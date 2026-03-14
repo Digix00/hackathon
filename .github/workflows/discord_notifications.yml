@@ -2,7 +2,7 @@ name: Discord Notifications
 
 on:
   pull_request:
-    types: [opened, synchronize, ready_for_review, review_requested, reopened, closed]
+    types: [opened, ready_for_review, review_requested, reopened, closed]
   pull_request_review:
     types: [submitted]
   issues:
