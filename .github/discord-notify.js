@@ -110,7 +110,7 @@ module.exports = async ({ context, core, fs }) => {
 
       const assigner = context.payload.sender?.login || '(unknown)';
       const msg = [
-        `${mentionOf(assigner)}が${mentions}にIssueをアサインしました！`,
+        `📌 ${mentionOf(assigner)}が${mentions}にIssueをアサインしました！`,
         `[**${issue.title}**](${issue.html_url})`,
       ].join('\n');
 
