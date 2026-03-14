@@ -141,7 +141,7 @@ git push -u origin "$(git branch --show-current)"
 
 - Base branch: リポジトリの文脈から分かるならそれを使う。曖昧なら GitHub が返すデフォルトブランチを優先する。
 - Title: ブランチ名ではなく、実際に反映した変更の結果を表す。
-- Body: [`.codex/skills/create-pull-request/references/pr_body_template.md`](.codex/skills/create-pull-request/references/pr_body_template.md) と [`REVIEW.md`](REVIEW.md) の「PR説明欄の更新」に合わせて書く。Mermaid による図解が必要な変更だけ追加し、それ以外は省略してよい。
+- Body: [`.codex/skills/create-pull-request/references/pr_body_template.md`](../../.codex/skills/create-pull-request/references/pr_body_template.md) と [`REVIEW.md`](../../REVIEW.md) の「PR説明欄の更新」に合わせて書く。Mermaid による図解が必要な変更だけ追加し、それ以外は省略してよい。
 
 例:
 
