@@ -1,0 +1,21 @@
+# Xcode
+DerivedData/
+.build/
+*.xcuserstate
+xcuserdata/
+
+# Swift Package Manager
+Packages/
+.package.resolved
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/
+
+# Secrets
+Config/Secrets.xcconfig
+
+# macOS
+.DS_Store
