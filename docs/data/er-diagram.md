@@ -45,8 +45,8 @@ erDiagram
 		string external_id
 		string provider
 		string title
-		string artist
-		string album
+		string artist_name
+		string album_name
 		string album_art_url
 		integer duration_ms
 		datetime cached_at
