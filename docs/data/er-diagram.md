@@ -489,13 +489,18 @@ erDiagram
 | reporter_user_id | string | users.idへの外部キー（通報者） |
 | reported_user_id | string | users.idへの外部キー（被通報者） |
 | report_type | string | "user" または "comment" |
-| target_comment_id | string | comments.idへの外部キー（report_type="comment"の場合） |
+| target_comment_id | string | comments.idへの外部キー（report_type="comment"の場合に必須） |
 | reason | string | 通報理由 |
 | created_at | datetime | |
 | deleted_at | datetime | |
 
 **制約:**
-- `(reporter_user_id, reported_user_id, report_type, target_comment_id)` で UNIQUE 制約
+- `report_type` と `target_comment_id` の整合性を保証する CHECK 制約  
+  例: `CHECK ((report_type = 'comment' AND target_comment_id IS NOT NULL) OR (report_type = 'user' AND target_comment_id IS NULL))`
+- comment 通報用の部分 UNIQUE 制約  
+  例: `UNIQUE (reporter_user_id, reported_user_id, report_type, target_comment_id) WHERE report_type = 'comment'`
+- user 通報用の部分 UNIQUE 制約  
+  例: `UNIQUE (reporter_user_id, reported_user_id, report_type) WHERE report_type = 'user'`
 
 **インデックス:**
 - `reported_user_id`
@@ -723,8 +728,8 @@ Spotify/Apple Music OAuth連携情報。
 - `created_at`
 
 **運用:**
-- worker が定期的に `status = "pending"` をスキャンして通知送信
-- 失敗時は `retry_count` をインクリメントし、3回超過で `status = "failed"` に遷移
+- worker が定期的に `status = 'pending'` をスキャンして通知送信
+- 失敗時は `retry_count` をインクリメントし、3回超過で `status = 'failed'` に遷移
 
 ---
 
@@ -750,4 +755,3 @@ Spotify/Apple Music OAuth連携情報。
 **運用:**
 - UPSERT で交換発生時にカウントをインクリメント
 - カウントがしきい値（3 / 5 / 10 / 50 / 100）を超過した場合はドメインエラー
-
