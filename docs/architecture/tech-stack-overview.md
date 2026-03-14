@@ -23,7 +23,7 @@
 | Backend | Go + Echo | [backend.md](./backend.md) |
 | DB | Cloud SQL (PostgreSQL) | [backend.md](./backend.md) |
 | インフラ | GCP / Terraform | [infrastructure.md](./infrastructure.md) |
-| スキーマ | OpenAPI 3.x | [schema.md](./schema.md) |
+| スキーマ | OpenAPI 3.x | [schema-driven-development.md](./schema-driven-development.md) |
 | CI/CD | GitHub Actions | [cicd.md](./cicd.md) |
 
 ## 外部連携
