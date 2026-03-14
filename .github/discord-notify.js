@@ -100,7 +100,6 @@ module.exports = async ({ context, core, fs }) => {
     if (action === 'opened' || action === 'assigned') {
       const issue = context.payload.issue;
       if (!issue) return;
-      const { repo, owner } = context.repo;
 
       const addedAssignee = context.payload.assignee?.login;
       const allAssignees = (issue.assignees || []).map((/** @type {any} */ u) => u.login);
@@ -119,7 +118,6 @@ module.exports = async ({ context, core, fs }) => {
   } else if (ev === 'pull_request') {
     const pr = context.payload.pull_request;
     if (!pr) return;
-    const { repo, owner } = context.repo;
 
     if (action === 'review_requested') {
       // 仕様: PRにレビュアーをアサインした時に全員へまとめてメンション
@@ -165,7 +163,6 @@ module.exports = async ({ context, core, fs }) => {
       const pr = context.payload.pull_request;
       const review = context.payload.review;
       if (!pr || !review) return;
-      const { repo, owner } = context.repo;
 
       const state = (review.state || '').toUpperCase(); // APPROVED / CHANGES_REQUESTED / COMMENTED
       const reviewer = review.user?.login || '(unknown)';
