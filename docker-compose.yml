@@ -1,0 +1,68 @@
+services:
+  firebase-emulator:
+    build:
+      context: .
+      dockerfile: docker/firebase-emulator/Dockerfile
+    container_name: firebase-emulator
+    working_dir: /workspace
+    ports:
+      - "4000:4000" # Emulator UI
+      - "9099:9099" # Auth Emulator
+    volumes:
+      - ./:/workspace
+    command: >
+      firebase emulators:start --project demo-hackathon --only auth
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: hackathon
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hackathon"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: cmd/server/Dockerfile
+    container_name: backend-server
+    working_dir: /app
+    env_file:
+      - .env.development
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+    command: >
+      air -c .air.toml
+    depends_on:
+      - firebase-emulator
+      - postgres
+
+  worker:
+    build:
+      context: .
+      dockerfile: cmd/worker/Dockerfile
+    container_name: backend-worker
+    working_dir: /app
+    env_file:
+      - .env.development
+    volumes:
+      - ./:/app
+    command: >
+      air -c .air.worker.toml
+    depends_on:
+      - firebase-emulator
+      - postgres
+
+volumes:
+  postgres_data:

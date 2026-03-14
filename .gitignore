@@ -1,0 +1,31 @@
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Go
+/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
+
+# Air / local build artifacts
+tmp/
+
+# Logs
+*.log
+firebase-debug.log
+
+# Firebase local cache (if generated on host)
+.firebase/
