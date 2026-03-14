@@ -13,6 +13,17 @@ import (
 )
 
 func main() {
+	dsn := os.Getenv("DATABASE_URL")
+	var db *sql.DB
+	if dsn != "" {
+		openedDB, err := sql.Open("pgx", dsn)
+		if err != nil {
+			panic(err)
+		}
+		db = openedDB
+		defer db.Close()
+	}
+
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(middleware.Recover())
@@ -23,8 +34,7 @@ func main() {
 	})
 
 	e.GET("/healthz/postgres", func(c echo.Context) error {
-		dsn := os.Getenv("DATABASE_URL")
-		if dsn == "" {
+		if db == nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{
 				"status": "error",
 				"error":  "DATABASE_URL is not set",
@@ -34,16 +44,7 @@ func main() {
 		ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 		defer cancel()
 
-		db, err := sql.Open("pgx", dsn)
-		if err != nil {
-			return c.JSON(http.StatusServiceUnavailable, map[string]string{
-				"status": "error",
-				"error":  err.Error(),
-			})
-		}
-		defer db.Close()
-
-		err = db.PingContext(ctx)
+		err := db.PingContext(ctx)
 		if err != nil {
 			return c.JSON(http.StatusServiceUnavailable, map[string]string{
 				"status": "error",
