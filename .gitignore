@@ -1,3 +1,16 @@
+# ===== Backend / Node / Firebase =====
+node_modules/
+*.log
+tmp/
+.env
+.env.*
+!.env.example
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+
+# ===== macOS =====
+.DS_Store
 # OS / Editor
 .DS_Store
 Thumbs.db
