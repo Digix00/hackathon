@@ -146,7 +146,7 @@ module.exports = async ({ context, core, fs }) => {
       if (filteredReviewers.length > 0) {
         const mentions = uniq(filteredReviewers).map(mentionOf).join(' ');
         const msg = [
-          `🆕 ${mentionOf(pr.user.login)}がプルリクを作成しました！`,
+          `🆕 ${mentionOf(pr.user.login)}がプルリクを作成しました！ ${mentions}`,
           `[**${pr.title}**](${pr.html_url})`,
         ].join('\n');
         await post(msg);
@@ -179,7 +179,7 @@ module.exports = async ({ context, core, fs }) => {
       const snippet = body ? (body.length > 200 ? body.slice(0, 200) + '…' : body) : '';
 
       const msgLines = [
-        `💬 ${mentionOf(reviewer)}がプルリクをレビューしました！ (${state})`,
+        `💬 ${mentionOf(author)} ${reviewer}がプルリクをレビューしました！ (${state})`,
         `[**${pr.title}**](${pr.html_url}#pullrequestreview-${review.id})`,
       ];
       if (snippet) {
