@@ -1,0 +1,22 @@
+# Git
+.git/
+.github/
+
+# Build artifacts
+tmp/
+
+# Docker configs (不要 for Go build context)
+docker/
+
+# Documentation
+docs/
+*.md
+
+# Firebase local cache
+.firebase/
+firebase-debug.log
+
+# Editor
+.vscode/
+.idea/
+.DS_Store

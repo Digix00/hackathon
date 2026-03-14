@@ -20,7 +20,7 @@
 
 ### 1.1.3 データベース構築
 
-- [ ] **Infra** `modules/cloudsql/` - Cloud SQL (PostgreSQL) インスタンス
+- [ ] **Infra** `modules/cloudsql/` - Cloud SQL（PostgreSQL）インスタンス
 - [ ] **Backend** Cloud SQL 接続設定（`internal/infra/rdb/client.go`）
 - [ ] **Backend** マイグレーション基盤導入（golang-migrate など）
 
@@ -28,7 +28,8 @@
 
 - [ ] **Backend** `docker-compose.yml` 作成
 - [ ] **Backend** `cmd/server/Dockerfile` 作成
-- [ ] **Backend** Firebase Emulator コンテナ設定
+- [ ] **Backend** PostgreSQL コンテナ設定（Cloud SQL 代替）
+- [ ] **Backend** Firebase Auth Emulator コンテナ設定
 - [ ] **Backend** ホットリロード設定（Air）
 
 ## 1.2 ログ基盤構築

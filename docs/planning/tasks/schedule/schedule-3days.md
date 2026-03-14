@@ -27,12 +27,12 @@
 | Xcode プロジェクト作成 | Go プロジェクト初期化（Echo） |
 | Firebase SDK 導入 | ディレクトリ構造作成 |
 | Sign in with Apple 設定開始 | docker-compose.yml 作成 |
-| | Firebase Emulator 設定 |
+| | PostgreSQL + Firebase Auth Emulator 設定 |
 
 ### Day 0 完了条件
 - [ ] iOS プロジェクトが作成され、Firebase SDK が導入されている
 - [ ] Backend プロジェクトが初期化され、`docker compose up` で起動する
-- [ ] Firebase Emulator が動作する
+- [ ] PostgreSQL と Firebase Auth Emulator が動作する
 
 ---
 
