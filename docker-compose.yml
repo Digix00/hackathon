@@ -45,8 +45,10 @@ services:
     command: >
       air -c .air.toml
     depends_on:
-      - firebase-emulator
-      - postgres
+      firebase-emulator:
+        condition: service_started
+      postgres:
+        condition: service_healthy
 
   worker:
     build:
@@ -61,8 +63,10 @@ services:
     command: >
       air -c .air.worker.toml
     depends_on:
-      - firebase-emulator
-      - postgres
+      firebase-emulator:
+        condition: service_started
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:
