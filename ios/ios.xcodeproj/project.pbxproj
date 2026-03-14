@@ -27,6 +27,8 @@
 		524C6B9B2F6562AC007E823F /* ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		524C6BA82F6562AE007E823F /* iosTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		524C6BB22F6562AE007E823F /* iosUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		524C6BD52F6562AE007E823F /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ios/config/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		524C6BD62F6562AE007E823F /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ios/config/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -79,7 +81,17 @@
 				524C6BAB2F6562AE007E823F /* iosTests */,
 				524C6BB52F6562AE007E823F /* iosUITests */,
 				524C6B9C2F6562AC007E823F /* Products */,
+				524C6BD72F6562AE007E823F /* config */,
 			);
+			sourceTree = "<group>";
+		};
+		524C6BD72F6562AE007E823F /* config */ = {
+			isa = PBXGroup;
+			children = (
+				524C6BD52F6562AE007E823F /* Debug.xcconfig */,
+				524C6BD62F6562AE007E823F /* Release.xcconfig */,
+			);
+			name = config;
 			sourceTree = "<group>";
 		};
 		524C6B9C2F6562AC007E823F /* Products */ = {
@@ -390,6 +402,7 @@
 		};
 		524C6BBD2F6562AE007E823F /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 524C6BD52F6562AE007E823F /* Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -407,7 +420,6 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.digix.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -421,6 +433,7 @@
 		};
 		524C6BBE2F6562AE007E823F /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 524C6BD62F6562AE007E823F /* Release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -438,7 +451,6 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.digix.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;

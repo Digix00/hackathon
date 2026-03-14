@@ -1,4 +1,4 @@
-PRODUCT_BUNDLE_IDENTIFIER = com.yourteam.yourapp
-APP_DISPLAY_NAME = YourApp
+PRODUCT_BUNDLE_IDENTIFIER = com.digix.ios
+APP_DISPLAY_NAME = ios
 API_BASE_URL = https://api.example.com
 APP_ENV = release
