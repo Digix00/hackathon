@@ -1,20 +1,3 @@
-# ===== iOS / Xcode =====
-DerivedData/
-.build/
-*.xcuserstate
-xcuserdata/
-Packages/
-.package.resolved
-
-# Fastlane
-fastlane/report.xml
-fastlane/Preview.html
-fastlane/screenshots/**/*.png
-fastlane/test_output/
-
-# Secrets
-ios/ios/config/Secrets.xcconfig
-
 # ===== Backend / Node / Firebase =====
 node_modules/
 *.log

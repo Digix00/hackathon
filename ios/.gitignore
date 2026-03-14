@@ -15,7 +15,4 @@ fastlane/screenshots/**/*.png
 fastlane/test_output/
 
 # Secrets
-config/Secrets.xcconfig
-
-# macOS
-.DS_Store
+ios/config/Secrets.xcconfig
