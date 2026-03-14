@@ -111,8 +111,7 @@ module.exports = async ({ context, core, fs }) => {
       const assigner = context.payload.sender?.login || '(unknown)';
       const msg = [
         `${mentionOf(assigner)}が${mentions}にIssueをアサインしました！`,
-        `**${issue.title}**`,
-        `${issue.html_url}`,
+        `[**${issue.title}**](${issue.html_url})`,
       ].join('\n');
 
       await post(msg);
@@ -134,8 +133,7 @@ module.exports = async ({ context, core, fs }) => {
 
       const msg = [
         `${mentionOf(pr.user.login)}が${mentions}にレビューを依頼しました！`,
-        `**${pr.title}**`,
-        `${pr.html_url}`,
+        `[**${pr.title}**](${pr.html_url})`,
       ].join('\n');
       await post(msg);
     } else if (action === 'opened' || action === 'ready_for_review' || action === 'reopened') {
@@ -149,8 +147,7 @@ module.exports = async ({ context, core, fs }) => {
         const mentions = uniq(filteredReviewers).map(mentionOf).join(' ');
         const msg = [
           `🆕 ${mentionOf(pr.user.login)}がプルリクを作成しました！`,
-          `**${pr.title}**`,
-          `${pr.html_url}`,
+          `[**${pr.title}**](${pr.html_url})`,
         ].join('\n');
         await post(msg);
       }
@@ -158,8 +155,7 @@ module.exports = async ({ context, core, fs }) => {
       // 仕様: PRがmergeされたときに通知
       const msg = [
         `✅ ${mentionOf(pr.user.login)}がプルリクをマージしました！`,
-        `**${pr.title}**`,
-        `${pr.html_url}`,
+        `[**${pr.title}**](${pr.html_url})`,
       ].join('\n');
       await post(msg);
     }
@@ -184,8 +180,7 @@ module.exports = async ({ context, core, fs }) => {
 
       const msgLines = [
         `💬 ${mentionOf(reviewer)}がプルリクをレビューしました！ (${state})`,
-        `**${pr.title}**`,
-        `${pr.html_url}#pullrequestreview-${review.id}`,
+        `[**${pr.title}**](${pr.html_url}#pullrequestreview-${review.id})`,
       ];
       if (snippet) {
         msgLines.push('\n> ' + snippet.replace(/\n/g, '\n> '));
