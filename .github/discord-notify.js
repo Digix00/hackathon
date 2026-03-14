@@ -169,7 +169,7 @@ module.exports = async ({ context, core, fs }) => {
       const author = pr.user?.login || '(unknown)';
 
       // 自分のPRを自分でレビューした場合は通知しない
-      if (author && reviewer && author === reviewer) return;
+      if (author !== '(unknown)' && reviewer !== '(unknown)' && author === reviewer) return;
 
       // レビュー本文を軽く要約（長すぎるとWebhookが弾くので先頭だけ）
       const body = (review.body || '').trim();
