@@ -1,0 +1,44 @@
+# モバイル技術スタック
+
+## iOS
+
+| 項目 | 採用技術 | 備考 |
+|---|---|---|
+| 言語 | Swift | |
+| UI | TBD（SwiftUI / UIKit） | |
+| BLE | CoreBluetooth | バックグラウンド動作は Info.plist 設定 + Central/Peripheral 両対応が必要 |
+| 位置情報 | CoreLocation | 常時取得 or 使用時取得の権限設計が審査に影響 |
+| 認証 | Sign in with Apple | App Store ガイドライン上、サードパーティ認証を使う場合は必須 |
+| 通知 | APNs (UserNotifications) | |
+| 音楽連携 | Spotify iOS SDK / MusicKit | MusicKit は Apple Music 専用 |
+
+### iOS BLE 制約（最優先技術検証事項）
+
+- バックグラウンドでの Peripheral アドバタイズは制限あり（フォアグラウンド遷移で復帰する挙動）
+- Central スキャンはバックグラウンド継続可能だが、スキャン間隔が OS により延長される
+- RSSI によるバックグラウンド距離推定の精度は低い（壁・ポケット・混雑による大幅なブレ）
+- BLE ID は毎日ローテーション（固定 ID は追跡リスク）
+
+## Android
+
+| 項目 | 採用技術 | 備考 |
+|---|---|---|
+| 言語 | Kotlin | |
+| UI | TBD（Jetpack Compose / XML View） | |
+| BLE | Android Bluetooth API (BluetoothLeScanner / AdvertiseCallback) | |
+| 位置情報 | FusedLocationProviderClient | |
+| 認証 | Google Sign-In | |
+| 通知 | FCM | |
+| 音楽連携 | Spotify Android SDK | |
+
+### Android BLE 制約
+
+- 機種差・メーカー独自省電力設定による挙動の差が大きい
+- Android 12 以降は BLUETOOTH_SCAN / BLUETOOTH_ADVERTISE 権限が個別に必要
+- バックグラウンドスキャンは Foreground Service 化が実質的に必要
+
+## 共通設計方針
+
+- オフライン時も UI が破綻しない設計（BLE 交換レコードをローカルに保持し、オンライン復帰時に再送）
+- 外部 API（Spotify 等）のジャケ写はローカルキャッシュ
+- 権限リクエストは Bluetooth → 通知 → 位置情報 の順でオンボーディングフローに組み込む
