@@ -1,13 +1,13 @@
 # インフラ技術スタック
 
-Firestore を採用するため GCP をベースプラットフォームとする。
+Cloud SQL（PostgreSQL）を採用するため GCP をベースプラットフォームとする。
 インフラは Terraform で IaC 管理し、環境ごとの差異をコードで表現する。
 
 ## GCP サービス構成
 
 | サービス | 用途 | Terraform 管理 |
 |---|---|---|
-| Cloud Firestore | メイン DB（ネイティブモード） | ✅ |
+| Cloud SQL（PostgreSQL） | メイン DB | ✅ |
 | Cloud Run | Backend API のホスティング | ✅ |
 | Cloud Run Jobs | 通知バッチ処理（worker） | ✅ |
 | Cloud Scheduler | worker を定期キック（10〜20分間隔） | ✅ |
@@ -37,7 +37,7 @@ terraform/
 │       └── terraform.tfvars
 └── modules/
     ├── cloudrun/             # Cloud Run service（API）+ Cloud Run Jobs（worker）
-    ├── firestore/            # Firestore データベース・インデックス
+    ├── cloudsql/             # Cloud SQL インスタンス・DB・ユーザー
     ├── scheduler/            # Cloud Scheduler ジョブ
     ├── registry/             # Artifact Registry リポジトリ
     ├── storage/              # Cloud Storage バケット
@@ -123,7 +123,7 @@ Cloud Run 自動デプロイ
 
 ## 開発環境（Docker）
 
-ローカル開発ではすべての GCP サービスをエミュレータに置き換え、
+ローカル開発では GCP 依存を最小化し、
 `docker compose up` 一発で開発環境が立ち上がる構成にする。
 
 ### コンテナ構成
@@ -132,15 +132,24 @@ Cloud Run 自動デプロイ
 ┌─────────────────────────────────────────┐
 │ docker-compose.yml                      │
 │                                         │
-│  ┌──────────────┐   ┌────────────────┐  │
-│  │    server    │──▶│    firebase    │  │
-│  │  (Echo API)  │   │    emulator    │  │
-│  │    :8000     │   │  Firestore     │  │
-│  └──────────────┘   │  :8080         │  │
-│                     │  Auth  :9099   │  │
-│  ┌──────────────┐   │  FCM   :4500   │  │
-│  │    worker    │──▶│  UI    :4000   │  │
-│  └──────────────┘   └────────────────┘  │
+│  ┌──────────────┐      ┌──────────────┐  │
+│  │    server    │ ───▶ │   postgres   │  │
+│  │  (Echo API)  │      │    :5432     │  │
+│  │    :8000     │      └──────────────┘  │
+│  └──────────────┘                         │
+│          │                                │
+│          └───────────┐                    │
+│                      ▼                    │
+│               ┌──────────────┐            │
+│               │   firebase   │            │
+│               │   emulator   │            │
+│               │ Auth :9099   │            │
+│               │ UI   :4000   │            │
+│               └──────────────┘            │
+│                                            │
+│  ┌──────────────┐      ┌──────────────┐   │
+│  │    worker    │ ───▶ │   postgres   │   │
+│  └──────────────┘      └──────────────┘   │
 └─────────────────────────────────────────┘
 ```
 
@@ -150,15 +159,16 @@ Cloud Run 自動デプロイ
 |---|---|---|---|
 | `server` | 自前 Dockerfile.dev（Air でホットリロード） | 8000 | Echo API サーバー |
 | `worker` | 自前 `cmd/worker/Dockerfile` | - | Outbox ワーカー |
-| `firebase-emulator` | `node:lts` + firebase-tools | 4000(UI) / 8080 / 9099 / 4500 | Firestore・Auth・FCM |
+| `postgres` | `postgres:16-alpine` | 5432 | ローカル DB（Cloud SQL 代替） |
+| `firebase-emulator` | `node:lts` + firebase-tools | 4000(UI) / 9099 | Auth Emulator |
 
 ### エミュレータ対応表
 
 | 本番サービス | 開発環境での代替 |
 |---|---|
-| Cloud Firestore | Firebase Emulator Suite（Firestore） |
+| Cloud SQL（PostgreSQL） | Docker Compose の PostgreSQL コンテナ |
 | Firebase Auth | Firebase Emulator Suite（Auth） |
-| FCM（Android通知） | Firebase Emulator Suite（FCM）※実端末には届かない |
+| FCM（Android通知） | 開発環境では送信をスキップ or モック化 |
 | APNs（iOS通知） | 開発環境ではスキップ（環境変数フラグで無効化） |
 | Cloud Scheduler | 開発環境では手動実行で代替 |
 
@@ -166,9 +176,8 @@ Cloud Run 自動デプロイ
 
 ```
 # .env.development（例）
-FIRESTORE_EMULATOR_HOST=firebase-emulator:8080
 FIREBASE_AUTH_EMULATOR_HOST=firebase-emulator:9099
-FIREBASE_MESSAGING_EMULATOR_HOST=firebase-emulator:4500
+DATABASE_URL=postgres://postgres:postgres@postgres:5432/hackathon?sslmode=disable
 ```
 
 ## 監視・アラート
@@ -179,5 +188,4 @@ FIREBASE_MESSAGING_EMULATOR_HOST=firebase-emulator:4500
 ## TBD（未決定）
 
 - Cloud Run のリージョン（asia-northeast1 推奨だが要確認）
-- Firestore のセキュリティルール設計（クライアント直アクセスをどこまで許可するか）
 - CDN（プロフィール画像配信が必要になった場合）
