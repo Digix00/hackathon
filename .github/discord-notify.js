@@ -153,8 +153,12 @@ module.exports = async ({ context, core, fs }) => {
       }
     } else if (action === 'closed' && pr.merged) {
       // 仕様: PRがmergeされたときに通知
+      const merger = pr.merged_by?.login || context.payload.sender?.login || '(unknown)';
+      const author = pr.user?.login || '(unknown)';
+      const mergerText = merger === '(unknown)' ? '(unknown)' : mentionOf(merger);
+      const authorText = author === '(unknown)' ? '(unknown)' : mentionOf(author);
       const msg = [
-        `✅ ${mentionOf(pr.user.login)}がプルリクをマージしました！`,
+        `✅ ${mergerText}が${authorText}のプルリクをマージしました！`,
         `[**${pr.title}**](${pr.html_url})`,
       ].join('\n');
       await post(msg);
