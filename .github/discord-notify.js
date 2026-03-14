@@ -129,8 +129,10 @@ module.exports = async ({ context, core, fs }) => {
       });
       if (!shouldNotify) return;
 
+      const requester = context.payload.sender?.login || pr.user.login;
+
       const msg = [
-        `${mentionOf(pr.user.login)}が${mentions}にレビューを依頼しました！`,
+        `${mentionOf(requester)}が${mentions}にレビューを依頼しました！`,
         `[**${pr.title}**](${pr.html_url})`,
       ].join('\n');
       await post(msg);
