@@ -342,8 +342,8 @@ erDiagram
 | external_id | string | Spotify/Apple Music上の曲ID |
 | provider | string | "spotify" または "apple_music" |
 | title | string | 曲名 |
-| artist | string | アーティスト名 |
-| album | string | アルバム名 |
+| artist_name | string | アーティスト名 |
+| album_name | string | アルバム名 |
 | album_art_url | string | ジャケット画像URL |
 | duration_ms | integer | 曲の長さ（ミリ秒） |
 | cached_at | datetime | キャッシュ日時 |
