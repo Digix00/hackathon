@@ -12,6 +12,12 @@ services:
       - ./:/workspace
     command: >
       firebase emulators:start --project demo-hackathon --only auth
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9099"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   postgres:
     image: postgres:16-alpine
@@ -46,7 +52,7 @@ services:
       air -c .air.toml
     depends_on:
       firebase-emulator:
-        condition: service_started
+        condition: service_healthy
       postgres:
         condition: service_healthy
 
@@ -64,7 +70,7 @@ services:
       air -c .air.worker.toml
     depends_on:
       firebase-emulator:
-        condition: service_started
+        condition: service_healthy
       postgres:
         condition: service_healthy
 

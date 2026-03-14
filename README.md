@@ -17,6 +17,7 @@
 ## 起動方法
 
 ```powershell
+cd backend
 docker compose up --build -d
 ```
 
@@ -73,7 +74,7 @@ docker compose down
 
 ## 関連ファイル
 
-- `docker-compose.yml`
-- `firebase.json`
-- `.env.development`
-- `cmd/server/main.go`
+- `backend/docker-compose.yml`
+- `backend/firebase.json`
+- `backend/.env.development`
+- `backend/cmd/server/main.go`
