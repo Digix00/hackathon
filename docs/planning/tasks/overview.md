@@ -4,19 +4,19 @@
 
 ## スケジュール・シフト
 
-- [発表に向けた全体スケジュール（3/14〜3/21）](./schedule-full.md) ← メイン
-- [Phase 1-3 詳細スケジュール（3/14〜3/17）](./schedule-3days.md)
+- [発表に向けた全体スケジュール（3/14〜3/21）](./schedule/schedule-full.md) ← メイン
+- [Phase 1-3 詳細スケジュール（3/14〜3/17）](./schedule/schedule-3days.md)
 - [メンバーシフト表](./member-shifts.md)
 
 ## フェーズ構成
 
 | フェーズ | 概要 | 担当 |
 |---|---|---|
-| [Phase 1](./phase1-infrastructure.md) | インフラ・認証基盤 | Backend, Infra |
-| [Phase 2](./phase2-ble-track.md) | BLE機能・曲設定 | iOS, Android, Backend |
-| [Phase 3](./phase3-encounter.md) | すれ違い交換機能 | iOS, Android, Backend |
-| [Phase 4](./phase4-ux.md) | ユーザー体験向上 | iOS, Android, Backend |
-| [Phase 5](./phase5-post-poc.md) | PoC後機能 | 全チーム |
+| [Phase 1](./phases/phase1-infrastructure.md) | インフラ・認証基盤 | Backend, Infra |
+| [Phase 2](./phases/phase2-ble-track.md) | BLE機能・曲設定 | iOS, Android, Backend |
+| [Phase 3](./phases/phase3-encounter.md) | すれ違い交換機能 | iOS, Android, Backend |
+| [Phase 4](./phases/phase4-ux.md) | ユーザー体験向上 | iOS, Android, Backend |
+| [Phase 5](./phases/phase5-post-poc.md) | PoC後機能 | 全チーム |
 
 ## 優先順位（issues.md準拠）
 
