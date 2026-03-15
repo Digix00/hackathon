@@ -252,7 +252,7 @@ func (c *Client) GenerateSong(ctx context.Context, req *port.LyriaRequest) (*por
     resp, err := c.endpoint.Predict(ctx, &aiplatformpb.PredictRequest{
         Endpoint:   endpointPath,
         Instances:  []*structpb.Value{instanceValue},
-        Parameters: params,
+        Parameters: structpb.NewStructValue(params),
     })
     if err != nil {
         return nil, fmt.Errorf("lyria prediction failed: %w", err)

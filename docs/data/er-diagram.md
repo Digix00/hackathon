@@ -324,7 +324,7 @@ erDiagram
 	LYRIC_CHAINS ||--o{ LYRIC_ENTRIES : "chain_id"
 	USERS ||--o{ LYRIC_ENTRIES : "user_id"
 	ENCOUNTERS ||--o{ LYRIC_ENTRIES : "encounter_id"
-	LYRIC_CHAINS ||--|| GENERATED_SONGS : "chain_id"
+	LYRIC_CHAINS ||--o| GENERATED_SONGS : "chain_id"
 	GENERATED_SONGS ||--o{ SONG_LIKES : "song_id"
 	USERS ||--o{ SONG_LIKES : "user_id"
 	LYRIC_CHAINS ||--o{ OUTBOX_LYRIA_JOBS : "chain_id"
