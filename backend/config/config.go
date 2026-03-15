@@ -7,8 +7,7 @@ type Config struct {
 	GoEnv       string `envconfig:"GO_ENV" default:"development"`
 	DatabaseURL string `envconfig:"DATABASE_URL" required:"true"`
 
-	// #3 MUST: Firebase は Phase 1 で実装するため required を外す。実装時に required:"true" に戻すこと。
-	FirebaseProjectID        string `envconfig:"FIREBASE_PROJECT_ID"`
+	FirebaseProjectID        string `envconfig:"FIREBASE_PROJECT_ID" required:"true"`
 	FirebaseAuthEmulatorHost string `envconfig:"FIREBASE_AUTH_EMULATOR_HOST"`
 }
 

@@ -19,7 +19,7 @@ type File struct {
 	FileSize         int            `gorm:"not null"`
 	UploadedByUserID string         `gorm:"not null"`
 	CreatedAt        time.Time      `gorm:"not null;autoCreateTime"`
-	DeletedAt        gorm.DeletedAt `gorm:"index"` // #1 MUST: soft delete フィルタのため gorm.DeletedAt を使用
+	DeletedAt        gorm.DeletedAt `gorm:"index"`
 }
 
 type User struct {
@@ -39,7 +39,7 @@ type User struct {
 	AvatarShape    string         `gorm:"not null;default:circle"`
 	CreatedAt      time.Time      `gorm:"not null;autoCreateTime"`
 	UpdatedAt      time.Time      `gorm:"not null;autoUpdateTime"`
-	DeletedAt      gorm.DeletedAt `gorm:"index"` // #1 MUST
+	DeletedAt      gorm.DeletedAt `gorm:"index"`
 
 	// Associations
 	Prefecture *Prefecture `gorm:"foreignKey:PrefectureID"`
@@ -79,17 +79,14 @@ type UserDevice struct {
 }
 
 // MusicConnection は Spotify / Apple Music の OAuth 連携情報を保持する。
-// AccessToken / RefreshToken は DB 漏洩時のトークン流出を防ぐため、
-// TODO: 本番運用前にアプリ層で AES-GCM 暗号化して保存すること。
-// 参考: gorm Scanner/Valuer インターフェースを実装したカスタム型で透過的に暗号化できる。
 type MusicConnection struct {
 	ID               string     `gorm:"primaryKey"`
 	UserID           string     `gorm:"not null;uniqueIndex:uq_music_connections"`
 	Provider         string     `gorm:"not null;uniqueIndex:uq_music_connections"` // 'spotify' | 'apple_music'
 	ProviderUserID   string     `gorm:"not null"`
 	ProviderUsername *string
-	AccessToken      string     `gorm:"not null"`  // #4 MUST: 要暗号化（TODO 参照）
-	RefreshToken     *string                        // #4 MUST: 要暗号化（TODO 参照）
+	AccessToken      string     `gorm:"not null"`  // TODO: 要暗号化
+	RefreshToken     *string                        // TODO: 要暗号化
 	ExpiresAt        *time.Time
 	CreatedAt        time.Time  `gorm:"not null;autoCreateTime"`
 	UpdatedAt        time.Time  `gorm:"not null;autoUpdateTime"`
@@ -102,5 +99,5 @@ type BleToken struct {
 	ValidFrom time.Time      `gorm:"not null"`
 	ValidTo   time.Time      `gorm:"not null;index"`
 	CreatedAt time.Time      `gorm:"not null;autoCreateTime"`
-	DeletedAt gorm.DeletedAt `gorm:"index"` // #1 MUST
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }

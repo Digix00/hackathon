@@ -51,10 +51,6 @@ func (e *DomainError) Is(target error) bool {
 	return e.Code == t.Code
 }
 
-// コンストラクタ。呼び出し元は詳細メッセージを付けてエラーを生成する。
-//
-//	return errs.NotFound("user %s not found", id)
-
 func NotFound(msg string) *DomainError {
 	return &DomainError{Code: CodeNotFound, Message: msg}
 }
