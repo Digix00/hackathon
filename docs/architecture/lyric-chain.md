@@ -172,7 +172,11 @@
     {
       "sequence_num": 1,
       "content": "夜明け前の静けさの中",
-            "user": { "id": "uuid", "display_name": "ユーザーA", "avatar_url": "..." }
+      "user": {
+        "id": "uuid",
+        "display_name": "ユーザーA",
+        "avatar_url": "..."
+      }
     },
     ...
   ],
@@ -202,10 +206,13 @@
       "my_lyric": "今日も空は青かった",
       "generated_at": "YYYY-MM-DDTHH:MM:SSZ"
     }
-  ]
+  ],
+  "pagination": {
+    "next_cursor": null,
+    "has_more": false
+  }
 }
 ```
-
 ---
 
 ## Chainマッチングロジック
