@@ -48,10 +48,10 @@ type Comment struct {
 
 type Report struct {
 	ID              string         `gorm:"primaryKey"`
-	ReporterUserID  string         `gorm:"not null;uniqueIndex:uq_reports_comment,where:report_type = 'comment';uniqueIndex:uq_reports_user,where:report_type = 'user'"`
-	ReportedUserID  string         `gorm:"not null;index;uniqueIndex:uq_reports_comment,where:report_type = 'comment';uniqueIndex:uq_reports_user,where:report_type = 'user'"`
-	ReportType      string         `gorm:"not null;check:chk_reports_type,(report_type = 'comment' AND target_comment_id IS NOT NULL) OR (report_type = 'user' AND target_comment_id IS NULL);uniqueIndex:uq_reports_comment,where:report_type = 'comment';uniqueIndex:uq_reports_user,where:report_type = 'user'"` // 'user' | 'comment'
-	TargetCommentID *string        `gorm:"index;uniqueIndex:uq_reports_comment,where:report_type = 'comment'"`
+	ReporterUserID  string         `gorm:"not null;uniqueIndex:uq_reports_comment,where:report_type = 'comment' AND deleted_at IS NULL;uniqueIndex:uq_reports_user,where:report_type = 'user' AND deleted_at IS NULL"`
+	ReportedUserID  string         `gorm:"not null;index;uniqueIndex:uq_reports_comment,where:report_type = 'comment' AND deleted_at IS NULL;uniqueIndex:uq_reports_user,where:report_type = 'user' AND deleted_at IS NULL"`
+	ReportType      string         `gorm:"not null;check:chk_reports_type,(report_type = 'comment' AND target_comment_id IS NOT NULL) OR (report_type = 'user' AND target_comment_id IS NULL);uniqueIndex:uq_reports_comment,where:report_type = 'comment' AND deleted_at IS NULL;uniqueIndex:uq_reports_user,where:report_type = 'user' AND deleted_at IS NULL"` // 'user' | 'comment'
+	TargetCommentID *string        `gorm:"index;uniqueIndex:uq_reports_comment,where:report_type = 'comment' AND deleted_at IS NULL"`
 	Reason          string         `gorm:"not null"`
 	CreatedAt       time.Time      `gorm:"not null;autoCreateTime"`
 	DeletedAt       gorm.DeletedAt `gorm:"index"` // #1 MUST
