@@ -43,3 +43,16 @@ firebase-debug.log
 
 # Firebase local cache (if generated on host)
 .firebase/
+
+# Terraform
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/terraform.tfstate.*.backup
+**/terraform.tfvars
+!**/terraform.tfvars.example
+**/override.tf
+**/override.tf.json
+**/*_override.tf
+**/*_override.tf.json
