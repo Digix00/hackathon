@@ -193,7 +193,7 @@ API レスポンスと DB カラム名が異なる主なフィールド一覧。
   "avatar_url": "https://example.com/avatar.png",
   "bio": "music lover",
   "birthdate": "1995-04-01",
-  "age_visibility": "age_range",
+  "age_visibility": "by-10",
   "prefecture_id": "13",
   "sex": "male"
 }
@@ -209,7 +209,7 @@ API レスポンスと DB カラム名が異なる主なフィールド一覧。
     "avatar_url": "https://example.com/avatar.png",
     "bio": "music lover",
     "birthdate": "1995-04-01",
-    "age_visibility": "age_range",
+    "age_visibility": "by-10",
     "prefecture_id": "13",
     "sex": "male",
     "created_at": "2026-03-15T09:30:00Z",
@@ -229,6 +229,10 @@ API レスポンスと DB カラム名が異なる主なフィールド一覧。
     "display_name": "mimura",
     "avatar_url": "https://example.com/avatar.png",
     "bio": "music lover",
+    "birthdate": "1995-04-01",
+    "age_visibility": "by-10",
+    "prefecture_id": "13",
+    "sex": "male",
     "created_at": "2026-03-15T09:30:00Z",
     "updated_at": "2026-03-15T09:30:00Z"
   }
@@ -276,7 +280,7 @@ API レスポンスと DB カラム名が異なる主なフィールド一覧。
   "avatar_url": "https://example.com/new-avatar.png",
   "bio": "updated bio",
   "birthdate": "1995-04-01",
-  "age_visibility": "age_range",
+  "age_visibility": "by-10",
   "prefecture_id": "13",
   "sex": "male"
 }
@@ -292,7 +296,7 @@ API レスポンスと DB カラム名が異なる主なフィールド一覧。
     "avatar_url": "https://example.com/new-avatar.png",
     "bio": "updated bio",
     "birthdate": "1995-04-01",
-    "age_visibility": "age_range",
+    "age_visibility": "by-10",
     "prefecture_id": "13",
     "sex": "male",
     "created_at": "2026-03-15T09:30:00Z",
