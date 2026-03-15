@@ -56,7 +56,6 @@ class BleManager(private val context: Context) {
             .build()
 
         val data = AdvertiseData.Builder()
-            .addServiceUuid(ParcelUuid(SERVICE_UUID))
             .addServiceData(ParcelUuid(SERVICE_UUID), bleToken.toByteArray(Charsets.UTF_8))
             .build()
 
@@ -90,9 +89,7 @@ class BleManager(private val context: Context) {
         }
         val scanner: BluetoothLeScanner = bluetoothAdapter?.bluetoothLeScanner ?: return
 
-        val filter = ScanFilter.Builder()
-            .setServiceUuid(ParcelUuid(SERVICE_UUID))
-            .build()
+        val filter = ScanFilter.Builder().build()
 
         val settings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)

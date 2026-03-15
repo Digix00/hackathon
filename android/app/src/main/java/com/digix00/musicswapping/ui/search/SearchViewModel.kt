@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -33,9 +32,14 @@ class SearchViewModel @Inject constructor(private val api: ApiService, private v
     init {
         queryFlow
             .debounce(SEARCH_DEBOUNCE_MS)
-            .filter { it.length >= 2 }
             .distinctUntilChanged()
-            .onEach { q -> search(q) }
+            .onEach { q ->
+                if (q.length >= 2) {
+                    search(q)
+                } else {
+                    _uiState.update { it.copy(results = emptyList(), isLoading = false) }
+                }
+            }
             .launchIn(viewModelScope)
     }
 
