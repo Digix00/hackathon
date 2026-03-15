@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import CoreMotion
 import Combine
 
@@ -54,6 +55,11 @@ class MotionManager: ObservableObject {
     init() {
         self.manager = CMMotionManager()
         self.manager.deviceMotionUpdateInterval = 1.0 / 60.0
+    }
+
+    func startUpdates() {
+        guard manager.isDeviceMotionAvailable, !manager.isDeviceMotionActive else { return }
+
         self.manager.startDeviceMotionUpdates(to: .main) { [weak self] (motionData, error) in
             guard error == nil else {
                 print(error!)
@@ -66,8 +72,13 @@ class MotionManager: ObservableObject {
         }
     }
 
-    deinit {
+    func stopUpdates() {
+        guard manager.isDeviceMotionActive else { return }
         manager.stopDeviceMotionUpdates()
+    }
+
+    deinit {
+        stopUpdates()
     }
 }
 
@@ -158,7 +169,8 @@ struct MainPrototypeView: View {
         NavigationStack {
             HomeHeroPage(
                 state: homeState,
-                selectedPage: .constant(0)
+                selectedPage: .constant(0),
+                isMotionActive: selectedSurface == .track
             )
             .toolbarBackground(.hidden, for: .navigationBar)
         }
@@ -705,6 +717,7 @@ private struct DynamicBlurBackground: View {
 private struct HomeHeroPage: View {
     let state: HomeScreenState
     @Binding var selectedPage: Int
+    let isMotionActive: Bool
     @State private var isSignaling = false
     @Environment(\.topSafeAreaInset) private var topSafeArea
     @Environment(\.bottomSafeAreaInset) private var bottomSafeArea
@@ -788,6 +801,21 @@ private struct HomeHeroPage: View {
                 .padding(.bottom, max(24, bottomSafeArea + 16))
             }
             .padding(.horizontal, 32)
+        }
+        .onAppear {
+            if isMotionActive {
+                motion.startUpdates()
+            }
+        }
+        .onChange(of: isMotionActive) { isActive in
+            if isActive {
+                motion.startUpdates()
+            } else {
+                motion.stopUpdates()
+            }
+        }
+        .onDisappear {
+            motion.stopUpdates()
         }
     }
 }
