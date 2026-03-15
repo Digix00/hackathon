@@ -37,4 +37,7 @@ jobs:
         run: terraform init
 
       - name: Terraform Apply
+        env:
+          TF_VAR_project_id: ${{ vars.TF_PROJECT_ID }}
+          TF_VAR_github_repo: ${{ vars.TF_GITHUB_REPO }}
         run: terraform apply -auto-approve -input=false
