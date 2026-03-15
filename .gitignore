@@ -9,6 +9,11 @@ firebase-debug.log
 firebase-debug.*.log
 .firebase/
 
+# ===== Development artifacts =====
+*.patch
+*.orig
+*.rej
+
 # ===== macOS =====
 .DS_Store
 # OS / Editor
