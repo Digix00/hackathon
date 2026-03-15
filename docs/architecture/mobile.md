@@ -24,12 +24,22 @@
 | 項目 | 採用技術 | 備考 |
 |---|---|---|
 | 言語 | Kotlin | |
-| UI | TBD（Jetpack Compose / XML View） | |
-| BLE | Android Bluetooth API (BluetoothLeScanner / AdvertiseCallback) | |
+| UI | Jetpack Compose | StateFlow + collectAsState |
+| アーキテクチャ | MVVM + Repository | 単一 app モジュール |
+| DI | Hilt | |
+| 通信 | Retrofit + OkHttp + Kotlinx Serialization | BuildConfig で dev/prod URL 切替 |
+| ローカル保存 | Room + DataStore | BLE 交換レコードは Room、設定は DataStore |
+| 画像 | Coil | ジャケ写キャッシュ |
+| BLE | Android Bluetooth API (BluetoothLeScanner / AdvertiseCallback) | Foreground Service 常駐 |
 | 位置情報 | FusedLocationProviderClient | |
-| 認証 | Google Sign-In | |
+| 認証 | Google Sign-In | Firebase Auth 連携 |
 | 通知 | FCM | |
 | 音楽連携 | Spotify Android SDK | |
+| SDK | minSdk 26 / targetSdk 35 | |
+| ビルド | dev/prod 2 flavor | |
+| 秘密情報 | local.properties + CI Secrets | `local.properties` は .gitignore 対象 |
+| 品質ゲート | ktlint + Detekt + ユニットテスト | CI 必須チェック |
+| applicationId | com.digix00.musicswapping | |
 
 ### Android BLE 制約
 
