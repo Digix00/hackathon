@@ -40,9 +40,27 @@ resource "google_service_account" "terraform_ci" {
   display_name = "Terraform CI/CD Service Account"
 }
 
-resource "google_project_iam_member" "terraform_ci_editor" {
+locals {
+  terraform_ci_roles = [
+    "roles/run.admin",
+    "roles/artifactregistry.admin",
+    "roles/cloudsql.admin",
+    "roles/cloudscheduler.admin",
+    "roles/secretmanager.admin",
+    "roles/iam.serviceAccountAdmin",
+    "roles/iam.workloadIdentityPoolAdmin",
+    "roles/resourcemanager.projectIamAdmin",
+    "roles/serviceusage.serviceUsageAdmin",
+    "roles/storage.admin",
+    "roles/logging.admin",
+  ]
+}
+
+resource "google_project_iam_member" "terraform_ci_roles" {
+  for_each = toset(local.terraform_ci_roles)
+
   project = var.project_id
-  role    = "roles/editor"
+  role    = each.value
   member  = "serviceAccount:${google_service_account.terraform_ci.email}"
 }
 
