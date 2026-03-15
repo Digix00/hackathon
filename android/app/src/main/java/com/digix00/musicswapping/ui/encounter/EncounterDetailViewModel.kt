@@ -27,6 +27,9 @@ class EncounterDetailViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun toggleLike(id: String) {
+        val current = encounter.value ?: return
+        if (current.isLiked) return
+
         viewModelScope.launch {
             runCatching { encounterRepository.like(id) }
         }

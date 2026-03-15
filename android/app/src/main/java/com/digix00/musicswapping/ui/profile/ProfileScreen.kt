@@ -20,6 +20,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -35,6 +36,10 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(isOnboarding) {
+        viewModel.initialize(isOnboarding)
+    }
 
     Scaffold(
         topBar = {
@@ -65,7 +70,7 @@ fun ProfileScreen(
                 CircularProgressIndicator()
             } else {
                 Button(
-                    onClick = { viewModel.save { onSaved?.invoke() } },
+                    onClick = { viewModel.save(isOnboarding) { onSaved?.invoke() } },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("保存")

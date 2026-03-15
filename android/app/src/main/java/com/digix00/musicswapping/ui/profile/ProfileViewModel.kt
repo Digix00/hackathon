@@ -19,8 +19,14 @@ class ProfileViewModel @Inject constructor(private val userRepository: UserRepos
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
-    init {
-        load()
+    private var initialized = false
+
+    fun initialize(isOnboarding: Boolean) {
+        if (initialized) return
+        initialized = true
+        if (!isOnboarding) {
+            load()
+        }
     }
 
     private fun load() {
@@ -34,10 +40,16 @@ class ProfileViewModel @Inject constructor(private val userRepository: UserRepos
         _uiState.update { it.copy(nickname = value) }
     }
 
-    fun save(onSuccess: () -> Unit = {}) {
+    fun save(isOnboarding: Boolean, onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            runCatching { userRepository.updateMe(nickname = uiState.value.nickname, avatarUrl = null) }
+            runCatching {
+                if (isOnboarding) {
+                    userRepository.createUser(nickname = uiState.value.nickname, avatarUrl = null)
+                } else {
+                    userRepository.updateMe(nickname = uiState.value.nickname, avatarUrl = null)
+                }
+            }
                 .onSuccess {
                     _uiState.update { state -> state.copy(isLoading = false) }
                     onSuccess()
