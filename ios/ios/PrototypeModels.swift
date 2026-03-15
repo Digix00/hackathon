@@ -22,6 +22,16 @@ struct GeneratedSong: Identifiable, Hashable {
     let color: Color
 }
 
+struct HomeScreenState: Hashable {
+    let userName: String
+    let featuredTrack: Track?
+    let weeklyTracks: [Track]
+    let recentEncounters: [Encounter]
+    let todayEncounterCount: Int
+    let weekEncounterCount: Int
+    let isOffline: Bool
+}
+
 enum EmptyScenario: String, CaseIterable, Identifiable {
     case firstEncounter = "初回すれ違いゼロ"
     case inactive = "継続利用中ゼロ"
@@ -71,6 +81,16 @@ enum MockData {
         GeneratedSong(title: "街角の記憶", subtitle: "5人で作成・3/14", color: .blue),
         GeneratedSong(title: "Transit Echo", subtitle: "6人で作成・3/13", color: .mint)
     ]
+
+    static let home = HomeScreenState(
+        userName: "Miyu",
+        featuredTrack: featuredTrack,
+        weeklyTracks: tracks,
+        recentEncounters: encounters,
+        todayEncounterCount: 12,
+        weekEncounterCount: 47,
+        isOffline: false
+    )
 
     static let recentSearches: [Track] = Array(tracks.prefix(2))
     static let popularTracks: [Track] = Array(tracks.dropFirst().prefix(3))

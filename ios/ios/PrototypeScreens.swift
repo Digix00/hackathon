@@ -68,10 +68,6 @@ struct SplashScreenView: View {
                         .font(.system(size: 34, weight: .medium))
                         .foregroundStyle(PrototypeTheme.textPrimary)
                 }
-                .overlay(
-                    Circle()
-                        .stroke(PrototypeTheme.border, lineWidth: 1)
-                )
 
                 Text("すれ違い趣味交換")
                     .font(.system(size: 28, weight: .bold))
@@ -91,8 +87,11 @@ struct OnboardingFlowView: View {
     let onFinish: () -> Void
 
     var body: some View {
-        AppScaffold(title: step == 0 ? "ようこそ" : "はじめる準備") {
-            VStack(spacing: 18) {
+        AppScaffold(
+            title: stepTitle,
+            subtitle: stepSubtitle
+        ) {
+            VStack(spacing: 32) {
                 progress
 
                 Group {
@@ -108,235 +107,610 @@ struct OnboardingFlowView: View {
                     }
                 }
 
-                HStack(spacing: 12) {
-                    if step > 0 {
-                        SecondaryButton(title: "戻る") {
-                            step -= 1
+                Spacer()
+
+                HStack(spacing: 16) {
+                    if step > 0 && step < 3 {
+                        Button(action: {
+                            withAnimation(.spring()) { step -= 1 }
+                        }) {
+                            Image(systemName: "arrow.left")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundStyle(PrototypeTheme.textSecondary)
+                                .frame(width: 56, height: 56)
+                                .background(PrototypeTheme.surfaceMuted)
+                                .clipShape(Circle())
                         }
                     }
 
-                    PrimaryButton(title: step == 3 ? "はじめる" : "次へ") {
+                    PrimaryButton(title: step == 3 ? "BEGIN JOURNEY" : "CONTINUE") {
                         if step == 3 {
                             onFinish()
                         } else {
-                            step += 1
+                            withAnimation(.spring()) { step += 1 }
                         }
                     }
                 }
             }
+            .padding(.bottom, 12)
+        }
+    }
+
+    private var stepTitle: String {
+        switch step {
+        case 0: return "Hello World."
+        case 1: return "Identity"
+        case 2: return "Presence"
+        default: return "Ready."
+        }
+    }
+
+    private var stepSubtitle: String {
+        switch step {
+        case 0: return "A NEW WAY TO CONNECT"
+        case 1: return "HOW OTHERS WILL SEE YOU"
+        case 2: return "SETTING UP THE BEACON"
+        default: return "EVERYTHING IS SET"
         }
     }
 
     private var progress: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 10) {
             ForEach(0..<4, id: \.self) { index in
                 Capsule()
-                    .fill(index <= step ? PrototypeTheme.accent : PrototypeTheme.border)
-                    .frame(height: 6)
+                    .fill(index == step ? PrototypeTheme.textPrimary : PrototypeTheme.border)
+                    .frame(width: index == step ? 32 : 12, height: 6)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var onboardingWelcome: some View {
-        VStack(spacing: 16) {
-            SectionCard {
-                VStack(alignment: .leading, spacing: 18) {
-                    Text("すれ違いから始まる\n新しい音楽体験")
-                        .font(.system(size: 30, weight: .bold))
-                        .foregroundStyle(PrototypeTheme.textPrimary)
-                    Text("街を歩くだけで、誰かのお気に入りの曲と出会えるアプリです。")
-                        .font(.system(size: 16))
-                        .foregroundStyle(PrototypeTheme.textSecondary)
-                    SecondaryButton(title: "Apple で続ける", systemImage: "apple.logo") {}
-                    SecondaryButton(title: "Google で続ける", systemImage: "globe") {}
-                }
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .stroke(PrototypeTheme.border, lineWidth: 1)
+                    .frame(width: 200, height: 200)
+                
+                Circle()
+                    .stroke(PrototypeTheme.border.opacity(0.5), lineWidth: 1)
+                    .frame(width: 260, height: 260)
+                
+                Image(systemName: "waveform")
+                    .font(.system(size: 64, weight: .thin))
+                    .foregroundStyle(PrototypeTheme.accent)
             }
+            .padding(.vertical, 20)
+
+            VStack(alignment: .leading, spacing: 16) {
+                Text("URBAN SERENDIPITY")
+                    .font(.system(size: 12, weight: .black))
+                    .foregroundStyle(PrototypeTheme.accent)
+                    .kerning(2.0)
+
+                Text("すれ違う、\n音楽で繋がる。")
+                    .font(.system(size: 32, weight: .black))
+                    .foregroundStyle(PrototypeTheme.textPrimary)
+                    .lineSpacing(4)
+
+                Text("街を歩くだけで、誰かの「今の気分」と出会える。新しい音楽体験を始めましょう。")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(PrototypeTheme.textSecondary)
+                    .lineSpacing(6)
+            }
+            .padding(.horizontal, 8)
         }
     }
 
     private var onboardingProfile: some View {
-        VStack(spacing: 16) {
-            SectionCard {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("あなたのことを教えてください")
-                        .font(.system(size: 24, weight: .bold))
-                    HStack(spacing: 16) {
-                        MockArtworkView(color: .gray, symbol: "person.fill", size: 72)
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("ニックネーム")
-                                .font(.system(size: 13, weight: .medium))
+        VStack(spacing: 24) {
+            SectionCard(title: "YOUR PROFILE") {
+                VStack(alignment: .leading, spacing: 20) {
+                    HStack(spacing: 20) {
+                        ZStack {
+                            Circle()
+                                .fill(PrototypeTheme.surfaceElevated)
+                                .frame(width: 80, height: 80)
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 32))
+                                .foregroundStyle(PrototypeTheme.textTertiary)
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("NICKNAME")
+                                .font(.system(size: 10, weight: .black))
                                 .foregroundStyle(PrototypeTheme.textSecondary)
                             Text("miyu")
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(12)
-                                .background(PrototypeTheme.surfaceMuted)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundStyle(PrototypeTheme.textPrimary)
                         }
                     }
+                    
                     Divider()
-                    Text("今日シェアしたい曲")
-                        .font(.system(size: 20, weight: .semibold))
-                    TrackSelectionRow(track: MockData.featuredTrack)
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("SHARING TRACK")
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundStyle(PrototypeTheme.textSecondary)
+                        
+                        HStack(spacing: 14) {
+                            MockArtworkView(color: .indigo, symbol: "music.note", size: 52)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("夜に駆ける")
+                                    .font(.system(size: 16, weight: .bold))
+                                Text("YOASOBI")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(PrototypeTheme.textSecondary)
+                            }
+                            Spacer()
+                            Image(systemName: "pencil")
+                                .font(.system(size: 14))
+                                .foregroundStyle(PrototypeTheme.textTertiary)
+                        }
+                        .padding(12)
+                        .background(PrototypeTheme.surfaceElevated.opacity(0.5))
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                    }
                 }
             }
+            
+            Text("この情報はすれ違った相手にのみ公開されます。")
+                .font(.system(size: 13))
+                .foregroundStyle(PrototypeTheme.textTertiary)
+                .multilineTextAlignment(.center)
         }
     }
 
     private var onboardingPermissions: some View {
-        VStack(spacing: 16) {
-            SectionCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("近くの人と出会うための許可")
-                        .font(.system(size: 24, weight: .bold))
-                    PermissionRow(icon: "location.fill", title: "位置情報", description: "近くの人を見つけるために使います。")
-                    PermissionRow(icon: "dot.radiowaves.left.and.right", title: "Bluetooth", description: "すれ違いを検知するために使います。")
-                    PermissionRow(icon: "bell.fill", title: "通知", description: "新しい出会いや生成曲をお知らせします。")
+        VStack(spacing: 20) {
+            VStack(alignment: .leading, spacing: 16) {
+                PermissionRow(
+                    icon: "location.fill",
+                    title: "Location Services",
+                    description: "近くの人を見つけるために使用します。"
+                )
+                PermissionRow(
+                    icon: "dot.radiowaves.left.and.right",
+                    title: "Bluetooth",
+                    description: "BLE信号で安全にすれ違いを検知します。"
+                )
+                PermissionRow(
+                    icon: "bell.fill",
+                    title: "Notifications",
+                    description: "新しい出会いや曲の生成をお知らせします。"
+                )
+            }
+            
+            GlassmorphicCard {
+                HStack(spacing: 12) {
+                    Image(systemName: "shield.fill")
+                        .foregroundStyle(PrototypeTheme.success)
+                    Text("プライバシーは保護されており、正確な現在地が共有されることはありません。")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(PrototypeTheme.textSecondary)
                 }
             }
         }
     }
 
     private var onboardingFinish: some View {
-        VStack(spacing: 16) {
-            SectionCard {
-                VStack(spacing: 18) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 48))
-                        .foregroundStyle(PrototypeTheme.success)
-                    Text("準備ができました")
-                        .font(.system(size: 24, weight: .bold))
-                    Text("街を歩くと、近くにいる人の音楽と出会えます。")
-                        .font(.system(size: 15))
-                        .foregroundStyle(PrototypeTheme.textSecondary)
-                        .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity)
+        VStack(spacing: 32) {
+            ZStack {
+                Circle()
+                    .fill(PrototypeTheme.success.opacity(0.1))
+                    .frame(width: 140, height: 140)
+                
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 64))
+                    .foregroundStyle(PrototypeTheme.success)
+            }
+            .padding(.top, 40)
+
+            VStack(spacing: 12) {
+                Text("READY TO EXPLORE")
+                    .font(.system(size: 14, weight: .black))
+                    .foregroundStyle(PrototypeTheme.success)
+                    .kerning(1.5)
+                
+                Text("準備が完了しました")
+                    .font(.system(size: 28, weight: .black))
+                
+                Text("iPhoneを持って街に出かけましょう。\n誰かの音楽があなたを待っています。")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(PrototypeTheme.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(6)
             }
         }
     }
 }
 
 struct HomeView: View {
-    @State private var showsLyricModal = false
+    @State private var selectedPage = 0
+    @GestureState private var verticalDragOffset: CGFloat = 0
+
+    private enum Page: Int {
+        case hero
+        case insights
+    }
 
     var body: some View {
-        AppScaffold(title: "こんにちは、Miyuさん", trailingSymbol: "bell.badge") {
-            VStack(alignment: .leading, spacing: 20) {
-                SectionCard(title: "今日シェアしている曲") {
-                    VStack(spacing: 14) {
-                        MockArtworkView(color: MockData.featuredTrack.color, symbol: "music.note", size: 128)
-                        Text(MockData.featuredTrack.title)
-                            .font(.system(size: 24, weight: .bold))
-                        Text(MockData.featuredTrack.artist)
-                            .font(.system(size: 16))
-                            .foregroundStyle(PrototypeTheme.textSecondary)
-                        NavigationLink {
-                            SearchView()
-                        } label: {
-                            Text("変更")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(PrototypeTheme.accent)
-                        }
+        GeometryReader { proxy in
+            ZStack {
+                // Main Content
+                Group {
+                    if currentPage == .hero {
+                        HomeHeroPage(
+                            state: homeState,
+                            selectedPage: $selectedPage
+                        )
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    } else {
+                        HomeInsightsPage(
+                            state: homeState,
+                            topSafeAreaInset: proxy.safeAreaInsets.top,
+                            selectedPage: $selectedPage
+                        )
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
-                    .frame(maxWidth: .infinity)
                 }
 
-                NavigationLink {
-                    ChainProgressView()
-                } label: {
-                    SectionCard {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("あなたの歌詞が曲になる途中")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(PrototypeTheme.textPrimary)
-                            HStack(spacing: 8) {
-                                ForEach(0..<4, id: \.self) { index in
-                                    Circle()
-                                        .fill(index == 2 ? PrototypeTheme.textPrimary : PrototypeTheme.textTertiary)
-                                        .frame(width: 12, height: 12)
-                                }
-                            }
-                            Text("3/4 人参加中  「今日も空は青かった」")
-                                .font(.system(size: 14))
-                                .foregroundStyle(PrototypeTheme.textSecondary)
+                if currentPage == .hero {
+                    // Keep the page indicator on the hero screen only.
+                    // The insights screen already shows the ScrollView indicator.
+                    HStack {
+                        Spacer()
+                        ZStack(alignment: .top) {
+                            Capsule()
+                                .fill(PrototypeTheme.border.opacity(0.35))
+                                .frame(width: 3, height: 100)
+
+                            Capsule()
+                                .fill(PrototypeTheme.accent)
+                                .frame(width: 3, height: 40)
+                                .offset(y: currentPage == .hero ? 0 : 60)
                         }
+                        .padding(.trailing, 20)
                     }
+                }
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .contentShape(Rectangle())
+            .offset(y: verticalDragOffset * 0.18)
+            .gesture(
+                DragGesture(minimumDistance: 20, coordinateSpace: .local)
+                    .updating($verticalDragOffset) { value, state, _ in
+                        state = value.translation.height
+                    }
+                    .onEnded { value in
+                        handleVerticalSwipe(translation: value.translation.height)
+                    }
+            )
+            .animation(.spring(response: 0.32, dampingFraction: 0.86), value: selectedPage)
+        }
+        .background(PrototypeTheme.background)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private var currentPage: Page {
+        Page(rawValue: selectedPage) ?? .hero
+    }
+
+    private var homeState: HomeScreenState {
+        MockData.home
+    }
+
+    private func handleVerticalSwipe(translation: CGFloat) {
+        let threshold: CGFloat = 80
+        if translation < -threshold, currentPage == .hero {
+            selectedPage = Page.insights.rawValue
+        } else if translation > threshold, currentPage == .insights {
+            selectedPage = Page.hero.rawValue
+        }
+    }
+}
+
+private struct DynamicBlurBackground: View {
+    let baseColor: Color
+    @State private var animate = false
+
+    var body: some View {
+        ZStack {
+            PrototypeTheme.background.ignoresSafeArea()
+
+            // メインのBlob 1
+            Circle()
+                .fill(baseColor.opacity(0.35))
+                .frame(width: 450, height: 450)
+                .offset(x: animate ? 80 : -80, y: animate ? -150 : -50)
+                .blur(radius: 90)
+
+            // メインのBlob 2
+            Circle()
+                .fill(PrototypeTheme.accent.opacity(0.12))
+                .frame(width: 380, height: 380)
+                .offset(x: animate ? -100 : 100, y: animate ? 200 : 100)
+                .blur(radius: 100)
+
+            // アクセントのBlob 3
+            Circle()
+                .fill(baseColor.opacity(0.2))
+                .frame(width: 320, height: 320)
+                .offset(x: animate ? 40 : -40, y: animate ? 50 : -50)
+                .blur(radius: 80)
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 5).repeatForever(autoreverses: true)) {
+                animate.toggle()
+            }
+        }
+    }
+}
+
+private struct HomeHeroPage: View {
+    let state: HomeScreenState
+    @Binding var selectedPage: Int
+    @State private var isSignaling = false
+
+    private var heroColor: Color {
+        state.featuredTrack?.color ?? PrototypeTheme.surfaceElevated
+    }
+
+    var body: some View {
+        ZStack {
+            DynamicBlurBackground(baseColor: heroColor)
+
+            VStack {
+                // Top Status Area
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("35.6812° N, 139.7671° E")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
+                        Text("TOKYO / SHIBUYA")
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.4))
+                            .kerning(1.5)
+                    }
+                    Spacer()
+                    
+                    // Minimal Status Indicator with Animation
+                    HStack(spacing: 8) {
+                        ZStack {
+                            Circle()
+                                .fill(PrototypeTheme.accent)
+                                .frame(width: 6, height: 6)
+
+                            Circle()
+                                .stroke(PrototypeTheme.accent.opacity(0.3), lineWidth: 2)
+                                .frame(width: 6, height: 6)
+                                .scaleEffect(isSignaling ? 2.5 : 1.0)
+                                .opacity(isSignaling ? 0.0 : 0.8)
+                        }
+                        .onAppear {
+                            withAnimation(.easeOut(duration: 2.0).repeatForever(autoreverses: false)) {
+                                isSignaling = true
+                            }
+                        }
+
+                        Text("BEACON ACTIVE")
+                            .font(.system(size: 10, weight: .black))
+                            .kerning(1.2)
+                            .foregroundStyle(PrototypeTheme.textSecondary)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(PrototypeTheme.surface.opacity(0.4))
+                    .clipShape(Capsule())
+                }
+                .padding(.top, 24)
+
+                Spacer()
+
+                NavigationLink {
+                    SearchView()
+                } label: {
+                    FeaturedTrackHeroCard(track: state.featuredTrack)
                 }
                 .buttonStyle(.plain)
 
-                SectionCard {
-                    HStack {
-                        Text("今週出会った音楽")
-                            .font(.system(size: 18, weight: .semibold))
-                        Spacer()
-                        NavigationLink("すべて") {
-                            EncounterListView()
-                        }
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(PrototypeTheme.accent)
-                    }
+                Spacer()
 
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
-                        ForEach(MockData.tracks.prefix(7)) { track in
-                            MockArtworkView(color: track.color, symbol: "music.note", size: 60)
-                        }
+                // Bottom Hint
+                VStack(spacing: 12) {
+                    Text("SWIPE UP FOR INSIGHTS")
+                        .font(.system(size: 10, weight: .black))
+                        .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.5))
+                        .kerning(2.0)
+                    
+                    Capsule()
+                        .fill(PrototypeTheme.border.opacity(0.6))
+                        .frame(width: 40, height: 4)
+                }
+                .padding(.bottom, 12)
+            }
+            .padding(32)
+        }
+    }
+}
+
+private struct HomeInsightsPage: View {
+    let state: HomeScreenState
+    let topSafeAreaInset: CGFloat
+    @Binding var selectedPage: Int
+
+    private var contentTopPadding: CGFloat {
+        topSafeAreaInset + 12
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 28) {
+                if state.isOffline {
+                    OfflineBannerView()
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("すれ違いの情報")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundStyle(PrototypeTheme.textPrimary)
+                }
+
+                if !state.weeklyTracks.isEmpty {
+                    SectionCard {
+                        SectionHeader(title: "今週出会った音楽")
+
+                        WeeklyMusicCollageView(tracks: state.weeklyTracks)
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 14) {
                     Text("すれ違い")
                         .font(.system(size: 18, weight: .semibold))
-                    HStack(spacing: 12) {
-                        StatCard(title: "今日", value: "12", footnote: "街を歩いて出会いが増えています")
-                        StatCard(title: "今週", value: "47", footnote: "今週の合計")
+                        .foregroundStyle(PrototypeTheme.textPrimary)
+
+                    HStack(spacing: 14) {
+                        SummaryMetricCard(
+                            title: "今日",
+                            count: state.todayEncounterCount,
+                            zeroMessage: "まだありません"
+                        )
+                        SummaryMetricCard(
+                            title: "今週",
+                            count: state.weekEncounterCount,
+                            zeroMessage: "まだありません"
+                        )
                     }
                 }
 
                 SectionCard {
-                    HStack {
-                        Text("最近の出会い")
-                            .font(.system(size: 18, weight: .semibold))
-                        Spacer()
-                        Button("歌詞を残す") {
-                            showsLyricModal = true
-                        }
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(PrototypeTheme.accent)
-                    }
+                    SectionHeader(title: "最近の出会い", showsAction: !state.recentEncounters.isEmpty)
 
-                    ForEach(MockData.encounters.prefix(3)) { encounter in
-                        NavigationLink {
-                            EncounterDetailView(encounter: encounter)
-                        } label: {
-                            EncounterRow(encounter: encounter)
+                    if state.recentEncounters.isEmpty {
+                        FirstEncounterEmptyState()
+                    } else {
+                        VStack(spacing: 12) {
+                            ForEach(state.recentEncounters.prefix(5)) { encounter in
+                                NavigationLink {
+                                    EncounterDetailView(encounter: encounter)
+                                } label: {
+                                    EncounterRow(encounter: encounter)
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
-                        .buttonStyle(.plain)
                     }
                 }
+
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, contentTopPadding)
+            .padding(.bottom, 28)
+        }
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 20, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.height > 80 {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            selectedPage = 0
+                        }
+                    }
+                }
+        )
+        .background(PrototypeTheme.background)
+    }
+}
+
+private struct SectionHeader: View {
+    let title: String
+    var showsAction = true
+
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(PrototypeTheme.textPrimary)
+            Spacer()
+            if showsAction {
+                NavigationLink("すべて") {
+                    EncounterListView()
+                }
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(PrototypeTheme.accent)
             }
         }
-        .sheet(isPresented: $showsLyricModal) {
-            LyricInputModalView()
-        }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink {
-                    NotificationsPlaceholderView()
-                } label: {
-                    Image(systemName: "bell")
-                        .foregroundStyle(PrototypeTheme.textPrimary)
+    }
+}
+
+private struct FeaturedTrackHeroCard: View {
+    let track: Track?
+    @State private var isPulsing = false
+
+    var body: some View {
+        VStack(spacing: 48) {
+            if let track {
+                VStack(spacing: 40) {
+                    ZStack {
+                        // Background Glow
+                        Circle()
+                            .fill(track.color.opacity(0.15))
+                            .frame(width: 340, height: 340)
+                            .scaleEffect(isPulsing ? 1.15 : 1.0)
+                            .blur(radius: isPulsing ? 32 : 20)
+                            .animation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true), value: isPulsing)
+
+                        // Outer ring
+                        Circle()
+                            .stroke(track.color.opacity(0.1), lineWidth: 1)
+                            .frame(width: 300, height: 300)
+                            .scaleEffect(isPulsing ? 1.05 : 0.95)
+                            .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: isPulsing)
+
+                        MockArtworkView(color: track.color, symbol: "music.note", size: 240)
+                            .shadow(color: track.color.opacity(0.2), radius: 30, x: 0, y: 15)
+                    }
+                    .onAppear { isPulsing = true }
+
+                    VStack(spacing: 12) {
+                        Text("CURRENTLY SHARING")
+                            .font(.system(size: 11, weight: .black))
+                            .foregroundStyle(track.color.opacity(0.7))
+                            .kerning(1.5)
+                        
+                        Text(track.title)
+                            .font(.system(size: 38, weight: .black))
+                            .foregroundStyle(PrototypeTheme.textPrimary)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .tracking(-1.0)
+
+                        Text(track.artist)
+                            .font(.system(size: 22, weight: .medium))
+                            .foregroundStyle(PrototypeTheme.textSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.horizontal, 12)
+                }
+            } else {
+                VStack(spacing: 32) {
+                    Circle()
+                        .fill(PrototypeTheme.surfaceMuted)
+                        .frame(width: 140, height: 140)
+                        .overlay {
+                            Image(systemName: "plus")
+                                .font(.system(size: 40, weight: .light))
+                                .foregroundStyle(PrototypeTheme.textTertiary)
+                        }
+
+                    Text("SET YOUR TRACK")
+                        .font(.system(size: 14, weight: .black))
+                        .foregroundStyle(PrototypeTheme.textSecondary)
+                        .kerning(1.2)
                 }
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink {
-                    SettingsHubView(restartOnboarding: {})
-                } label: {
-                    Image(systemName: "gearshape")
-                        .foregroundStyle(PrototypeTheme.textPrimary)
-                }
-            }
         }
-        .navigationBarTitleDisplayMode(.inline)
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -371,51 +745,122 @@ struct EncounterDetailView: View {
     @State private var showsLyricModal = false
 
     var body: some View {
-        AppScaffold(title: encounter.track.title) {
-            VStack(alignment: .leading, spacing: 18) {
-                SectionCard {
-                    HStack(spacing: 16) {
-                        MockArtworkView(color: encounter.track.color, symbol: "music.note", size: 72)
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(encounter.track.title)
-                                .font(.system(size: 22, weight: .bold))
-                            Text(encounter.track.artist)
-                                .font(.system(size: 15))
-                                .foregroundStyle(PrototypeTheme.textSecondary)
-                            Button(encounter.userName) {
-                                showsProfile = true
-                            }
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(PrototypeTheme.accent)
+        AppScaffold(
+            title: encounter.track.title,
+            subtitle: "3 MINUTES AGO • SHIBUYA STATION",
+            accentColor: encounter.track.color
+        ) {
+            VStack(alignment: .leading, spacing: 24) {
+                // Main Track Info Card
+                VStack(spacing: 24) {
+                    MockArtworkView(color: encounter.track.color, symbol: "music.note", size: 160)
+                        .shadow(color: encounter.track.color.opacity(0.3), radius: 30, x: 0, y: 15)
+                    
+                    VStack(spacing: 8) {
+                        Text(encounter.track.title)
+                            .font(.system(size: 28, weight: .black))
+                            .foregroundStyle(PrototypeTheme.textPrimary)
+                            .tracking(-0.5)
+                        
+                        Text(encounter.track.artist)
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundStyle(PrototypeTheme.textSecondary)
+                    }
+                    
+                    Button(action: { showsProfile = true }) {
+                        HStack(spacing: 8) {
+                            MockArtworkView(color: .gray, symbol: "person.fill", size: 24)
+                            Text(encounter.userName)
+                                .font(.system(size: 14, weight: .bold))
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 10, weight: .black))
                         }
-                        Spacer()
+                        .foregroundStyle(PrototypeTheme.textPrimary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(PrototypeTheme.surface.opacity(0.6))
+                        .clipShape(Capsule())
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+
+                // Lyric Fragment - Glassmorphic
+                GlassmorphicCard {
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            Image(systemName: "quote.opening")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(encounter.track.color)
+                            Spacer()
+                            Text("LYRIC FRAGMENT")
+                                .font(.system(size: 10, weight: .black))
+                                .foregroundStyle(PrototypeTheme.textSecondary)
+                                .kerning(1.2)
+                        }
+                        
+                        Text(encounter.lyric)
+                            .font(.system(size: 22, weight: .bold, design: .serif))
+                            .italic()
+                            .foregroundStyle(PrototypeTheme.textPrimary)
+                            .lineSpacing(4)
+                        
+                        HStack {
+                            Spacer()
+                            Image(systemName: "quote.closing")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(encounter.track.color)
+                        }
                     }
                 }
 
-                SectionCard(title: "この出会いのことば") {
-                    Text(encounter.lyric)
-                        .font(.system(size: 20, weight: .semibold))
-                    Text("3分前のすれ違いで記録された歌詞メモ")
-                        .font(.system(size: 14))
-                        .foregroundStyle(PrototypeTheme.textSecondary)
+                // Interaction Area
+                VStack(spacing: 16) {
+                    HStack(spacing: 12) {
+                        Button(action: {}) {
+                            HStack {
+                                Image(systemName: "heart.fill")
+                                Text("LIKE")
+                            }
+                            .font(.system(size: 14, weight: .black))
+                            .foregroundStyle(Color.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 52)
+                            .background(encounter.track.color)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        }
+                        
+                        Button(action: {}) {
+                            Image(systemName: "ellipsis")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundStyle(PrototypeTheme.textPrimary)
+                                .frame(width: 52, height: 52)
+                                .background(PrototypeTheme.surfaceMuted)
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        }
+                    }
+                    
+                    PrimaryButton(title: "ADD YOUR LYRIC", systemImage: "sparkles") {
+                        showsLyricModal = true
+                    }
                 }
 
-                HStack(spacing: 12) {
-                    SecondaryButton(title: "いいね", systemImage: "heart") {}
-                    SecondaryButton(title: "通報", systemImage: "flag") {}
-                }
-
-                PrimaryButton(title: "歌詞を残す", systemImage: "sparkles") {
-                    showsLyricModal = true
-                }
-
+                // Extra Debug Section
                 NavigationLink {
                     RealtimeDemoView()
                 } label: {
-                    SectionCard {
-                        Text("リアルタイム演出のたたき台を見る")
-                            .font(.system(size: 16, weight: .semibold))
+                    HStack {
+                        Text("VIEW ENCOUNTER LOG")
+                            .font(.system(size: 12, weight: .black))
+                            .kerning(1.0)
+                        Spacer()
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 12, weight: .black))
                     }
+                    .foregroundStyle(PrototypeTheme.textSecondary)
+                    .padding(16)
+                    .background(PrototypeTheme.surfaceMuted.opacity(0.4))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
                 .buttonStyle(.plain)
             }
@@ -443,12 +888,8 @@ struct SearchView: View {
                         .foregroundStyle(PrototypeTheme.textTertiary)
                 }
                 .padding(14)
-                .background(PrototypeTheme.surface)
+                .background(PrototypeTheme.surfaceElevated)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(PrototypeTheme.border, lineWidth: 1)
-                )
 
                 SectionCard(title: "最近検索した曲") {
                     ForEach(MockData.recentSearches) { track in
@@ -1060,7 +1501,7 @@ struct RealtimeDemoView: View {
                     VStack(spacing: 18) {
                         ZStack {
                             Circle()
-                                .stroke(PrototypeTheme.border, lineWidth: 2)
+                                .fill(PrototypeTheme.surfaceElevated)
                                 .frame(width: 160, height: 160)
                             Circle()
                                 .fill(circleColor.opacity(0.18))
@@ -1133,6 +1574,99 @@ struct RealtimeDemoView: View {
     }
 }
 
+private struct OfflineBannerView: View {
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "wifi.exclamationmark")
+                .foregroundStyle(PrototypeTheme.warning)
+            Text("オフラインです")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(PrototypeTheme.textPrimary)
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(PrototypeTheme.surfaceMuted)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+private struct FirstEncounterEmptyState: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            EmptyStateCard(
+                icon: "figure.walk",
+                title: "まだすれ違いがありません",
+                message: "新しい出会いを待っています",
+                tint: PrototypeTheme.info
+            )
+        }
+    }
+}
+
+private struct WeeklyMusicCollageView: View {
+    let tracks: [Track]
+
+    private var visibleTracks: [Track] { Array(tracks.prefix(7)) }
+
+    var body: some View {
+        let columns = Array(repeating: GridItem(.fixed(56), spacing: 8), count: 4)
+
+        LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
+            ForEach(visibleTracks) { track in
+                NavigationLink {
+                    EncounterListView()
+                } label: {
+                    MockArtworkView(color: track.color, symbol: "music.note", size: 56)
+                }
+                .buttonStyle(.plain)
+            }
+
+            if tracks.count > visibleTracks.count {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(PrototypeTheme.surfaceElevated)
+                        .frame(width: 56, height: 56)
+                    Text("+\(tracks.count - visibleTracks.count)")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(PrototypeTheme.textSecondary)
+                }
+            }
+        }
+    }
+}
+
+private struct SummaryMetricCard: View {
+    let title: String
+    let count: Int
+    let zeroMessage: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(PrototypeTheme.textSecondary)
+            HStack(alignment: .lastTextBaseline, spacing: 4) {
+                Text("\(count)")
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundStyle(PrototypeTheme.textPrimary)
+                Text("人")
+                    .font(.system(size: 13))
+                    .foregroundStyle(PrototypeTheme.textSecondary)
+            }
+            Text(count == 0 ? zeroMessage : " ")
+                .font(.system(size: 12))
+                .foregroundStyle(PrototypeTheme.textSecondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(PrototypeTheme.surfaceElevated)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(title)のすれ違い、\(count)人")
+    }
+}
+
 private struct TrackSelectionRow: View {
     let track: Track
 
@@ -1177,12 +1711,8 @@ private struct EncounterRow: View {
             }
         }
         .padding(14)
-        .background(PrototypeTheme.surface)
+        .background(PrototypeTheme.surfaceElevated)
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(PrototypeTheme.border, lineWidth: 1)
-        )
     }
 }
 

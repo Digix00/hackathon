@@ -1,9 +1,10 @@
 import SwiftUI
 
 enum PrototypeTheme {
-    static let background = Color(red: 248 / 255, green: 250 / 255, blue: 252 / 255)
-    static let surface = Color.white
-    static let surfaceMuted = Color(red: 241 / 255, green: 245 / 255, blue: 249 / 255)
+    static let background = Color(red: 242 / 255, green: 246 / 255, blue: 250 / 255)
+    static let surface = Color(red: 1.0, green: 1.0, blue: 1.0)
+    static let surfaceMuted = Color(red: 232 / 255, green: 238 / 255, blue: 244 / 255)
+    static let surfaceElevated = Color(red: 222 / 255, green: 230 / 255, blue: 238 / 255)
     static let textPrimary = Color(red: 15 / 255, green: 23 / 255, blue: 42 / 255)
     static let textSecondary = Color(red: 100 / 255, green: 116 / 255, blue: 139 / 255)
     static let textTertiary = Color(red: 148 / 255, green: 163 / 255, blue: 184 / 255)
@@ -17,39 +18,128 @@ enum PrototypeTheme {
 
 struct AppScaffold<Content: View>: View {
     let title: String
+    let subtitle: String?
     let trailingSymbol: String?
+    let accentColor: Color?
     @ViewBuilder var content: Content
 
     init(
         title: String,
+        subtitle: String? = nil,
         trailingSymbol: String? = nil,
+        accentColor: Color? = nil,
         @ViewBuilder content: () -> Content
     ) {
         self.title = title
+        self.subtitle = subtitle
         self.trailingSymbol = trailingSymbol
+        self.accentColor = accentColor
         self.content = content()
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                HStack {
-                    Text(title)
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(PrototypeTheme.textPrimary)
-                    Spacer()
-                    if let trailingSymbol {
-                        Image(systemName: trailingSymbol)
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(PrototypeTheme.textSecondary)
-                    }
+        ZStack {
+            if let accentColor {
+                DynamicBackground(baseColor: accentColor)
+            } else {
+                ZStack {
+                    PrototypeTheme.background.ignoresSafeArea()
+                    DotGridBackground()
+                        .opacity(0.15)
                 }
-
-                content
             }
-            .padding(20)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 28) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(title)
+                                .font(.system(size: 32, weight: .black))
+                                .foregroundStyle(PrototypeTheme.textPrimary)
+                                .tracking(-0.5)
+                            
+                            if let subtitle {
+                                Text(subtitle)
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundStyle(PrototypeTheme.textSecondary)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 4)
+                                    .background(PrototypeTheme.surfaceMuted.opacity(0.6))
+                                    .clipShape(Capsule())
+                            }
+                        }
+                        Spacer()
+                        if let trailingSymbol {
+                            Button(action: {}) {
+                                Image(systemName: trailingSymbol)
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundStyle(PrototypeTheme.textPrimary)
+                                    .padding(12)
+                                    .background(PrototypeTheme.surface)
+                                    .clipShape(Circle())
+                                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
+                            }
+                        }
+                    }
+                    .padding(.top, 12)
+
+                    content
+                }
+                .padding(24)
+            }
         }
-        .background(PrototypeTheme.background)
+    }
+}
+
+struct DynamicBackground: View {
+    let baseColor: Color
+    @State private var animate = false
+
+    var body: some View {
+        ZStack {
+            PrototypeTheme.background.ignoresSafeArea()
+
+            // Deep Layer Blob
+            Circle()
+                .fill(baseColor.opacity(0.18))
+                .frame(width: 650, height: 650)
+                .offset(x: animate ? 60 : -60, y: animate ? -120 : 120)
+                .blur(radius: 90)
+
+            // Dynamic Accent Blob
+            Circle()
+                .fill(baseColor.opacity(0.15))
+                .frame(width: 450, height: 450)
+                .offset(x: animate ? -140 : 140, y: animate ? 170 : -70)
+                .blur(radius: 110)
+            
+            // Texture overlay
+            DotGridBackground()
+                .opacity(0.25)
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 8).repeatForever(autoreverses: true)) {
+                animate.toggle()
+            }
+        }
+        .ignoresSafeArea()
+    }
+}
+
+struct DotGridBackground: View {
+    var body: some View {
+        Canvas { context, size in
+            let dotSize: CGFloat = 1.0
+            let spacing: CGFloat = 28
+            
+            for x in stride(from: spacing/2, through: size.width, by: spacing) {
+                for y in stride(from: spacing/2, through: size.height, by: spacing) {
+                    let rect = CGRect(x: x - dotSize/2, y: y - dotSize/2, width: dotSize, height: dotSize)
+                    context.fill(Path(ellipseIn: rect), with: .color(PrototypeTheme.textSecondary.opacity(0.15)))
+                }
+            }
+        }
+        .ignoresSafeArea()
     }
 }
 
@@ -63,22 +153,43 @@ struct SectionCard<Content: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 18) {
             if let title {
                 Text(title)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(PrototypeTheme.textSecondary)
+                    .textCase(.uppercase)
+                    .kerning(1.2)
             }
             content
         }
-        .padding(18)
+        .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PrototypeTheme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(PrototypeTheme.border, lineWidth: 1)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(PrototypeTheme.surface)
+                .shadow(color: Color.black.opacity(0.03), radius: 15, x: 0, y: 8)
         )
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(PrototypeTheme.border.opacity(0.5), lineWidth: 1)
+        )
+    }
+}
+
+struct GlassmorphicCard<Content: View>: View {
+    @ViewBuilder var content: Content
+    
+    var body: some View {
+        content
+            .padding(20)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.05), radius: 20, x: 0, y: 10)
     }
 }
 
@@ -124,12 +235,8 @@ struct SecondaryButton: View {
             .foregroundStyle(PrototypeTheme.textPrimary)
             .frame(maxWidth: .infinity)
             .frame(height: 52)
-            .background(PrototypeTheme.surface)
+            .background(PrototypeTheme.surfaceMuted)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(PrototypeTheme.border, lineWidth: 1)
-            )
         }
     }
 }
@@ -208,12 +315,8 @@ struct StatCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(PrototypeTheme.surface)
+        .background(PrototypeTheme.surfaceElevated)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(PrototypeTheme.border, lineWidth: 1)
-        )
     }
 }
 
@@ -238,11 +341,7 @@ struct EmptyStateCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(24)
-        .background(PrototypeTheme.surface)
+        .background(PrototypeTheme.surfaceElevated)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(PrototypeTheme.border, lineWidth: 1)
-        )
     }
 }
