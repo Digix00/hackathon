@@ -44,6 +44,10 @@ firebase-debug.log
 # Firebase local cache (if generated on host)
 .firebase/
 
+# Local tool downloads
+tools/gradle-*/
+tools/gradle-*-bin.zip
+
 # Terraform
 **/.terraform/
 **/terraform.tfstate
