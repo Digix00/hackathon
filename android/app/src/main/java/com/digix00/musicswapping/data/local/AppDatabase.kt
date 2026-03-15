@@ -7,7 +7,7 @@ import com.digix00.musicswapping.data.local.entity.EncounterEntity
 
 @Database(
     entities = [EncounterEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {

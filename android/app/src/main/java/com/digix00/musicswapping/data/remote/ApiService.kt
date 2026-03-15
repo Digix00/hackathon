@@ -7,6 +7,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
@@ -33,7 +34,7 @@ interface ApiService {
     suspend fun getEncounters(): List<EncounterDto>
 
     @POST("encounters/{id}/favorites")
-    suspend fun likeEncounter(id: String): Unit
+    suspend fun likeEncounter(@Path("id") id: String): Unit
 
     // ── BLE Token ───────────────────────────────────────────────────
     @POST("ble-tokens")

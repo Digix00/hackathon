@@ -14,6 +14,7 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.ParcelUuid
 import android.util.Log
 import androidx.core.content.ContextCompat
@@ -126,10 +127,18 @@ class BleManager(private val context: Context) {
     fun isBluetoothEnabled(): Boolean = bluetoothAdapter?.isEnabled == true
 
     private fun hasBluetoothPermissions(): Boolean {
-        val permissions = listOf(
-            Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_ADVERTISE
-        )
+        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            listOf(
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_ADVERTISE
+            )
+        } else {
+            listOf(
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+        }
         return permissions.all {
             ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
         }

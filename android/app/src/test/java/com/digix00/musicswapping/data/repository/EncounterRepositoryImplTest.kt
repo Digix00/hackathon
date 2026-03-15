@@ -67,6 +67,7 @@ class EncounterRepositoryImplTest {
             id = "e1",
             partnerUserId = "u1",
             partnerNickname = "Alice",
+            trackId = "t1",
             trackTitle = "Song",
             trackArtist = "Artist",
             albumArtUrl = null,

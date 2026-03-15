@@ -19,6 +19,8 @@ import retrofit2.Retrofit
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
+    private fun String.withTrailingSlash(): String = if (endsWith("/")) this else "$this/"
+
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
@@ -42,7 +44,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(client: OkHttpClient): Retrofit = Retrofit.Builder()
-        .baseUrl(BuildConfig.BASE_URL)
+        .baseUrl(BuildConfig.BASE_URL.withTrailingSlash())
         .client(client)
         .addConverterFactory(
             json.asConverterFactory("application/json".toMediaType())

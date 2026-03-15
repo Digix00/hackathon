@@ -43,7 +43,7 @@ android {
             dimension = "env"
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
-            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8000\"")
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8000/\"")
             buildConfigField("String", "FIREBASE_USE_EMULATOR", "\"true\"")
             buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${localProp("dev.google.web_client_id")}\"")
         }

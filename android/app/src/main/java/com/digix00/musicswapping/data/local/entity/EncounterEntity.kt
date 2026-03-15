@@ -10,6 +10,7 @@ data class EncounterEntity(
     @PrimaryKey val id: String,
     @ColumnInfo(name = "partner_user_id") val partnerUserId: String,
     @ColumnInfo(name = "partner_nickname") val partnerNickname: String,
+    @ColumnInfo(name = "track_id") val trackId: String,
     @ColumnInfo(name = "track_title") val trackTitle: String,
     @ColumnInfo(name = "track_artist") val trackArtist: String,
     @ColumnInfo(name = "album_art_url") val albumArtUrl: String?,

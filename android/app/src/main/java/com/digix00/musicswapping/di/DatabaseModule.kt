@@ -20,7 +20,9 @@ object DatabaseModule {
         context,
         AppDatabase::class.java,
         "music_swapping.db"
-    ).build()
+    )
+        .fallbackToDestructiveMigration()
+        .build()
 
     @Provides
     fun provideEncounterDao(db: AppDatabase) = db.encounterDao()

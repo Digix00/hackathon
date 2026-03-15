@@ -22,6 +22,7 @@ class EncounterRepositoryImpl @Inject constructor(private val api: ApiService, p
                 id = dto.id,
                 partnerUserId = dto.partnerUser.id,
                 partnerNickname = dto.partnerUser.nickname,
+                trackId = dto.sharedTrack.id,
                 trackTitle = dto.sharedTrack.title,
                 trackArtist = dto.sharedTrack.artist,
                 albumArtUrl = dto.sharedTrack.albumArtUrl,
@@ -47,7 +48,7 @@ class EncounterRepositoryImpl @Inject constructor(private val api: ApiService, p
             avatarUrl = null
         ),
         sharedTrack = Track(
-            id = id,
+            id = trackId,
             spotifyId = "",
             title = trackTitle,
             artist = trackArtist,
