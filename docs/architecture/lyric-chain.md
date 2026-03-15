@@ -186,7 +186,7 @@
 }
 ```
 
-### GET /api/v1/songs/me
+### GET /api/v1/users/me/songs
 
 自分が参加した生成楽曲一覧。
 
@@ -465,5 +465,5 @@ func (uc *LyricUseCase) ValidateContent(ctx context.Context, content string) err
 | P1 | Geminiムード分析 |
 | P1 | コンテンツモデレーション |
 | P1 | 生成完了通知 |
-| P2 | GET /api/v1/songs/me API |
+| P2 | GET /api/v1/users/me/songs API |
 | P2 | Chain詳細API |

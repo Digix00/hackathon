@@ -47,7 +47,8 @@ erDiagram
 		string title
 		string artist_name
 		string album_name
-		string album_art_url
+		string artwork_url
+		string preview_url
 		integer duration_ms
 		datetime cached_at
 	}
@@ -417,7 +418,8 @@ erDiagram
 | title | string | 曲名 |
 | artist_name | string | アーティスト名 |
 | album_name | string | アルバム名 |
-| album_art_url | string | ジャケット画像URL |
+| artwork_url | string | ジャケット画像URL |
+| preview_url | string | プレビュー再生URL |
 | duration_ms | integer | 曲の長さ（ミリ秒） |
 | cached_at | datetime | キャッシュ日時 |
 

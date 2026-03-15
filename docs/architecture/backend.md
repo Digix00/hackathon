@@ -192,4 +192,4 @@ GeneratedSong レコード作成
 |---|---|---|
 | POST | `/api/v1/lyrics` | 歌詞投稿 |
 | GET | `/api/v1/lyrics/chains/{id}` | チェーン詳細取得 |
-| GET | `/api/v1/songs/me` | 自分が参加した生成楽曲一覧 |
+| GET | `/api/v1/users/me/songs` | 自分が参加した生成楽曲一覧 |
