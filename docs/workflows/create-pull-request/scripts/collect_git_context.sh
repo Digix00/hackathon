@@ -26,4 +26,4 @@ git ls-files --others --exclude-standard
 
 echo
 echo "== 最近のコミット =="
-git log --oneline --decorate -5
+git log --oneline --decorate -5 2>/dev/null || echo "(コミットなし)"
