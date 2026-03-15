@@ -93,8 +93,8 @@ BLE近接検知と外部音楽API連携の実装。
 
 ### 2.4.2 Spotify 連携 API
 
-- [ ] **Backend** `GET /auth/spotify` - Spotify 認可開始
-- [ ] **Backend** `GET /auth/spotify/callback` - Spotify 認可コールバック
+- [ ] **Backend** `GET /music-connections/{provider}/authorize`（`provider=spotify`） - Spotify 認可開始
+- [ ] **Backend** `GET /music-connections/{provider}/callback`（`provider=spotify`） - Spotify 認可コールバック
 - [ ] **Backend** `GET /tracks/search` - 楽曲検索
 - [ ] **Backend** `GET /tracks/:id` - 楽曲詳細取得
 

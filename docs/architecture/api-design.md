@@ -36,15 +36,19 @@
 - **404 Not Found**: 対象リソース未存在、またはアクセス不可を秘匿する場合
 - **409 Conflict**: 重複投稿や、現在の状態では受け付けられない操作
 
-## auth/spotify
+## music-connections/auth
 
-### GET /auth/spotify
+`provider` は `spotify` または `apple_music` を受け付ける。
 
-Spotify の OAuth 認可フローを開始する。
+### GET /music-connections/{provider}/authorize
+
+指定した音楽サービスの OAuth 認可フローを開始する。
 クライアントはレスポンスの `authorize_url` にユーザーをリダイレクトする。
 `state` は CSRF トークンであり、クライアント側でセッション等に保存し、コールバック時に検証すること。
-このエンドポイントは認証必須であり、サーバーは `Authorization` ヘッダーの Firebase ユーザーに対して Spotify 連携開始情報を発行する。
+このエンドポイントは認証必須であり、サーバーは `Authorization` ヘッダーの Firebase ユーザーに対して連携開始情報を発行する。
 `state` には CSRF 用 nonce に加え、連携開始時の Firebase ユーザーを特定するためのサーバー署名済みコンテキストを含める。
+
+**Path Params**: `provider`（`spotify` | `apple_music`）
 
 **Response (200)**
 
@@ -55,20 +59,57 @@ Spotify の OAuth 認可フローを開始する。
 }
 ```
 
-### GET /auth/spotify/callback
+### GET /music-connections/{provider}/callback
 
-Spotify がユーザーを返すリダイレクト先。
-Spotify から `code`・`state` がクエリパラメータで付与される。
-サーバーは `state` を検証し、`code` を使ってアクセストークンを取得し、`state` に含まれるサーバー署名済みユーザーコンテキストを用いて Firebase ユーザーと Spotify アカウントを紐付ける。
+指定した音楽サービスがユーザーを返すリダイレクト先。
+サービスから `code`・`state` がクエリパラメータで付与される。
+サーバーは `state` を検証し、`code` を使ってアクセストークンを取得し、`state` に含まれるサーバー署名済みユーザーコンテキストを用いて Firebase ユーザーと音楽サービスアカウントを紐付ける。
 このエンドポイントでは `Authorization` ヘッダーは必須とせず、連携対象ユーザーの特定は `state` の検証結果だけで行う。
-コールバック完了後は JSON を返さず、アプリが受け取れる Deep Link（例: `digix://auth/spotify/callback?result=success`）へ **302 Found** でリダイレクトする。
+コールバック完了後は JSON を返さず、アプリが受け取れる Deep Link（例: `digix://music-connections/{provider}/callback?result=success`）へ **302 Found** でリダイレクトする。
 失敗時は `result=error` と `error_code` を付与して同様にリダイレクトする。
 
-**Query**: `code`（Spotify 認可コード）, `state`（CSRF 検証用 nonce とサーバー署名済みユーザーコンテキストを含む値）
+**Path Params**: `provider`（`spotify` | `apple_music`）
+
+**Query**: `code`（認可コード）, `state`（CSRF 検証用 nonce とサーバー署名済みユーザーコンテキストを含む値）
 
 **Response (302 Found)**
 
-- `Location: digix://auth/spotify/callback?result=success`
+- `Location: digix://music-connections/{provider}/callback?result=success`
+
+## music-connections
+
+`music_connections` テーブルに対応する、音楽サービス連携状態の参照・解除 API。
+`GET /music-connections/{provider}/callback` 成功時は、対応する `provider` の連携情報を新規作成または更新（upsert）する。
+
+### GET /users/me/music-connections
+
+自分の音楽サービス連携一覧を取得する。
+
+**Response (200)**
+
+```json
+{
+  "music_connections": [
+    {
+      "provider": "spotify",
+      "provider_user_id": "spotify_user_123",
+      "provider_username": "spotify_display_name",
+      "expires_at": "2026-03-16T09:30:00Z",
+      "updated_at": "2026-03-15T09:30:00Z"
+    }
+  ]
+}
+```
+
+### DELETE /users/me/music-connections/{provider}
+
+指定したプロバイダ連携を解除する。
+`provider` は `spotify` または `apple_music`。
+連携レコードが存在しない場合は **404 Not Found** を返す。
+
+**Response (204)**
+
+レスポンスボディなし。
 
 ## tracks
 
