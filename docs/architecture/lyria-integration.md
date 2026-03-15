@@ -190,6 +190,8 @@ import (
 
     aiplatform "cloud.google.com/go/aiplatform/apiv1"
     "cloud.google.com/go/aiplatform/apiv1/aiplatformpb"
+    port "example.com/yourapp/port"
+    "google.golang.org/api/option"
     "google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -225,19 +227,31 @@ func (c *Client) GenerateSong(ctx context.Context, req *port.LyriaRequest) (*por
         c.projectID, c.location, c.modelID,
     )
 
-    // リクエストパラメータ
+    // モデルパラメータ（温度などのチューニング用）
     params, err := structpb.NewStruct(map[string]interface{}{
-        "prompt":       prompt,
-        "duration_sec": req.DurationSec,
-        "output_format": "wav",
+        "temperature": 0.3,
     })
     if err != nil {
         return nil, fmt.Errorf("failed to create params: %w", err)
     }
 
+    // インスタンスペイロード（Lyria への実際の入力）
+    instanceStruct, err := structpb.NewStruct(map[string]interface{}{
+        "prompt":        prompt,
+        "duration_sec":  req.DurationSec,
+        "output_format": "wav",
+    })
+    if err != nil {
+        return nil, fmt.Errorf("failed to create instance: %w", err)
+    }
+
+    // PredictRequest.Instances は []*structpb.Value を受け取る
+    instanceValue := structpb.NewStructValue(instanceStruct)
+
     // API呼び出し
     resp, err := c.endpoint.Predict(ctx, &aiplatformpb.PredictRequest{
         Endpoint:   endpointPath,
+        Instances:  []*structpb.Value{instanceValue},
         Parameters: params,
     })
     if err != nil {
@@ -310,6 +324,28 @@ func NewClient(ctx context.Context, projectID, location string) (*Client, error)
         client: client,
         model:  model,
     }, nil
+}
+
+// Gemini レスポンスからテキスト部分のみを取り出すヘルパー関数の一例。
+// - 複数候補が返る場合: 先頭の候補のみを利用
+// - 候補0件/テキストパート無しの場合: 空文字列を返す
+func extractText(resp *genai.GenerateContentResponse) string {
+    if resp == nil || len(resp.Candidates) == 0 {
+        return ""
+    }
+
+    cand := resp.Candidates[0]
+    if cand.Content == nil || len(cand.Content.Parts) == 0 {
+        return ""
+    }
+
+    for _, part := range cand.Content.Parts {
+        if txt, ok := part.(genai.Text); ok {
+            return string(txt)
+        }
+    }
+
+    return ""
 }
 
 func (c *Client) AnalyzeLyrics(ctx context.Context, lyrics string) (*port.LyricsAnalysis, error) {

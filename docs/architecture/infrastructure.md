@@ -185,7 +185,7 @@ FIREBASE_AUTH_EMULATOR_HOST=firebase-emulator:9099
 DATABASE_URL=postgres://postgres:postgres@postgres:5432/hackathon?sslmode=disable
 
 # Vertex AI（開発環境ではモック使用）
-VERTEX_AI_PROJECT_ID=ana-dev
+VERTEX_AI_PROJECT_ID=your-gcp-project
 VERTEX_AI_LOCATION=us-central1
 USE_MOCK_LYRIA=true
 USE_MOCK_GEMINI=true
