@@ -172,7 +172,7 @@
     {
       "sequence_num": 1,
       "content": "夜明け前の静けさの中",
-      "user": { "display_name": "ユーザーA", "avatar_url": "..." }
+            "user": { "id": "uuid", "display_name": "ユーザーA", "avatar_url": "..." }
     },
     ...
   ],
