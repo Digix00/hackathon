@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  dev flavor 専用の AndroidManifest。
+  main/AndroidManifest.xml にマージされる差分のみ記述。
+  android:label でのアプリ名区別で dev ビルドが一目で分かるようにする。
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application
+        android:label="MusicSwapping [dev]"
+        tools:replace="android:label" />
+</manifest>

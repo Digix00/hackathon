@@ -1,0 +1,9 @@
+# local.properties – このファイルは .gitignore で除外してください
+# Firebase / API の秘密情報を環境別に記入します
+
+# prod 環境 API ベース URL
+prod.api.base_url=https://api.example.com
+
+# Spotify OAuth クライアント情報
+spotify.client_id=YOUR_SPOTIFY_CLIENT_ID
+spotify.redirect_uri=musicswapping://spotify/callback

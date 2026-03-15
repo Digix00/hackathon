@@ -1,0 +1,51 @@
+build:
+    weights:
+        complexity: 1
+
+complexity:
+    LongMethod:
+        threshold: 80
+    LargeClass:
+        threshold: 400
+
+style:
+    MagicNumber:
+        ignoreAnnotated:
+            - "Preview"
+            - "Composable"
+        ignoreNumbers:
+            - "-1"
+            - "0"
+            - "1"
+            - "2"
+        ignoreHashCodeFunction: true
+        ignorePropertyDeclaration: true
+        ignoreConstantDeclaration: true
+        ignoreCompanionObjectPropertyDeclaration: true
+        ignoreNamedArgument: true
+    MaxLineLength:
+        maxLineLength: 140
+    ForbiddenComment:
+        active: false
+    UnnecessaryAbstractClass:
+        ignoreAnnotated:
+            - "Module"
+    UnusedParameter:
+        active: false
+
+naming:
+    FunctionNaming:
+        ignoreAnnotated:
+            - "Composable"
+
+coroutines:
+    InjectDispatcher:
+        active: false
+
+exceptions:
+    TooGenericExceptionCaught:
+        active: false
+
+potential-bugs:
+    UnsafeCallOnNullableType:
+        active: false
