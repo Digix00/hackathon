@@ -114,6 +114,7 @@ erDiagram
 		string report_type
 		string target_comment_id FK
 		string reason
+		string detail
 		datetime created_at
 		datetime deleted_at
 	}
@@ -551,6 +552,7 @@ erDiagram
 | report_type | string | "user" または "comment" |
 | target_comment_id | string | comments.idへの外部キー（report_type="comment"の場合に必須） |
 | reason | string | 通報理由 |
+| detail | string | 補足説明（任意、最大500文字） |
 | created_at | datetime | |
 | deleted_at | datetime | |
 
