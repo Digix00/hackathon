@@ -8,7 +8,7 @@ import (
 
 type Encounter struct {
 	ID            string         `gorm:"primaryKey"`
-	UserID1       string         `gorm:"not null;index"`
+	UserID1       string         `gorm:"not null;index;check:chk_encounters_user_order,user_id1 < user_id2"`
 	UserID2       string         `gorm:"not null;index"`
 	EncounteredAt time.Time      `gorm:"not null;index"`
 	EncounterType string         `gorm:"not null"` // 'ble' | 'location'
@@ -17,7 +17,6 @@ type Encounter struct {
 	CreatedAt     time.Time      `gorm:"not null;autoCreateTime"`
 	DeletedAt     gorm.DeletedAt `gorm:"index"` // #1 MUST
 
-	// CHECK (user_id_1 < user_id_2) は migrate.go の applyManualConstraints で定義
 	User1 *User `gorm:"foreignKey:UserID1"`
 	User2 *User `gorm:"foreignKey:UserID2"`
 }
@@ -49,33 +48,29 @@ type Comment struct {
 
 type Report struct {
 	ID              string         `gorm:"primaryKey"`
-	ReporterUserID  string         `gorm:"not null"`
-	ReportedUserID  string         `gorm:"not null;index"`
-	ReportType      string         `gorm:"not null"` // 'user' | 'comment'
-	TargetCommentID *string        `gorm:"index"`
+	ReporterUserID  string         `gorm:"not null;uniqueIndex:uq_reports_comment,where:report_type = 'comment';uniqueIndex:uq_reports_user,where:report_type = 'user'"`
+	ReportedUserID  string         `gorm:"not null;index;uniqueIndex:uq_reports_comment,where:report_type = 'comment';uniqueIndex:uq_reports_user,where:report_type = 'user'"`
+	ReportType      string         `gorm:"not null;check:chk_reports_type,(report_type = 'comment' AND target_comment_id IS NOT NULL) OR (report_type = 'user' AND target_comment_id IS NULL);uniqueIndex:uq_reports_comment,where:report_type = 'comment';uniqueIndex:uq_reports_user,where:report_type = 'user'"` // 'user' | 'comment'
+	TargetCommentID *string        `gorm:"index;uniqueIndex:uq_reports_comment,where:report_type = 'comment'"`
 	Reason          string         `gorm:"not null"`
 	CreatedAt       time.Time      `gorm:"not null;autoCreateTime"`
 	DeletedAt       gorm.DeletedAt `gorm:"index"` // #1 MUST
-
-	// CHECK 制約・部分 UNIQUE インデックスは migrate.go の applyManualConstraints で定義
 }
 
 type Block struct {
 	ID            string         `gorm:"primaryKey"`
-	BlockerUserID string         `gorm:"not null;index"`
-	BlockedUserID string         `gorm:"not null;index"`
+	BlockerUserID string         `gorm:"not null;index;uniqueIndex:uq_blocks,where:deleted_at IS NULL"`
+	BlockedUserID string         `gorm:"not null;index;uniqueIndex:uq_blocks,where:deleted_at IS NULL"`
 	CreatedAt     time.Time      `gorm:"not null;autoCreateTime"`
 	DeletedAt     gorm.DeletedAt `gorm:"index"`
-	// uq_blocks (blocker_user_id, blocked_user_id) WHERE deleted_at IS NULL は migrate.go で定義
 }
 
 type Mute struct {
 	ID           string         `gorm:"primaryKey"`
-	UserID       string         `gorm:"not null;index"`
-	TargetUserID string         `gorm:"not null;index"`
+	UserID       string         `gorm:"not null;index;uniqueIndex:uq_mutes,where:deleted_at IS NULL"`
+	TargetUserID string         `gorm:"not null;index;uniqueIndex:uq_mutes,where:deleted_at IS NULL"`
 	CreatedAt    time.Time      `gorm:"not null;autoCreateTime"`
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
-	// uq_mutes (user_id, target_user_id) WHERE deleted_at IS NULL は migrate.go で定義
 }
 
 type OutboxNotification struct {

@@ -20,11 +20,10 @@ type Track struct {
 
 type UserTrack struct {
 	ID        string         `gorm:"primaryKey"`
-	UserID    string         `gorm:"not null;index"`
-	TrackID   string         `gorm:"not null;index"`
+	UserID    string         `gorm:"not null;index;uniqueIndex:uq_user_tracks,where:deleted_at IS NULL"`
+	TrackID   string         `gorm:"not null;index;uniqueIndex:uq_user_tracks,where:deleted_at IS NULL"`
 	CreatedAt time.Time      `gorm:"not null;autoCreateTime"`
 	DeletedAt gorm.DeletedAt `gorm:"index"`
-	// uq_user_tracks (user_id, track_id) WHERE deleted_at IS NULL は migrate.go で定義
 
 	Track *Track `gorm:"foreignKey:TrackID"`
 }
@@ -53,35 +52,32 @@ type Playlist struct {
 
 type PlaylistTrack struct {
 	ID         string         `gorm:"primaryKey"`
-	PlaylistID string         `gorm:"not null;index"`
-	TrackID    string         `gorm:"not null;index"`
+	PlaylistID string         `gorm:"not null;index;uniqueIndex:uq_playlist_tracks,where:deleted_at IS NULL"`
+	TrackID    string         `gorm:"not null;index;uniqueIndex:uq_playlist_tracks,where:deleted_at IS NULL"`
 	SortOrder  int            `gorm:"column:sort_order;not null"`
 	CreatedAt  time.Time      `gorm:"not null;autoCreateTime"`
 	UpdatedAt  time.Time      `gorm:"not null;autoUpdateTime"`
 	DeletedAt  gorm.DeletedAt `gorm:"index"`
-	// uq_playlist_tracks (playlist_id, track_id) WHERE deleted_at IS NULL は migrate.go で定義
 
 	Track *Track `gorm:"foreignKey:TrackID"`
 }
 
 type TrackFavorite struct {
 	ID        string         `gorm:"primaryKey"`
-	UserID    string         `gorm:"not null;index"`
-	TrackID   string         `gorm:"not null;index"`
+	UserID    string         `gorm:"not null;index;uniqueIndex:uq_track_favorites,where:deleted_at IS NULL"`
+	TrackID   string         `gorm:"not null;index;uniqueIndex:uq_track_favorites,where:deleted_at IS NULL"`
 	CreatedAt time.Time      `gorm:"not null;autoCreateTime"`
 	DeletedAt gorm.DeletedAt `gorm:"index"`
-	// uq_track_favorites (user_id, track_id) WHERE deleted_at IS NULL は migrate.go で定義
 
 	Track *Track `gorm:"foreignKey:TrackID"`
 }
 
 type PlaylistFavorite struct {
 	ID         string         `gorm:"primaryKey"`
-	UserID     string         `gorm:"not null;index"`
-	PlaylistID string         `gorm:"not null;index"`
+	UserID     string         `gorm:"not null;index;uniqueIndex:uq_playlist_favorites,where:deleted_at IS NULL"`
+	PlaylistID string         `gorm:"not null;index;uniqueIndex:uq_playlist_favorites,where:deleted_at IS NULL"`
 	CreatedAt  time.Time      `gorm:"not null;autoCreateTime"`
 	DeletedAt  gorm.DeletedAt `gorm:"index"`
-	// uq_playlist_favorites (user_id, playlist_id) WHERE deleted_at IS NULL は migrate.go で定義
 
 	Playlist *Playlist `gorm:"foreignKey:PlaylistID"`
 }
