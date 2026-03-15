@@ -107,6 +107,15 @@ erDiagram
 		datetime read_at
 	}
 
+	ENCOUNTER_TRACKS {
+		string id PK
+		string encounter_id FK
+		string track_id FK
+		string source_user_id FK
+		datetime created_at
+		datetime deleted_at
+	}
+
 	REPORTS {
 		string id PK
 		string reporter_user_id FK
@@ -302,6 +311,9 @@ erDiagram
 	USERS ||--o{ ENCOUNTERS : "user_id_2"
 	USERS ||--o{ ENCOUNTER_READS : "user_id"
 	ENCOUNTERS ||--o{ ENCOUNTER_READS : "encounter_id"
+	ENCOUNTERS ||--o{ ENCOUNTER_TRACKS : "encounter_id"
+	TRACKS ||--o{ ENCOUNTER_TRACKS : "track_id"
+	USERS ||--o{ ENCOUNTER_TRACKS : "source_user_id"
 	USERS ||--o{ REPORTS : "reporter_user_id"
 	USERS ||--o{ REPORTS : "reported_user_id"
 	COMMENTS ||--o{ REPORTS : "target_comment_id"
@@ -539,6 +551,29 @@ erDiagram
 **インデックス:**
 - `user_id`
 - `encounter_id`
+
+---
+
+## encounter_tracks
+
+すれ違いに紐づく交換曲情報。
+
+| フィールド | 型 | 備考 |
+|-|-|-|
+| id | string | 主キー |
+| encounter_id | string | encounters.idへの外部キー |
+| track_id | string | tracks.idへの外部キー |
+| source_user_id | string | users.idへの外部キー（どちらのユーザー由来の曲か） |
+| created_at | datetime | |
+| deleted_at | datetime | |
+
+**制約:**
+- `(encounter_id, track_id, source_user_id)` で UNIQUE 制約
+
+**インデックス:**
+- `encounter_id`
+- `track_id`
+- `source_user_id`
 
 ---
 
