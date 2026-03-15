@@ -33,14 +33,9 @@ private struct EncounterLyricsList: View {
     }
 }
 
-// Global Namespace for shared transitions
-struct SharedHeroNamespace {
-    @Namespace static var global
-}
-
-// Environment key for namespace
+// Environment key for matched-geometry namespace
 private struct HeroNamespaceKey: EnvironmentKey {
-    static let defaultValue: Namespace.ID = SharedHeroNamespace.global
+    static let defaultValue: Namespace.ID = Namespace().wrappedValue
 }
 
 extension EnvironmentValues {
@@ -58,17 +53,21 @@ class MotionManager: ObservableObject {
     
     init() {
         self.manager = CMMotionManager()
-        self.manager.deviceMotionUpdateInterval = 1/60
-        self.manager.startDeviceMotionUpdates(to: .main) { (motionData, error) in
+        self.manager.deviceMotionUpdateInterval = 1.0 / 60.0
+        self.manager.startDeviceMotionUpdates(to: .main) { [weak self] (motionData, error) in
             guard error == nil else {
                 print(error!)
                 return
             }
             if let motionData = motionData {
-                self.pitch = motionData.attitude.pitch
-                self.roll = motionData.attitude.roll
+                self?.pitch = motionData.attitude.pitch
+                self?.roll = motionData.attitude.roll
             }
         }
+    }
+
+    deinit {
+        manager.stopDeviceMotionUpdates()
     }
 }
 
@@ -1327,14 +1326,14 @@ struct GeneratedSongsView: View {
                     NavigationLink {
                         GeneratedSongNotificationView()
                     } label: {
-                        SecondaryButton(title: "生成完了通知を見る", systemImage: "bell.badge") {}
+                        SecondaryButtonLabel(title: "生成完了通知を見る", systemImage: "bell.badge")
                     }
                     .buttonStyle(.plain)
 
                     NavigationLink {
                         GeneratingStateView()
                     } label: {
-                        SecondaryButton(title: "生成状態を見る", systemImage: "sparkles.rectangle.stack") {}
+                        SecondaryButtonLabel(title: "生成状態を見る", systemImage: "sparkles.rectangle.stack")
                     }
                     .buttonStyle(.plain)
                 }
@@ -1550,6 +1549,7 @@ struct ChainProgressView: View {
 struct LyricInputModalView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var lyric = "今日も空は青かった"
+    @State private var didTriggerNearLimitHaptic = false
 
     var body: some View {
         NavigationStack {
@@ -1606,8 +1606,14 @@ struct LyricInputModalView: View {
                             )
                             .frame(height: 160)
                             .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 5)
-                            .onChange(of: lyric) { _ in
-                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            .onChange(of: lyric) { newValue in
+                                let isNearLimit = newValue.count >= 90
+                                if isNearLimit && !didTriggerNearLimitHaptic {
+                                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                    didTriggerNearLimitHaptic = true
+                                } else if !isNearLimit {
+                                    didTriggerNearLimitHaptic = false
+                                }
                             }
                         
                         HStack {
@@ -2346,7 +2352,6 @@ private struct EncounterRow: View {
                     Image(systemName: "clock")
                         .font(.system(size: 10))
                     Text(encounter.relativeTime)
-                        .font(PrototypeTheme.Typography.Encounter.metaCompact)
                         .prototypeFont(size: 11, weight: .medium, role: .data)
                 }
                 .foregroundStyle(PrototypeTheme.textTertiary)

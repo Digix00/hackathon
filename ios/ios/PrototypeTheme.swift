@@ -1,19 +1,27 @@
 import SwiftUI
 
 enum PrototypeTheme {
-    static let background = Color(red: 242 / 255, green: 246 / 255, blue: 250 / 255)
+    private static func rgb(_ red: Int, _ green: Int, _ blue: Int) -> Color {
+        Color(
+            red: Double(red) / 255.0,
+            green: Double(green) / 255.0,
+            blue: Double(blue) / 255.0
+        )
+    }
+
+    static let background = rgb(242, 246, 250)
     static let surface = Color(red: 1.0, green: 1.0, blue: 1.0)
-    static let surfaceMuted = Color(red: 232 / 255, green: 238 / 255, blue: 244 / 255)
-    static let surfaceElevated = Color(red: 222 / 255, green: 230 / 255, blue: 238 / 255)
-    static let textPrimary = Color(red: 15 / 255, green: 23 / 255, blue: 42 / 255)
-    static let textSecondary = Color(red: 100 / 255, green: 116 / 255, blue: 139 / 255)
-    static let textTertiary = Color(red: 148 / 255, green: 163 / 255, blue: 184 / 255)
-    static let accent = Color(red: 51 / 255, green: 65 / 255, blue: 85 / 255)
-    static let border = Color(red: 226 / 255, green: 232 / 255, blue: 240 / 255)
-    static let success = Color(red: 22 / 255, green: 163 / 255, blue: 74 / 255)
-    static let warning = Color(red: 202 / 255, green: 138 / 255, blue: 4 / 255)
-    static let error = Color(red: 220 / 255, green: 38 / 255, blue: 38 / 255)
-    static let info = Color(red: 37 / 255, green: 99 / 255, blue: 235 / 255)
+    static let surfaceMuted = rgb(232, 238, 244)
+    static let surfaceElevated = rgb(222, 230, 238)
+    static let textPrimary = rgb(15, 23, 42)
+    static let textSecondary = rgb(100, 116, 139)
+    static let textTertiary = rgb(148, 163, 184)
+    static let accent = rgb(51, 65, 85)
+    static let border = rgb(226, 232, 240)
+    static let success = rgb(22, 163, 74)
+    static let warning = rgb(202, 138, 4)
+    static let error = rgb(220, 38, 38)
+    static let info = rgb(37, 99, 235)
 
     enum Typography {
         enum Role {
@@ -303,19 +311,28 @@ struct SecondaryButton: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                if let systemImage {
-                    Image(systemName: systemImage)
-                }
-                Text(title)
-                    .font(PrototypeTheme.Typography.Product.control)
-            }
-            .foregroundStyle(PrototypeTheme.textPrimary)
-            .frame(maxWidth: .infinity)
-            .frame(height: 52)
-            .background(PrototypeTheme.surfaceMuted)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            SecondaryButtonLabel(title: title, systemImage: systemImage)
         }
+    }
+}
+
+struct SecondaryButtonLabel: View {
+    let title: String
+    var systemImage: String? = nil
+
+    var body: some View {
+        HStack(spacing: 8) {
+            if let systemImage {
+                Image(systemName: systemImage)
+            }
+            Text(title)
+                .font(PrototypeTheme.Typography.Product.control)
+        }
+        .foregroundStyle(PrototypeTheme.textPrimary)
+        .frame(maxWidth: .infinity)
+        .frame(height: 52)
+        .background(PrototypeTheme.surfaceMuted)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
