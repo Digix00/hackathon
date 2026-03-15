@@ -214,36 +214,38 @@
 
 ```go
 func (uc *LyricUseCase) SubmitLyric(ctx context.Context, userID, encounterID uuid.UUID, content string) (*LyricEntry, error) {
-    // 1. ユーザーが過去24時間以内に参加していないpending Chainを検索
-    chain, err := uc.chainRepo.FindAvailableChain(ctx, userID)
-    if err != nil {
-        return nil, err
-    }
+    var entry *LyricEntry
 
-    // 2. 空きChainがなければ新規作成
-    if chain == nil {
-        chain = &LyricChain{
-            ID:        uuid.New(),
-            Status:    ChainStatusPending,
-            Threshold: 4, // デフォルト閾値
+    // 1. Chain選択からEntry作成、カウント更新までを同一トランザクションで実行
+    err := uc.txManager.RunInTx(ctx, func(tx TxContext) error {
+        // 2. 利用可能なpending Chainを SELECT FOR UPDATE で検索して排他ロック
+        chain, err := uc.chainRepo.FindAvailableChain(tx, userID)
+        if err != nil {
+            return err
         }
-        if err := uc.chainRepo.Create(ctx, chain); err != nil {
-            return nil, err
+
+        // 3. 空きChainがなければ同一トランザクション内で新規作成
+        if chain == nil {
+            chain = &LyricChain{
+                ID:        uuid.New(),
+                Status:    ChainStatusPending,
+                Threshold: 4, // デフォルト閾値
+            }
+            if err := uc.chainRepo.Create(tx, chain); err != nil {
+                return err
+            }
         }
-    }
 
-    // 3. 歌詞エントリを追加
-    entry := &LyricEntry{
-        ID:          uuid.New(),
-        ChainID:     chain.ID,
-        UserID:      userID,
-        Content:     content,
-        SequenceNum: chain.ParticipantCount + 1,
-        EncounterID: encounterID,
-    }
+        // 4. ロック済みのParticipantCountから連番を計算してEntryを作成
+        entry = &LyricEntry{
+            ID:          uuid.New(),
+            ChainID:     chain.ID,
+            UserID:      userID,
+            Content:     content,
+            SequenceNum: chain.ParticipantCount + 1,
+            EncounterID: encounterID,
+        }
 
-    // 4. トランザクションで保存 + カウント更新
-    err = uc.txManager.RunInTx(ctx, func(tx TxContext) error {
         if err := uc.entryRepo.Create(tx, entry); err != nil {
             return err
         }
@@ -274,6 +276,9 @@ func (uc *LyricUseCase) SubmitLyric(ctx context.Context, userID, encounterID uui
 | user未参加 | 同一ユーザーの重複参加防止 |
 | created_at > NOW() - 24h | 古すぎるChainは除外 |
 
+- `FindAvailableChain` はトランザクション内で実行し、候補 `LyricChain` を `SELECT ... FOR UPDATE` で取得する
+- これにより Chain 選択、必要時の新規作成、`SequenceNum` 計算、`LyricEntry` 作成、`ParticipantCount` 更新、Outbox 追加を Cloud SQL 上でアトミックに確定する
+
 ---
 
 ## 生成ジョブ処理
@@ -299,10 +304,11 @@ func (w *LyriaWorker) ProcessGenerationJob(ctx context.Context, chainID uuid.UUI
 
     // 4. Lyriaで楽曲生成
     audio, err := w.lyriaClient.GenerateSong(ctx, &LyriaRequest{
-        Lyrics:   combinedLyrics,
-        Mood:     analysis.Mood,
-        Genre:    analysis.Genre,
-        Duration: 45, // 45秒
+        Lyrics:      combinedLyrics,
+        Mood:        analysis.Mood,
+        Genre:       analysis.Genre,
+        Tempo:       analysis.Tempo,
+        DurationSec: 45, // 45秒
     })
     if err != nil {
         return w.handleFailure(ctx, chain, err)
