@@ -51,9 +51,9 @@
 │                             │
 │  プライバシー                │
 │  ┌───────────────────────┐  │
-│  │ 🚫 ブロック一覧       → │  │
+│  │ ✋ ブロック / ミュート → │  │
 │  ├───────────────────────┤  │
-│  │ 🔇 ミュート一覧       → │  │
+│  │ 👥 他ユーザープロフィール例→│  │
 │  └───────────────────────┘  │
 │                             │
 │  連携                       │
@@ -61,23 +61,16 @@
 │  │ 🎧 音楽サービス連携   → │  │
 │  └───────────────────────┘  │
 │                             │
-│  サポート                    │
+│  プロトタイプ一覧            │
 │  ┌───────────────────────┐  │
-│  │ ❓ ヘルプ / FAQ       → │  │
+│  │ 📋 空状態・エラー状態  → │  │
 │  ├───────────────────────┤  │
-│  │ 📄 利用規約          → │  │
+│  │ 📶 リアルタイム演出    → │  │
 │  ├───────────────────────┤  │
-│  │ 🔒 プライバシーポリシー→│  │
+│  │ ✨ オンボーディング再表示→│  │
+│  ├───────────────────────┤  │
+│  │ 🗑️ アカウント削除      → │  │
 │  └───────────────────────┘  │
-│                             │
-│  アカウント                  │
-│  ┌───────────────────────┐  │
-│  │    ログアウト           │  │
-│  ├───────────────────────┤  │
-│  │    アカウントを削除      │  │
-│  └───────────────────────┘  │
-│                             │
-│        バージョン 1.0.0      │
 │                             │
 ├─────────────────────────────┤
 │  🏠    📋    ❤️    👤      │
@@ -104,30 +97,44 @@
 
 ### 設定グループ
 
-**セクションヘッダー**:
+**実装**: `settingsGroup(title:items:)` ヘルパー関数
+
+**セクションヘッダー（SectionCard の title）**:
 ```
 フォント: 13pt Semibold
-色: Slate 500
-マージン: 上24pt、下8pt、左16pt
-大文字変換: なし
+色: テキストセカンダリ
+マージン: SectionCard のデフォルト
 ```
 
-**設定アイテム**:
+**設定アイテム（SettingRow）**:
 ```
-┌───────────────────────────────────┐
-│  🎵  シェアする曲              →  │
-└───────────────────────────────────┘
+NavigationLink → AnyView:
+  SettingRow(icon: String, title: String)
+
+内部レイアウト:
+  HStack:
+    Image(systemName: icon)
+    Text(title)
+    Spacer
+    Image(systemName: "chevron.right")
 ```
 
 **スタイル**:
 ```
-高さ: 52pt
-パディング: 左16pt、右16pt
-アイコン: 24pt、Slate 500
+アイコンサイズ: システムデフォルト
 テキスト: 15pt Regular
-矢印: Slate 400
-背景: カード背景色
-区切り線: 下部 1pt、左インデント 52pt
+間隔: 14pt
+背景: SectionCard内
+```
+
+**グループ構成**:
+```swift
+settingsGroup(title: "アプリ設定", items: [
+  ("music.note", "シェアする曲", SearchView()),
+  ("location.fill", "すれ違い設定", EncounterSettingsView()),
+  ("bell.fill", "通知設定", NotificationSettingsView()),
+  ("paintbrush.fill", "外観", AppearanceSettingsView())
+])
 ```
 
 ### 危険なアクション
@@ -527,6 +534,108 @@
 ```
 
 → 3秒後にウェルカム画面へ遷移
+
+---
+
+# 9. プロトタイプ一覧
+
+## 目的
+
+プロトタイプで実装されたUI状態や演出を確認するための画面集。
+
+## セクション構成
+
+### 空状態・エラー状態（EmptyStatesGalleryView）
+
+**レイアウト**:
+```
+AppScaffold(title: "空状態・エラー状態"):
+  Picker("状態", EmptyScenario)
+    .segmented
+
+  switch scenario:
+    case .firstEncounter:
+      EmptyStateCard(まだすれ違いがありません)
+    case .inactive:
+      EmptyStateCard(最近すれ違いが少ない)
+    case .searchEmpty:
+      EmptyStateCard(検索結果なし)
+    case .network:
+      EmptyStateCard(通信エラー)
+    case .bluetooth:
+      EmptyStateCard(Bluetooth許可)
+```
+
+**EmptyScenario**:
+```swift
+enum EmptyScenario: CaseIterable {
+  case firstEncounter
+  case inactive
+  case searchEmpty
+  case network
+  case bluetooth
+}
+```
+
+### リアルタイム演出（RealtimeDemoView）
+
+**レイアウト**:
+```
+AppScaffold(title: "リアルタイム演出"):
+  Picker("状態", RealtimeScenario)
+    .segmented
+
+  SectionCard:
+    ZStack:
+      Circle(Surface Elevated, 160pt)
+      Circle(circleColor, circleSize)  // アニメーション
+      MockArtworkView(80pt)
+
+    Text(statusTitle)    // 22pt Bold
+    Text(statusMessage)  // 14pt、セカンダリ
+```
+
+**RealtimeScenario**:
+```swift
+enum RealtimeScenario: CaseIterable {
+  case standby     // グレー、120pt
+  case approaching // イエロー、136pt
+  case matched     // グリーン、156pt
+  case afterglow   // インディゴ、132pt
+}
+```
+
+### オンボーディング再表示（RestartOnboardingView）
+
+**レイアウト**:
+```
+AppScaffold(title: "オンボーディング再表示"):
+  EmptyStateCard(
+    icon: "sparkles",
+    title: "オンボーディングをやり直します",
+    message: "たたき台確認用に、いつでも最初の導線に戻れます。",
+    tint: Info
+  )
+
+  PrimaryButton("再表示する"):
+    → restartOnboarding()
+```
+
+**用途**: プロトタイプ確認用
+
+### 他ユーザープロフィール例（OtherUserProfileStandaloneView）
+
+**レイアウト**:
+```
+AppScaffold(title: "他ユーザープロフィール"):
+  OtherUserProfileCard()
+```
+
+**OtherUserProfileCard 構成**:
+- アバター（84pt）
+- ユーザー名（22pt Bold）
+- ひとこと（14pt、セカンダリ）
+- ミュート/通報ボタン
 
 ---
 
