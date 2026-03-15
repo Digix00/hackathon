@@ -35,7 +35,7 @@ import java.time.format.FormatStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: HomeViewModel, onEncounterClick: (String) -> Unit, onSettingsClick: () -> Unit, onChangeSongClick: () -> Unit) {
+fun HomeScreen(viewModel: HomeViewModel, onEncounterClick: (String) -> Unit, onSettingsClick: () -> Unit) {
     val encounters by viewModel.encounters.collectAsStateWithLifecycle()
 
     Scaffold(

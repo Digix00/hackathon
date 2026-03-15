@@ -82,7 +82,7 @@ private fun PermissionPage(onNext: () -> Unit) {
         Text("アプリを使うために\n許可が必要です", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(32.dp))
 
-        // 권限 요청 순서: Bluetooth → 통知 → 位置
+        // 権限リクエスト順序: Bluetooth → 通知 → 位置情報
         OutlinedButton(
             onClick = { btLauncher.launch(btPermissions) },
             modifier = Modifier.fillMaxWidth()

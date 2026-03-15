@@ -49,7 +49,6 @@ jobs:
       - name: Write placeholder google-services.json for CI
         run: |
           cp app/google-services.json.example app/src/dev/google-services.json
-          cp app/google-services.json.example app/src/prod/google-services.json
 
       - name: Run ktlint
         run: ./gradlew ktlintCheck
@@ -87,7 +86,6 @@ jobs:
       - name: Write placeholder google-services.json for CI
         run: |
           cp app/google-services.json.example app/src/dev/google-services.json
-          cp app/google-services.json.example app/src/prod/google-services.json
 
       - name: Run unit tests
         run: ./gradlew testDevDebugUnitTest
@@ -129,7 +127,6 @@ jobs:
       - name: Write placeholder google-services.json for CI
         run: |
           cp app/google-services.json.example app/src/dev/google-services.json
-          cp app/google-services.json.example app/src/prod/google-services.json
 
       - name: Build devDebug APK
         run: ./gradlew assembleDevDebug

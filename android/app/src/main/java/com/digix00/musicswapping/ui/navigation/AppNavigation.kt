@@ -2,11 +2,14 @@ package com.digix00.musicswapping.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.digix00.musicswapping.data.preferences.AppPreferences
 import com.digix00.musicswapping.ui.auth.AuthScreen
 import com.digix00.musicswapping.ui.auth.AuthViewModel
 import com.digix00.musicswapping.ui.encounter.EncounterDetailScreen
@@ -20,16 +23,24 @@ import com.digix00.musicswapping.ui.settings.SettingsScreen
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    val context = LocalContext.current
     val authViewModel: AuthViewModel = hiltViewModel()
+    val appPreferences = remember(context) { AppPreferences(context.applicationContext) }
     val isLoggedIn by authViewModel.isLoggedIn.collectAsStateWithLifecycle()
+    val isOnboardingCompleted by appPreferences.isOnboardingCompleted.collectAsStateWithLifecycle(initialValue = false)
 
-    val startDestination = if (isLoggedIn) Screen.Home.route else Screen.Auth.route
+    val startDestination = when {
+        !isLoggedIn -> Screen.Auth.route
+        isOnboardingCompleted -> Screen.Home.route
+        else -> Screen.Onboarding.route
+    }
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Screen.Auth.route) {
             AuthScreen(
                 onLoginSuccess = {
-                    navController.navigate(Screen.Onboarding.route) {
+                    val destination = if (isOnboardingCompleted) Screen.Home.route else Screen.Onboarding.route
+                    navController.navigate(destination) {
                         popUpTo(Screen.Auth.route) { inclusive = true }
                     }
                 }
@@ -49,8 +60,7 @@ fun AppNavigation() {
             HomeScreen(
                 viewModel = vm,
                 onEncounterClick = { id -> navController.navigate(Screen.EncounterDetail.createRoute(id)) },
-                onSettingsClick = { navController.navigate(Screen.Settings.route) },
-                onChangeSongClick = { navController.navigate(Screen.Search.route) }
+                onSettingsClick = { navController.navigate(Screen.Settings.route) }
             )
         }
         composable(Screen.EncounterDetail.route) { backStack ->

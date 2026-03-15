@@ -1,3 +1,4 @@
+import org.gradle.api.GradleException
 import java.util.Properties
 
 plugins {
@@ -22,6 +23,23 @@ val localProps =
     }
 
 fun localProp(key: String) = localProps.getProperty(key) ?: ""
+
+val releaseStoreFile = localProp("release.signing.store_file")
+val releaseStorePassword = localProp("release.signing.store_password")
+val releaseKeyAlias = localProp("release.signing.key_alias")
+val releaseKeyPassword = localProp("release.signing.key_password")
+val hasReleaseSigning =
+    releaseStoreFile.isNotBlank() &&
+        releaseStorePassword.isNotBlank() &&
+        releaseKeyAlias.isNotBlank() &&
+        releaseKeyPassword.isNotBlank()
+val isReleaseTaskRequested = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
+
+if (isReleaseTaskRequested && !hasReleaseSigning) {
+    throw GradleException(
+        "Release signing config is missing. Set release.signing.store_file, release.signing.store_password, release.signing.key_alias, release.signing.key_password in local.properties.",
+    )
+}
 
 android {
     namespace = "com.digix00.musicswapping"
@@ -59,6 +77,17 @@ android {
         }
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseStoreFile)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -66,7 +95,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            signingConfig = signingConfigs.getByName("debug") // TODO: release 署名設定
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 
