@@ -13,6 +13,10 @@ struct Encounter: Identifiable, Hashable {
     let track: Track
     let relativeTime: String
     let lyric: String
+
+    var happenedYesterday: Bool {
+        relativeTime == "昨日"
+    }
 }
 
 struct GeneratedSong: Identifiable, Hashable {
@@ -49,6 +53,22 @@ enum RealtimeScenario: String, CaseIterable, Identifiable {
     case afterglow = "余韻"
 
     var id: String { rawValue }
+}
+
+enum EncounterSection: String, CaseIterable, Identifiable {
+    case today = "今日"
+    case yesterday = "昨日"
+
+    var id: String { rawValue }
+
+    func includes(_ encounter: Encounter) -> Bool {
+        switch self {
+        case .today:
+            return !encounter.happenedYesterday
+        case .yesterday:
+            return encounter.happenedYesterday
+        }
+    }
 }
 
 enum MockData {
@@ -94,4 +114,11 @@ enum MockData {
 
     static let recentSearches: [Track] = Array(tracks.prefix(2))
     static let popularTracks: [Track] = Array(tracks.dropFirst().prefix(3))
+    static let generatedSongContributors: [Encounter] = Array(encounters.prefix(4))
+    static let chainContributors: [Encounter] = Array(encounters.prefix(3))
+    static let previewSharedTrack: Track = tracks[1]
+
+    static func encounters(in section: EncounterSection) -> [Encounter] {
+        encounters.filter(section.includes)
+    }
 }

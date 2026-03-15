@@ -8,12 +8,81 @@ enum PrototypeTheme {
     static let textPrimary = Color(red: 15 / 255, green: 23 / 255, blue: 42 / 255)
     static let textSecondary = Color(red: 100 / 255, green: 116 / 255, blue: 139 / 255)
     static let textTertiary = Color(red: 148 / 255, green: 163 / 255, blue: 184 / 255)
-    static let accent = Color(red: 71 / 255, green: 85 / 255, blue: 105 / 255)
+    static let accent = Color(red: 51 / 255, green: 65 / 255, blue: 85 / 255)
     static let border = Color(red: 226 / 255, green: 232 / 255, blue: 240 / 255)
     static let success = Color(red: 22 / 255, green: 163 / 255, blue: 74 / 255)
     static let warning = Color(red: 202 / 255, green: 138 / 255, blue: 4 / 255)
     static let error = Color(red: 220 / 255, green: 38 / 255, blue: 38 / 255)
     static let info = Color(red: 37 / 255, green: 99 / 255, blue: 235 / 255)
+
+    enum Typography {
+        enum Role {
+            case primary
+            case accent
+            case data
+
+            var design: Font.Design {
+                switch self {
+                case .primary:
+                    return .rounded
+                case .accent:
+                    return .serif
+                case .data:
+                    return .monospaced
+                }
+            }
+        }
+
+        static func font(
+            size: CGFloat,
+            weight: Font.Weight = .regular,
+            role: Role = .primary
+        ) -> Font {
+            .system(size: size, weight: weight, design: role.design)
+        }
+
+        enum Encounter {
+            static let screenTitle = Typography.font(size: 28, weight: .bold)
+            static let sectionTitle = Typography.font(size: 18, weight: .semibold)
+            static let cardTitle = Typography.font(size: 16, weight: .semibold)
+            static let body = Typography.font(size: 14, weight: .medium)
+            static let meta = Typography.font(size: 13, weight: .medium)
+            static let metaCompact = Typography.font(size: 12, weight: .semibold)
+            static let action = Typography.font(size: 14, weight: .bold)
+            static let eyebrow = Typography.font(size: 11, weight: .bold)
+        }
+
+        enum Product {
+            static let screenTitle = Typography.font(size: 32, weight: .black)
+            static let subtitle = Typography.font(size: 14, weight: .medium)
+            static let sectionLabel = Typography.font(size: 13, weight: .semibold)
+            static let control = Typography.font(size: 16, weight: .semibold)
+        }
+
+        enum Onboarding {
+            static let title = Typography.font(size: 32, weight: .black)
+            static let body = Typography.font(size: 16, weight: .medium)
+            static let eyebrow = Typography.font(size: 12, weight: .black)
+            static let cardLabel = Typography.font(size: 10, weight: .black)
+            static let button = Typography.font(size: 16, weight: .semibold)
+            static let stepTitle = Typography.font(size: 32, weight: .black)
+            static let stepSubtitle = Typography.font(size: 12, weight: .black)
+        }
+    }
+}
+
+extension View {
+    func prototypeTypography() -> some View {
+        fontDesign(PrototypeTheme.Typography.Role.primary.design)
+    }
+
+    func prototypeFont(
+        size: CGFloat,
+        weight: Font.Weight = .regular,
+        role: PrototypeTheme.Typography.Role = .primary
+    ) -> some View {
+        font(PrototypeTheme.Typography.font(size: size, weight: weight, role: role))
+    }
 }
 
 struct AppScaffold<Content: View>: View {
@@ -38,56 +107,63 @@ struct AppScaffold<Content: View>: View {
     }
 
     var body: some View {
-        ZStack {
-            if let accentColor {
-                DynamicBackground(baseColor: accentColor)
-            } else {
-                ZStack {
-                    PrototypeTheme.background.ignoresSafeArea()
-                    DotGridBackground()
-                        .opacity(0.15)
-                }
-            }
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 28) {
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(title)
-                                .font(.system(size: 32, weight: .black))
-                                .foregroundStyle(PrototypeTheme.textPrimary)
-                                .tracking(-0.5)
-                            
-                            if let subtitle {
-                                Text(subtitle)
-                                    .font(.system(size: 15, weight: .medium))
-                                    .foregroundStyle(PrototypeTheme.textSecondary)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 4)
-                                    .background(PrototypeTheme.surfaceMuted.opacity(0.6))
-                                    .clipShape(Capsule())
-                            }
-                        }
-                        Spacer()
-                        if let trailingSymbol {
-                            Button(action: {}) {
-                                Image(systemName: trailingSymbol)
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(PrototypeTheme.textPrimary)
-                                    .padding(12)
-                                    .background(PrototypeTheme.surface)
-                                    .clipShape(Circle())
-                                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
-                            }
-                        }
+        GeometryReader { geometry in
+            ZStack {
+                if let accentColor {
+                    DynamicBackground(baseColor: accentColor)
+                } else {
+                    ZStack {
+                        PrototypeTheme.background.ignoresSafeArea()
+                        DotGridBackground()
+                            .opacity(0.15)
                     }
-                    .padding(.top, 12)
-
-                    content
                 }
-                .padding(24)
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 28) {
+                        HStack(alignment: .top) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(title)
+                                    .font(PrototypeTheme.Typography.Product.screenTitle)
+                                    .foregroundStyle(PrototypeTheme.textPrimary)
+                                    .tracking(-0.5)
+
+                                if let subtitle {
+                                    Text(subtitle)
+                                        .font(PrototypeTheme.Typography.Product.subtitle)
+                                        .foregroundStyle(PrototypeTheme.textSecondary)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 4)
+                                        .background(PrototypeTheme.surfaceMuted.opacity(0.6))
+                                        .clipShape(Capsule())
+                                }
+                            }
+                            Spacer()
+                            if let trailingSymbol {
+                                Button(action: {}) {
+                                    Image(systemName: trailingSymbol)
+                                        .font(.system(size: 18, weight: .semibold))
+                                        .foregroundStyle(PrototypeTheme.textPrimary)
+                                        .padding(12)
+                                        .background(PrototypeTheme.surface)
+                                        .clipShape(Circle())
+                                        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
+                                }
+                            }
+                        }
+                        .padding(.top, geometry.safeAreaInsets.top + 8)
+
+                        content
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, max(24, geometry.safeAreaInsets.bottom + 8))
+                }
+                .scrollContentBackground(.hidden)
             }
+            .toolbar(.hidden, for: .navigationBar)
+            .background(Color.clear)
         }
+        .ignoresSafeArea()
     }
 }
 
@@ -156,10 +232,9 @@ struct SectionCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 18) {
             if let title {
                 Text(title)
-                    .font(.system(size: 14, weight: .bold))
+                    .font(PrototypeTheme.Typography.Product.sectionLabel)
                     .foregroundStyle(PrototypeTheme.textSecondary)
-                    .textCase(.uppercase)
-                    .kerning(1.2)
+                    .tracking(0.2)
             }
             content
         }
@@ -169,10 +244,6 @@ struct SectionCard<Content: View>: View {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .fill(PrototypeTheme.surface)
                 .shadow(color: Color.black.opacity(0.03), radius: 15, x: 0, y: 8)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(PrototypeTheme.border.opacity(0.5), lineWidth: 1)
         )
     }
 }
@@ -187,9 +258,16 @@ struct GlassmorphicCard<Content: View>: View {
             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                    .stroke(
+                        LinearGradient(
+                            colors: [.white.opacity(0.6), .white.opacity(0.1), .white.opacity(0.0)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
             )
-            .shadow(color: Color.black.opacity(0.05), radius: 20, x: 0, y: 10)
+            .shadow(color: Color.black.opacity(0.06), radius: 24, x: 0, y: 12)
     }
 }
 
@@ -206,7 +284,7 @@ struct PrimaryButton: View {
                     Image(systemName: systemImage)
                 }
                 Text(title)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(PrototypeTheme.Typography.Product.control)
             }
             .foregroundStyle(Color.white)
             .frame(maxWidth: .infinity)
@@ -230,7 +308,7 @@ struct SecondaryButton: View {
                     Image(systemName: systemImage)
                 }
                 Text(title)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(PrototypeTheme.Typography.Product.control)
             }
             .foregroundStyle(PrototypeTheme.textPrimary)
             .frame(maxWidth: .infinity)
@@ -343,5 +421,35 @@ struct EmptyStateCard: View {
         .padding(24)
         .background(PrototypeTheme.surfaceElevated)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+struct ScaleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
+    }
+}
+
+// MARK: - Safe Area Environment Keys
+
+private struct TopSafeAreaInsetKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 0
+}
+
+private struct BottomSafeAreaInsetKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 0
+}
+
+extension EnvironmentValues {
+    var topSafeAreaInset: CGFloat {
+        get { self[TopSafeAreaInsetKey.self] }
+        set { self[TopSafeAreaInsetKey.self] = newValue }
+    }
+
+    var bottomSafeAreaInset: CGFloat {
+        get { self[BottomSafeAreaInsetKey.self] }
+        set { self[BottomSafeAreaInsetKey.self] = newValue }
     }
 }
