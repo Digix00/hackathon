@@ -183,10 +183,25 @@ erDiagram
 	USER_DEVICES {
 		string id PK
 		string user_id FK
-		string device_token
+		string push_token
 		string platform
+		string device_id
+		string app_version
+		boolean enabled
 		datetime created_at
 		datetime updated_at
+	}
+
+	NOTIFICATIONS {
+		string id PK
+		string user_id FK
+		string type
+		string title
+		string body
+		string target_json
+		boolean is_read
+		datetime read_at
+		datetime created_at
 	}
 
 	USER_SETTINGS {
@@ -330,6 +345,7 @@ erDiagram
 	ENCOUNTERS ||--o{ COMMENTS : "encounter_id"
 	USERS ||--o{ COMMENTS : "commenter_user_id"
 	USERS ||--o{ USER_DEVICES : "user_id"
+	USERS ||--o{ NOTIFICATIONS : "user_id"
 	USERS ||--o{ USER_SETTINGS : "user_id"
 	USERS ||--o{ MUSIC_CONNECTIONS : "user_id"
 	USERS ||--o{ OUTBOX_NOTIFICATIONS : "user_id"
@@ -731,17 +747,44 @@ erDiagram
 |-|-|-|
 | id | string | 主キー |
 | user_id | string | users.idへの外部キー |
-| device_token | string | APNs/FCMのデバイストークン |
+| push_token | string | APNs/FCMのデバイストークン |
 | platform | string | "ios" または "android" |
+| device_id | string | 端末固有ID |
+| app_version | string | アプリバージョン |
+| enabled | boolean | 通知送信の有効/無効 |
 | created_at | datetime | |
 | updated_at | datetime | |
 
 **制約:**
-- `device_token` に UNIQUE 制約
+- `(user_id, platform, device_id)` で UNIQUE 制約
 
 **インデックス:**
 - `user_id`
-- `device_token`
+- `push_token`
+- `user_id, enabled`
+
+---
+
+## notifications
+
+アプリ内通知センター表示用の通知レコード。
+
+| フィールド | 型 | 備考 |
+|-|-|-|
+| id | string | 主キー |
+| user_id | string | users.idへの外部キー（通知対象ユーザ） |
+| type | string | "encounter_single", "encounter_batch", "comment", "like", "song_generated" など |
+| title | string | 通知タイトル |
+| body | string | 通知本文 |
+| target_json | string | 画面遷移先情報（encounter_id 等）をJSON形式で保持 |
+| is_read | boolean | 既読フラグ（デフォルト: false） |
+| read_at | datetime | 既読日時（nullable） |
+| created_at | datetime | |
+
+**インデックス:**
+- `user_id`
+- `user_id, is_read`
+- `user_id, created_at`
 
 ---
 
