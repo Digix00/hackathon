@@ -1,0 +1,14 @@
+*.iml
+.gradle
+/local.properties
+/.idea/
+.DS_Store
+/build
+**/build/
+/captures
+.externalNativeBuild
+.caches
+local.properties
+**/*.jks
+google-services.json
+gradle/gradle-daemon-jvm.properties
