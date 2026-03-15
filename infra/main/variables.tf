@@ -9,5 +9,5 @@ variable "region" {
 
 variable "github_repo" {
   type        = string
-  description = "Digix00/hackathon"
+  description = "GitHub リポジトリ名（例: org/repo）。Workload Identity Federation に使用"
 }
