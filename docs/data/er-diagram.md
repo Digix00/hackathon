@@ -92,7 +92,7 @@ erDiagram
 		string id PK
 		string user_id_1 FK
 		string user_id_2 FK
-		datetime encountered_at
+		datetime occurred_at
 		string encounter_type
 		float latitude
 		float longitude
@@ -505,7 +505,7 @@ erDiagram
 | id | string | 主キー |
 | user_id_1 | string | users.idへの外部キー |
 | user_id_2 | string | users.idへの外部キー |
-| encountered_at | datetime | すれ違い発生日時 |
+| occurred_at | datetime | すれ違い発生日時 |
 | encounter_type | string | "ble" または "location" |
 | latitude | float | ぼかし済み緯度（encounter_type="location" の場合のみ） |
 | longitude | float | ぼかし済み経度（encounter_type="location" の場合のみ） |
@@ -518,7 +518,7 @@ erDiagram
 **インデックス:**
 - `user_id_1`
 - `user_id_2`
-- `encountered_at`
+- `occurred_at`
 
 ---
 

@@ -9,6 +9,7 @@
 - 一覧取得 API の `limit` は特に明記がない限り省略時 20、最大 50 とする。
 - 一覧取得 API の並び順は特に明記がない限り `created_at` 降順（新しい順）とする。`occurred_at` を持つリソースは `occurred_at` 降順を優先する。
 - 特に記載がない限り、レスポンスの `id` は UUID を想定する。
+- ただしトラック系リソースの `id` / `track_id` / パスパラメータ `{id}` は例外として `<provider>:track:<external_id>` 形式の外部識別子を使用する（例: `spotify:track:123`）。DB スキーマでは `tracks.provider` と `tracks.external_id` の組み合わせに対応する。
 
 ### 共通エラー形式
 
@@ -73,6 +74,8 @@ Spotify から `code`・`state` がクエリパラメータで付与される。
 ```
 
 ## tracks
+
+このセクションで扱うトラック識別子（`id` / `track_id` / `{id}`）は、共通仕様の例外として `<provider>:track:<external_id>` 形式の外部識別子を用いる。
 
 ### GET /tracks/search
 
