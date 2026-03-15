@@ -1,6 +1,7 @@
 package com.digix00.musicswapping.ui.navigation
 
 sealed class Screen(val route: String) {
+    data object Splash : Screen("splash")
     data object Auth : Screen("auth")
     data object Onboarding : Screen("onboarding")
     data object Home : Screen("home")

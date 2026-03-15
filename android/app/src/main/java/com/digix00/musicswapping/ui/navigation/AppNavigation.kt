@@ -1,6 +1,7 @@
 package com.digix00.musicswapping.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -19,6 +20,7 @@ import com.digix00.musicswapping.ui.onboarding.OnboardingScreen
 import com.digix00.musicswapping.ui.profile.ProfileScreen
 import com.digix00.musicswapping.ui.search.SearchScreen
 import com.digix00.musicswapping.ui.settings.SettingsScreen
+import kotlinx.coroutines.flow.map
 
 @Composable
 fun AppNavigation() {
@@ -27,19 +29,29 @@ fun AppNavigation() {
     val authViewModel: AuthViewModel = hiltViewModel()
     val appPreferences = remember(context) { AppPreferences(context.applicationContext) }
     val isLoggedIn by authViewModel.isLoggedIn.collectAsStateWithLifecycle()
-    val isOnboardingCompleted by appPreferences.isOnboardingCompleted.collectAsStateWithLifecycle(initialValue = false)
+    val isOnboardingCompleted by appPreferences.isOnboardingCompleted
+        .map<Boolean, Boolean?> { it }
+        .collectAsStateWithLifecycle(initialValue = null)
 
-    val startDestination = when {
-        !isLoggedIn -> Screen.Auth.route
-        isOnboardingCompleted -> Screen.Home.route
-        else -> Screen.Onboarding.route
-    }
+    NavHost(navController = navController, startDestination = Screen.Splash.route) {
+        composable(Screen.Splash.route) {
+            LaunchedEffect(isLoggedIn, isOnboardingCompleted) {
+                val destination = when {
+                    !isLoggedIn -> Screen.Auth.route
+                    isOnboardingCompleted == null -> null
+                    isOnboardingCompleted == true -> Screen.Home.route
+                    else -> Screen.Onboarding.route
+                } ?: return@LaunchedEffect
 
-    NavHost(navController = navController, startDestination = startDestination) {
+                navController.navigate(destination) {
+                    popUpTo(Screen.Splash.route) { inclusive = true }
+                }
+            }
+        }
         composable(Screen.Auth.route) {
             AuthScreen(
                 onLoginSuccess = {
-                    val destination = if (isOnboardingCompleted) Screen.Home.route else Screen.Onboarding.route
+                    val destination = if (isOnboardingCompleted == true) Screen.Home.route else Screen.Onboarding.route
                     navController.navigate(destination) {
                         popUpTo(Screen.Auth.route) { inclusive = true }
                     }

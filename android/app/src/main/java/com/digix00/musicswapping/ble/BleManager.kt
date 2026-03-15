@@ -56,6 +56,7 @@ class BleManager(private val context: Context) {
             .build()
 
         val data = AdvertiseData.Builder()
+            .addServiceUuid(ParcelUuid(SERVICE_UUID))
             .addServiceData(ParcelUuid(SERVICE_UUID), bleToken.toByteArray(Charsets.UTF_8))
             .build()
 
