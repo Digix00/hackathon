@@ -127,7 +127,7 @@ git push -u origin "$(git branch --show-current)"
 
 ```bash
 git add <paths...>
-git commit -m "type: concise description"
+git commit -m "type: 簡潔な日本語の説明"
 ```
 
 最後のコミット後は以下を実行する。
