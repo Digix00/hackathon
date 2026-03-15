@@ -233,6 +233,59 @@ erDiagram
 		datetime updated_at
 	}
 
+	LYRIC_CHAINS {
+		string id PK
+		string status
+		integer participant_count
+		integer threshold
+		datetime created_at
+		datetime completed_at
+		datetime deleted_at
+	}
+
+	LYRIC_ENTRIES {
+		string id PK
+		string chain_id FK
+		string user_id FK
+		string encounter_id FK
+		string content
+		integer sequence_num
+		datetime created_at
+		datetime deleted_at
+	}
+
+	GENERATED_SONGS {
+		string id PK
+		string chain_id FK
+		string title
+		string audio_url
+		integer duration_sec
+		string mood
+		string genre
+		string status
+		datetime generated_at
+		datetime created_at
+		datetime deleted_at
+	}
+
+	SONG_LIKES {
+		string id PK
+		string song_id FK
+		string user_id FK
+		datetime created_at
+		datetime deleted_at
+	}
+
+	OUTBOX_LYRIA_JOBS {
+		string id PK
+		string chain_id FK
+		string status
+		integer retry_count
+		string error_message
+		datetime created_at
+		datetime processed_at
+	}
+
 	%% リレーション
 	PREFECTURES ||--o{ USERS : "prefecture_id"
 	FILES ||--o{ USERS : "avatar_file_id"
@@ -268,6 +321,13 @@ erDiagram
 	USERS ||--o{ OUTBOX_NOTIFICATIONS : "user_id"
 	ENCOUNTERS ||--o{ OUTBOX_NOTIFICATIONS : "encounter_id"
 	USERS ||--o{ DAILY_ENCOUNTER_COUNTS : "user_id"
+	LYRIC_CHAINS ||--o{ LYRIC_ENTRIES : "chain_id"
+	USERS ||--o{ LYRIC_ENTRIES : "user_id"
+	ENCOUNTERS ||--o{ LYRIC_ENTRIES : "encounter_id"
+	LYRIC_CHAINS ||--o| GENERATED_SONGS : "chain_id"
+	GENERATED_SONGS ||--o{ SONG_LIKES : "song_id"
+	USERS ||--o{ SONG_LIKES : "user_id"
+	LYRIC_CHAINS ||--o{ OUTBOX_LYRIA_JOBS : "chain_id"
 ```
 
 ---
@@ -755,3 +815,135 @@ Spotify/Apple Music OAuth連携情報。
 **運用:**
 - UPSERT で交換発生時にカウントをインクリメント
 - カウントがしきい値（3 / 5 / 10 / 50 / 100）を超過した場合はドメインエラー
+
+---
+
+## lyric_chains
+
+歌詞チェーン。4〜8人の歌詞が集まると楽曲生成がトリガーされる。
+
+| フィールド | 型 | 備考 |
+|-|-|-|
+| id | string | 主キー |
+| status | string | "pending", "generating", "completed", "failed" |
+| participant_count | integer | 現在の参加者数 |
+| threshold | integer | 生成トリガー閾値（4〜8、デフォルト: 4） |
+| created_at | datetime | |
+| completed_at | datetime | 楽曲生成完了日時（nullable） |
+| deleted_at | datetime | |
+
+**インデックス:**
+- `status`（pending のスキャン用）
+- `created_at`
+
+**運用:**
+- 歌詞投稿時に `status = 'pending'` かつ `participant_count < threshold` のチェーンを検索
+- 該当なしの場合は新規チェーン作成
+- `participant_count >= threshold` で `status = 'generating'` に変更し、Lyria生成ジョブをキュー
+
+---
+
+## lyric_entries
+
+歌詞エントリ。各ユーザーがすれ違い時に投稿した歌詞。
+
+| フィールド | 型 | 備考 |
+|-|-|-|
+| id | string | 主キー |
+| chain_id | string | lyric_chains.idへの外部キー |
+| user_id | string | users.idへの外部キー |
+| encounter_id | string | encounters.idへの外部キー |
+| content | string | 歌詞内容（最大100文字） |
+| sequence_num | integer | チェーン内の順番（1〜8） |
+| created_at | datetime | |
+| deleted_at | datetime | |
+
+**制約:**
+- `(chain_id, user_id)` で UNIQUE 制約（同一ユーザーの重複参加防止）
+- `(chain_id, sequence_num)` で UNIQUE 制約
+- `content` の長さは最大100文字
+
+**インデックス:**
+- `chain_id`
+- `user_id`
+- `encounter_id`
+
+---
+
+## generated_songs
+
+Lyriaで生成された楽曲。
+
+| フィールド | 型 | 備考 |
+|-|-|-|
+| id | string | 主キー |
+| chain_id | string | lyric_chains.idへの外部キー（1対1） |
+| title | string | 曲タイトル（Geminiで自動生成、最大100文字） |
+| audio_url | string | Cloud Storage URL |
+| duration_sec | integer | 楽曲の長さ（秒） |
+| mood | string | ムード（"melancholic", "upbeat", "nostalgic", etc.） |
+| genre | string | ジャンル（"J-POP", "Rock", "Ballad", etc.） |
+| status | string | "processing", "completed", "failed" |
+| generated_at | datetime | 生成完了日時 |
+| created_at | datetime | |
+| deleted_at | datetime | |
+
+**制約:**
+- `chain_id` に UNIQUE 制約（1チェーン1曲）
+
+**インデックス:**
+- `chain_id`
+- `status`
+- `generated_at`
+
+**運用:**
+- Lyria生成完了後、audio_urlにCloud StorageのパスをセットしstatusをcompletedにUPDATE
+- 生成失敗時はstatusをfailedに変更
+
+---
+
+## song_likes
+
+生成楽曲へのいいね。
+
+| フィールド | 型 | 備考 |
+|-|-|-|
+| id | string | 主キー |
+| song_id | string | generated_songs.idへの外部キー |
+| user_id | string | users.idへの外部キー |
+| created_at | datetime | |
+| deleted_at | datetime | |
+
+**制約:**
+- `(song_id, user_id)` で UNIQUE 制約
+
+**インデックス:**
+- `song_id`
+- `user_id`
+
+---
+
+## outbox_lyria_jobs
+
+Lyria楽曲生成ジョブのOutboxテーブル。
+
+| フィールド | 型 | 備考 |
+|-|-|-|
+| id | string | 主キー |
+| chain_id | string | lyric_chains.idへの外部キー |
+| status | string | "pending", "processing", "completed", "failed" |
+| retry_count | integer | リトライ回数（最大3回） |
+| error_message | string | エラーメッセージ（nullable） |
+| created_at | datetime | |
+| processed_at | datetime | 処理完了日時 |
+
+**インデックス:**
+- `status`（pending のスキャン用）
+- `chain_id`
+- `created_at`
+
+**運用:**
+- worker が定期的に `status = 'pending'` をスキャンしてLyria生成処理を実行
+- 処理開始時に `status = 'processing'` に変更
+- 成功時は `status = 'completed'`、失敗時は `retry_count` をインクリメント
+- 3回超過で `status = 'failed'` に遷移し、アラート発報

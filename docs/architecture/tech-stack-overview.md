@@ -11,7 +11,15 @@
        ↓
    [Backend: Go + Echo]
        ↓
-   [Cloud SQL (GCP)]
+   ┌───────────────────────────────────┐
+   │         GCP Services              │
+   ├───────────────────────────────────┤
+   │  Cloud SQL    Vertex AI           │
+   │  (PostgreSQL) (Gemini + Lyria)    │
+   │                                   │
+   │  Cloud Storage  FCM               │
+   │  (Audio Files)  (Push)            │
+   └───────────────────────────────────┘
 ```
 
 ## レイヤー別スタック一覧
@@ -22,6 +30,7 @@
 | Android | Kotlin | [mobile.md](./mobile.md) |
 | Backend | Go + Echo | [backend.md](./backend.md) |
 | DB | Cloud SQL（PostgreSQL） | [backend.md](./backend.md) |
+| AI/ML | Vertex AI（Gemini 1.5 Flash + Lyria） | [lyria-integration.md](./lyria-integration.md) |
 | インフラ | GCP / Terraform | [infrastructure.md](./infrastructure.md) |
 | スキーマ | OpenAPI 3.x | [schema-driven-development.md](./schema-driven-development.md) |
 | CI/CD | GitHub Actions | [cicd.md](./cicd.md) |
@@ -34,6 +43,14 @@
 | Apple Music API | 楽曲情報取得（地域差・審査難度に注意） |
 | APNs | iOS プッシュ通知 |
 | FCM | Android プッシュ通知 |
+
+## Google AI/ML サービス
+
+| サービス | モデル | 用途 | 詳細ドキュメント |
+|---|---|---|---|
+| Vertex AI | Gemini 1.5 Flash | 歌詞分析（ムード・ジャンル推定）、コンテンツモデレーション、タイトル生成 | [lyria-integration.md](./lyria-integration.md) |
+| Vertex AI | Lyria（lyria-002） | 歌詞チェーンからの楽曲自動生成 | [lyria-integration.md](./lyria-integration.md) |
+| Cloud Storage | - | 生成楽曲の保存・配信 | [infrastructure.md](./infrastructure.md) |
 
 ## 近接検知方式
 
