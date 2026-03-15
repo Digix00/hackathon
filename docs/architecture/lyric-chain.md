@@ -136,7 +136,7 @@
     "chain_id": "uuid",
     "sequence_num": 3,
     "content": "今日も空は青かった",
-    "created_at": "2025-03-15T10:00:00Z"
+    "created_at": "YYYY-MM-DDTHH:MM:SSZ"
   },
   "chain": {
     "id": "uuid",
@@ -165,8 +165,8 @@
     "status": "completed",
     "participant_count": 4,
     "threshold": 4,
-    "created_at": "2025-03-15T09:00:00Z",
-    "completed_at": "2025-03-15T10:05:00Z"
+    "created_at": "YYYY-MM-DDTHH:MM:SSZ",
+    "completed_at": "YYYY-MM-DDTHH:MM:SSZ"
   },
   "entries": [
     {
@@ -200,7 +200,7 @@
       "audio_url": "...",
       "participant_count": 4,
       "my_lyric": "今日も空は青かった",
-      "generated_at": "2025-03-15T10:05:00Z"
+      "generated_at": "YYYY-MM-DDTHH:MM:SSZ"
     }
   ]
 }
@@ -255,7 +255,9 @@ func (uc *LyricUseCase) SubmitLyric(ctx context.Context, userID, encounterID uui
         if chain.ParticipantCount >= chain.Threshold {
             chain.Status = ChainStatusGenerating
             // 生成ジョブをOutboxに追加
-            if err := uc.outboxRepo.Enqueue(tx, OutboxTypeLyriaGeneration, chain.ID); err != nil {
+            if err := uc.outboxRepo.Enqueue(tx, OutboxTypeLyriaGeneration, LyriaGenerationPayload{
+                ChainID: chain.ID,
+            }); err != nil {
                 return err
             }
         }
@@ -282,6 +284,29 @@ func (uc *LyricUseCase) SubmitLyric(ctx context.Context, userID, encounterID uui
 ---
 
 ## 生成ジョブ処理
+
+### Outbox 追加規約
+
+`outboxRepo.Enqueue` は以下の形で統一する。
+
+```go
+Enqueue(tx TxContext, outboxType OutboxType, payload any) error
+```
+
+- 第2引数は Outbox の種別
+- 第3引数は JSON 化して保存する payload 構造体
+- 単一 ID を渡したい場合も、裸の `uuid.UUID` ではなく payload 構造体で包む
+
+```go
+type LyriaGenerationPayload struct {
+    ChainID uuid.UUID `json:"chain_id"`
+}
+
+type SongNotificationPayload struct {
+    UserID uuid.UUID `json:"user_id"`
+    SongID uuid.UUID `json:"song_id"`
+}
+```
 
 ### Worker処理フロー
 
@@ -345,7 +370,7 @@ func (w *LyriaWorker) ProcessGenerationJob(ctx context.Context, chainID uuid.UUI
 
         // 参加者全員への通知をOutboxに追加
         for _, entry := range entries {
-            if err := w.outboxRepo.Enqueue(tx, OutboxTypeSongNotification, &SongNotificationPayload{
+            if err := w.outboxRepo.Enqueue(tx, OutboxTypeSongNotification, SongNotificationPayload{
                 UserID: entry.UserID,
                 SongID: song.ID,
             }); err != nil {

@@ -190,7 +190,7 @@ import (
 
     aiplatform "cloud.google.com/go/aiplatform/apiv1"
     "cloud.google.com/go/aiplatform/apiv1/aiplatformpb"
-    port "example.com/yourapp/port"
+    port "example.com/yourapp/internal/usecase/port"
     "google.golang.org/api/option"
     "google.golang.org/protobuf/types/known/structpb"
 )
@@ -304,6 +304,7 @@ import (
     "fmt"
 
     "cloud.google.com/go/vertexai/genai"
+    port "example.com/yourapp/internal/usecase/port"
 )
 
 type Client struct {
@@ -349,20 +350,24 @@ func extractText(resp *genai.GenerateContentResponse) string {
 }
 
 func (c *Client) AnalyzeLyrics(ctx context.Context, lyrics string) (*port.LyricsAnalysis, error) {
-    prompt := fmt.Sprintf(`以下の歌詞を分析して、JSON形式で結果を返してください。
+    prompt := fmt.Sprintf(`以下の歌詞を分析してください。
+
+必ず有効な JSON オブジェクトのみを返してください。説明文、前置き・後置きの文章、コメント、Markdown のコードブロックやバッククォート（``` や `）など、JSON 以外の文字は一切出力しないでください。
+出力は先頭から末尾まで 1 つの JSON オブジェクトのみとし、改行は JSON 内のインデントのために使用しても構いません。
 
 歌詞:
 %s
 
-以下の形式で回答してください（日本語で）:
+以下の形式の JSON オブジェクト「のみ」を返してください。前後に説明文やコードフェンス（```）を付けないでください。
+各フィールドの値は、指定された言語・形式に厳密に従ってください。
 {
-  "mood": "メインのムード（1語: melancholic, upbeat, nostalgic, energetic, peaceful, romantic等）",
-  "secondary_moods": ["サブムード1", "サブムード2"],
-  "genre": "推奨ジャンル（J-POP, Rock, Ballad, Electronic等）",
-  "tempo": "推奨テンポ（slow, medium, fast）",
-  "suggested_title": "歌詞の内容に合った曲タイトル案",
-  "keywords": ["キーワード1", "キーワード2", "キーワード3"],
-  "language": "言語コード（ja, en等）"
+  "mood": "メインのムード（英語1語。次のいずれか: melancholic, upbeat, nostalgic, energetic, peaceful, romantic）",
+  "secondary_moods": ["サブムード1（日本語）", "サブムード2（日本語）"],
+  "genre": "推奨ジャンル（英語。例: j-pop, rock, ballad, electronic）",
+  "tempo": "推奨テンポ（英語。次のいずれか: slow, medium, fast）",
+  "suggested_title": "歌詞の内容に合った曲タイトル案（日本語）",
+  "keywords": ["キーワード1（日本語）", "キーワード2（日本語）", "キーワード3（日本語）"],
+  "language": "言語コード（英小文字の2文字。例: ja, en）"
 }`, lyrics)
 
     resp, err := c.model.GenerateContent(ctx, genai.Text(prompt))
@@ -382,9 +387,12 @@ func (c *Client) AnalyzeLyrics(ctx context.Context, lyrics string) (*port.Lyrics
 func (c *Client) ModerateContent(ctx context.Context, content string) (*port.ModerationResult, error) {
     prompt := fmt.Sprintf(`以下のテキストが不適切なコンテンツを含むかチェックしてください。
 
+必ず有効な JSON オブジェクトのみを返してください。説明文、前置き・後置きの文章、コメント、Markdown のコードブロックやバッククォート（``` や `）など、JSON 以外の文字は一切出力しないでください。
+出力は先頭から末尾まで 1 つの JSON オブジェクトのみとし、改行は JSON 内のインデントのために使用しても構いません。
+
 テキスト: %s
 
-以下の形式でJSON回答:
+以下の形式の JSON オブジェクトを返してください。
 {
   "is_harmful": true/false,
   "categories": ["該当カテゴリ（ヘイト、暴力、成人向け等）"],
