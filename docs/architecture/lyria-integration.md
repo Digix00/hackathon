@@ -157,21 +157,21 @@ type GeminiClient interface {
 
 // LyricsAnalysis は歌詞分析結果
 type LyricsAnalysis struct {
-    Mood           string   // メインのムード
-    SecondaryMoods []string // サブムード
-    Genre          string   // 推奨ジャンル
-    Tempo          string   // 推奨テンポ
-    SuggestedTitle string   // タイトル案
-    Keywords       []string // キーワード
-    Language       string   // 言語（ja, en, etc.）
+    Mood           string   `json:"mood"`             // メインのムード
+    SecondaryMoods []string `json:"secondary_moods"`  // サブムード
+    Genre          string   `json:"genre"`            // 推奨ジャンル
+    Tempo          string   `json:"tempo"`            // 推奨テンポ
+    SuggestedTitle string   `json:"suggested_title"`  // タイトル案
+    Keywords       []string `json:"keywords"`         // キーワード
+    Language       string   `json:"language"`         // 言語（ja, en, etc.）
 }
 
 // ModerationResult はコンテンツモデレーション結果
 type ModerationResult struct {
-    IsHarmful    bool
-    Categories   []string // 該当したカテゴリ
-    Confidence   float64
-    Suggestion   string // 修正提案（該当時）
+    IsHarmful    bool     `json:"is_harmful"`
+    Categories   []string `json:"categories"` // 該当したカテゴリ
+    Confidence   float64  `json:"confidence"`
+    Suggestion   string   `json:"suggestion"` // 修正提案（該当時）
 }
 ```
 
