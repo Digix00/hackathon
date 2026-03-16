@@ -119,16 +119,12 @@ class ApiClient(
     }
 
     companion object {
-        protected const val BASE_URL_KEY: String = "com.digix00.musicswapping.generated.baseUrl"
-        @Deprecated(
-          message = "Please use the capitalized constant `BASE_URL_KEY` instead.",
-          replaceWith = ReplaceWith("BASE_URL_KEY")
-        )
-        protected const val baseUrlKey: String = BASE_URL_KEY
+        @JvmStatic
+        protected val baseUrlKey: String = "com.digix00.musicswapping.generated.baseUrl"
 
         @JvmStatic
         val defaultBasePath: String by lazy {
-            System.getProperties().getProperty(BASE_URL_KEY, "http://localhost:8000/api/v1")
+            System.getProperties().getProperty(baseUrlKey, "http://localhost:8000/api/v1")
         }
     }
 }
