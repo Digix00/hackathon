@@ -12,7 +12,6 @@ hiltNavigation          = "1.2.0"
 retrofit                = "2.11.0"
 okhttp                  = "4.12.0"
 kotlinxSerialization    = "1.7.3"
-retrofitSerializer      = "1.0.0"
 room                    = "2.6.1"
 datastore               = "1.1.2"
 coil                    = "3.0.4"
@@ -58,7 +57,8 @@ hilt-navigation-compose         = { group = "androidx.hilt", name = "hilt-naviga
 retrofit                        = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 okhttp-logging                  = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 kotlinx-serialization-json      = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
-retrofit-kotlinx-serialization  = { group = "com.jakewharton.retrofit", name = "retrofit2-kotlinx-serialization-converter", version.ref = "retrofitSerializer" }
+retrofit-kotlinx-serialization  = { group = "com.squareup.retrofit2", name = "converter-kotlinx-serialization", version.ref = "retrofit" }
+retrofit-converter-scalars      = { group = "com.squareup.retrofit2", name = "converter-scalars", version.ref = "retrofit" }
 
 # Room
 room-runtime                    = { group = "androidx.room", name = "room-runtime", version.ref = "room" }

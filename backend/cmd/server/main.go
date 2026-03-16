@@ -1,3 +1,12 @@
+// @title           MusicSwapping API
+// @version         1.0
+// @description     MusicSwapping バックエンド API
+// @host            localhost:8000
+// @BasePath        /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in              header
+// @name            Authorization
+// @description     Firebase ID トークン。"Bearer <token>" の形式で渡す。
 package main
 
 import (
@@ -8,9 +17,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.uber.org/zap"
 
 	"hackathon/config"
+	_ "hackathon/docs"
 	"hackathon/internal/handler"
 	infraauth "hackathon/internal/infra/auth"
 	"hackathon/internal/infra/rdb"
@@ -63,6 +74,12 @@ func main() {
 	e.HideBanner = true
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
+
+	// Swagger UI は development / test 環境のみ公開する（Seed と同じ allowlist 方式）
+	if cfg.GoEnv == "development" || cfg.GoEnv == "test" {
+		e.GET("/swagger/*", echoSwagger.WrapHandler)
+		log.Info("swagger UI enabled", zap.String("url", "http://localhost:"+cfg.Port+"/swagger/index.html"))
+	}
 
 	e.GET("/healthz", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})

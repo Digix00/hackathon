@@ -1,3 +1,4 @@
+import io.gitlab.arturbosch.detekt.Detekt
 import org.gradle.api.GradleException
 import java.util.Properties
 
@@ -146,6 +147,7 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.retrofit.kotlinx.serialization)
+    implementation(libs.retrofit.converter.scalars)
 
     // Room
     implementation(libs.room.runtime)
@@ -179,6 +181,10 @@ dependencies {
 detekt {
     config.setFrom("$rootDir/detekt.yml")
     buildUponDefaultConfig = true
+}
+
+tasks.withType<Detekt>().configureEach {
+    exclude("**/generated/**")
 }
 
 ktlint {
