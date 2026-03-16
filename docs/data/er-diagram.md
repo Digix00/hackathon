@@ -47,7 +47,8 @@ erDiagram
 		string title
 		string artist_name
 		string album_name
-		string album_art_url
+		string artwork_url
+		string preview_url
 		integer duration_ms
 		datetime cached_at
 	}
@@ -92,7 +93,7 @@ erDiagram
 		string id PK
 		string user_id_1 FK
 		string user_id_2 FK
-		datetime encountered_at
+		datetime occurred_at
 		string encounter_type
 		float latitude
 		float longitude
@@ -107,6 +108,15 @@ erDiagram
 		datetime read_at
 	}
 
+	ENCOUNTER_TRACKS {
+		string id PK
+		string encounter_id FK
+		string track_id FK
+		string source_user_id FK
+		datetime created_at
+		datetime deleted_at
+	}
+
 	REPORTS {
 		string id PK
 		string reporter_user_id FK
@@ -114,6 +124,7 @@ erDiagram
 		string report_type
 		string target_comment_id FK
 		string reason
+		string detail
 		datetime created_at
 		datetime deleted_at
 	}
@@ -172,10 +183,25 @@ erDiagram
 	USER_DEVICES {
 		string id PK
 		string user_id FK
-		string device_token
+		string push_token
 		string platform
+		string device_id
+		string app_version
+		boolean enabled
 		datetime created_at
 		datetime updated_at
+	}
+
+	NOTIFICATIONS {
+		string id PK
+		string user_id FK
+		string type
+		string title
+		string body
+		string target_json
+		boolean is_read
+		datetime read_at
+		datetime created_at
 	}
 
 	USER_SETTINGS {
@@ -301,6 +327,9 @@ erDiagram
 	USERS ||--o{ ENCOUNTERS : "user_id_2"
 	USERS ||--o{ ENCOUNTER_READS : "user_id"
 	ENCOUNTERS ||--o{ ENCOUNTER_READS : "encounter_id"
+	ENCOUNTERS ||--o{ ENCOUNTER_TRACKS : "encounter_id"
+	TRACKS ||--o{ ENCOUNTER_TRACKS : "track_id"
+	USERS ||--o{ ENCOUNTER_TRACKS : "source_user_id"
 	USERS ||--o{ REPORTS : "reporter_user_id"
 	USERS ||--o{ REPORTS : "reported_user_id"
 	COMMENTS ||--o{ REPORTS : "target_comment_id"
@@ -316,6 +345,7 @@ erDiagram
 	ENCOUNTERS ||--o{ COMMENTS : "encounter_id"
 	USERS ||--o{ COMMENTS : "commenter_user_id"
 	USERS ||--o{ USER_DEVICES : "user_id"
+	USERS ||--o{ NOTIFICATIONS : "user_id"
 	USERS ||--o{ USER_SETTINGS : "user_id"
 	USERS ||--o{ MUSIC_CONNECTIONS : "user_id"
 	USERS ||--o{ OUTBOX_NOTIFICATIONS : "user_id"
@@ -350,7 +380,7 @@ erDiagram
 | prefecture_id | string | prefectures.idへの外部キー |
 | sex | string | "male", "female", "no-answer" |
 | is_restricted | boolean | 通報を数回受けるとtrue |
-| avatar_file_id | string | files.idへの外部キー |
+| avatar_file_id | string | files.idへの外部キー（API の `avatar_url` はこの参照から解決する公開 URL） |
 | avatar_shape | string | "circle" または "square" |
 | created_at | datetime | |
 | updated_at | datetime | |
@@ -404,7 +434,8 @@ erDiagram
 | title | string | 曲名 |
 | artist_name | string | アーティスト名 |
 | album_name | string | アルバム名 |
-| album_art_url | string | ジャケット画像URL |
+| artwork_url | string | ジャケット画像URL |
+| preview_url | string | プレビュー再生URL |
 | duration_ms | integer | 曲の長さ（ミリ秒） |
 | cached_at | datetime | キャッシュ日時 |
 
@@ -504,7 +535,7 @@ erDiagram
 | id | string | 主キー |
 | user_id_1 | string | users.idへの外部キー |
 | user_id_2 | string | users.idへの外部キー |
-| encountered_at | datetime | すれ違い発生日時 |
+| occurred_at | datetime | すれ違い発生日時 |
 | encounter_type | string | "ble" または "location" |
 | latitude | float | ぼかし済み緯度（encounter_type="location" の場合のみ） |
 | longitude | float | ぼかし済み経度（encounter_type="location" の場合のみ） |
@@ -517,7 +548,7 @@ erDiagram
 **インデックス:**
 - `user_id_1`
 - `user_id_2`
-- `encountered_at`
+- `occurred_at`
 
 ---
 
@@ -541,6 +572,30 @@ erDiagram
 
 ---
 
+## encounter_tracks
+
+すれ違いに紐づく交換曲情報。
+`source_user_id` はサーバー内部で利用し、公開 API には露出しない。
+
+| フィールド | 型 | 備考 |
+|-|-|-|
+| id | string | 主キー |
+| encounter_id | string | encounters.idへの外部キー |
+| track_id | string | tracks.idへの外部キー |
+| source_user_id | string | users.idへの外部キー（どちらのユーザー由来の曲か） |
+| created_at | datetime | |
+| deleted_at | datetime | |
+
+**制約:**
+- `(encounter_id, track_id, source_user_id)` で UNIQUE 制約
+
+**インデックス:**
+- `encounter_id`
+- `track_id`
+- `source_user_id`
+
+---
+
 ## reports
 
 | フィールド | 型 | 備考 |
@@ -551,6 +606,7 @@ erDiagram
 | report_type | string | "user" または "comment" |
 | target_comment_id | string | comments.idへの外部キー（report_type="comment"の場合に必須） |
 | reason | string | 通報理由 |
+| detail | string | 補足説明（任意、最大500文字） |
 | created_at | datetime | |
 | deleted_at | datetime | |
 
@@ -692,17 +748,44 @@ erDiagram
 |-|-|-|
 | id | string | 主キー |
 | user_id | string | users.idへの外部キー |
-| device_token | string | APNs/FCMのデバイストークン |
+| push_token | string | APNs/FCMのデバイストークン |
 | platform | string | "ios" または "android" |
+| device_id | string | 端末固有ID |
+| app_version | string | アプリバージョン |
+| enabled | boolean | 通知送信の有効/無効 |
 | created_at | datetime | |
 | updated_at | datetime | |
 
 **制約:**
-- `device_token` に UNIQUE 制約
+- `(user_id, platform, device_id)` で UNIQUE 制約
 
 **インデックス:**
 - `user_id`
-- `device_token`
+- `push_token`
+- `user_id, enabled`
+
+---
+
+## notifications
+
+アプリ内通知センター表示用の通知レコード。
+
+| フィールド | 型 | 備考 |
+|-|-|-|
+| id | string | 主キー |
+| user_id | string | users.idへの外部キー（通知対象ユーザ） |
+| type | string | "encounter_single", "encounter_batch", "comment", "like", "song_generated" など |
+| title | string | 通知タイトル |
+| body | string | 通知本文 |
+| target_json | string | 画面遷移先情報（encounter_id 等）をJSON形式で保持 |
+| is_read | boolean | 既読フラグ（デフォルト: false） |
+| read_at | datetime | 既読日時（nullable） |
+| created_at | datetime | |
+
+**インデックス:**
+- `user_id`
+- `user_id, is_read`
+- `user_id, created_at`
 
 ---
 

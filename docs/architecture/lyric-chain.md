@@ -172,7 +172,11 @@
     {
       "sequence_num": 1,
       "content": "夜明け前の静けさの中",
-      "user": { "display_name": "ユーザーA", "avatar_url": "..." }
+      "user": {
+        "id": "uuid",
+        "display_name": "ユーザーA",
+        "avatar_url": "..."
+      }
     },
     ...
   ],
@@ -186,7 +190,7 @@
 }
 ```
 
-### GET /api/v1/songs/me
+### GET /api/v1/users/me/songs
 
 自分が参加した生成楽曲一覧。
 
@@ -202,10 +206,13 @@
       "my_lyric": "今日も空は青かった",
       "generated_at": "YYYY-MM-DDTHH:MM:SSZ"
     }
-  ]
+  ],
+  "pagination": {
+    "next_cursor": null,
+    "has_more": false
+  }
 }
 ```
-
 ---
 
 ## Chainマッチングロジック
@@ -465,5 +472,5 @@ func (uc *LyricUseCase) ValidateContent(ctx context.Context, content string) err
 | P1 | Geminiムード分析 |
 | P1 | コンテンツモデレーション |
 | P1 | 生成完了通知 |
-| P2 | GET /api/v1/songs/me API |
+| P2 | GET /api/v1/users/me/songs API |
 | P2 | Chain詳細API |

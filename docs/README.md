@@ -10,6 +10,7 @@ AI が迷わず参照できるよう、目的別に整理した一覧です。
 ## Architecture
 
 - 技術スタック概要: [architecture/tech-stack-overview.md](./architecture/tech-stack-overview.md)
+- API設計: [architecture/api-design.md](./architecture/api-design.md)
 - モバイル: [architecture/mobile.md](./architecture/mobile.md)
 - バックエンド/DB: [architecture/backend.md](./architecture/backend.md)
 - インフラ: [architecture/infrastructure.md](./architecture/infrastructure.md)
@@ -28,7 +29,6 @@ AI が迷わず参照できるよう、目的別に整理した一覧です。
 
 ## Data
 
-- DB スキーマ: [data/database-schema.md](./data/database-schema.md)
 - ER 図: [data/er-diagram.md](./data/er-diagram.md)
 
 ## Planning
