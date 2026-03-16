@@ -61,14 +61,6 @@ func main() {
 	})
 
 	e.GET("/healthz/postgres", func(c echo.Context) error {
-		sqlDB, err := db.DB()
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{
-				"status": "error",
-				"error":  err.Error(),
-			})
-		}
-
 		ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 		defer cancel()
 
@@ -84,7 +76,6 @@ func main() {
 
 	log.Info("server starting", zap.String("port", cfg.Port))
 
-	// #5 Nit: e.Logger.Fatal だと Echo 独自形式になるため zap に統一
 	if err := e.Start(":" + cfg.Port); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal("server error", zap.Error(err))
 	}

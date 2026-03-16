@@ -45,7 +45,7 @@ type Playlist struct {
 	IsPublic    bool           `gorm:"not null;default:true;index"`
 	CreatedAt   time.Time      `gorm:"not null;autoCreateTime"`
 	UpdatedAt   time.Time      `gorm:"not null;autoUpdateTime"`
-	DeletedAt   gorm.DeletedAt `gorm:"index"` // #1 MUST
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
 
 	Tracks []PlaylistTrack `gorm:"foreignKey:PlaylistID"`
 }

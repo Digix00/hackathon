@@ -13,7 +13,7 @@ type LyricChain struct {
 	Threshold        int            `gorm:"not null;default:4"`
 	CreatedAt        time.Time      `gorm:"not null;autoCreateTime;index"`
 	CompletedAt      *time.Time
-	DeletedAt        gorm.DeletedAt `gorm:"index"` // #1 MUST
+	DeletedAt        gorm.DeletedAt `gorm:"index"`
 
 	Entries       []LyricEntry   `gorm:"foreignKey:ChainID"`
 	GeneratedSong *GeneratedSong `gorm:"foreignKey:ChainID"`
@@ -41,7 +41,7 @@ type GeneratedSong struct {
 	Status      string         `gorm:"not null;default:processing;index"` // 'processing' | 'completed' | 'failed'
 	GeneratedAt *time.Time     `gorm:"index"`
 	CreatedAt   time.Time      `gorm:"not null;autoCreateTime"`
-	DeletedAt   gorm.DeletedAt `gorm:"index"` // #1 MUST
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }
 
 type SongLike struct {

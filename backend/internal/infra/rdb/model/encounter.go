@@ -15,7 +15,7 @@ type Encounter struct {
 	Latitude      *float64
 	Longitude     *float64
 	CreatedAt     time.Time      `gorm:"not null;autoCreateTime"`
-	DeletedAt     gorm.DeletedAt `gorm:"index"` // #1 MUST
+	DeletedAt     gorm.DeletedAt `gorm:"index"`
 
 	User1 *User `gorm:"foreignKey:UserID1"`
 	User2 *User `gorm:"foreignKey:UserID2"`
@@ -43,7 +43,7 @@ type Comment struct {
 	CommenterUserID string         `gorm:"not null;index"`
 	Content         string         `gorm:"not null"`
 	CreatedAt       time.Time      `gorm:"not null;autoCreateTime"`
-	DeletedAt       gorm.DeletedAt `gorm:"index"` // #1 MUST
+	DeletedAt       gorm.DeletedAt `gorm:"index"`
 }
 
 type Report struct {
@@ -54,7 +54,7 @@ type Report struct {
 	TargetCommentID *string        `gorm:"index;uniqueIndex:uq_reports_comment,where:report_type = 'comment' AND deleted_at IS NULL"`
 	Reason          string         `gorm:"not null"`
 	CreatedAt       time.Time      `gorm:"not null;autoCreateTime"`
-	DeletedAt       gorm.DeletedAt `gorm:"index"` // #1 MUST
+	DeletedAt       gorm.DeletedAt `gorm:"index"`
 }
 
 type Block struct {

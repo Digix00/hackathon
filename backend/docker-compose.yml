@@ -75,11 +75,10 @@ services:
         condition: service_healthy
 
   pgadmin:
-    image: dpage/pgadmin4:latest
+    image: dpage/pgadmin4:8
     container_name: pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@local.dev
-      PGADMIN_DEFAULT_PASSWORD: admin
+    env_file:
+      - .env.development
     ports:
       - "5050:80"
     depends_on:
