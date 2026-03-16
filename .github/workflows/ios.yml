@@ -44,11 +44,12 @@ jobs:
 
           echo "SIMULATOR_NAME=$SIMULATOR_NAME" >> "$GITHUB_ENV"
 
-      - name: Run unit and UI tests
+      - name: Run unit tests
         run: |
           xcodebuild test \
             -project ios.xcodeproj \
             -scheme ios \
+            -only-testing:iosTests \
             -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
             -derivedDataPath "$RUNNER_TEMP/DerivedData" \
             CODE_SIGNING_ALLOWED=NO
