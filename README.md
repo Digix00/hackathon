@@ -94,6 +94,14 @@ make stop-dev
 
 ※ DBデータ等を完全に消去したい場合は `make clean` を実行してください。
 
+## iOS アプリ
+
+詳細は [ios/README.md](ios/README.md) を参照してください。
+
+```bash
+open ios/ios.xcodeproj
+```
+
 ## 関連ファイル
 
 - `backend/Makefile` - 開発用コマンド定義
@@ -101,3 +109,4 @@ make stop-dev
 - `backend/firebase.json`
 - `backend/.env.development`
 - `backend/cmd/server/main.go`
+- `ios/README.md` - iOS アプリのセットアップ手順
