@@ -206,7 +206,11 @@ actor BLEBackendClient {
         if needsPrefix {
             merged.append(contentsOf: apiPrefixSegments)
         }
-        merged.append(contentsOf: endpointSegments)
+        if baseHasPrefix && endpointHasPrefix {
+            merged.append(contentsOf: endpointSegments.dropFirst(apiPrefixSegments.count))
+        } else {
+            merged.append(contentsOf: endpointSegments)
+        }
 
         return "/" + merged.joined(separator: "/")
     }
