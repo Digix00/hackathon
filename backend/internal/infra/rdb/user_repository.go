@@ -8,9 +8,10 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
+	"hackathon/internal/domain/entity"
 	"hackathon/internal/domain/repository"
+	"hackathon/internal/infra/rdb/converter"
 	"hackathon/internal/infra/rdb/model"
 )
 
@@ -35,7 +36,7 @@ func (r *userRepository) FindByAuthProviderAndProviderUserID(ctx context.Context
 	if err != nil {
 		return entity.User{}, err
 	}
-	return modelToEntityUser(user), nil
+	return converter.ModelToEntityUser(user), nil
 }
 
 func (r *userRepository) FindByID(ctx context.Context, id string) (entity.User, error) {
@@ -50,7 +51,7 @@ func (r *userRepository) FindByID(ctx context.Context, id string) (entity.User, 
 	if err != nil {
 		return entity.User{}, err
 	}
-	return modelToEntityUser(user), nil
+	return converter.ModelToEntityUser(user), nil
 }
 
 func (r *userRepository) Create(ctx context.Context, params repository.CreateUserParams) (entity.User, error) {
@@ -63,9 +64,9 @@ func (r *userRepository) Create(ctx context.Context, params repository.CreateUse
 			Name:           &params.DisplayName,
 			Bio:            params.Bio,
 			Birthdate:      params.Birthdate,
-			AgeVisibility:  params.AgeVisibility,
+			AgeVisibility:  string(params.AgeVisibility),
 			PrefectureID:   params.PrefectureID,
-			Sex:            params.Sex,
+			Sex:            string(params.Sex),
 		}
 		if err := tx.Create(&created).Error; err != nil {
 			return err
@@ -108,7 +109,7 @@ func (r *userRepository) Create(ctx context.Context, params repository.CreateUse
 	if err != nil {
 		return entity.User{}, err
 	}
-	return modelToEntityUser(created), nil
+	return converter.ModelToEntityUser(created), nil
 }
 
 func (r *userRepository) Update(ctx context.Context, userID string, params repository.UpdateUserParams) (entity.User, error) {
@@ -130,14 +131,14 @@ func (r *userRepository) Update(ctx context.Context, userID string, params repos
 		if params.BirthdateSet {
 			updated.Birthdate = params.Birthdate
 		}
-		if params.AgeVisibility != nil && *params.AgeVisibility != "" {
-			updated.AgeVisibility = *params.AgeVisibility
+		if params.AgeVisibility != nil {
+			updated.AgeVisibility = string(*params.AgeVisibility)
 		}
 		if params.PrefectureID != nil {
 			updated.PrefectureID = params.PrefectureID
 		}
-		if params.Sex != nil && *params.Sex != "" {
-			updated.Sex = *params.Sex
+		if params.Sex != nil {
+			updated.Sex = string(*params.Sex)
 		}
 		if params.AvatarURLSet {
 			if params.AvatarURL == nil || *params.AvatarURL == "" {
@@ -170,7 +171,7 @@ func (r *userRepository) Update(ctx context.Context, userID string, params repos
 	if err != nil {
 		return entity.User{}, err
 	}
-	return modelToEntityUser(updated), nil
+	return converter.ModelToEntityUser(updated), nil
 }
 
 func (r *userRepository) DeleteWithCleanup(ctx context.Context, userID string) error {
@@ -179,20 +180,20 @@ func (r *userRepository) DeleteWithCleanup(ctx context.Context, userID string) e
 			return err
 		}
 
-		if err := tx.Where("user_id = ?", userID).Delete(&model.UserSettings{}).Error; err != nil {
-			return err
+		tables := []struct {
+			model any
+			query string
+		}{
+			{&model.UserSettings{}, "user_id = ?"},
+			{&model.UserDevice{}, "user_id = ?"},
+			{&model.MusicConnection{}, "user_id = ?"},
+			{&model.BleToken{}, "user_id = ?"},
+			{&model.File{}, "uploaded_by_user_id = ?"},
 		}
-		if err := tx.Where("user_id = ?", userID).Delete(&model.UserDevice{}).Error; err != nil {
-			return err
-		}
-		if err := userDeleteIfTableExists(tx, &model.MusicConnection{}, "user_id = ?", userID); err != nil {
-			return err
-		}
-		if err := userDeleteIfTableExists(tx, &model.BleToken{}, "user_id = ?", userID); err != nil {
-			return err
-		}
-		if err := userDeleteIfTableExists(tx, &model.File{}, "uploaded_by_user_id = ?", userID); err != nil {
-			return err
+		for _, t := range tables {
+			if err := tx.Where(t.query, userID).Delete(t.model).Error; err != nil {
+				return err
+			}
 		}
 
 		return tx.Where("id = ?", userID).Delete(&model.User{}).Error
@@ -207,102 +208,77 @@ const (
 	rdbDeletedUserDisplayName    = "削除済みユーザー"
 )
 
-func userHasTable(tx *gorm.DB, tableModel any) bool {
-	return tx.Migrator().HasTable(tableModel)
-}
-
-func userDeleteIfTableExists(tx *gorm.DB, tableModel any, query any, args ...any) error {
-	if !userHasTable(tx, tableModel) {
-		return nil
-	}
-	return tx.Where(query, args...).Delete(tableModel).Error
-}
 
 func userCleanupRelatedData(tx *gorm.DB, userID string) error {
-	encounterIDs := make([]string, 0)
-	if userHasTable(tx, &model.Encounter{}) {
-		if err := tx.Model(&model.Encounter{}).
-			Where("user_id1 = ? OR user_id2 = ?", userID, userID).
-			Pluck("id", &encounterIDs).Error; err != nil {
-			return err
-		}
+	// encounter に連鎖する子レコードを先に削除
+	var encounterIDs []string
+	if err := tx.Model(&model.Encounter{}).
+		Where("user_id1 = ? OR user_id2 = ?", userID, userID).
+		Pluck("id", &encounterIDs).Error; err != nil {
+		return err
 	}
-
 	if len(encounterIDs) > 0 {
-		if err := userDeleteIfTableExists(tx, &model.EncounterRead{}, "encounter_id IN ?", encounterIDs); err != nil {
+		if err := tx.Where("encounter_id IN ?", encounterIDs).Delete(&model.EncounterRead{}).Error; err != nil {
 			return err
 		}
-		if err := userDeleteIfTableExists(tx, &model.Comment{}, "encounter_id IN ?", encounterIDs); err != nil {
+		if err := tx.Where("encounter_id IN ?", encounterIDs).Delete(&model.Comment{}).Error; err != nil {
 			return err
 		}
-		if err := userDeleteIfTableExists(tx, &model.OutboxNotification{}, "encounter_id IN ?", encounterIDs); err != nil {
+		if err := tx.Where("encounter_id IN ?", encounterIDs).Delete(&model.OutboxNotification{}).Error; err != nil {
 			return err
 		}
 	}
 
-	if err := userDeleteIfTableExists(tx, &model.EncounterRead{}, "user_id = ?", userID); err != nil {
-		return err
+	simpleDeletes := []struct {
+		model any
+		query string
+		args  []any
+	}{
+		{&model.EncounterRead{}, "user_id = ?", []any{userID}},
+		{&model.Comment{}, "commenter_user_id = ?", []any{userID}},
+		{&model.DailyEncounterCount{}, "user_id = ?", []any{userID}},
+		{&model.OutboxNotification{}, "user_id = ?", []any{userID}},
+		{&model.Encounter{}, "user_id1 = ? OR user_id2 = ?", []any{userID, userID}},
+		{&model.Report{}, "reporter_user_id = ? OR reported_user_id = ?", []any{userID, userID}},
+		{&model.Block{}, "blocker_user_id = ? OR blocked_user_id = ?", []any{userID, userID}},
+		{&model.Mute{}, "user_id = ? OR target_user_id = ?", []any{userID, userID}},
+		{&model.UserTrack{}, "user_id = ?", []any{userID}},
+		{&model.UserCurrentTrack{}, "user_id = ?", []any{userID}},
+		{&model.TrackFavorite{}, "user_id = ?", []any{userID}},
 	}
-	if err := userDeleteIfTableExists(tx, &model.Comment{}, "commenter_user_id = ?", userID); err != nil {
-		return err
-	}
-	if err := userDeleteIfTableExists(tx, &model.DailyEncounterCount{}, "user_id = ?", userID); err != nil {
-		return err
-	}
-	if err := userDeleteIfTableExists(tx, &model.OutboxNotification{}, "user_id = ?", userID); err != nil {
-		return err
-	}
-	if err := userDeleteIfTableExists(tx, &model.Encounter{}, "user_id1 = ? OR user_id2 = ?", userID, userID); err != nil {
-		return err
-	}
-	if err := userDeleteIfTableExists(tx, &model.Report{}, "reporter_user_id = ? OR reported_user_id = ?", userID, userID); err != nil {
-		return err
-	}
-	if err := userDeleteIfTableExists(tx, &model.Block{}, "blocker_user_id = ? OR blocked_user_id = ?", userID, userID); err != nil {
-		return err
-	}
-	if err := userDeleteIfTableExists(tx, &model.Mute{}, "user_id = ? OR target_user_id = ?", userID, userID); err != nil {
-		return err
-	}
-	if err := userDeleteIfTableExists(tx, &model.UserTrack{}, "user_id = ?", userID); err != nil {
-		return err
-	}
-	if err := userDeleteIfTableExists(tx, &model.UserCurrentTrack{}, "user_id = ?", userID); err != nil {
-		return err
-	}
-	if err := userDeleteIfTableExists(tx, &model.TrackFavorite{}, "user_id = ?", userID); err != nil {
-		return err
-	}
-
-	playlistIDs := make([]string, 0)
-	if userHasTable(tx, &model.Playlist{}) {
-		if err := tx.Model(&model.Playlist{}).Where("user_id = ?", userID).Pluck("id", &playlistIDs).Error; err != nil {
+	for _, d := range simpleDeletes {
+		if err := tx.Where(d.query, d.args...).Delete(d.model).Error; err != nil {
 			return err
 		}
+	}
+
+	// playlist に連鎖する子レコードを先に削除
+	var playlistIDs []string
+	if err := tx.Model(&model.Playlist{}).Where("user_id = ?", userID).Pluck("id", &playlistIDs).Error; err != nil {
+		return err
 	}
 	if len(playlistIDs) > 0 {
-		if err := userDeleteIfTableExists(tx, &model.PlaylistTrack{}, "playlist_id IN ?", playlistIDs); err != nil {
+		if err := tx.Where("playlist_id IN ?", playlistIDs).Delete(&model.PlaylistTrack{}).Error; err != nil {
 			return err
 		}
-		if err := userDeleteIfTableExists(tx, &model.PlaylistFavorite{}, "playlist_id IN ?", playlistIDs); err != nil {
+		if err := tx.Where("playlist_id IN ?", playlistIDs).Delete(&model.PlaylistFavorite{}).Error; err != nil {
 			return err
 		}
 	}
-	if err := userDeleteIfTableExists(tx, &model.PlaylistFavorite{}, "user_id = ?", userID); err != nil {
+	if err := tx.Where("user_id = ?", userID).Delete(&model.PlaylistFavorite{}).Error; err != nil {
 		return err
 	}
-	if err := userDeleteIfTableExists(tx, &model.Playlist{}, "user_id = ?", userID); err != nil {
+	if err := tx.Where("user_id = ?", userID).Delete(&model.Playlist{}).Error; err != nil {
 		return err
 	}
-	if err := userDeleteIfTableExists(tx, &model.SongLike{}, "user_id = ?", userID); err != nil {
+	if err := tx.Where("user_id = ?", userID).Delete(&model.SongLike{}).Error; err != nil {
 		return err
 	}
 
-	chainIDs := make([]string, 0)
-	if userHasTable(tx, &model.LyricEntry{}) {
-		if err := tx.Model(&model.LyricEntry{}).Where("user_id = ?", userID).Distinct().Pluck("chain_id", &chainIDs).Error; err != nil {
-			return err
-		}
+	// lyric chain: 他参加者がいるチェーンは削除済みユーザーに所有権を移譲
+	var chainIDs []string
+	if err := tx.Model(&model.LyricEntry{}).Where("user_id = ?", userID).Distinct().Pluck("chain_id", &chainIDs).Error; err != nil {
+		return err
 	}
 	for _, chainID := range chainIDs {
 		var otherCount int64
@@ -310,16 +286,12 @@ func userCleanupRelatedData(tx *gorm.DB, userID string) error {
 			return err
 		}
 		if otherCount == 0 {
-			if err := userDeleteIfTableExists(tx, &model.GeneratedSong{}, "chain_id = ?", chainID); err != nil {
-				return err
+			for _, m := range []any{&model.GeneratedSong{}, &model.OutboxLyriaJob{}, &model.LyricEntry{}} {
+				if err := tx.Where("chain_id = ?", chainID).Delete(m).Error; err != nil {
+					return err
+				}
 			}
-			if err := userDeleteIfTableExists(tx, &model.OutboxLyriaJob{}, "chain_id = ?", chainID); err != nil {
-				return err
-			}
-			if err := userDeleteIfTableExists(tx, &model.LyricEntry{}, "chain_id = ?", chainID); err != nil {
-				return err
-			}
-			if err := userDeleteIfTableExists(tx, &model.LyricChain{}, "id = ?", chainID); err != nil {
+			if err := tx.Where("id = ?", chainID).Delete(&model.LyricChain{}).Error; err != nil {
 				return err
 			}
 			continue
@@ -372,33 +344,3 @@ func rdbGetOrCreateDeletedUserID(tx *gorm.DB) (string, error) {
 	return deletedUser.ID, nil
 }
 
-func modelToEntityUser(user model.User) entity.User {
-	var avatarURL *string
-	if user.AvatarFile != nil {
-		u := user.AvatarFile.FilePath
-		avatarURL = &u
-	}
-
-	var prefectureName *string
-	if user.Prefecture != nil {
-		p := user.Prefecture.Name
-		prefectureName = &p
-	}
-
-	return entity.User{
-		ID:             user.ID,
-		AuthProvider:   user.AuthProvider,
-		ProviderUserID: user.ProviderUserID,
-		Name:           user.Name,
-		Bio:            user.Bio,
-		Birthdate:      user.Birthdate,
-		AgeVisibility:  user.AgeVisibility,
-		PrefectureID:   user.PrefectureID,
-		PrefectureName: prefectureName,
-		Sex:            user.Sex,
-		AvatarFileID:   user.AvatarFileID,
-		AvatarURL:      avatarURL,
-		CreatedAt:      user.CreatedAt,
-		UpdatedAt:      user.UpdatedAt,
-	}
-}

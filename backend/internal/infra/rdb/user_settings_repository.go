@@ -9,6 +9,7 @@ import (
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
+	"hackathon/internal/domain/vo"
 	"hackathon/internal/infra/rdb/model"
 )
 
@@ -47,11 +48,11 @@ func (r *userSettingsRepository) Create(ctx context.Context, settings *entity.Us
 		NotificationEnabled:             settings.NotificationEnabled,
 		EncounterNotificationEnabled:    settings.EncounterNotificationEnabled,
 		BatchNotificationEnabled:        settings.BatchNotificationEnabled,
-		NotificationFrequency:           settings.NotificationFrequency,
+		NotificationFrequency:           string(settings.NotificationFrequency),
 		CommentNotificationEnabled:      settings.CommentNotificationEnabled,
 		LikeNotificationEnabled:         settings.LikeNotificationEnabled,
 		AnnouncementNotificationEnabled: settings.AnnouncementNotificationEnabled,
-		ThemeMode:                       settings.ThemeMode,
+		ThemeMode:                       string(settings.ThemeMode),
 	}
 	if err := r.db.WithContext(ctx).Create(&record).Error; err != nil {
 		return err
@@ -76,11 +77,11 @@ func (r *userSettingsRepository) Update(ctx context.Context, settings *entity.Us
 			"notification_enabled":              settings.NotificationEnabled,
 			"encounter_notification_enabled":    settings.EncounterNotificationEnabled,
 			"batch_notification_enabled":        settings.BatchNotificationEnabled,
-			"notification_frequency":            settings.NotificationFrequency,
+			"notification_frequency":            string(settings.NotificationFrequency),
 			"comment_notification_enabled":      settings.CommentNotificationEnabled,
 			"like_notification_enabled":         settings.LikeNotificationEnabled,
 			"announcement_notification_enabled": settings.AnnouncementNotificationEnabled,
-			"theme_mode":                        settings.ThemeMode,
+			"theme_mode":                        string(settings.ThemeMode),
 		}).Error
 	if err != nil {
 		return err
@@ -109,11 +110,11 @@ func toUserSettingsEntity(settings model.UserSettings) entity.UserSettings {
 		NotificationEnabled:             settings.NotificationEnabled,
 		EncounterNotificationEnabled:    settings.EncounterNotificationEnabled,
 		BatchNotificationEnabled:        settings.BatchNotificationEnabled,
-		NotificationFrequency:           settings.NotificationFrequency,
+		NotificationFrequency:           vo.NotificationFrequency(settings.NotificationFrequency),
 		CommentNotificationEnabled:      settings.CommentNotificationEnabled,
 		LikeNotificationEnabled:         settings.LikeNotificationEnabled,
 		AnnouncementNotificationEnabled: settings.AnnouncementNotificationEnabled,
-		ThemeMode:                       settings.ThemeMode,
+		ThemeMode:                       vo.ThemeMode(settings.ThemeMode),
 		CreatedAt:                       settings.CreatedAt,
 		UpdatedAt:                       settings.UpdatedAt,
 	}

@@ -9,6 +9,7 @@ import (
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
+	"hackathon/internal/domain/vo"
 	"hackathon/internal/infra/rdb/model"
 )
 
@@ -20,10 +21,10 @@ func NewUserDeviceRepository(db *gorm.DB) repository.UserDeviceRepository {
 	return &userDeviceRepository{db: db}
 }
 
-func (r *userDeviceRepository) FindByUserIDPlatformAndDeviceID(ctx context.Context, userID, platform, deviceID string) (entity.UserDevice, error) {
+func (r *userDeviceRepository) FindByUserIDPlatformAndDeviceID(ctx context.Context, userID string, platform vo.Platform, deviceID string) (entity.UserDevice, error) {
 	var device model.UserDevice
 	err := r.db.WithContext(ctx).
-		Where("user_id = ? AND platform = ? AND device_id = ?", userID, platform, deviceID).
+		Where("user_id = ? AND platform = ? AND device_id = ?", userID, string(platform), deviceID).
 		First(&device).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return entity.UserDevice{}, domainerrs.NotFound("Device was not found")
@@ -50,7 +51,7 @@ func (r *userDeviceRepository) Create(ctx context.Context, device *entity.UserDe
 	record := model.UserDevice{
 		ID:          device.ID,
 		UserID:      device.UserID,
-		Platform:    device.Platform,
+		Platform:    string(device.Platform),
 		DeviceID:    device.DeviceID,
 		DeviceToken: device.DeviceToken,
 		AppVersion:  device.AppVersion,
@@ -98,7 +99,7 @@ func toUserDeviceEntity(device model.UserDevice) entity.UserDevice {
 	return entity.UserDevice{
 		ID:          device.ID,
 		UserID:      device.UserID,
-		Platform:    device.Platform,
+		Platform:    vo.Platform(device.Platform),
 		DeviceID:    device.DeviceID,
 		DeviceToken: device.DeviceToken,
 		AppVersion:  device.AppVersion,
