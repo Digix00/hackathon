@@ -5,75 +5,134 @@ struct HomeInsightsPage: View {
 
     var body: some View {
         AppScaffold(
-            title: "すれ違い情報",
-            subtitle: "すれ違いで出会った音楽と相手の記録"
+            title: "INSIGHTS",
+            subtitle: "都市に漂う音楽の断片",
+            customBackground: AnyView(
+                MemoryBlurBackground(colors: state.weeklyTracks.map(\.color))
+            )
         ) {
-            VStack(alignment: .leading, spacing: 28) {
-                if state.isOffline {
-                    OfflineBannerView()
-                }
-
-                SectionCard(title: "すれ違い") {
-                    HStack(spacing: 14) {
-                        SummaryMetricCard(
-                            title: "今日",
-                            count: state.todayEncounterCount,
-                            zeroMessage: "まだありません"
-                        )
-                        SummaryMetricCard(
-                            title: "今週",
-                            count: state.weekEncounterCount,
-                            zeroMessage: "まだありません"
-                        )
-                    }
-                }
-
+            VStack(alignment: .leading, spacing: 0) {
+                
+                // --- 1. THE HERO COLLAGE ---
                 if !state.weeklyTracks.isEmpty {
-                    SectionCard(title: "出会った音楽") {
-                        SectionHeader(title: "今週出会った音楽")
-                        WeeklyMusicCollageView(tracks: state.weeklyTracks)
-                    }
+                    HeroJacketCollageView(tracks: state.weeklyTracks)
+                        .padding(.horizontal, -24)
+                        .padding(.top, 20)
+                        .padding(.bottom, 80)
                 }
 
-                SectionCard(title: "最近のすれ違い") {
-                    SectionHeader(title: "最近の出会い", showsAction: !state.recentEncounters.isEmpty)
+                // --- 2. RECENT ENCOUNTERS ---
+                VStack(alignment: .leading, spacing: 40) {
+                    Text("最近のすれ違い")
+                        .font(PrototypeTheme.Typography.font(size: 22, weight: .black, role: .primary))
+                        .foregroundStyle(PrototypeTheme.textPrimary)
+                        .tracking(-0.5)
 
                     if state.recentEncounters.isEmpty {
                         FirstEncounterEmptyState()
                     } else {
-                        VStack(spacing: 12) {
-                            ForEach(state.recentEncounters.prefix(5)) { encounter in
+                        VStack(spacing: 28) {
+                            ForEach(state.recentEncounters.prefix(7)) { encounter in
                                 NavigationLink {
                                     EncounterDetailView(encounter: encounter)
                                 } label: {
-                                    EncounterRow(encounter: encounter)
+                                    HeroEncounterRow(encounter: encounter)
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(ScaleButtonStyle())
                             }
                         }
                     }
+                    
+                    NavigationLink {
+                        EncounterListView()
+                    } label: {
+                        HStack(spacing: 12) {
+                            Text("すべての出会いを見る")
+                                .font(PrototypeTheme.Typography.font(size: 15, weight: .bold, role: .primary))
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 14, weight: .black))
+                        }
+                        .foregroundStyle(PrototypeTheme.accent)
+                        .padding(.vertical, 16)
+                        .padding(.horizontal, 32)
+                        .background(PrototypeTheme.accent.opacity(0.1))
+                        .clipShape(Capsule())
+                    }
+                    .padding(.top, 20)
                 }
+                .padding(.bottom, 120)
             }
         }
     }
 }
 
-private struct SectionHeader: View {
-    let title: String
-    var showsAction = true
+// MARK: - Components
 
+private struct HeroJacketCollageView: View {
+    let tracks: [Track]
+    
     var body: some View {
-        HStack {
-            Text(title)
-                .font(PrototypeTheme.Typography.Encounter.sectionTitle)
-                .foregroundStyle(PrototypeTheme.textPrimary)
-            Spacer()
-            if showsAction {
-                NavigationLink("すべて") {
-                    EncounterListView()
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: -70) {
+                ForEach(Array(tracks.prefix(8).enumerated()), id: \.offset) { index, track in
+                    VStack(alignment: .leading, spacing: 24) {
+                        MockArtworkView(color: track.color, symbol: "music.note", size: 300)
+                            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                            .shadow(color: Color.black.opacity(0.35), radius: 40, x: 0, y: 25)
+                            .rotationEffect(.degrees(Double(index % 2 == 0 ? -5 : 5)))
+                        
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(track.title)
+                                .font(PrototypeTheme.Typography.font(size: 20, weight: .black, role: .primary))
+                                .foregroundStyle(PrototypeTheme.textPrimary)
+                                .lineLimit(1)
+                            Text(track.artist)
+                                .font(PrototypeTheme.Typography.font(size: 16, weight: .bold, role: .primary))
+                                .foregroundStyle(PrototypeTheme.textSecondary)
+                                .lineLimit(1)
+                        }
+                        .padding(.leading, 16)
+                    }
+                    .zIndex(Double(tracks.count - index))
                 }
-                .font(PrototypeTheme.Typography.Encounter.meta)
-                .foregroundStyle(PrototypeTheme.accent)
+            }
+            .padding(.horizontal, 48)
+            .padding(.vertical, 40)
+        }
+    }
+}
+
+private struct HeroEncounterRow: View {
+    let encounter: Encounter
+    
+    var body: some View {
+        HStack(spacing: 24) {
+            MockArtworkView(color: encounter.track.color, symbol: "music.note", size: 68)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .shadow(color: encounter.track.color.opacity(0.2), radius: 15, x: 0, y: 8)
+            
+            VStack(alignment: .leading, spacing: 6) {
+                Text(encounter.track.title)
+                    .font(PrototypeTheme.Typography.font(size: 18, weight: .bold, role: .primary))
+                    .foregroundStyle(PrototypeTheme.textPrimary)
+                    .lineLimit(1)
+                
+                Text(encounter.track.artist)
+                    .font(PrototypeTheme.Typography.font(size: 15, weight: .medium, role: .primary))
+                    .foregroundStyle(PrototypeTheme.textSecondary)
+                    .lineLimit(1)
+            }
+            
+            Spacer()
+            
+            VStack(alignment: .trailing, spacing: 4) {
+                Text(encounter.relativeTime)
+                    .font(PrototypeTheme.Typography.font(size: 12, weight: .bold, role: .data))
+                    .foregroundStyle(PrototypeTheme.textTertiary)
+                
+                Circle()
+                    .fill(encounter.track.color.opacity(0.6))
+                    .frame(width: 6, height: 6)
             }
         }
     }
