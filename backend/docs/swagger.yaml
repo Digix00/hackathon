@@ -1,0 +1,15 @@
+basePath: /api/v1
+host: localhost:8000
+info:
+  contact: {}
+  description: MusicSwapping バックエンド API
+  title: MusicSwapping API
+  version: "1.0"
+paths: {}
+securityDefinitions:
+  BearerAuth:
+    description: Firebase ID トークン。"Bearer <token>" の形式で渡す。
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
