@@ -127,6 +127,7 @@ struct MainPrototypeView: View {
             ZStack {
                 trackSurface
                     .environment(\.topSafeAreaInset, topSafeArea)
+                    .environment(\.bottomSafeAreaInset, bottomSafeArea)
                     .frame(width: proxy.size.width, height: proxy.size.height)
                     .offset(y: selectedSurface == .track ? dragOffset : (-proxy.size.height + dragOffset))
                     .opacity(selectedSurface == .track ? 1.0 : 0.5)
@@ -169,7 +170,6 @@ struct MainPrototypeView: View {
         NavigationStack {
             HomeHeroPage(
                 state: homeState,
-                selectedPage: .constant(0),
                 isMotionActive: selectedSurface == .track
             )
             .toolbarBackground(.hidden, for: .navigationBar)
@@ -181,8 +181,7 @@ struct MainPrototypeView: View {
         TabView(selection: $selectedLibraryTab) {
             NavigationStack {
                 HomeInsightsPage(
-                    state: homeState,
-                    selectedPage: .constant(1)
+                    state: homeState
                 )
             }
             .tag(LibraryTab.insights)
@@ -712,7 +711,6 @@ private struct DynamicBlurBackground: View {
 
 private struct HomeHeroPage: View {
     let state: HomeScreenState
-    @Binding var selectedPage: Int
     let isMotionActive: Bool
     @State private var isSignaling = false
     @Environment(\.topSafeAreaInset) private var topSafeArea
@@ -818,7 +816,6 @@ private struct HomeHeroPage: View {
 
 private struct HomeInsightsPage: View {
     let state: HomeScreenState
-    @Binding var selectedPage: Int
     @Environment(\.topSafeAreaInset) private var topSafeArea
     @Environment(\.bottomSafeAreaInset) private var bottomSafeArea
 
@@ -893,16 +890,6 @@ private struct HomeInsightsPage: View {
             .padding(.top, contentTopPadding)
             .padding(.bottom, contentBottomPadding)
         }
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 20, coordinateSpace: .local)
-                .onEnded { value in
-                    if value.translation.height > 80 {
-                        withAnimation(.easeInOut(duration: 0.25)) {
-                            selectedPage = 0
-                        }
-                    }
-                }
-        )
         .background(PrototypeTheme.background)
     }
 }
