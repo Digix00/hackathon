@@ -38,8 +38,7 @@
 
 ## 3. テスト証跡（最新）
 
-- Unit/通常: `go test ./...` 相当
-  - 実行結果: passed 14, failed 0
+- Unit/通常: PostgreSQL を使った API テスト（`go test ./...`）
 - Integration(PostgreSQL): `make test-integration`
   - 実行結果: `ok hackathon/internal/handler`
 
@@ -51,5 +50,5 @@
 ## 5. レビュー観点メモ（設計判断）
 
 - 未実装ルートは panic ではなく 501 + warning ログ運用
-- SQLiteテスト互換のため、`deleteMe` ではテーブル存在チェック付き削除ヘルパーを採用
+- PostgreSQL を単体/統合の両テストで利用し、DB 方言差異を排除
 - 共有 lyric 匿名化の表示名は API設計書記載に合わせ `"削除済みユーザー"` を設定

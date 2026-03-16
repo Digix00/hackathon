@@ -6,15 +6,17 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
 	firebaseauth "firebase.google.com/go/v4/auth"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	"hackathon/internal/infra/rdb"
 	"hackathon/internal/infra/rdb/model"
 )
 
@@ -32,24 +34,76 @@ func (v testTokenVerifier) VerifyIDToken(ctx context.Context, idToken string) (*
 
 func newTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+
+	dsn := os.Getenv("PG_TEST_DATABASE_URL")
+	if dsn == "" {
+		dsn = "postgres://postgres:postgres@127.0.0.1:5432/hackathon?sslmode=disable"
+	}
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
+		t.Skipf("skip postgres-backed router test: postgres is not reachable (%v)", err)
 	}
-	if err := db.AutoMigrate(
-		&model.Prefecture{},
-		&model.File{},
-		&model.User{},
-		&model.UserSettings{},
-		&model.UserDevice{},
-		&model.Track{},
-		&model.UserCurrentTrack{},
-		&model.Encounter{},
-		&model.Block{},
-	); err != nil {
-		t.Fatalf("migrate sqlite: %v", err)
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatalf("get sql.DB: %v", err)
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if err := sqlDB.PingContext(ctx); err != nil {
+		t.Skipf("skip postgres-backed router test: postgres ping failed (%v)", err)
+	}
+
+	if err := rdb.Migrate(db); err != nil {
+		t.Fatalf("migrate postgres: %v", err)
+	}
+
+	cleanupPostgresTestDataForRouter(t, db)
+	t.Cleanup(func() {
+		cleanupPostgresTestDataForRouter(t, db)
+	})
+
 	return db
+	}
+
+func cleanupPostgresTestDataForRouter(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	err := db.Exec(`
+TRUNCATE TABLE
+	outbox_lyria_jobs,
+	song_likes,
+	generated_songs,
+	lyric_entries,
+	lyric_chains,
+	playlist_favorites,
+	playlist_tracks,
+	playlists,
+	track_favorites,
+	user_tracks,
+	mutes,
+	reports,
+	comments,
+	encounter_reads,
+	daily_encounter_counts,
+	outbox_notifications,
+	music_connections,
+	ble_tokens,
+	users,
+	files,
+	user_settings,
+	user_devices,
+	prefectures,
+	tracks,
+	user_current_tracks,
+	encounters,
+	blocks
+RESTART IDENTITY CASCADE;
+`).Error
+	if err != nil {
+		t.Fatalf("cleanup postgres test data: %v", err)
+	}
 }
 
 func seedTestUser(t *testing.T, db *gorm.DB, providerUserID string) model.User {
@@ -323,24 +377,6 @@ func TestCreateGetPatchAndDeleteUserFlow(t *testing.T) {
 
 func TestDeleteMeCleansUpRelatedData(t *testing.T) {
 	db := newTestDB(t)
-	if err := db.AutoMigrate(
-		&model.EncounterRead{},
-		&model.DailyEncounterCount{},
-		&model.Comment{},
-		&model.Report{},
-		&model.Mute{},
-		&model.OutboxNotification{},
-		&model.UserTrack{},
-		&model.TrackFavorite{},
-		&model.Playlist{},
-		&model.PlaylistTrack{},
-		&model.PlaylistFavorite{},
-		&model.SongLike{},
-		&model.MusicConnection{},
-		&model.BleToken{},
-	); err != nil {
-		t.Fatalf("migrate delete related tables: %v", err)
-	}
 
 	user := seedTestUser(t, db, "firebase-uid-delete-user")
 	other := seedTestUser(t, db, "firebase-uid-delete-other")
