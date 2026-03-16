@@ -1,5 +1,6 @@
 .PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean reset-db \
-        generate-docs generate-android generate-ios generate-code
+        generate-docs generate-android generate-ios generate-code \
+        _generate-android-only _generate-ios-only
 
 # ==============================================================================
 # Docker Compose Commands
@@ -75,10 +76,9 @@ generate-docs:
 			--parseInternal
 	@echo "==> docs/swagger.json を生成しました"
 
-# swagger.json から Android (Kotlin + Retrofit2) クライアントを生成する
-# openapitools/openapi-generator-cli の公式 Docker イメージを使用
-# 出力先: android/app/src/main/java/com/digix00/musicswapping/generated/
-generate-android: generate-docs
+# swagger.json から Android (Kotlin + Retrofit2) クライアントだけを生成する内部ターゲット
+# generate-code から呼ぶ際に generate-docs の二重実行を避けるために使用する
+_generate-android-only:
 	@mkdir -p $(ANDROID_OUT)
 	docker run --rm \
 		-v $(CURDIR)/docs/swagger.json:/local/swagger.json \
@@ -92,9 +92,8 @@ generate-android: generate-docs
 			--additional-properties=serializationLibrary=kotlinx_serialization,useCoroutines=true
 	@echo "==> Android クライアントを生成しました → $(ANDROID_OUT)"
 
-# swagger.json から iOS (Swift 5 + async/await) クライアントを生成する
-# 出力先: ios/ios/Generated/
-generate-ios: generate-docs
+# swagger.json から iOS (Swift 5 + async/await) クライアントだけを生成する内部ターゲット
+_generate-ios-only:
 	@mkdir -p $(IOS_OUT)
 	docker run --rm \
 		-v $(CURDIR)/docs/swagger.json:/local/swagger.json \
@@ -107,10 +106,15 @@ generate-ios: generate-docs
 			--additional-properties=responseAs=AsyncAwait,useSPMFileStructure=true
 	@echo "==> iOS クライアントを生成しました → $(IOS_OUT)"
 
+# 単体実行用: swagger.json を生成してから Android クライアントを生成する
+generate-android: generate-docs _generate-android-only
+
+# 単体実行用: swagger.json を生成してから iOS クライアントを生成する
+generate-ios: generate-docs _generate-ios-only
+
 # swagger.json・Android クライアント・iOS クライアントをまとめて生成する
-# generate-docs は generate-android / generate-ios の依存に含まれるが、
-# 並列実行時の二重生成を避けるため先行して単独実行している
+# generate-docs を1回だけ実行してから両クライアントを生成する
 generate-code:
 	$(MAKE) generate-docs
-	$(MAKE) generate-android generate-ios
+	$(MAKE) _generate-android-only _generate-ios-only
 	@echo "==> 全コード生成が完了しました"

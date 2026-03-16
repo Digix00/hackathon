@@ -3,13 +3,24 @@
 ## 合意済み
 
 - REST (JSON) を採用する
-- **OpenAPI 3.x を Single Source of Truth とする**（Design-first）
-- スキーマを先に確定させ、Go・Swift・Kotlin の3チームが並行して動ける状態を作る
-- 破壊的変更は CI でブロックする（`oasdiff breaking`）
+- 破壊的変更は CI でブロックする（`oasdiff breaking` を将来導入予定）
 
-### コード生成ツール（合意済み）
+### 現在の実装方針（ハックハソン暫定）
 
-| プラットフォーム | ツール |
+Design-first への移行は将来的な目標とし、ハックハソン期間中はスピード優先で **Code-first（swag）** を採用する。
+
+| 項目 | 採用方針 |
+|---|---|
+| スキーマ生成 | `swag init`（Go コードのアノテーションから Swagger 2.0 を自動生成） |
+| Swagger UI | `GET /swagger/*`（development / test 環境のみ公開） |
+| Android クライアント | `openapi-generator -g kotlin --library jvm-retrofit2` |
+| iOS クライアント | `openapi-generator -g swift5`（`--additional-properties=responseAs=AsyncAwait`） |
+
+生成コマンド: `make generate-code`（`backend/` または リポジトリルートから実行可能）
+
+### 将来的な移行目標（Design-first）
+
+| プラットフォーム | 移行後ツール |
 |---|---|
 | Go | `oapi-codegen`（Echo と相性が良い） |
 | Swift | `swift-openapi-generator`（Apple 公式、SPM プラグイン） |
