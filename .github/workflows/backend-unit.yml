@@ -1,0 +1,39 @@
+name: backend-unit
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - backend/**
+      - .github/workflows/backend-unit.yml
+  push:
+    branches:
+      - main
+    paths:
+      - backend/**
+      - .github/workflows/backend-unit.yml
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run unit tests
+        run: go test ./...
