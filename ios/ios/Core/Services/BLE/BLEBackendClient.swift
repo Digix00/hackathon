@@ -9,6 +9,8 @@ struct BLEAdvertisingToken {
 }
 
 actor BLEBackendClient {
+    private static let apiPrefixSegments = ["api", "v1"]
+
     enum BackendError: Error {
         case invalidBaseURL
         case invalidResponse
@@ -94,7 +96,7 @@ actor BLEBackendClient {
         }
 
         let normalizedPath = path.hasPrefix("/") ? String(path.dropFirst()) : path
-        components.path = components.path.appendingPathComponent(normalizedPath)
+        components.path = Self.buildAPIPath(basePath: components.path, endpointPath: normalizedPath)
 
         guard let url = components.url else {
             throw BackendError.invalidBaseURL
@@ -191,6 +193,30 @@ actor BLEBackendClient {
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }()
+
+    private static func buildAPIPath(basePath: String, endpointPath: String) -> String {
+        let baseSegments = pathSegments(from: basePath)
+        let endpointSegments = pathSegments(from: endpointPath)
+
+        let endpointHasPrefix = endpointSegments.starts(with: apiPrefixSegments)
+        let baseHasPrefix = baseSegments.suffix(apiPrefixSegments.count).elementsEqual(apiPrefixSegments)
+        let needsPrefix = !endpointHasPrefix && !baseHasPrefix
+
+        var merged = baseSegments
+        if needsPrefix {
+            merged.append(contentsOf: apiPrefixSegments)
+        }
+        merged.append(contentsOf: endpointSegments)
+
+        return "/" + merged.joined(separator: "/")
+    }
+
+    private static func pathSegments(from rawPath: String) -> [String] {
+        rawPath
+            .split(separator: "/")
+            .map(String.init)
+            .filter { !$0.isEmpty }
+    }
 }
 
 private struct BLETokenEnvelope: Decodable {
@@ -222,14 +248,5 @@ private struct EncounterCreateRequest: Encodable {
         case type
         case rssi
         case occurredAt = "occurred_at"
-    }
-}
-
-private extension String {
-    func appendingPathComponent(_ component: String) -> String {
-        if isEmpty || hasSuffix("/") {
-            return self + component
-        }
-        return self + "/" + component
     }
 }
