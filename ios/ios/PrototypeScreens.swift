@@ -46,29 +46,30 @@ extension EnvironmentValues {
     }
 }
 
-class MotionManager: ObservableObject {
+private enum Haptics {
+    static func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
+        UIImpactFeedbackGenerator(style: style).impactOccurred()
+    }
+}
+
+final class MotionManager: ObservableObject {
     @Published var pitch: Double = 0.0
     @Published var roll: Double = 0.0
-    
-    private var manager: CMMotionManager
-    
+
+    private let manager: CMMotionManager
+
     init() {
-        self.manager = CMMotionManager()
-        self.manager.deviceMotionUpdateInterval = 1.0 / 60.0
+        manager = CMMotionManager()
+        manager.deviceMotionUpdateInterval = 1.0 / 60.0
     }
 
     func startUpdates() {
         guard manager.isDeviceMotionAvailable, !manager.isDeviceMotionActive else { return }
 
-        self.manager.startDeviceMotionUpdates(to: .main) { [weak self] (motionData, error) in
-            guard error == nil else {
-                print(error!)
-                return
-            }
-            if let motionData = motionData {
-                self?.pitch = motionData.attitude.pitch
-                self?.roll = motionData.attitude.roll
-            }
+        manager.startDeviceMotionUpdates(to: .main) { [weak self] motionData, error in
+            guard error == nil, let motionData else { return }
+            self?.pitch = motionData.attitude.pitch
+            self?.roll = motionData.attitude.roll
         }
     }
 
@@ -129,27 +130,27 @@ struct MainPrototypeView: View {
                     .environment(\.topSafeAreaInset, topSafeArea)
                     .environment(\.bottomSafeAreaInset, bottomSafeArea)
                     .frame(width: proxy.size.width, height: proxy.size.height)
-                    .offset(y: selectedSurface == .track ? dragOffset : (-proxy.size.height + dragOffset))
-                    .opacity(selectedSurface == .track ? 1.0 : 0.5)
-                    .scaleEffect(selectedSurface == .track ? 1.0 : 0.95)
+                    .offset(y: trackSurfaceOffset(containerHeight: proxy.size.height))
+                    .opacity(trackSurfaceOpacity)
+                    .scaleEffect(trackSurfaceScale)
 
                 librarySurface
                     .environment(\.topSafeAreaInset, topSafeArea)
                     .environment(\.bottomSafeAreaInset, bottomSafeArea)
                     .frame(width: proxy.size.width, height: proxy.size.height)
-                    .offset(y: selectedSurface == .track ? (proxy.size.height + dragOffset) : dragOffset)
-                    .opacity(selectedSurface == .track ? 0.5 : 1.0)
+                    .offset(y: librarySurfaceOffset(containerHeight: proxy.size.height))
+                    .opacity(librarySurfaceOpacity)
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 20, coordinateSpace: .local)
                     .updating($verticalDragOffset) { value, state, _ in
-                        guard abs(value.translation.height) > abs(value.translation.width) else { return }
+                        guard isVerticalSwipe(value.translation) else { return }
                         state = value.translation.height
                     }
                     .onEnded { value in
-                        guard abs(value.translation.height) > abs(value.translation.width) else { return }
+                        guard isVerticalSwipe(value.translation) else { return }
                         handleVerticalSwipe(translation: value.translation.height)
                     }
             )
@@ -166,37 +167,40 @@ struct MainPrototypeView: View {
         MockData.home
     }
 
+    private var isShowingTrackSurface: Bool {
+        selectedSurface == .track
+    }
+
     private var trackSurface: some View {
-        NavigationStack {
+        navigationContainer {
             HomeHeroPage(
                 state: homeState,
-                isMotionActive: selectedSurface == .track
+                isMotionActive: isShowingTrackSurface
             )
             .toolbarBackground(.hidden, for: .navigationBar)
         }
-        .background(Color.clear)
     }
 
     private var librarySurface: some View {
         TabView(selection: $selectedLibraryTab) {
-            NavigationStack {
+            navigationContainer {
                 HomeInsightsPage(
                     state: homeState
                 )
             }
             .tag(LibraryTab.insights)
 
-            NavigationStack {
+            navigationContainer {
                 EncounterListView()
             }
             .tag(LibraryTab.history)
 
-            NavigationStack {
+            navigationContainer {
                 GeneratedSongsView()
             }
             .tag(LibraryTab.songs)
 
-            NavigationStack {
+            navigationContainer {
                 SettingsHubView(restartOnboarding: restartOnboarding)
             }
             .tag(LibraryTab.profile)
@@ -206,7 +210,7 @@ struct MainPrototypeView: View {
         .simultaneousGesture(
             DragGesture(minimumDistance: 20, coordinateSpace: .local)
                 .onEnded { value in
-                    guard abs(value.translation.height) > abs(value.translation.width) else { return }
+                    guard isVerticalSwipe(value.translation) else { return }
                     handleVerticalSwipe(translation: value.translation.height)
                 }
         )
@@ -230,13 +234,47 @@ struct MainPrototypeView: View {
         }
     }
 
+    private func trackSurfaceOffset(containerHeight: CGFloat) -> CGFloat {
+        isShowingTrackSurface ? dragOffset : -containerHeight + dragOffset
+    }
+
+    private func librarySurfaceOffset(containerHeight: CGFloat) -> CGFloat {
+        isShowingTrackSurface ? containerHeight + dragOffset : dragOffset
+    }
+
+    private var trackSurfaceOpacity: Double {
+        isShowingTrackSurface ? 1.0 : 0.5
+    }
+
+    private var librarySurfaceOpacity: Double {
+        isShowingTrackSurface ? 0.5 : 1.0
+    }
+
+    private var trackSurfaceScale: CGFloat {
+        isShowingTrackSurface ? 1.0 : 0.95
+    }
+
+    @ViewBuilder
+    private func navigationContainer<Content: View>(
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        NavigationStack {
+            content()
+        }
+        .background(Color.clear)
+    }
+
+    private func isVerticalSwipe(_ translation: CGSize) -> Bool {
+        abs(translation.height) > abs(translation.width)
+    }
+
     private func handleVerticalSwipe(translation: CGFloat) {
         let threshold: CGFloat = 90
         if translation < -threshold, selectedSurface == .track {
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            Haptics.impact(.medium)
             selectedSurface = .library
         } else if translation > threshold, selectedSurface == .library {
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            Haptics.impact(.medium)
             selectedSurface = .track
         }
     }
@@ -251,7 +289,7 @@ private struct LibraryFooter: View {
         HStack(spacing: 0) {
             ForEach(tabs, id: \.rawValue) { tab in
                 Button {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    Haptics.impact(.light)
                     withAnimation(.easeInOut(duration: 0.2)) {
                         selectedTab = tab
                     }
@@ -646,353 +684,6 @@ struct ParticleModifier: ViewModifier {
 extension View {
     func particleEffect() -> some View {
         modifier(ParticleModifier())
-    }
-}
-
-private struct DynamicBlurBackground: View {
-    let baseColor: Color
-    @State private var animate = false
-    @State private var rotation: Double = 0
-
-    var body: some View {
-        ZStack {
-            PrototypeTheme.background
-
-            Group {
-                // メインのBlob 1
-                Circle()
-                    .fill(baseColor.opacity(0.4))
-                    .frame(width: 450, height: 450)
-                    .offset(x: animate ? 80 : -80, y: animate ? -150 : -50)
-                    .blur(radius: 90)
-
-                // メインのBlob 2
-                Circle()
-                    .fill(PrototypeTheme.accent.opacity(0.15))
-                    .frame(width: 380, height: 380)
-                    .offset(x: animate ? -100 : 100, y: animate ? 200 : 100)
-                    .blur(radius: 100)
-
-                // アクセントのBlob 3
-                Circle()
-                    .fill(baseColor.opacity(0.25))
-                    .frame(width: 320, height: 320)
-                    .offset(x: animate ? 40 : -40, y: animate ? 50 : -50)
-                    .blur(radius: 80)
-            }
-            .rotationEffect(.degrees(rotation))
-            
-            // Noise/Texture overlay
-            Color.white.opacity(0.01)
-                .background(
-                    Image(systemName: "sparkles")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .opacity(0.02)
-                        .blendMode(.overlay)
-                )
-            
-            DotGridBackground()
-                .opacity(0.2)
-                
-        }
-        .particleEffect()
-        .ignoresSafeArea()
-        .onAppear {
-            withAnimation(.easeInOut(duration: 4.5).repeatForever(autoreverses: true)) {
-                animate.toggle()
-            }
-            withAnimation(.linear(duration: 30).repeatForever(autoreverses: false)) {
-                rotation = 360
-            }
-        }
-    }
-}
-
-private struct HomeHeroPage: View {
-    let state: HomeScreenState
-    let isMotionActive: Bool
-    @State private var isSignaling = false
-    @Environment(\.topSafeAreaInset) private var topSafeArea
-    @Environment(\.bottomSafeAreaInset) private var bottomSafeArea
-    @StateObject private var motion = MotionManager()
-
-    private var heroColor: Color {
-        state.featuredTrack?.color ?? PrototypeTheme.surfaceElevated
-    }
-
-    var body: some View {
-        ZStack {
-            DynamicBlurBackground(baseColor: heroColor)
-                // Parallax background
-                .offset(x: CGFloat(motion.roll * -30), y: CGFloat(motion.pitch * -30))
-
-            // Typographic watermark
-            Text("TOKYO")
-                .font(.system(size: 140, weight: .black))
-                .foregroundStyle(Color.white.opacity(0.03))
-                .rotationEffect(.degrees(-90))
-                .offset(x: -150)
-                .allowsHitTesting(false)
-                .offset(x: CGFloat(motion.roll * -10), y: CGFloat(motion.pitch * -10))
-
-            VStack {
-                // Top Status Area
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("35.6812° N, 139.7671° E")
-                            .prototypeFont(size: 10, weight: .bold, role: .data)
-                            .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
-                        Text("TOKYO / SHIBUYA")
-                            .font(.system(size: 10, weight: .black))
-                            .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.4))
-                            .kerning(1.5)
-                    }
-                    Spacer()
-
-                    // Minimal Status Indicator with Animation
-                    HStack(spacing: 8) {
-                        Circle()
-                            .fill(PrototypeTheme.accent)
-                            .frame(width: 6, height: 6)
-
-                        Text("検知中")
-                            .font(.system(size: 10, weight: .black))
-                            .kerning(1.2)
-                            .foregroundStyle(PrototypeTheme.textSecondary)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(PrototypeTheme.surface.opacity(0.4))
-                    .clipShape(Capsule())
-                }
-                .padding(.top, topSafeArea + 8)
-
-                Spacer()
-
-                NavigationLink {
-                    SearchView()
-                } label: {
-                    FeaturedTrackHeroCard(track: state.featuredTrack)
-                }
-                .buttonStyle(ScaleButtonStyle())
-                // Parallax foreground
-                .offset(x: CGFloat(motion.roll * 20), y: CGFloat(motion.pitch * 20))
-
-                Spacer()
-
-                // Bottom Hint
-                VStack(spacing: 12) {
-                    Text("上にスワイプして詳細を見る")
-                        .font(.system(size: 10, weight: .black))
-                        .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.5))
-                        .kerning(2.0)
-
-                    Capsule()
-                        .fill(PrototypeTheme.border.opacity(0.6))
-                        .frame(width: 40, height: 4)
-                }
-                .padding(.bottom, max(24, bottomSafeArea + 16))
-            }
-            .padding(.horizontal, 32)
-        }
-        .onAppear {
-            if isMotionActive {
-                motion.startUpdates()
-            }
-        }
-        .onChange(of: isMotionActive) { isActive in
-            if isActive {
-                motion.startUpdates()
-            } else {
-                motion.stopUpdates()
-            }
-        }
-        .onDisappear {
-            motion.stopUpdates()
-        }
-    }
-}
-
-private struct HomeInsightsPage: View {
-    let state: HomeScreenState
-    @Environment(\.topSafeAreaInset) private var topSafeArea
-    @Environment(\.bottomSafeAreaInset) private var bottomSafeArea
-
-    private var contentTopPadding: CGFloat {
-        topSafeArea + 20
-    }
-
-    private var contentBottomPadding: CGFloat {
-        max(64, bottomSafeArea + 64) + 40
-    }
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
-                if state.isOffline {
-                    OfflineBannerView()
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("すれ違い情報")
-                        .font(PrototypeTheme.Typography.Encounter.screenTitle)
-                        .foregroundStyle(PrototypeTheme.textPrimary)
-                    Text("すれ違いで出会った音楽と相手の記録")
-                        .font(PrototypeTheme.Typography.Encounter.body)
-                        .foregroundStyle(PrototypeTheme.textSecondary)
-                }
-
-                SectionCard(title: "すれ違い") {
-                    HStack(spacing: 14) {
-                        SummaryMetricCard(
-                            title: "今日",
-                            count: state.todayEncounterCount,
-                            zeroMessage: "まだありません"
-                        )
-                        SummaryMetricCard(
-                            title: "今週",
-                            count: state.weekEncounterCount,
-                            zeroMessage: "まだありません"
-                        )
-                    }
-                }
-
-                if !state.weeklyTracks.isEmpty {
-                    SectionCard(title: "出会った音楽") {
-                        SectionHeader(title: "今週出会った音楽")
-
-                        WeeklyMusicCollageView(tracks: state.weeklyTracks)
-                    }
-                }
-
-                SectionCard(title: "最近のすれ違い") {
-                    SectionHeader(title: "最近の出会い", showsAction: !state.recentEncounters.isEmpty)
-
-                    if state.recentEncounters.isEmpty {
-                        FirstEncounterEmptyState()
-                    } else {
-                        VStack(spacing: 12) {
-                            ForEach(state.recentEncounters.prefix(5)) { encounter in
-                                NavigationLink {
-                                    EncounterDetailView(encounter: encounter)
-                                } label: {
-                                    EncounterRow(encounter: encounter)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                }
-
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, contentTopPadding)
-            .padding(.bottom, contentBottomPadding)
-        }
-        .background(PrototypeTheme.background)
-    }
-}
-
-private struct SectionHeader: View {
-    let title: String
-    var showsAction = true
-
-    var body: some View {
-        HStack {
-            Text(title)
-                .font(PrototypeTheme.Typography.Encounter.sectionTitle)
-                .foregroundStyle(PrototypeTheme.textPrimary)
-            Spacer()
-            if showsAction {
-                NavigationLink("すべて") {
-                    EncounterListView()
-                }
-                .font(PrototypeTheme.Typography.Encounter.meta)
-                .foregroundStyle(PrototypeTheme.accent)
-            }
-        }
-    }
-}
-
-private struct FeaturedTrackHeroCard: View {
-    let track: Track?
-    @State private var isPulsing = false
-    @Environment(\.heroNamespace) var heroNamespace
-
-    var body: some View {
-        VStack(spacing: 48) {
-            if let track {
-                VStack(spacing: 40) {
-                    ZStack {
-                        // Background Glow
-                        Circle()
-                            .fill(track.color.opacity(0.15))
-                            .frame(width: 340, height: 340)
-                            .scaleEffect(isPulsing ? 1.15 : 1.0)
-                            .blur(radius: isPulsing ? 32 : 20)
-                            .animation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true), value: isPulsing)
-
-                        // Outer decorative ring
-                        Circle()
-                            .stroke(track.color.opacity(0.15), lineWidth: 1)
-                            .frame(width: 300, height: 300)
-
-                        // Inner decorative ring
-                        Circle()
-                            .stroke(track.color.opacity(0.08), lineWidth: 1)
-                            .frame(width: 260, height: 260)
-
-                        MockArtworkView(color: track.color, symbol: "music.note", size: 240)
-                            .shadow(color: track.color.opacity(0.2), radius: 30, x: 0, y: 15)
-                            .matchedGeometryEffect(id: "hero_artwork_\(track.id)", in: heroNamespace)
-                    }
-                    .onAppear { isPulsing = true }
-
-                    VStack(spacing: 12) {
-                        Text("いまシェア中")
-                            .font(.system(size: 11, weight: .black))
-                            .foregroundStyle(track.color.opacity(0.7))
-                            .kerning(1.5)
-                        
-                        Text(track.title)
-                            .font(.system(size: 38, weight: .black))
-                            .foregroundStyle(PrototypeTheme.textPrimary)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .truncationMode(.tail)
-                            .tracking(-1.0)
-                            .matchedGeometryEffect(id: "hero_title_\(track.id)", in: heroNamespace)
-
-                        Text(track.artist)
-                            .font(.system(size: 22, weight: .medium))
-                            .foregroundStyle(PrototypeTheme.textSecondary)
-                            .multilineTextAlignment(.center)
-                            .matchedGeometryEffect(id: "hero_artist_\(track.id)", in: heroNamespace)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                    }
-                    .padding(.horizontal, 12)
-                }
-            } else {
-                VStack(spacing: 32) {
-                    Circle()
-                        .fill(PrototypeTheme.surfaceMuted)
-                        .frame(width: 140, height: 140)
-                        .overlay {
-                            Image(systemName: "plus")
-                                .font(.system(size: 40, weight: .light))
-                                .foregroundStyle(PrototypeTheme.textTertiary)
-                        }
-
-                    Text("曲を設定")
-                        .font(.system(size: 14, weight: .black))
-                        .foregroundStyle(PrototypeTheme.textSecondary)
-                        .kerning(1.2)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity)
     }
 }
 
@@ -2202,7 +1893,7 @@ struct RealtimeDemoView: View {
     }
 }
 
-private struct OfflineBannerView: View {
+struct OfflineBannerView: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "wifi.exclamationmark")
@@ -2221,7 +1912,7 @@ private struct OfflineBannerView: View {
     }
 }
 
-private struct FirstEncounterEmptyState: View {
+struct FirstEncounterEmptyState: View {
     var body: some View {
         VStack(spacing: 16) {
             EmptyStateCard(
@@ -2234,7 +1925,7 @@ private struct FirstEncounterEmptyState: View {
     }
 }
 
-private struct WeeklyMusicCollageView: View {
+struct WeeklyMusicCollageView: View {
     let tracks: [Track]
 
     private var visibleTracks: [Track] { Array(tracks.prefix(7)) }
@@ -2266,7 +1957,7 @@ private struct WeeklyMusicCollageView: View {
     }
 }
 
-private struct SummaryMetricCard: View {
+struct SummaryMetricCard: View {
     let title: String
     let count: Int
     let zeroMessage: String
@@ -2331,7 +2022,7 @@ private struct TrackSelectionRow: View {
     }
 }
 
-private struct EncounterRow: View {
+struct EncounterRow: View {
     let encounter: Encounter
 
     var body: some View {

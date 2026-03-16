@@ -1,14 +1,14 @@
 import SwiftUI
 
 struct Track: Identifiable, Hashable {
-    let id = UUID()
+    var id: String { "\(title)-\(artist)" }
     let title: String
     let artist: String
     let color: Color
 }
 
 struct Encounter: Identifiable, Hashable {
-    let id = UUID()
+    var id: String { "\(userName)-\(track.id)-\(relativeTime)-\(lyric)" }
     let userName: String
     let track: Track
     let relativeTime: String
@@ -20,7 +20,7 @@ struct Encounter: Identifiable, Hashable {
 }
 
 struct GeneratedSong: Identifiable, Hashable {
-    let id = UUID()
+    var id: String { "\(title)-\(subtitle)" }
     let title: String
     let subtitle: String
     let color: Color
