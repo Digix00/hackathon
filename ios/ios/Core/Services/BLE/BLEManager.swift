@@ -204,7 +204,10 @@ final class BLEManager: NSObject, ObservableObject {
     }
 
     private func shouldEmitDetection(token: String, rssi: NSNumber, now: Date) -> Bool {
-        guard rssi.intValue >= Constants.rssiThreshold else { return false }
+        let rssiValue = rssi.intValue
+        // CoreBluetooth uses 127 as a sentinel for unavailable RSSI.
+        guard rssiValue != 127 else { return false }
+        guard rssiValue >= Constants.rssiThreshold else { return false }
 
         if let last = cooldownByToken[token], now.timeIntervalSince(last) < Constants.cooldown {
             return false
