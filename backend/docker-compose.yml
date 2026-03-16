@@ -74,5 +74,16 @@ services:
       postgres:
         condition: service_healthy
 
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: pgadmin
+    env_file:
+      - .env.development
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres_data:

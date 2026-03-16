@@ -2,26 +2,53 @@ package main
 
 import (
 	"context"
-	"database/sql"
+	"errors"
 	"net/http"
-	"os"
 	"time"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"go.uber.org/zap"
+
+	"hackathon/config"
+	"hackathon/internal/infra/rdb"
+	applogger "hackathon/logger"
 )
 
 func main() {
-	dsn := os.Getenv("DATABASE_URL")
-	var db *sql.DB
-	if dsn != "" {
-		openedDB, err := sql.Open("pgx", dsn)
-		if err != nil {
-			panic(err)
+	cfg, err := config.Load()
+	if err != nil {
+		panic("config load failed: " + err.Error())
+	}
+
+	log, err := applogger.New(cfg.GoEnv)
+	if err != nil {
+		panic("logger init failed: " + err.Error())
+	}
+	defer log.Sync() //nolint:errcheck
+
+	db, err := rdb.Open(cfg.DatabaseURL, cfg.GoEnv)
+	if err != nil {
+		log.Fatal("db open failed", zap.Error(err))
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatal("db get sql.DB failed", zap.Error(err))
+	}
+	defer sqlDB.Close()
+
+	if err := rdb.Migrate(db); err != nil {
+		log.Fatal("db migrate failed", zap.Error(err))
+	}
+	log.Info("db migration completed")
+
+	// Seed は development / test 環境のみ実行する（allowlist 方式）。
+	// staging など未知の環境でも誤って実行されないようにするため != "production" ではなく明示的に指定。
+	if cfg.GoEnv == "development" || cfg.GoEnv == "test" {
+		if err := rdb.Seed(db); err != nil {
+			log.Fatal("db seed failed", zap.Error(err))
 		}
-		db = openedDB
-		defer db.Close()
+		log.Info("db seed completed")
 	}
 
 	e := echo.New()
@@ -34,44 +61,22 @@ func main() {
 	})
 
 	e.GET("/healthz/postgres", func(c echo.Context) error {
-		if db == nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{
-				"status": "error",
-				"error":  "DATABASE_URL is not set",
-			})
-		}
-
 		ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 		defer cancel()
 
-		err := db.PingContext(ctx)
-		if err != nil {
+		if err := sqlDB.PingContext(ctx); err != nil {
 			return c.JSON(http.StatusServiceUnavailable, map[string]string{
 				"status": "error",
 				"error":  err.Error(),
 			})
 		}
 
-		var result int
-		err = db.QueryRowContext(ctx, "SELECT 1").Scan(&result)
-		if err != nil {
-			return c.JSON(http.StatusServiceUnavailable, map[string]string{
-				"status": "error",
-				"error":  err.Error(),
-			})
-		}
-
-		return c.JSON(http.StatusOK, map[string]interface{}{
-			"status": "ok",
-			"db":     "postgres",
-			"result": result,
-		})
+		return c.JSON(http.StatusOK, map[string]string{"status": "ok", "db": "postgres"})
 	})
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8000"
-	}
+	log.Info("server starting", zap.String("port", cfg.Port))
 
-	e.Logger.Fatal(e.Start(":" + port))
+	if err := e.Start(":" + cfg.Port); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatal("server error", zap.Error(err))
+	}
 }

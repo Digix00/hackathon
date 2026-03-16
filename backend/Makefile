@@ -1,10 +1,11 @@
-.PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean
+.PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean reset-db
 
 # ==============================================================================
 # Docker Compose Commands
 # ==============================================================================
 
 # バックエンド環境をビルドしてバックグラウンドで起動
+# マイグレーションはサーバー起動時に自動実行される
 run-dev:
 	docker compose up --build -d
 
@@ -24,6 +25,12 @@ restart-dev:
 # ボリューム（DBデータ等）を含めて環境を完全に削除
 clean:
 	docker compose down -v
+
+# DBを完全リセットして再起動（マイグレーション + シード自動実行）
+# 動作確認環境を初期状態に戻したいときに使う
+reset-db:
+	docker compose down -v
+	docker compose up --build -d
 
 # ==============================================================================
 # Utility Commands
