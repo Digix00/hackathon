@@ -165,8 +165,12 @@ func (h *userHandler) deleteMe(c echo.Context) error {
 		return err
 	}
 
+	// Firebase 削除はベストエフォートで実行する。
+	// DB 削除が完了した時点でユーザーは API 上で無効化されているため、
+	// Firebase 削除に失敗してもクライアントには成功を返しエラーをログに残す。
+	// 孤立した Firebase アカウントは DB レコードを持たないため再ログインしても即 404 になる。
 	if err := h.authUserManager.DeleteUser(c.Request().Context(), uid); err != nil && !firebaseauth.IsUserNotFound(err) {
-		return err
+		c.Logger().Errorf("deleteMe: firebase user deletion failed (uid=%s): %v", uid, err)
 	}
 
 	return c.NoContent(http.StatusNoContent)
