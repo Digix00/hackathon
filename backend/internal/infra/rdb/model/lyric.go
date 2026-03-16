@@ -7,11 +7,11 @@ import (
 )
 
 type LyricChain struct {
-	ID               string         `gorm:"primaryKey"`
-	Status           string         `gorm:"not null;default:pending;index"` // 'pending' | 'generating' | 'completed' | 'failed'
-	ParticipantCount int            `gorm:"not null;default:0"`
-	Threshold        int            `gorm:"not null;default:4"`
-	CreatedAt        time.Time      `gorm:"not null;autoCreateTime;index"`
+	ID               string    `gorm:"primaryKey"`
+	Status           string    `gorm:"not null;default:pending;index"` // 'pending' | 'generating' | 'completed' | 'failed'
+	ParticipantCount int       `gorm:"not null;default:0"`
+	Threshold        int       `gorm:"not null;default:4"`
+	CreatedAt        time.Time `gorm:"not null;autoCreateTime;index"`
 	CompletedAt      *time.Time
 	DeletedAt        gorm.DeletedAt `gorm:"index"`
 
@@ -31,8 +31,8 @@ type LyricEntry struct {
 }
 
 type GeneratedSong struct {
-	ID          string         `gorm:"primaryKey"`
-	ChainID     string         `gorm:"not null;uniqueIndex"`
+	ID          string `gorm:"primaryKey"`
+	ChainID     string `gorm:"not null;uniqueIndex"`
 	Title       *string
 	AudioURL    *string
 	DurationSec *int
@@ -53,11 +53,11 @@ type SongLike struct {
 }
 
 type OutboxLyriaJob struct {
-	ID           string     `gorm:"primaryKey"`
-	ChainID      string     `gorm:"not null;index"`
-	Status       string     `gorm:"not null;default:pending;index"` // 'pending' | 'processing' | 'completed' | 'failed'
-	RetryCount   int        `gorm:"not null;default:0"`
+	ID           string `gorm:"primaryKey"`
+	ChainID      string `gorm:"not null;index"`
+	Status       string `gorm:"not null;default:pending;index"` // 'pending' | 'processing' | 'completed' | 'failed'
+	RetryCount   int    `gorm:"not null;default:0"`
 	ErrorMessage *string
-	CreatedAt    time.Time  `gorm:"not null;autoCreateTime;index"`
+	CreatedAt    time.Time `gorm:"not null;autoCreateTime;index"`
 	ProcessedAt  *time.Time
 }

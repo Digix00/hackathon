@@ -7,11 +7,11 @@ import (
 )
 
 type Track struct {
-	ID          string    `gorm:"primaryKey"`
-	ExternalID  string    `gorm:"not null;uniqueIndex:uq_tracks_external"`
-	Provider    string    `gorm:"not null;uniqueIndex:uq_tracks_external"` // 'spotify' | 'apple_music'
-	Title       string    `gorm:"not null"`
-	ArtistName  string    `gorm:"not null"`
+	ID          string `gorm:"primaryKey"`
+	ExternalID  string `gorm:"not null;uniqueIndex:uq_tracks_external"`
+	Provider    string `gorm:"not null;uniqueIndex:uq_tracks_external"` // 'spotify' | 'apple_music'
+	Title       string `gorm:"not null"`
+	ArtistName  string `gorm:"not null"`
 	AlbumName   *string
 	AlbumArtURL *string
 	DurationMs  *int
@@ -38,9 +38,9 @@ type UserCurrentTrack struct {
 }
 
 type Playlist struct {
-	ID          string         `gorm:"primaryKey"`
-	UserID      string         `gorm:"not null;index"`
-	Name        string         `gorm:"not null"`
+	ID          string `gorm:"primaryKey"`
+	UserID      string `gorm:"not null;index"`
+	Name        string `gorm:"not null"`
 	Description *string
 	IsPublic    bool           `gorm:"not null;default:true;index"`
 	CreatedAt   time.Time      `gorm:"not null;autoCreateTime"`

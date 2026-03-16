@@ -23,18 +23,18 @@ type File struct {
 }
 
 type User struct {
-	ID             string         `gorm:"primaryKey"`
-	AuthProvider   string         `gorm:"not null;uniqueIndex:uq_users_provider"`
-	ProviderUserID string         `gorm:"not null;uniqueIndex:uq_users_provider"`
+	ID             string `gorm:"primaryKey"`
+	AuthProvider   string `gorm:"not null;uniqueIndex:uq_users_provider"`
+	ProviderUserID string `gorm:"not null;uniqueIndex:uq_users_provider"`
 	Name           *string
 	NameKana       *string
 	NameUpdatedAt  *time.Time
 	Bio            *string
 	Birthdate      *time.Time
-	AgeVisibility  string         `gorm:"not null;default:hidden"`
-	PrefectureID   *string        `gorm:"index"`
-	Sex            string         `gorm:"not null;default:no-answer"`
-	IsRestricted   bool           `gorm:"not null;default:false"`
+	AgeVisibility  string  `gorm:"not null;default:hidden"`
+	PrefectureID   *string `gorm:"index"`
+	Sex            string  `gorm:"not null;default:no-answer"`
+	IsRestricted   bool    `gorm:"not null;default:false"`
 	AvatarFileID   *string
 	AvatarShape    string         `gorm:"not null;default:circle"`
 	CreatedAt      time.Time      `gorm:"not null;autoCreateTime"`
@@ -47,13 +47,13 @@ type User struct {
 }
 
 type UserSettings struct {
-	ID                              string    `gorm:"primaryKey"`
-	UserID                          string    `gorm:"not null;uniqueIndex"`
-	BleEnabled                      bool      `gorm:"not null;default:true"`
-	LocationEnabled                 bool      `gorm:"not null;default:true"`
-	DetectionDistance               int       `gorm:"not null;default:50"`
-	ScheduleEnabled                 bool      `gorm:"not null;default:false"`
-	ScheduleStartTime               *string   // TIME 型は string で保持
+	ID                              string  `gorm:"primaryKey"`
+	UserID                          string  `gorm:"not null;uniqueIndex"`
+	BleEnabled                      bool    `gorm:"not null;default:true"`
+	LocationEnabled                 bool    `gorm:"not null;default:true"`
+	DetectionDistance               int     `gorm:"not null;default:50"`
+	ScheduleEnabled                 bool    `gorm:"not null;default:false"`
+	ScheduleStartTime               *string // TIME 型は string で保持
 	ScheduleEndTime                 *string
 	ProfileVisible                  bool      `gorm:"not null;default:true"`
 	TrackVisible                    bool      `gorm:"not null;default:true"`
@@ -80,16 +80,16 @@ type UserDevice struct {
 
 // MusicConnection は Spotify / Apple Music の OAuth 連携情報を保持する。
 type MusicConnection struct {
-	ID               string     `gorm:"primaryKey"`
-	UserID           string     `gorm:"not null;uniqueIndex:uq_music_connections"`
-	Provider         string     `gorm:"not null;uniqueIndex:uq_music_connections"` // 'spotify' | 'apple_music'
-	ProviderUserID   string     `gorm:"not null"`
+	ID               string `gorm:"primaryKey"`
+	UserID           string `gorm:"not null;uniqueIndex:uq_music_connections"`
+	Provider         string `gorm:"not null;uniqueIndex:uq_music_connections"` // 'spotify' | 'apple_music'
+	ProviderUserID   string `gorm:"not null"`
 	ProviderUsername *string
-	AccessToken      string     `gorm:"not null"`  // TODO: 要暗号化
-	RefreshToken     *string                        // TODO: 要暗号化
+	AccessToken      string  `gorm:"not null"` // TODO: 要暗号化
+	RefreshToken     *string // TODO: 要暗号化
 	ExpiresAt        *time.Time
-	CreatedAt        time.Time  `gorm:"not null;autoCreateTime"`
-	UpdatedAt        time.Time  `gorm:"not null;autoUpdateTime"`
+	CreatedAt        time.Time `gorm:"not null;autoCreateTime"`
+	UpdatedAt        time.Time `gorm:"not null;autoUpdateTime"`
 }
 
 type BleToken struct {
