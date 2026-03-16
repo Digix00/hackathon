@@ -2,33 +2,11 @@ import SwiftUI
 
 private struct DynamicBlurBackground: View {
     let baseColor: Color
-    @State private var animate = false
-    @State private var rotation: Double = 0
 
     var body: some View {
         ZStack {
             PrototypeTheme.background
 
-            Group {
-                Circle()
-                    .fill(baseColor.opacity(0.4))
-                    .frame(width: 450, height: 450)
-                    .offset(x: animate ? 80 : -80, y: animate ? -150 : -50)
-                    .blur(radius: 90)
-
-                Circle()
-                    .fill(PrototypeTheme.accent.opacity(0.15))
-                    .frame(width: 380, height: 380)
-                    .offset(x: animate ? -100 : 100, y: animate ? 200 : 100)
-                    .blur(radius: 100)
-
-                Circle()
-                    .fill(baseColor.opacity(0.25))
-                    .frame(width: 320, height: 320)
-                    .offset(x: animate ? 40 : -40, y: animate ? 50 : -50)
-                    .blur(radius: 80)
-            }
-            .rotationEffect(.degrees(rotation))
 
             Color.white.opacity(0.01)
                 .background(
@@ -44,14 +22,6 @@ private struct DynamicBlurBackground: View {
         }
         .particleEffect()
         .ignoresSafeArea()
-        .onAppear {
-            withAnimation(.easeInOut(duration: 4.5).repeatForever(autoreverses: true)) {
-                animate.toggle()
-            }
-            withAnimation(.linear(duration: 30).repeatForever(autoreverses: false)) {
-                rotation = 360
-            }
-        }
     }
 }
 
