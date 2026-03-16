@@ -11,6 +11,8 @@ import (
 	"go.uber.org/zap"
 
 	"hackathon/config"
+	"hackathon/internal/handler"
+	infraauth "hackathon/internal/infra/auth"
 	"hackathon/internal/infra/rdb"
 	applogger "hackathon/logger"
 )
@@ -31,6 +33,12 @@ func main() {
 	if err != nil {
 		log.Fatal("db open failed", zap.Error(err))
 	}
+
+	authClient, err := infraauth.NewFirebaseAuthClient(context.Background(), cfg.FirebaseProjectID)
+	if err != nil {
+		log.Fatal("firebase auth client init failed", zap.Error(err))
+	}
+
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Fatal("db get sql.DB failed", zap.Error(err))
@@ -72,6 +80,12 @@ func main() {
 		}
 
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok", "db": "postgres"})
+	})
+
+	handler.RegisterRoutes(e, handler.Dependencies{
+		AuthTokenVerifier: authClient,
+		AuthUserManager:   authClient,
+		DB:                db,
 	})
 
 	log.Info("server starting", zap.String("port", cfg.Port))
