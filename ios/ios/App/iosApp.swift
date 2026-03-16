@@ -25,7 +25,7 @@ struct iosApp: App {
                 }
                 .onReceive(bleManager.$latestDetection.compactMap { $0 }) { detection in
                     Task {
-                        try? await backendClient.postEncounter(
+                        await backendClient.enqueueEncounter(
                             targetBLEToken: detection.token,
                             rssi: detection.rssi,
                             occurredAt: detection.detectedAt
