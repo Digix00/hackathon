@@ -99,6 +99,9 @@ struct AppScaffold<Content: View>: View {
     let trailingSymbol: String?
     let accentColor: Color?
     @ViewBuilder var content: Content
+    
+    @Environment(\.topSafeAreaInset) private var envTopSafeArea
+    @Environment(\.bottomSafeAreaInset) private var envBottomSafeArea
 
     init(
         title: String,
@@ -116,6 +119,9 @@ struct AppScaffold<Content: View>: View {
 
     var body: some View {
         GeometryReader { geometry in
+            let topPadding = (envTopSafeArea > 0 ? envTopSafeArea : geometry.safeAreaInsets.top)
+            let bottomPadding = (envBottomSafeArea > 0 ? envBottomSafeArea : geometry.safeAreaInsets.bottom)
+
             ZStack {
                 if let accentColor {
                     DynamicBackground(baseColor: accentColor)
@@ -159,19 +165,19 @@ struct AppScaffold<Content: View>: View {
                                 }
                             }
                         }
-                        .padding(.top, geometry.safeAreaInsets.top + 8)
+                        .padding(.top, topPadding + 8)
 
                         content
                     }
                     .padding(.horizontal, 24)
-                    .padding(.bottom, max(24, geometry.safeAreaInsets.bottom + 8))
+                    .padding(.bottom, max(24, bottomPadding + 8))
                 }
                 .scrollContentBackground(.hidden)
             }
             .toolbar(.hidden, for: .navigationBar)
             .background(Color.clear)
+            .ignoresSafeArea()
         }
-        .ignoresSafeArea()
     }
 }
 
