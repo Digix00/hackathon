@@ -46,6 +46,7 @@ API レスポンスと DB カラム名が異なる主なフィールド一覧。
 | `avatar_url` | `users.avatar_file_id` | MVP では外部 URL を直接保存（`files` テーブル経由なし） |
 | `expires_at`（BLE トークン） | `ble_tokens.valid_to` | 期限フィールド名の統一 |
 | `target_user_id`（通報） | `reports.reported_user_id` | 明示的に API 設計書に注記済み |
+| `type`（エンカウント） | `encounters.encounter_type` | API では短縮名を使用 |
 | `push_token` エンドポイント群 | `USER_DEVICES` テーブル | セクション名が異なる |
 | `shared-track` エンドポイント群 | `USER_CURRENT_TRACKS` テーブル | セクション名が異なる |
 
