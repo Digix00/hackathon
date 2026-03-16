@@ -69,6 +69,9 @@ struct HomeHeroPage: View {
 
     var body: some View {
         ZStack {
+            PrototypeTheme.background
+                .ignoresSafeArea()
+
             DynamicBlurBackground(baseColor: heroColor)
                 .offset(x: CGFloat(motion.roll * -30), y: CGFloat(motion.pitch * -30))
 
@@ -151,6 +154,7 @@ struct HomeHeroPage: View {
         .onDisappear {
             motion.stopUpdates()
         }
+        .ignoresSafeArea()
     }
 }
 
