@@ -17,10 +17,6 @@ struct ParticleModifier: ViewModifier {
                         let normalizedY = yOffset.truncatingRemainder(dividingBy: size.height * 1.5)
                         let y = size.height - (normalizedY < 0 ? normalizedY + size.height * 1.5 : normalizedY)
                         let x = size.width / 2 + xOffset
-
-                        let rect = CGRect(x: x, y: y, width: 3, height: 3)
-                        context.opacity = 0.3 * sin(time * 2 + Double(i)) + 0.3
-                        context.fill(Path(ellipseIn: rect), with: .color(.white))
                     }
                 }
             )
