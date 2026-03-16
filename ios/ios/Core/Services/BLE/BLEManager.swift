@@ -5,11 +5,12 @@ import Foundation
 /// BLE token exchange manager based on docs/architecture/ble.md.
 ///
 /// - Uses non-connectable advertising + scanning only (no GATT connection).
-/// - Exchanges only ephemeral BLE token via manufacturer data.
+/// - Exchanges only ephemeral BLE token via advertising payload.
 /// - Applies client-side cooldown and RSSI filtering before surfacing detections.
 final class BLEManager: NSObject, ObservableObject {
     struct Constants {
         static let manufacturerID: UInt16 = 0xD1A1
+        static let localNamePrefix = "MS:"
 
         static let scanWindow: TimeInterval = 2
         static let scanInterval: TimeInterval = 5
@@ -123,9 +124,8 @@ final class BLEManager: NSObject, ObservableObject {
             return
         }
 
-        let manufacturerData = encodeManufacturerData(token: token)
         let data: [String: Any] = [
-            CBAdvertisementDataManufacturerDataKey: manufacturerData,
+            CBAdvertisementDataLocalNameKey: Constants.localNamePrefix + token,
             CBAdvertisementDataIsConnectable: false
         ]
 
@@ -173,20 +173,35 @@ final class BLEManager: NSObject, ObservableObject {
         return compact
     }
 
-    private func encodeManufacturerData(token: String) -> Data {
-        var id = Constants.manufacturerID.littleEndian
-        var data = Data(bytes: &id, count: MemoryLayout<UInt16>.size)
-        data.append(token.data(using: .utf8) ?? Data())
-        return data
+    private func decodeToken(fromAdvertisementData advertisementData: [String: Any]) -> String? {
+        if
+            let localName = advertisementData[CBAdvertisementDataLocalNameKey] as? String,
+            let token = decodeToken(fromLocalName: localName)
+        {
+            return token
+        }
+
+        return decodeToken(fromManufacturerData: advertisementData)
     }
 
-    private func decodeToken(fromAdvertisementData advertisementData: [String: Any]) -> String? {
+    private func decodeToken(fromLocalName localName: String) -> String? {
+        guard localName.hasPrefix(Constants.localNamePrefix) else { return nil }
+        let payload = String(localName.dropFirst(Constants.localNamePrefix.count))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !payload.isEmpty else { return nil }
+        return String(payload.prefix(Constants.maxTokenLength))
+    }
+
+    private func decodeToken(fromManufacturerData advertisementData: [String: Any]) -> String? {
         guard
             let manufacturerData = advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data,
             manufacturerData.count > MemoryLayout<UInt16>.size
         else {
             return nil
         }
+
+        let id = UInt16(manufacturerData[0]) | (UInt16(manufacturerData[1]) << 8)
+        guard id == Constants.manufacturerID else { return nil }
 
         let payload = manufacturerData.dropFirst(MemoryLayout<UInt16>.size)
         let token = String(data: payload, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -233,6 +248,12 @@ extension BLEManager: CBCentralManagerDelegate {
 }
 
 extension BLEManager: CBPeripheralManagerDelegate {
+    func peripheralManagerDidStartAdvertising(_ peripheral: CBPeripheralManager, error: Error?) {
+        if error != nil {
+            isAdvertising = false
+        }
+    }
+
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
         applyAdvertisingState()
     }
