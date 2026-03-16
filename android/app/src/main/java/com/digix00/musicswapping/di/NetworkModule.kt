@@ -3,7 +3,7 @@ package com.digix00.musicswapping.di
 import com.digix00.musicswapping.BuildConfig
 import com.digix00.musicswapping.data.remote.ApiService
 import com.digix00.musicswapping.data.remote.AuthInterceptor
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
