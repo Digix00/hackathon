@@ -326,6 +326,9 @@ func TestPatchAndDeletePushToken(t *testing.T) {
 
 func TestCreateGetPatchAndDeleteUserFlow(t *testing.T) {
 	db := newTestDB(t)
+	if err := db.Create(&model.Prefecture{ID: "13", Name: "東京都"}).Error; err != nil {
+		t.Fatalf("create prefecture: %v", err)
+	}
 	e := newTestServer(t, db, "firebase-uid-user-flow")
 
 	createReq, err := authRequest(http.MethodPost, "/api/v1/users", map[string]any{
@@ -513,6 +516,9 @@ func TestGetUserByIDMasksProfileAndTrack(t *testing.T) {
 	bio := "secret bio"
 	prefID := "13"
 	birthdate := jsonDate(t, "1998-03-10")
+	if err := db.Create(&model.Prefecture{ID: "13", Name: "東京都"}).Error; err != nil {
+		t.Fatalf("create prefecture: %v", err)
+	}
 	target := model.User{
 		ID:             uuid.NewString(),
 		AuthProvider:   testFirebaseProvider,
@@ -526,9 +532,6 @@ func TestGetUserByIDMasksProfileAndTrack(t *testing.T) {
 	}
 	if err := db.Create(&target).Error; err != nil {
 		t.Fatalf("create target user: %v", err)
-	}
-	if err := db.Create(&model.Prefecture{ID: "13", Name: "東京都"}).Error; err != nil {
-		t.Fatalf("create prefecture: %v", err)
 	}
 	settings := model.UserSettings{ID: uuid.NewString(), UserID: target.ID}
 	if err := db.Create(&settings).Error; err != nil {
