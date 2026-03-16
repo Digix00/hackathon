@@ -89,22 +89,6 @@ func (h *userHandler) createUser(c echo.Context) error {
 			return findErr
 		}
 
-		var avatarFileID *string
-		if req.AvatarURL != nil && *req.AvatarURL != "" {
-			file := model.File{
-				ID:               uuid.NewString(),
-				FilePath:         *req.AvatarURL,
-				FileType:         "avatar",
-				MimeType:         "application/octet-stream",
-				FileSize:         0,
-				UploadedByUserID: uid,
-			}
-			if createErr := tx.Create(&file).Error; createErr != nil {
-				return createErr
-			}
-			avatarFileID = &file.ID
-		}
-
 		ageVisibility := "hidden"
 		if req.AgeVisibility != nil && *req.AgeVisibility != "" {
 			ageVisibility = *req.AgeVisibility
@@ -125,10 +109,30 @@ func (h *userHandler) createUser(c echo.Context) error {
 			AgeVisibility:  ageVisibility,
 			PrefectureID:   req.PrefectureID,
 			Sex:            sex,
-			AvatarFileID:   avatarFileID,
+			AvatarFileID:   nil,
 		}
 		if createErr := tx.Create(&created).Error; createErr != nil {
 			return createErr
+		}
+
+		if req.AvatarURL != nil && *req.AvatarURL != "" {
+			file := model.File{
+				ID:               uuid.NewString(),
+				FilePath:         *req.AvatarURL,
+				FileType:         "avatar",
+				MimeType:         "application/octet-stream",
+				FileSize:         0,
+				UploadedByUserID: created.ID,
+			}
+			if createErr := tx.Create(&file).Error; createErr != nil {
+				return createErr
+			}
+			created.AvatarFileID = &file.ID
+			if updateErr := tx.Model(&model.User{}).
+				Where("id = ?", created.ID).
+				Update("avatar_file_id", file.ID).Error; updateErr != nil {
+				return updateErr
+			}
 		}
 
 		settings := model.UserSettings{
@@ -362,7 +366,7 @@ func (h *userHandler) patchMe(c echo.Context) error {
 					FileType:         "avatar",
 					MimeType:         "application/octet-stream",
 					FileSize:         0,
-					UploadedByUserID: uid,
+					UploadedByUserID: updated.ID,
 				}
 				if createErr := tx.Create(&file).Error; createErr != nil {
 					return createErr
