@@ -53,11 +53,13 @@ struct iosApp: App {
                     bleManager.startAdvertising(token: advertisingToken.token)
                 }
 
-                let refreshLeadTime: TimeInterval = 5 * 60
+                // Refresh a bit early and add small jitter to avoid synchronized spikes.
+                let refreshLeadTime: TimeInterval = 60 * 60
+                let refreshJitter: TimeInterval = -Double.random(in: 0...(10 * 60))
                 let minRetryInterval: TimeInterval = 60
                 let sleepInterval = max(
                     minRetryInterval,
-                    advertisingToken.expiresAt.timeIntervalSinceNow - refreshLeadTime
+                    advertisingToken.expiresAt.timeIntervalSinceNow - refreshLeadTime + refreshJitter
                 )
 
                 try await Task.sleep(nanoseconds: UInt64(sleepInterval * 1_000_000_000))
