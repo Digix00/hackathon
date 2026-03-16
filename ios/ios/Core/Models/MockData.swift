@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 enum MockData {
     static let featuredTrack = Track(
