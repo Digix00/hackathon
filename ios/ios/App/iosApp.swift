@@ -21,10 +21,6 @@ struct iosApp: App {
                     bleManager.startAdvertising(token: bleToken)
                     bleManager.startScanning()
                 }
-                .onReceive(bleManager.$state) { state in
-                    guard state == .poweredOn else { return }
-                    bleManager.startScanning()
-                }
         }
     }
 }

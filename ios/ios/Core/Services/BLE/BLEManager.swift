@@ -40,6 +40,8 @@ final class BLEManager: NSObject, ObservableObject {
     private var centralManager: CBCentralManager!
     private var peripheralManager: CBPeripheralManager!
 
+    private var shouldAdvertise = false
+    private var shouldScan = false
     private var advertisedToken: String?
 
     private var scanCycleTimer: Timer?
@@ -62,29 +64,27 @@ final class BLEManager: NSObject, ObservableObject {
         let sanitized = sanitize(token: token)
         guard !sanitized.isEmpty else { return }
 
+        shouldAdvertise = true
         advertisedToken = sanitized
-        updateAdvertisingIfPossible()
+        applyAdvertisingState()
     }
 
     func stopAdvertising() {
-        peripheralManager.stopAdvertising()
-        isAdvertising = false
+        shouldAdvertise = false
+        stopAdvertisingRuntime()
     }
 
     func startScanning() {
-        guard centralManager.state == .poweredOn else { return }
-        guard !isScanning else { return }
-
-        isScanning = true
-        startScanWindow()
-
-        let repeatEvery = Constants.scanInterval
-        scanCycleTimer = Timer.scheduledTimer(withTimeInterval: repeatEvery, repeats: true) { [weak self] _ in
-            self?.startScanWindow()
-        }
+        shouldScan = true
+        applyScanningState()
     }
 
     func stopScanning() {
+        shouldScan = false
+        stopScanningRuntime()
+    }
+
+    private func stopScanningRuntime() {
         scanCycleTimer?.invalidate()
         scanCycleTimer = nil
 
@@ -112,8 +112,14 @@ final class BLEManager: NSObject, ObservableObject {
         }
     }
 
-    private func updateAdvertisingIfPossible() {
-        guard peripheralManager.state == .poweredOn, let token = advertisedToken else {
+    private func stopAdvertisingRuntime() {
+        peripheralManager.stopAdvertising()
+        isAdvertising = false
+    }
+
+    private func applyAdvertisingState() {
+        guard shouldAdvertise, peripheralManager.state == .poweredOn, let token = advertisedToken else {
+            stopAdvertisingRuntime()
             return
         }
 
@@ -128,9 +134,25 @@ final class BLEManager: NSObject, ObservableObject {
         isAdvertising = true
     }
 
+    private func applyScanningState() {
+        guard shouldScan, centralManager.state == .poweredOn else {
+            stopScanningRuntime()
+            return
+        }
+        guard !isScanning else { return }
+
+        isScanning = true
+        startScanWindow()
+
+        let repeatEvery = Constants.scanInterval
+        scanCycleTimer = Timer.scheduledTimer(withTimeInterval: repeatEvery, repeats: true) { [weak self] _ in
+            self?.startScanWindow()
+        }
+    }
+
     private func startScanWindow() {
         guard centralManager.state == .poweredOn else {
-            stopScanning()
+            stopScanningRuntime()
             return
         }
 
@@ -191,14 +213,7 @@ final class BLEManager: NSObject, ObservableObject {
 extension BLEManager: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         updateState(central.state)
-
-        if central.state == .poweredOn {
-            if isScanning {
-                startScanning()
-            }
-        } else {
-            stopScanning()
-        }
+        applyScanningState()
     }
 
     func centralManager(
@@ -219,10 +234,6 @@ extension BLEManager: CBCentralManagerDelegate {
 
 extension BLEManager: CBPeripheralManagerDelegate {
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
-        if peripheral.state == .poweredOn {
-            updateAdvertisingIfPossible()
-        } else {
-            stopAdvertising()
-        }
+        applyAdvertisingState()
     }
 }
