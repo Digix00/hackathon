@@ -43,7 +43,6 @@ struct HomeHeroPage: View {
                 .ignoresSafeArea()
 
             DynamicBlurBackground(baseColor: heroColor)
-                .offset(x: CGFloat(motion.roll * -30), y: CGFloat(motion.pitch * -30))
 
             Text("TOKYO")
                 .font(.system(size: 140, weight: .black))
@@ -51,7 +50,6 @@ struct HomeHeroPage: View {
                 .rotationEffect(.degrees(-90))
                 .offset(x: -150)
                 .allowsHitTesting(false)
-                .offset(x: CGFloat(motion.roll * -10), y: CGFloat(motion.pitch * -10))
 
             VStack {
                 HStack(alignment: .top) {
@@ -88,10 +86,9 @@ struct HomeHeroPage: View {
                 NavigationLink {
                     SearchView()
                 } label: {
-                    FeaturedTrackHeroCard(track: state.featuredTrack)
+                    FeaturedTrackHeroCard(track: state.featuredTrack, motionX: CGFloat(motion.roll * 20), motionY: CGFloat(motion.pitch * 20))
                 }
                 .buttonStyle(ScaleButtonStyle())
-                .offset(x: CGFloat(motion.roll * 20), y: CGFloat(motion.pitch * 20))
 
                 Spacer()
 
@@ -130,6 +127,8 @@ struct HomeHeroPage: View {
 
 private struct FeaturedTrackHeroCard: View {
     let track: Track?
+    let motionX: CGFloat
+    let motionY: CGFloat
     @State private var isPulsing = false
     @Environment(\.heroNamespace) private var heroNamespace
 
@@ -155,6 +154,7 @@ private struct FeaturedTrackHeroCard: View {
 
                         MockArtworkView(color: track.color, symbol: "music.note", size: 240)
                             .shadow(color: track.color.opacity(0.2), radius: 30, x: 0, y: 15)
+                            .offset(x: motionX, y: motionY)
                             .matchedGeometryEffect(id: "hero_artwork_\(track.id)", in: heroNamespace)
                     }
                     .onAppear {
@@ -196,6 +196,7 @@ private struct FeaturedTrackHeroCard: View {
                                 .font(.system(size: 40, weight: .light))
                                 .foregroundStyle(PrototypeTheme.textTertiary)
                         }
+                        .offset(x: motionX, y: motionY)
 
                     Text("曲を設定")
                         .font(.system(size: 14, weight: .black))
