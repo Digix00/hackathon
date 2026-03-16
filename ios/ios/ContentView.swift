@@ -10,25 +10,33 @@ struct ContentView: View {
     @State private var phase: Phase = .splash
 
     var body: some View {
-        ZStack {
-            PrototypeTheme.background.ignoresSafeArea()
+        GeometryReader { proxy in
+            let topSafeArea = proxy.safeAreaInsets.top
+            let bottomSafeArea = proxy.safeAreaInsets.bottom
 
-            if phase == .splash {
-                SplashScreenView()
+            ZStack {
+                PrototypeTheme.background.ignoresSafeArea()
+
+                if phase == .splash {
+                    SplashScreenView()
+                        .transition(.opacity)
+                } else if phase == .main {
+                    MainPrototypeView(
+                        restartOnboarding: { phase = .onboarding }
+                    )
                     .transition(.opacity)
-            } else if phase == .main {
-                MainPrototypeView(
-                    restartOnboarding: { phase = .onboarding }
-                )
-                .transition(.opacity)
-            } else {
-                OnboardingFlowView(
-                    onFinish: { phase = .main }
-                )
-                .transition(.opacity)
+                } else {
+                    OnboardingFlowView(
+                        onFinish: { phase = .main }
+                    )
+                    .environment(\.topSafeAreaInset, topSafeArea)
+                    .environment(\.bottomSafeAreaInset, bottomSafeArea)
+                    .transition(.opacity)
+                }
             }
+            .animation(.easeInOut(duration: 0.25), value: phase)
+            .ignoresSafeArea()
         }
-        .animation(.easeInOut(duration: 0.25), value: phase)
         .task {
             guard phase == .splash else { return }
             try? await Task.sleep(for: .milliseconds(900))
