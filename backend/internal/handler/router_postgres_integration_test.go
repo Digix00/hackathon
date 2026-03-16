@@ -18,6 +18,7 @@ import (
 
 	"hackathon/internal/infra/rdb"
 	"hackathon/internal/infra/rdb/model"
+	"hackathon/internal/usecase"
 )
 
 func openPostgresIntegrationDB(t *testing.T) *gorm.DB {
@@ -91,10 +92,21 @@ RESTART IDENTITY CASCADE;
 
 func newPostgresIntegrationServer(t *testing.T, db *gorm.DB, authUID string) *echo.Echo {
 	t.Helper()
+
+	userRepo := rdb.NewUserRepository(db)
+	userSettingsRepo := rdb.NewUserSettingsRepository(db)
+	userDeviceRepo := rdb.NewUserDeviceRepository(db)
+	blockRepo := rdb.NewBlockRepository(db)
+	encounterRepo := rdb.NewEncounterRepository(db)
+	trackRepo := rdb.NewUserCurrentTrackRepository(db)
+
 	e := echo.New()
 	RegisterRoutes(e, Dependencies{
 		AuthTokenVerifier: testTokenVerifier{uid: authUID},
-		DB:                db,
+		AuthUserManager:   testAuthUserManager{},
+		UserUsecase:       usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
+		SettingsUsecase:   usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
+		PushTokenUsecase:  usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
 	})
 	return e
 }
@@ -186,7 +198,7 @@ func TestPostgresIntegration_PushTokenUpsert(t *testing.T) {
 	}
 
 	var user model.User
-	if err := db.Where("auth_provider = ? AND provider_user_id = ?", firebaseProvider, "firebase-pg-uid-2").First(&user).Error; err != nil {
+	if err := db.Where("auth_provider = ? AND provider_user_id = ?", testFirebaseProvider, "firebase-pg-uid-2").First(&user).Error; err != nil {
 		t.Fatalf("load user: %v", err)
 	}
 
@@ -209,7 +221,7 @@ func TestPostgresIntegration_DeleteMeLyricCleanup(t *testing.T) {
 
 	currentUser := model.User{
 		ID:             uuid.NewString(),
-		AuthProvider:   firebaseProvider,
+		AuthProvider:   testFirebaseProvider,
 		ProviderUserID: currentUID,
 		Sex:            "no-answer",
 		AgeVisibility:  "hidden",
@@ -219,7 +231,7 @@ func TestPostgresIntegration_DeleteMeLyricCleanup(t *testing.T) {
 	}
 	otherUser := model.User{
 		ID:             uuid.NewString(),
-		AuthProvider:   firebaseProvider,
+		AuthProvider:   testFirebaseProvider,
 		ProviderUserID: otherUID,
 		Sex:            "no-answer",
 		AgeVisibility:  "hidden",
