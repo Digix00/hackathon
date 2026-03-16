@@ -1,0 +1,88 @@
+name: iOS CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios.yml"
+  pull_request:
+    branches: [ "main", "develop" ]
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios.yml"
+
+defaults:
+  run:
+    working-directory: ios
+
+permissions:
+  contents: read
+
+jobs:
+  # ── テスト実行 ──────────────────────────────────────────────
+  test:
+    name: Tests
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select available iOS Simulator
+        run: |
+          SIMULATOR_NAME="$(
+            xcrun simctl list devices available |
+            grep -E "iPhone" |
+            tail -1 |
+            sed -E 's/^[[:space:]]*([^()]*)[[:space:]]*\(.*/\1/' |
+            xargs
+          )"
+
+          if [ -z "$SIMULATOR_NAME" ]; then
+            echo "No available iPhone simulator found on this runner."
+            exit 1
+          fi
+
+          echo "SIMULATOR_NAME=$SIMULATOR_NAME" >> "$GITHUB_ENV"
+
+      - name: Run unit and UI tests
+        run: |
+          xcodebuild test \
+            -project ios.xcodeproj \
+            -scheme ios \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-results
+          path: |
+            ${{ runner.temp }}/DerivedData/Logs/Test/*.xcresult
+            ${{ runner.temp }}/DerivedData/Logs/Test/*.xccovreport
+            ${{ runner.temp }}/DerivedData/Logs/Test/*.xccovarchive
+
+  # ── ビルド確認（.app） ─────────────────────────────────────
+  build:
+    name: Build Debug App
+    runs-on: macos-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build app for iOS Simulator
+        run: |
+          xcodebuild build \
+            -project ios.xcodeproj \
+            -scheme ios \
+            -configuration Debug \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-debug-app
+          path: ${{ runner.temp }}/DerivedData/Build/Products/Debug-iphonesimulator/*.app
