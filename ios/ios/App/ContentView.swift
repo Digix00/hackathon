@@ -11,28 +11,10 @@ struct ContentView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let topSafeArea = proxy.safeAreaInsets.top
-            let bottomSafeArea = proxy.safeAreaInsets.bottom
-
             ZStack {
                 PrototypeTheme.background.ignoresSafeArea()
-
-                if phase == .splash {
-                    SplashScreenView()
-                        .transition(.opacity)
-                } else if phase == .main {
-                    MainPrototypeView(
-                        restartOnboarding: { phase = .onboarding }
-                    )
+                phaseView(using: proxy)
                     .transition(.opacity)
-                } else {
-                    OnboardingFlowView(
-                        onFinish: { phase = .main }
-                    )
-                    .environment(\.topSafeAreaInset, topSafeArea)
-                    .environment(\.bottomSafeAreaInset, bottomSafeArea)
-                    .transition(.opacity)
-                }
             }
             .animation(.easeInOut(duration: 0.25), value: phase)
             .ignoresSafeArea()
@@ -41,6 +23,24 @@ struct ContentView: View {
             guard phase == .splash else { return }
             try? await Task.sleep(for: .milliseconds(900))
             phase = .onboarding
+        }
+    }
+
+    @ViewBuilder
+    private func phaseView(using proxy: GeometryProxy) -> some View {
+        switch phase {
+        case .splash:
+            SplashScreenView()
+        case .onboarding:
+            OnboardingFlowView(
+                onFinish: { phase = .main }
+            )
+            .environment(\.topSafeAreaInset, proxy.safeAreaInsets.top)
+            .environment(\.bottomSafeAreaInset, proxy.safeAreaInsets.bottom)
+        case .main:
+            MainPrototypeView(
+                restartOnboarding: { phase = .onboarding }
+            )
         }
     }
 }

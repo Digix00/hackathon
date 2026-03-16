@@ -1,6 +1,13 @@
 import SwiftUI
 
 struct MainPrototypeView: View {
+    private enum Layout {
+        static let swipeThreshold: CGFloat = 90
+        static let dragResponseFactor: CGFloat = 0.9
+        static let backgroundScale: CGFloat = 0.95
+        static let inactiveOpacity: Double = 0.5
+    }
+
     private enum Surface {
         case track
         case library
@@ -39,23 +46,19 @@ struct MainPrototypeView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let topSafeArea = proxy.safeAreaInsets.top
-            let bottomSafeArea = proxy.safeAreaInsets.bottom
             let screenHeight = proxy.size.height
 
             ZStack {
                 trackSurface
-                    .environment(\.topSafeAreaInset, 0)
-                    .environment(\.bottomSafeAreaInset, 0)
-                    .offset(y: isShowingTrackSurface ? dragOffset : -screenHeight + dragOffset)
-                    .opacity(isShowingTrackSurface ? 1.0 : 0.5)
-                    .scaleEffect(isShowingTrackSurface ? 1.0 : 0.95)
+                    .offset(y: trackSurfaceOffset(screenHeight: screenHeight))
+                    .opacity(isShowingTrackSurface ? 1.0 : Layout.inactiveOpacity)
+                    .scaleEffect(isShowingTrackSurface ? 1.0 : Layout.backgroundScale)
 
                 librarySurface
-                    .environment(\.topSafeAreaInset, topSafeArea)
-                    .environment(\.bottomSafeAreaInset, bottomSafeArea)
-                    .offset(y: isShowingTrackSurface ? screenHeight + dragOffset : dragOffset)
-                    .opacity(isShowingTrackSurface ? 0.5 : 1.0)
+                    .environment(\.topSafeAreaInset, proxy.safeAreaInsets.top)
+                    .environment(\.bottomSafeAreaInset, proxy.safeAreaInsets.bottom)
+                    .offset(y: librarySurfaceOffset(screenHeight: screenHeight))
+                    .opacity(isShowingTrackSurface ? Layout.inactiveOpacity : 1.0)
             }
             .contentShape(Rectangle())
             .clipped()
@@ -94,6 +97,8 @@ struct MainPrototypeView: View {
             )
             .toolbarBackground(.hidden, for: .navigationBar)
         }
+        .environment(\.topSafeAreaInset, 0)
+        .environment(\.bottomSafeAreaInset, 0)
     }
 
     private var librarySurface: some View {
@@ -143,10 +148,18 @@ struct MainPrototypeView: View {
     private var dragOffset: CGFloat {
         switch selectedSurface {
         case .track:
-            return min(0, verticalDragOffset * 0.9)
+            return min(0, verticalDragOffset * Layout.dragResponseFactor)
         case .library:
-            return max(0, verticalDragOffset * 0.9)
+            return max(0, verticalDragOffset * Layout.dragResponseFactor)
         }
+    }
+
+    private func trackSurfaceOffset(screenHeight: CGFloat) -> CGFloat {
+        isShowingTrackSurface ? dragOffset : -screenHeight + dragOffset
+    }
+
+    private func librarySurfaceOffset(screenHeight: CGFloat) -> CGFloat {
+        isShowingTrackSurface ? screenHeight + dragOffset : dragOffset
     }
 
     @ViewBuilder
@@ -164,11 +177,10 @@ struct MainPrototypeView: View {
     }
 
     private func handleVerticalSwipe(translation: CGFloat) {
-        let threshold: CGFloat = 90
-        if translation < -threshold, selectedSurface == .track {
+        if translation < -Layout.swipeThreshold, selectedSurface == .track {
             HapticsService.impact(.medium)
             selectedSurface = .library
-        } else if translation > threshold, selectedSurface == .library {
+        } else if translation > Layout.swipeThreshold, selectedSurface == .library {
             HapticsService.impact(.medium)
             selectedSurface = .track
         }
