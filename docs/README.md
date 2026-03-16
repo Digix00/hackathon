@@ -29,7 +29,6 @@ AI が迷わず参照できるよう、目的別に整理した一覧です。
 
 ## Data
 
-- DB スキーマ: [data/database-schema.md](./data/database-schema.md)
 - ER 図: [data/er-diagram.md](./data/er-diagram.md)
 
 ## Planning

@@ -135,7 +135,7 @@ BLE 交換成立
 ## BLE 短命トークン設計
 
 - 毎日 0:00 UTC に全ユーザーの BLE ID を再発行（Cloud Scheduler → worker）
-- worker のバッチ処理で期限切れトークンを定期削除（Cloud SQL の WHERE expires_at < NOW()）
+- worker のバッチ処理で期限切れトークンを定期削除（Cloud SQL の WHERE valid_to < NOW()）
 - クライアントは起動時またはトークン期限切れ時に新しい ID を取得
 
 ## レート制限
@@ -191,5 +191,5 @@ GeneratedSong レコード作成
 | メソッド | パス | 説明 |
 |---|---|---|
 | POST | `/api/v1/lyrics` | 歌詞投稿 |
-| GET | `/api/v1/lyrics/chains/{id}` | チェーン詳細取得 |
+| GET | `/api/v1/lyrics/chains/{chain_id}` | チェーン詳細取得 |
 | GET | `/api/v1/users/me/songs` | 自分が参加した生成楽曲一覧 |
