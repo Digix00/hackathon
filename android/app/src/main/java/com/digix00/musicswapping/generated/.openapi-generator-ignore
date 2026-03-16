@@ -21,3 +21,13 @@
 #docs/*.md
 # Then explicitly reverse the ignore rule for a single file:
 #!docs/README.md
+
+# スタンドアロン Gradle プロジェクト成果物を除外
+# これらはホストプロジェクトから参照されず、バイナリ (gradle-wrapper.jar) を含むため VCS 汚染になる
+build.gradle
+settings.gradle
+gradlew
+gradlew.bat
+gradle/
+proguard-rules.pro
+README.md
