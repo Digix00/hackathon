@@ -5,17 +5,22 @@ import Foundation
 /// BLE token exchange manager based on docs/architecture/ble.md.
 ///
 /// - Uses non-connectable advertising + scanning only (no GATT connection).
-/// - Exchanges only ephemeral BLE token via advertising payload.
-/// - Applies client-side cooldown and RSSI filtering before surfacing detections.
+/// - Exchanges only ephemeral BLE token via service UUID advertising payload.
+/// - Applies client-side RSSI / detection-count / debounce / cooldown filters before surfacing detections.
 final class BLEManager: NSObject, ObservableObject {
     struct Constants {
-        static let manufacturerID: UInt16 = 0xD1A1
-
-        static let scanWindow: TimeInterval = 2
-        static let scanInterval: TimeInterval = 5
-        static let rssiThreshold = -90
+        static let appServiceUUID = CBUUID(string: "00001234-0000-1000-8000-00805F9B34FB")
+        static let tokenPrefixHex = "A17E1E50B1ECAFE0"
+        static let rssiThreshold = -85
+        static let detectionCountThreshold = 2
+        static let detectionWindow: TimeInterval = 30
+        static let debounce: TimeInterval = 30
         static let cooldown: TimeInterval = 5 * 60
-        static let maxTokenLength = 16
+        static let backgroundScanWindow: TimeInterval = 5
+        static let backgroundSleepInterval: TimeInterval = 10
+        static let longBackgroundThreshold: TimeInterval = 10 * 60
+        static let longBackgroundScanWindow: TimeInterval = 3
+        static let longBackgroundSleepInterval: TimeInterval = 30
     }
 
     enum BLEState: Equatable {
@@ -42,30 +47,46 @@ final class BLEManager: NSObject, ObservableObject {
 
     private var shouldAdvertise = false
     private var shouldScan = false
+    private var isForeground = true
+    private var enteredBackgroundAt: Date?
+    private var scanPolicyTask: Task<Void, Never>?
+    private var lowPowerModeObserver: NSObjectProtocol?
+    private var isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
     private var advertisedToken: String?
+    private var advertisedTokenUUID: CBUUID?
 
-    private var scanCycleTimer: Timer?
-    private var scanWindowStopTimer: Timer?
-
+    private var detectionCountsByToken: [String: DetectionCounter] = [:]
+    private var debounceByToken: [String: Date] = [:]
     private var cooldownByToken: [String: Date] = [:]
 
     override init() {
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: .main)
         peripheralManager = CBPeripheralManager(delegate: self, queue: .main)
+        lowPowerModeObserver = NotificationCenter.default.addObserver(
+            forName: .NSProcessInfoPowerStateDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handlePowerModeChange()
+        }
     }
 
     deinit {
+        scanPolicyTask?.cancel()
+        if let lowPowerModeObserver {
+            NotificationCenter.default.removeObserver(lowPowerModeObserver)
+        }
         stopScanning()
         stopAdvertising()
     }
 
     func startAdvertising(token: String) {
-        let sanitized = sanitize(token: token)
-        guard !sanitized.isEmpty else { return }
+        guard let payload = makeAdvertisingPayload(token: token) else { return }
 
         shouldAdvertise = true
-        advertisedToken = sanitized
+        advertisedToken = payload.backendToken
+        advertisedTokenUUID = payload.tokenUUID
         applyAdvertisingState()
     }
 
@@ -76,23 +97,39 @@ final class BLEManager: NSObject, ObservableObject {
 
     func startScanning() {
         shouldScan = true
-        applyScanningState()
+        reconfigureScanningPolicy()
     }
 
     func stopScanning() {
         shouldScan = false
+        scanPolicyTask?.cancel()
+        scanPolicyTask = nil
         stopScanningRuntime()
     }
 
+    func updateAppForegroundState(_ isForeground: Bool) {
+        self.isForeground = isForeground
+        enteredBackgroundAt = isForeground ? nil : Date()
+        reconfigureScanningPolicy()
+    }
+
     private func stopScanningRuntime() {
-        scanCycleTimer?.invalidate()
-        scanCycleTimer = nil
-
-        scanWindowStopTimer?.invalidate()
-        scanWindowStopTimer = nil
-
         centralManager.stopScan()
         isScanning = false
+    }
+
+    private func startScanningRuntimeIfPossible() {
+        guard shouldScan, centralManager.state == .poweredOn else {
+            stopScanningRuntime()
+            return
+        }
+        guard !isScanning else { return }
+
+        centralManager.scanForPeripherals(
+            withServices: [Constants.appServiceUUID],
+            options: [CBCentralManagerScanOptionAllowDuplicatesKey: true]
+        )
+        isScanning = true
     }
 
     private func updateState(_ centralState: CBManagerState) {
@@ -118,14 +155,19 @@ final class BLEManager: NSObject, ObservableObject {
     }
 
     private func applyAdvertisingState() {
-        guard shouldAdvertise, peripheralManager.state == .poweredOn, let token = advertisedToken else {
+        guard
+            shouldAdvertise,
+            !isLowPowerModeEnabled,
+            peripheralManager.state == .poweredOn,
+            advertisedToken != nil,
+            let tokenUUID = advertisedTokenUUID
+        else {
             stopAdvertisingRuntime()
             return
         }
 
-        let manufacturerData = buildManufacturerData(token: token)
         let data: [String: Any] = [
-            CBAdvertisementDataManufacturerDataKey: manufacturerData,
+            CBAdvertisementDataServiceUUIDsKey: [Constants.appServiceUUID, tokenUUID],
             CBAdvertisementDataIsConnectable: false
         ]
 
@@ -134,73 +176,117 @@ final class BLEManager: NSObject, ObservableObject {
         isAdvertising = true
     }
 
-    private func applyScanningState() {
-        guard shouldScan, centralManager.state == .poweredOn else {
-            stopScanningRuntime()
-            return
-        }
-        guard !isScanning else { return }
+    private func reconfigureScanningPolicy() {
+        scanPolicyTask?.cancel()
+        scanPolicyTask = nil
 
-        isScanning = true
-        startScanWindow()
-
-        let repeatEvery = Constants.scanInterval
-        scanCycleTimer = Timer.scheduledTimer(withTimeInterval: repeatEvery, repeats: true) { [weak self] _ in
-            self?.startScanWindow()
-        }
-    }
-
-    private func startScanWindow() {
-        guard centralManager.state == .poweredOn else {
+        guard shouldScan, !isLowPowerModeEnabled else {
             stopScanningRuntime()
             return
         }
 
-        centralManager.scanForPeripherals(
-            withServices: nil,
-            options: [CBCentralManagerScanOptionAllowDuplicatesKey: true]
-        )
+        if isForeground {
+            startScanningRuntimeIfPossible()
+            return
+        }
 
-        scanWindowStopTimer?.invalidate()
-        scanWindowStopTimer = Timer.scheduledTimer(withTimeInterval: Constants.scanWindow, repeats: false) { [weak self] _ in
-            self?.centralManager.stopScan()
+        scanPolicyTask = Task { [weak self] in
+            await self?.runBackgroundOpportunisticLoop()
         }
     }
 
-    private func sanitize(token: String) -> String {
-        let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
-        let compact = String(trimmed.prefix(Constants.maxTokenLength))
-        return compact
+    @MainActor
+    private func runBackgroundOpportunisticLoop() async {
+        while shouldScan, !isForeground, !isLowPowerModeEnabled, !Task.isCancelled {
+            let cadence = currentBackgroundCadence()
+
+            startScanningRuntimeIfPossible()
+            try? await Task.sleep(nanoseconds: UInt64(cadence.window * 1_000_000_000))
+
+            guard shouldScan, !isForeground, !isLowPowerModeEnabled, !Task.isCancelled else { break }
+            stopScanningRuntime()
+
+            try? await Task.sleep(nanoseconds: UInt64(cadence.sleep * 1_000_000_000))
+        }
+
+        if !isForeground || isLowPowerModeEnabled || !shouldScan {
+            stopScanningRuntime()
+        }
     }
 
-    private func buildManufacturerData(token: String) -> Data {
-        var bytes: [UInt8] = [
-            UInt8(Constants.manufacturerID & 0x00FF),
-            UInt8((Constants.manufacturerID & 0xFF00) >> 8)
-        ]
-        bytes.append(contentsOf: token.utf8)
-        return Data(bytes)
+    private func currentBackgroundCadence() -> (window: TimeInterval, sleep: TimeInterval) {
+        guard
+            let enteredBackgroundAt,
+            Date().timeIntervalSince(enteredBackgroundAt) >= Constants.longBackgroundThreshold
+        else {
+            return (Constants.backgroundScanWindow, Constants.backgroundSleepInterval)
+        }
+        return (Constants.longBackgroundScanWindow, Constants.longBackgroundSleepInterval)
+    }
+
+    private func handlePowerModeChange() {
+        isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
+        applyAdvertisingState()
+        reconfigureScanningPolicy()
+    }
+
+    private func makeAdvertisingPayload(token: String) -> AdvertisingPayload? {
+        let normalizedToken = token.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !normalizedToken.isEmpty else { return nil }
+
+        // 1) If token is already UUID, advertise it directly as TOKEN_UUID.
+        if UUID(uuidString: normalizedToken) != nil {
+            return AdvertisingPayload(backendToken: normalizedToken, tokenUUID: CBUUID(string: normalizedToken))
+        }
+
+        // 2) If token is 8-byte (16 hex chars), embed it as APP_PREFIX(8 bytes) + TOKEN(8 bytes).
+        guard normalizedToken.count == 16, normalizedToken.range(of: "^[0-9a-f]{16}$", options: .regularExpression) != nil else {
+            return nil
+        }
+        guard let tokenUUIDString = makeTokenUUIDString(fromHex8Bytes: normalizedToken) else { return nil }
+
+        return AdvertisingPayload(backendToken: normalizedToken, tokenUUID: CBUUID(string: tokenUUIDString))
+    }
+
+    private func makeTokenUUIDString(fromHex8Bytes tokenHex: String) -> String? {
+        let fullHex = Constants.tokenPrefixHex + tokenHex
+        guard fullHex.count == 32 else { return nil }
+        return [
+            String(fullHex.prefix(8)),
+            String(fullHex.dropFirst(8).prefix(4)),
+            String(fullHex.dropFirst(12).prefix(4)),
+            String(fullHex.dropFirst(16).prefix(4)),
+            String(fullHex.dropFirst(20).prefix(12))
+        ].joined(separator: "-")
     }
 
     private func decodeToken(fromAdvertisementData advertisementData: [String: Any]) -> String? {
-        return decodeToken(fromManufacturerData: advertisementData)
-    }
-
-    private func decodeToken(fromManufacturerData advertisementData: [String: Any]) -> String? {
         guard
-            let manufacturerData = advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data,
-            manufacturerData.count > MemoryLayout<UInt16>.size
+            let serviceUUIDs = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID],
+            serviceUUIDs.contains(Constants.appServiceUUID)
         else {
             return nil
         }
 
-        let id = UInt16(manufacturerData[0]) | (UInt16(manufacturerData[1]) << 8)
-        guard id == Constants.manufacturerID else { return nil }
+        guard let tokenUUID = serviceUUIDs.first(where: { $0 != Constants.appServiceUUID }) else {
+            return nil
+        }
 
-        let payload = manufacturerData.dropFirst(MemoryLayout<UInt16>.size)
-        let token = String(data: payload, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let token, !token.isEmpty else { return nil }
-        return token
+        return decodeBackendToken(fromTokenUUID: tokenUUID)
+    }
+
+    private func decodeBackendToken(fromTokenUUID tokenUUID: CBUUID) -> String {
+        let normalized = tokenUUID.uuidString.lowercased()
+        let compact = normalized.replacingOccurrences(of: "-", with: "")
+        let expectedPrefix = Constants.tokenPrefixHex.lowercased()
+
+        // If this UUID was built from APP_PREFIX + 8-byte token, restore hex token.
+        if compact.count == 32, compact.hasPrefix(expectedPrefix) {
+            return String(compact.suffix(16))
+        }
+
+        // Otherwise treat it as canonical UUID token.
+        return normalized
     }
 
     private func shouldEmitDetection(token: String, rssi: NSNumber, now: Date) -> Bool {
@@ -209,15 +295,32 @@ final class BLEManager: NSObject, ObservableObject {
         guard rssiValue != 127 else { return false }
         guard rssiValue >= Constants.rssiThreshold else { return false }
 
+        let previousCounter = detectionCountsByToken[token]
+        let nextCount: Int
+        if let previousCounter, now.timeIntervalSince(previousCounter.windowStartedAt) <= Constants.detectionWindow {
+            nextCount = previousCounter.count + 1
+        } else {
+            nextCount = 1
+        }
+        detectionCountsByToken[token] = DetectionCounter(count: nextCount, windowStartedAt: now)
+        guard nextCount >= Constants.detectionCountThreshold else { return false }
+
+        if let last = debounceByToken[token], now.timeIntervalSince(last) < Constants.debounce {
+            return false
+        }
         if let last = cooldownByToken[token], now.timeIntervalSince(last) < Constants.cooldown {
             return false
         }
 
+        debounceByToken[token] = now
         cooldownByToken[token] = now
+        detectionCountsByToken[token] = DetectionCounter(count: 0, windowStartedAt: now)
         return true
     }
 
     func resetCooldownCache() {
+        detectionCountsByToken.removeAll()
+        debounceByToken.removeAll()
         cooldownByToken.removeAll()
     }
 }
@@ -225,7 +328,7 @@ final class BLEManager: NSObject, ObservableObject {
 extension BLEManager: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         updateState(central.state)
-        applyScanningState()
+        reconfigureScanningPolicy()
     }
 
     func centralManager(
@@ -242,6 +345,16 @@ extension BLEManager: CBCentralManagerDelegate {
 
         latestDetection = Detection(token: token, rssi: RSSI.intValue, detectedAt: now)
     }
+}
+
+private struct AdvertisingPayload {
+    let backendToken: String
+    let tokenUUID: CBUUID
+}
+
+private struct DetectionCounter {
+    let count: Int
+    let windowStartedAt: Date
 }
 
 extension BLEManager: CBPeripheralManagerDelegate {

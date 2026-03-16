@@ -3,6 +3,7 @@ import SwiftUI
 
 @main
 struct iosApp: App {
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var bleManager = BLEManager()
     private let backendClient = BLEBackendClient()
     @State private var hasStartedBLE = false
@@ -15,6 +16,9 @@ struct iosApp: App {
                 .environmentObject(bleManager)
                 .task {
                     startBLEIfNeeded()
+                }
+                .onChange(of: scenePhase) { _, newPhase in
+                    bleManager.updateAppForegroundState(newPhase == .active)
                 }
                 .onReceive(bleManager.$latestDetection.compactMap { $0 }) { detection in
                     Task {
@@ -32,6 +36,7 @@ struct iosApp: App {
         guard !hasStartedBLE else { return }
 
         hasStartedBLE = true
+        bleManager.updateAppForegroundState(scenePhase == .active)
         bleManager.startScanning()
 
         tokenRefreshTask?.cancel()
