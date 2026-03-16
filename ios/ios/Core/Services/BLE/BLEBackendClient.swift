@@ -2,6 +2,7 @@ import Foundation
 #if canImport(FirebaseAuth)
 import FirebaseAuth
 #endif
+import Security
 
 struct BLEAdvertisingToken {
     let token: String
@@ -11,8 +12,10 @@ struct BLEAdvertisingToken {
 actor BLEBackendClient {
     private static let apiPrefixSegments = ["api", "v1"]
     private static let pendingEncounterStorageKey = "ble.pending.encounters.v1"
+    private static let failedEncounterStorageKey = "ble.failed.encounters.v1"
     private static let initialRetryDelaySeconds: UInt64 = 5
     private static let maxRetryDelaySeconds: UInt64 = 300
+    private static let maxRetryAttempts = 6
 
     enum BackendError: Error {
         case invalidBaseURL
@@ -27,6 +30,7 @@ actor BLEBackendClient {
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
     private var pendingEncounters: [PendingEncounter]
+    private var failedEncounters: [FailedEncounter]
     private var isDrainingQueue = false
 
     init(session: URLSession = .shared) {
@@ -42,6 +46,7 @@ actor BLEBackendClient {
         self.decoder = decoder
 
         self.pendingEncounters = Self.loadPendingEncounters()
+        self.failedEncounters = Self.loadFailedEncounters()
         self.startQueueDrainIfNeeded()
     }
 
@@ -79,7 +84,8 @@ actor BLEBackendClient {
             PendingEncounter(
                 targetBLEToken: targetBLEToken,
                 rssi: rssi,
-                occurredAtEpochMs: Int64(occurredAt.timeIntervalSince1970 * 1_000)
+                occurredAtEpochMs: Int64(occurredAt.timeIntervalSince1970 * 1_000),
+                attempts: 0
             )
         )
         persistPendingEncounters()
@@ -256,7 +262,7 @@ actor BLEBackendClient {
 
         var retryDelaySeconds = Self.initialRetryDelaySeconds
         while !pendingEncounters.isEmpty {
-            let next = pendingEncounters[0]
+            var next = pendingEncounters[0]
             let occurredAt = Date(timeIntervalSince1970: TimeInterval(next.occurredAtEpochMs) / 1_000)
 
             do {
@@ -269,25 +275,95 @@ actor BLEBackendClient {
                 persistPendingEncounters()
                 retryDelaySeconds = Self.initialRetryDelaySeconds
             } catch {
+                if case let BackendError.unexpectedStatus(statusCode) = error,
+                   Self.isPermanentHTTPFailure(statusCode)
+                {
+                    markAsFailedAndDropPending(
+                        encounter: next,
+                        statusCode: statusCode,
+                        reason: "permanent_http_failure"
+                    )
+                    retryDelaySeconds = Self.initialRetryDelaySeconds
+                    continue
+                }
+
+                next.attempts += 1
+                if next.attempts >= Self.maxRetryAttempts {
+                    markAsFailedAndDropPending(
+                        encounter: next,
+                        statusCode: nil,
+                        reason: "max_retry_exceeded"
+                    )
+                    retryDelaySeconds = Self.initialRetryDelaySeconds
+                    continue
+                }
+
+                pendingEncounters[0] = next
+                persistPendingEncounters()
                 try? await Task.sleep(nanoseconds: retryDelaySeconds * 1_000_000_000)
                 retryDelaySeconds = min(retryDelaySeconds * 2, Self.maxRetryDelaySeconds)
             }
         }
     }
 
+    private func markAsFailedAndDropPending(encounter: PendingEncounter, statusCode: Int?, reason: String) {
+        if !pendingEncounters.isEmpty {
+            pendingEncounters.removeFirst()
+        }
+        persistPendingEncounters()
+
+        failedEncounters.append(
+            FailedEncounter(
+                targetBLEToken: encounter.targetBLEToken,
+                rssi: encounter.rssi,
+                occurredAtEpochMs: encounter.occurredAtEpochMs,
+                attempts: encounter.attempts,
+                failedAtEpochMs: Int64(Date().timeIntervalSince1970 * 1_000),
+                statusCode: statusCode,
+                reason: reason
+            )
+        )
+        persistFailedEncounters()
+    }
+
     private func persistPendingEncounters() {
         guard let data = try? JSONEncoder().encode(pendingEncounters) else { return }
-        UserDefaults.standard.set(data, forKey: Self.pendingEncounterStorageKey)
+        KeychainStore.write(data: data, key: Self.pendingEncounterStorageKey)
     }
 
     private static func loadPendingEncounters() -> [PendingEncounter] {
         guard
-            let data = UserDefaults.standard.data(forKey: pendingEncounterStorageKey),
+            let data = KeychainStore.readData(key: pendingEncounterStorageKey),
             let decoded = try? JSONDecoder().decode([PendingEncounter].self, from: data)
         else {
             return []
         }
         return decoded
+    }
+
+    private func persistFailedEncounters() {
+        guard let data = try? JSONEncoder().encode(failedEncounters) else { return }
+        KeychainStore.write(data: data, key: Self.failedEncounterStorageKey)
+    }
+
+    private static func loadFailedEncounters() -> [FailedEncounter] {
+        guard
+            let data = KeychainStore.readData(key: failedEncounterStorageKey),
+            let decoded = try? JSONDecoder().decode([FailedEncounter].self, from: data)
+        else {
+            return []
+        }
+        return decoded
+    }
+
+    private static func isPermanentHTTPFailure(_ statusCode: Int) -> Bool {
+        if statusCode == 408 || statusCode == 429 {
+            return false
+        }
+        if (400...499).contains(statusCode) {
+            return true
+        }
+        return false
     }
 }
 
@@ -327,4 +403,57 @@ private struct PendingEncounter: Codable {
     let targetBLEToken: String
     let rssi: Int
     let occurredAtEpochMs: Int64
+    var attempts: Int
+}
+
+private struct FailedEncounter: Codable {
+    let targetBLEToken: String
+    let rssi: Int
+    let occurredAtEpochMs: Int64
+    let attempts: Int
+    let failedAtEpochMs: Int64
+    let statusCode: Int?
+    let reason: String
+}
+
+private enum KeychainStore {
+    private static let service = Bundle.main.bundleIdentifier ?? "com.digix00.musicswapping.ble"
+
+    static func write(data: Data, key: String) {
+        let baseQuery: [CFString: Any] = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrService: service,
+            kSecAttrAccount: key
+        ]
+
+        let attributes: [CFString: Any] = [
+            kSecValueData: data,
+            kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+
+        let updateStatus = SecItemUpdate(baseQuery as CFDictionary, attributes as CFDictionary)
+        if updateStatus == errSecSuccess {
+            return
+        }
+
+        var addQuery = baseQuery
+        addQuery[kSecValueData] = data
+        addQuery[kSecAttrAccessible] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        SecItemAdd(addQuery as CFDictionary, nil)
+    }
+
+    static func readData(key: String) -> Data? {
+        let query: [CFString: Any] = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrService: service,
+            kSecAttrAccount: key,
+            kSecReturnData: true,
+            kSecMatchLimit: kSecMatchLimitOne
+        ]
+
+        var item: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &item)
+        guard status == errSecSuccess else { return nil }
+        return item as? Data
+    }
 }
