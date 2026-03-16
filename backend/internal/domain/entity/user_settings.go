@@ -1,6 +1,10 @@
 package entity
 
-import "time"
+import (
+	"time"
+
+	"hackathon/internal/domain/vo"
+)
 
 type UserSettings struct {
 	ID                              string
@@ -16,11 +20,33 @@ type UserSettings struct {
 	NotificationEnabled             bool
 	EncounterNotificationEnabled    bool
 	BatchNotificationEnabled        bool
-	NotificationFrequency           string
+	NotificationFrequency           vo.NotificationFrequency
 	CommentNotificationEnabled      bool
 	LikeNotificationEnabled         bool
 	AnnouncementNotificationEnabled bool
-	ThemeMode                       string
+	ThemeMode                       vo.ThemeMode
 	CreatedAt                       time.Time
 	UpdatedAt                       time.Time
+}
+
+// NewUserSettings はデフォルト値を設定した新規UserSettingsを生成する。
+func NewUserSettings(id, userID string) UserSettings {
+	return UserSettings{
+		ID:                              id,
+		UserID:                          userID,
+		BleEnabled:                      true,
+		LocationEnabled:                 true,
+		DetectionDistance:               50,
+		ScheduleEnabled:                 false,
+		ProfileVisible:                  true,
+		TrackVisible:                    true,
+		NotificationEnabled:             true,
+		EncounterNotificationEnabled:    true,
+		BatchNotificationEnabled:        true,
+		NotificationFrequency:           vo.NotificationFrequencyHourly,
+		CommentNotificationEnabled:      true,
+		LikeNotificationEnabled:         true,
+		AnnouncementNotificationEnabled: true,
+		ThemeMode:                       vo.ThemeModeSystem,
+	}
 }

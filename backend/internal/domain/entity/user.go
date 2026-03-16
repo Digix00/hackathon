@@ -1,6 +1,10 @@
 package entity
 
-import "time"
+import (
+	"time"
+
+	"hackathon/internal/domain/vo"
+)
 
 type User struct {
 	ID             string
@@ -9,10 +13,10 @@ type User struct {
 	Name           *string
 	Bio            *string
 	Birthdate      *time.Time
-	AgeVisibility  string
+	AgeVisibility  vo.AgeVisibility
 	PrefectureID   *string
 	PrefectureName *string
-	Sex            string
+	Sex            vo.Sex
 	AvatarFileID   *string
 	AvatarURL      *string
 	CreatedAt      time.Time
