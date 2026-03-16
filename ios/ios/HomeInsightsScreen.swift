@@ -3,31 +3,14 @@ import SwiftUI
 struct HomeInsightsPage: View {
     let state: HomeScreenState
 
-    @Environment(\.topSafeAreaInset) private var topSafeArea
-    @Environment(\.bottomSafeAreaInset) private var bottomSafeArea
-
-    private var contentTopPadding: CGFloat {
-        topSafeArea + 20
-    }
-
-    private var contentBottomPadding: CGFloat {
-        max(64, bottomSafeArea + 64) + 40
-    }
-
     var body: some View {
-        ScrollView {
+        AppScaffold(
+            title: "すれ違い情報",
+            subtitle: "すれ違いで出会った音楽と相手の記録"
+        ) {
             VStack(alignment: .leading, spacing: 28) {
                 if state.isOffline {
                     OfflineBannerView()
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("すれ違い情報")
-                        .font(PrototypeTheme.Typography.Encounter.screenTitle)
-                        .foregroundStyle(PrototypeTheme.textPrimary)
-                    Text("すれ違いで出会った音楽と相手の記録")
-                        .font(PrototypeTheme.Typography.Encounter.body)
-                        .foregroundStyle(PrototypeTheme.textSecondary)
                 }
 
                 SectionCard(title: "すれ違い") {
@@ -71,11 +54,7 @@ struct HomeInsightsPage: View {
                     }
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.top, contentTopPadding)
-            .padding(.bottom, contentBottomPadding)
         }
-        .background(PrototypeTheme.background)
     }
 }
 

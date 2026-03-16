@@ -1,6 +1,5 @@
 import SwiftUI
 import UIKit
-import CoreMotion
 import Combine
 
 private struct SettingsDestination: Identifiable {
@@ -52,37 +51,6 @@ private enum Haptics {
     }
 }
 
-final class MotionManager: ObservableObject {
-    @Published var pitch: Double = 0.0
-    @Published var roll: Double = 0.0
-
-    private let manager: CMMotionManager
-
-    init() {
-        manager = CMMotionManager()
-        manager.deviceMotionUpdateInterval = 1.0 / 60.0
-    }
-
-    func startUpdates() {
-        guard manager.isDeviceMotionAvailable, !manager.isDeviceMotionActive else { return }
-
-        manager.startDeviceMotionUpdates(to: .main) { [weak self] motionData, error in
-            guard error == nil, let motionData else { return }
-            self?.pitch = motionData.attitude.pitch
-            self?.roll = motionData.attitude.roll
-        }
-    }
-
-    func stopUpdates() {
-        guard manager.isDeviceMotionActive else { return }
-        manager.stopDeviceMotionUpdates()
-    }
-
-    deinit {
-        stopUpdates()
-    }
-}
-
 struct MainPrototypeView: View {
     private enum Surface {
         case track
@@ -124,25 +92,24 @@ struct MainPrototypeView: View {
         GeometryReader { proxy in
             let topSafeArea = proxy.safeAreaInsets.top
             let bottomSafeArea = proxy.safeAreaInsets.bottom
+            let screenHeight = proxy.size.height
 
             ZStack {
                 trackSurface
-                    .environment(\.topSafeAreaInset, topSafeArea)
-                    .environment(\.bottomSafeAreaInset, bottomSafeArea)
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .offset(y: trackSurfaceOffset(containerHeight: proxy.size.height))
-                    .opacity(trackSurfaceOpacity)
-                    .scaleEffect(trackSurfaceScale)
+                    .environment(\.topSafeAreaInset, 0)
+                    .environment(\.bottomSafeAreaInset, 0)
+                    .offset(y: isShowingTrackSurface ? dragOffset : -screenHeight + dragOffset)
+                    .opacity(isShowingTrackSurface ? 1.0 : 0.5)
+                    .scaleEffect(isShowingTrackSurface ? 1.0 : 0.95)
 
                 librarySurface
                     .environment(\.topSafeAreaInset, topSafeArea)
                     .environment(\.bottomSafeAreaInset, bottomSafeArea)
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .offset(y: librarySurfaceOffset(containerHeight: proxy.size.height))
-                    .opacity(librarySurfaceOpacity)
+                    .offset(y: isShowingTrackSurface ? screenHeight + dragOffset : dragOffset)
+                    .opacity(isShowingTrackSurface ? 0.5 : 1.0)
             }
-            .frame(width: proxy.size.width, height: proxy.size.height)
             .contentShape(Rectangle())
+            .clipped()
             .gesture(
                 DragGesture(minimumDistance: 20, coordinateSpace: .local)
                     .updating($verticalDragOffset) { value, state, _ in
@@ -155,12 +122,11 @@ struct MainPrototypeView: View {
                     }
             )
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: selectedSurface)
-            .clipped()
             .environment(\.heroNamespace, heroNamespace)
         }
+        .background(PrototypeTheme.background)
         .ignoresSafeArea()
         .tint(PrototypeTheme.accent)
-        .background(PrototypeTheme.background.ignoresSafeArea())
     }
 
     private var homeState: HomeScreenState {
@@ -232,26 +198,6 @@ struct MainPrototypeView: View {
         case .library:
             return max(0, verticalDragOffset * 0.9)
         }
-    }
-
-    private func trackSurfaceOffset(containerHeight: CGFloat) -> CGFloat {
-        isShowingTrackSurface ? dragOffset : -containerHeight + dragOffset
-    }
-
-    private func librarySurfaceOffset(containerHeight: CGFloat) -> CGFloat {
-        isShowingTrackSurface ? containerHeight + dragOffset : dragOffset
-    }
-
-    private var trackSurfaceOpacity: Double {
-        isShowingTrackSurface ? 1.0 : 0.5
-    }
-
-    private var librarySurfaceOpacity: Double {
-        isShowingTrackSurface ? 0.5 : 1.0
-    }
-
-    private var trackSurfaceScale: CGFloat {
-        isShowingTrackSurface ? 1.0 : 0.95
     }
 
     @ViewBuilder
@@ -643,47 +589,6 @@ struct OnboardingFlowView: View {
                     .lineSpacing(6)
             }
         }
-    }
-}
-
-// Particle system for ambient life
-struct ParticleModifier: ViewModifier {
-    @State private var time = 0.0
-    let duration: Double = 20.0
-    
-    func body(content: Content) -> some View {
-        content
-            .overlay(
-                Canvas { context, size in
-                    for i in 0..<30 {
-                        let isEven = i % 2 == 0
-                        let speed = isEven ? 0.05 : 0.08
-                        let xOffset = sin(time * speed + Double(i)) * size.width * 0.4
-                        let yOffset = -time * speed * size.height + Double(i * 20)
-                        
-                        // Reset particle to bottom when it goes off top
-                        let normalizedY = yOffset.truncatingRemainder(dividingBy: size.height * 1.5)
-                        let y = size.height - (normalizedY < 0 ? normalizedY + size.height * 1.5 : normalizedY)
-                        
-                        let x = size.width / 2 + xOffset
-                        
-                        let rect = CGRect(x: x, y: y, width: 3, height: 3)
-                        context.opacity = 0.3 * sin(time * 2 + Double(i)) + 0.3
-                        context.fill(Path(ellipseIn: rect), with: .color(.white))
-                    }
-                }
-            )
-            .onAppear {
-                withAnimation(.linear(duration: duration).repeatForever(autoreverses: false)) {
-                    time = duration * 10
-                }
-            }
-    }
-}
-
-extension View {
-    func particleEffect() -> some View {
-        modifier(ParticleModifier())
     }
 }
 
