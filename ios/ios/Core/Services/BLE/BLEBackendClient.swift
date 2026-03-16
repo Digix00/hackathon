@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FirebaseAuth)
+import FirebaseAuth
+#endif
 
 struct BLEAdvertisingToken {
     let token: String
@@ -10,6 +13,7 @@ actor BLEBackendClient {
         case invalidBaseURL
         case invalidResponse
         case invalidTokenPayload
+        case missingAuthToken
         case unexpectedStatus(Int)
     }
 
@@ -99,6 +103,8 @@ actor BLEBackendClient {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        let bearerToken = try await fetchBearerToken()
+        request.setValue("Bearer \(bearerToken)", forHTTPHeaderField: "Authorization")
 
         if let body {
             request.httpBody = body
@@ -112,6 +118,39 @@ actor BLEBackendClient {
         }
 
         return (data, httpResponse)
+    }
+
+    private func fetchBearerToken() async throws -> String {
+        if let fixed = ProcessInfo.processInfo.environment["FIREBASE_ID_TOKEN"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+            !fixed.isEmpty
+        {
+            return fixed
+        }
+
+#if canImport(FirebaseAuth)
+        guard let user = Auth.auth().currentUser else {
+            throw BackendError.missingAuthToken
+        }
+
+        return try await withCheckedThrowingContinuation { continuation in
+            user.getIDToken { token, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                guard let token, !token.isEmpty else {
+                    continuation.resume(throwing: BackendError.missingAuthToken)
+                    return
+                }
+
+                continuation.resume(returning: token)
+            }
+        }
+#else
+        throw BackendError.missingAuthToken
+#endif
     }
 
     private static func resolveBaseURL() -> URL? {
