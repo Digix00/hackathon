@@ -94,14 +94,14 @@ advertise(ble_token)  ←→  scan
 | カラム | 型 | 説明 |
 |--------|----|------|
 | `id` | string | PK |
-| `user_id` | string | ユーザーID |
-| `token` | string | 一時トークン（uniqueIndex） |
-| `valid_from` | timestamp | 有効開始時刻 |
-| `valid_to` | timestamp | 有効終了時刻（index） |
-| `created_at` | timestamp | 作成日時 |
-| `deleted_at` | timestamp | 論理削除 |
+| `user_id` | string | users.id への外部キー |
+| `token` | string | BLEアドバタイズ用トークン（UNIQUE） |
+| `valid_from` | datetime | 有効開始日時 |
+| `valid_to` | datetime | 有効終了日時（index、期限切れ定期削除用） |
+| `created_at` | datetime | 作成日時 |
+| `deleted_at` | datetime | 論理削除 |
 
-更新周期: **10〜15分**（`valid_to` で制御）
+**更新運用:** 毎日 0:00 UTC に全ユーザーのBLEトークンを再発行。`valid_to` 超過レコードは定期削除。
 
 ------------------------------------------------------------------------
 
@@ -192,33 +192,53 @@ ble_tokens テーブルで user_id 解決（期限チェック含む）
 | カラム | 型 | 説明 |
 |--------|----|------|
 | `id` | string | PK |
-| `user_id1` | string | ユーザーID（`user_id1 < user_id2` 制約） |
-| `user_id2` | string | ユーザーID |
-| `encountered_at` | timestamp | すれ違い日時 |
+| `user_id_1` | string | users.id への外部キー（`user_id_1 < user_id_2` CHECK制約） |
+| `user_id_2` | string | users.id への外部キー |
+| `occurred_at` | datetime | すれ違い発生日時 |
 | `encounter_type` | string | `'ble'` \| `'location'` |
-| `latitude` | float (nullable) | 位置情報（オプション） |
-| `longitude` | float (nullable) | 位置情報（オプション） |
-| `created_at` | timestamp | 作成日時 |
-| `deleted_at` | timestamp | 論理削除 |
+| `latitude` | float (nullable) | ぼかし済み緯度（`encounter_type='location'` のみ） |
+| `longitude` | float (nullable) | ぼかし済み経度（`encounter_type='location'` のみ） |
+| `created_at` | datetime | 作成日時 |
+| `deleted_at` | datetime | 論理削除 |
 
-> **Note:** `user_id1 < user_id2` のCHECK制約により、同一ペアの重複登録を防ぐ。
+> **Note:** `user_id_1 < user_id_2` のCHECK制約により、同一ペアの重複登録を防ぐ。
+
+## DB: `encounter_tracks` テーブル
+
+すれ違いに紐づく交換曲情報。`source_user_id` はサーバー内部でのみ使用し、公開APIには露出しない。
+
+| カラム | 型 | 説明 |
+|--------|----|------|
+| `id` | string | PK |
+| `encounter_id` | string | encounters.id への外部キー |
+| `track_id` | string | tracks.id への外部キー |
+| `source_user_id` | string | users.id への外部キー（どちらのユーザー由来の曲か） |
+| `created_at` | datetime | 作成日時 |
+| `deleted_at` | datetime | 論理削除 |
+
+**制約:** `(encounter_id, track_id, source_user_id)` で UNIQUE 制約
 
 ## DB: `daily_encounter_counts` テーブル
 
-1日のすれ違い総件数をユーザー単位で管理し、レート制限に使用する。
+レート制限用の日別すれ違いカウント。
 
-| カラム | 説明 |
-|--------|------|
-| `user_id` | ユーザーID |
-| `date` | 日付 |
-| `count` | すれ違い件数 |
+| カラム | 型 | 説明 |
+|--------|----|---------|
+| `user_id` | string | users.id への外部キー |
+| `date` | date | 対象日 |
+| `count` | integer | すれ違い件数 |
+| `created_at` | datetime | 作成日時 |
+| `updated_at` | datetime | 更新日時 |
+
+**制約:** `(user_id, date)` で UNIQUE 制約  
+**運用:** UPSERT でカウントをインクリメント。しきい値（3 / 5 / 10 / 50 / 100）超過でドメインエラー。
 
 ## 判定クエリ例（同一ペア重複チェック）
 
 ```sql
 SELECT * FROM encounters
-WHERE user_id1 = $1 AND user_id2 = $2
-  AND DATE(encountered_at) = CURRENT_DATE
+WHERE user_id_1 = $1 AND user_id_2 = $2
+  AND DATE(occurred_at) = CURRENT_DATE
   AND deleted_at IS NULL
 ```
 
@@ -226,12 +246,14 @@ WHERE user_id1 = $1 AND user_id2 = $2
 
 # 8. 曲情報取得
 
-Encounter 登録後、相手ユーザーの現在再生中 or お気に入り曲を取得してクライアントへ返す。
+Encounter 登録後、相手ユーザーの現在シェア中の曲（`user_current_tracks`）またはお気に入り曲（`user_tracks`）を取得し、`encounter_tracks` に保存してクライアントへ返す。
 
 ```
 user_id
   ↓
-user_current_tracks / user_tracks テーブルから取得
+user_current_tracks（なければ user_tracks）から取得
+  ↓
+encounter_tracks に保存
   ↓
 クライアントへ返却
 ```
@@ -265,16 +287,17 @@ user_current_tracks / user_tracks テーブルから取得
 # 11. すれ違い処理の全体フロー
 
 ```
-① サーバーから ble_token を事前取得（定期更新）
+① サーバーから ble_token を事前取得（毎日0:00 UTC に再発行）
 ② advertise(ble_token)
 ③ scan → 相手の ble_token 検出
 ④ クライアント cooldown チェック（10分以内の重複は無視）
 ⑤ POST /encounter リクエスト送信
-⑥ サーバー: ble_token → user_id 解決
-⑦ 同一ペア・当日の重複チェック
-⑧ Encounter 登録 + DailyEncounterCount 更新
-⑨ 曲データ取得
-⑩ クライアント表示
+⑥ サーバー: ble_token → user_id 解決（有効期限チェック含む）
+⑦ 同一ペア・当日の重複チェック（encounters テーブル）
+⑧ daily_encounter_counts チェック（しきい値超過でエラー）
+⑨ Encounter 登録 + encounter_tracks 保存 + daily_encounter_counts 更新
+⑩ 曲データをクライアントへ返却
+⑪ クライアント表示
 ```
 
 ------------------------------------------------------------------------
