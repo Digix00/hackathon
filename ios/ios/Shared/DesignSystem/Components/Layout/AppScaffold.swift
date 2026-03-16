@@ -5,6 +5,7 @@ struct AppScaffold<Content: View>: View {
     let subtitle: String?
     let trailingSymbol: String?
     let accentColor: Color?
+    let customBackground: AnyView?
     @ViewBuilder var content: Content
 
     @Environment(\.topSafeAreaInset) private var envTopSafeArea
@@ -15,12 +16,14 @@ struct AppScaffold<Content: View>: View {
         subtitle: String? = nil,
         trailingSymbol: String? = nil,
         accentColor: Color? = nil,
+        customBackground: AnyView? = nil,
         @ViewBuilder content: () -> Content
     ) {
         self.title = title
         self.subtitle = subtitle
         self.trailingSymbol = trailingSymbol
         self.accentColor = accentColor
+        self.customBackground = customBackground
         self.content = content()
     }
 
@@ -30,7 +33,9 @@ struct AppScaffold<Content: View>: View {
             let bottomPadding = (envBottomSafeArea > 0 ? envBottomSafeArea : geometry.safeAreaInsets.bottom)
 
             ZStack {
-                if let accentColor {
+                if let customBackground {
+                    customBackground
+                } else if let accentColor {
                     DynamicBackground(baseColor: accentColor)
                 } else {
                     ZStack {
