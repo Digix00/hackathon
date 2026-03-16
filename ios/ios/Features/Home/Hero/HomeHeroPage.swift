@@ -19,48 +19,51 @@ struct HomeHeroPage: View {
                 PrototypeTheme.background.ignoresSafeArea()
                 HomeHeroBackground(baseColor: heroColor)
                     .ignoresSafeArea()
-                
-                // Large background text - adjusted for safe area to keep visual center
+
+                // Extremely subtle background text, fixed to avoid clipping
                 Text("TOKYO")
                     .font(.system(size: 140, weight: .black))
-                    .foregroundStyle(Color.white.opacity(0.03))
+                    .foregroundStyle(Color.white.opacity(0.012))
                     .rotationEffect(.degrees(-90))
-                    .offset(x: -150)
+                    .offset(x: -160)
                     .allowsHitTesting(false)
-                    .offset(x: CGFloat(motion.roll * -10), y: CGFloat(motion.pitch * -10))
             }
-            .offset(x: CGFloat(motion.roll * -30), y: CGFloat(motion.pitch * -30))
+            .offset(x: CGFloat(motion.roll * -15), y: CGFloat(motion.pitch * -15))
 
             // Content Layer
             VStack {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 4) {
+                // Top Info Bar - adjusted padding and spacing to prevent overflow
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text("35.6812° N, 139.7671° E")
-                            .prototypeFont(size: 10, weight: .bold, role: .data)
-                            .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
-                        Text("TOKYO / SHIBUYA")
-                            .font(.system(size: 10, weight: .black))
+                            .prototypeFont(size: 8.5, weight: .bold, role: .data)
                             .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.4))
+                        Text("SHIBUYA / TOKYO")
+                            .font(.system(size: 8.5, weight: .black))
+                            .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.2))
                             .kerning(1.5)
                     }
+
                     Spacer()
 
-                    HStack(spacing: 8) {
+                    HStack(spacing: 6) {
                         Circle()
-                            .fill(PrototypeTheme.accent)
-                            .frame(width: 6, height: 6)
+                            .fill(PrototypeTheme.accent.opacity(0.6))
+                            .frame(width: 3.5, height: 3.5)
 
-                        Text("検知中")
-                            .font(.system(size: 10, weight: .black))
+                        Text("SCANNING")
+                            .font(.system(size: 8.5, weight: .black))
                             .kerning(1.2)
-                            .foregroundStyle(PrototypeTheme.textSecondary)
+                            .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.7))
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(PrototypeTheme.surface.opacity(0.4))
-                    .clipShape(Capsule())
+                    .background(
+                        Capsule()
+                            .fill(PrototypeTheme.surface.opacity(0.4))
+                    )
                 }
-                .padding(.top, max(16, topSafeArea + 4))
+                .padding(.top, max(12, topSafeArea)) // Corrected top padding for safe area
 
                 Spacer()
 
@@ -68,28 +71,29 @@ struct HomeHeroPage: View {
                     SearchView()
                 } label: {
                     FeaturedTrackHeroCard(
-                        track: state.featuredTrack, 
-                        motionX: CGFloat(motion.roll * 20), 
-                        motionY: CGFloat(motion.pitch * 20)
+                        track: state.featuredTrack,
+                        motionX: CGFloat(motion.roll * 12),
+                        motionY: CGFloat(motion.pitch * 12)
                     )
                 }
                 .buttonStyle(ScaleButtonStyle())
 
                 Spacer()
 
+                // Bottom Hint
                 VStack(spacing: 12) {
-                    Text("上にスワイプして詳細を見る")
-                        .font(.system(size: 10, weight: .black))
-                        .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.5))
-                        .kerning(2.0)
+                    Text("SWIPE UP TO DISCOVER")
+                        .font(.system(size: 8.5, weight: .black))
+                        .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.3))
+                        .kerning(2.5)
 
                     Capsule()
-                        .fill(PrototypeTheme.border.opacity(0.6))
-                        .frame(width: 40, height: 4)
+                        .fill(PrototypeTheme.border.opacity(0.3))
+                        .frame(width: 28, height: 2.5)
                 }
                 .padding(.bottom, max(24, bottomSafeArea + 8))
             }
-            .padding(.horizontal, 32)
+            .padding(.horizontal, 28) // Balanced padding for safety and breathing room
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(PrototypeTheme.background)
