@@ -89,51 +89,43 @@ struct MainPrototypeView: View {
     @Namespace private var heroNamespace
 
     var body: some View {
-        ZStack {
-            // Background to ensure full screen color
-            PrototypeTheme.background.ignoresSafeArea()
+        GeometryReader { proxy in
+            let topSafeArea = proxy.safeAreaInsets.top
+            let bottomSafeArea = proxy.safeAreaInsets.bottom
+            let screenHeight = proxy.size.height
 
-            GeometryReader { proxy in
-                let topSafeArea = proxy.safeAreaInsets.top
-                let bottomSafeArea = proxy.safeAreaInsets.bottom
+            ZStack {
+                trackSurface
+                    .environment(\.topSafeAreaInset, 0)
+                    .environment(\.bottomSafeAreaInset, 0)
+                    .offset(y: isShowingTrackSurface ? dragOffset : -screenHeight + dragOffset)
+                    .opacity(isShowingTrackSurface ? 1.0 : 0.5)
+                    .scaleEffect(isShowingTrackSurface ? 1.0 : 0.95)
 
-                ZStack {
-                    trackSurface
-                        .environment(\.topSafeAreaInset, 0)
-                        .environment(\.bottomSafeAreaInset, 0)
-                        .frame(width: proxy.size.width + proxy.safeAreaInsets.leading + proxy.safeAreaInsets.trailing,
-                               height: proxy.size.height + topSafeArea + bottomSafeArea)
-                        .offset(y: trackSurfaceOffset(containerHeight: proxy.size.height + topSafeArea + bottomSafeArea))
-                        .opacity(trackSurfaceOpacity)
-                        .scaleEffect(trackSurfaceScale)
-
-                    librarySurface
-                        .environment(\.topSafeAreaInset, topSafeArea)
-                        .environment(\.bottomSafeAreaInset, bottomSafeArea)
-                        .frame(width: proxy.size.width + proxy.safeAreaInsets.leading + proxy.safeAreaInsets.trailing,
-                               height: proxy.size.height + topSafeArea + bottomSafeArea)
-                        .offset(y: librarySurfaceOffset(containerHeight: proxy.size.height + topSafeArea + bottomSafeArea))
-                        .opacity(librarySurfaceOpacity)
-                }
-                .frame(width: proxy.size.width, height: proxy.size.height)
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 20, coordinateSpace: .local)
-                        .updating($verticalDragOffset) { value, state, _ in
-                            guard isVerticalSwipe(value.translation) else { return }
-                            state = value.translation.height
-                        }
-                        .onEnded { value in
-                            guard isVerticalSwipe(value.translation) else { return }
-                            handleVerticalSwipe(translation: value.translation.height)
-                        }
-                )
-                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: selectedSurface)
-                .clipped()
-                .environment(\.heroNamespace, heroNamespace)
-                .ignoresSafeArea()
+                librarySurface
+                    .environment(\.topSafeAreaInset, topSafeArea)
+                    .environment(\.bottomSafeAreaInset, bottomSafeArea)
+                    .offset(y: isShowingTrackSurface ? screenHeight + dragOffset : dragOffset)
+                    .opacity(isShowingTrackSurface ? 0.5 : 1.0)
             }
+            .contentShape(Rectangle())
+            .clipped()
+            .gesture(
+                DragGesture(minimumDistance: 20, coordinateSpace: .local)
+                    .updating($verticalDragOffset) { value, state, _ in
+                        guard isVerticalSwipe(value.translation) else { return }
+                        state = value.translation.height
+                    }
+                    .onEnded { value in
+                        guard isVerticalSwipe(value.translation) else { return }
+                        handleVerticalSwipe(translation: value.translation.height)
+                    }
+            )
+            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: selectedSurface)
+            .environment(\.heroNamespace, heroNamespace)
         }
+        .background(PrototypeTheme.background)
+        .ignoresSafeArea()
         .tint(PrototypeTheme.accent)
     }
 
@@ -206,26 +198,6 @@ struct MainPrototypeView: View {
         case .library:
             return max(0, verticalDragOffset * 0.9)
         }
-    }
-
-    private func trackSurfaceOffset(containerHeight: CGFloat) -> CGFloat {
-        isShowingTrackSurface ? dragOffset : -containerHeight + dragOffset
-    }
-
-    private func librarySurfaceOffset(containerHeight: CGFloat) -> CGFloat {
-        isShowingTrackSurface ? containerHeight + dragOffset : dragOffset
-    }
-
-    private var trackSurfaceOpacity: Double {
-        isShowingTrackSurface ? 1.0 : 0.5
-    }
-
-    private var librarySurfaceOpacity: Double {
-        isShowingTrackSurface ? 0.5 : 1.0
-    }
-
-    private var trackSurfaceScale: CGFloat {
-        isShowingTrackSurface ? 1.0 : 0.95
     }
 
     @ViewBuilder
