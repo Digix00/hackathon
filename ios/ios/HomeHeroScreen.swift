@@ -121,7 +121,6 @@ struct HomeHeroPage: View {
         .onDisappear {
             motion.stopUpdates()
         }
-        .ignoresSafeArea()
     }
 }
 
