@@ -1,6 +1,5 @@
 import SwiftUI
 import UIKit
-import CoreMotion
 import Combine
 
 private struct SettingsDestination: Identifiable {
@@ -49,37 +48,6 @@ extension EnvironmentValues {
 private enum Haptics {
     static func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
         UIImpactFeedbackGenerator(style: style).impactOccurred()
-    }
-}
-
-final class MotionManager: ObservableObject {
-    @Published var pitch: Double = 0.0
-    @Published var roll: Double = 0.0
-
-    private let manager: CMMotionManager
-
-    init() {
-        manager = CMMotionManager()
-        manager.deviceMotionUpdateInterval = 1.0 / 60.0
-    }
-
-    func startUpdates() {
-        guard manager.isDeviceMotionAvailable, !manager.isDeviceMotionActive else { return }
-
-        manager.startDeviceMotionUpdates(to: .main) { [weak self] motionData, error in
-            guard error == nil, let motionData else { return }
-            self?.pitch = motionData.attitude.pitch
-            self?.roll = motionData.attitude.roll
-        }
-    }
-
-    func stopUpdates() {
-        guard manager.isDeviceMotionActive else { return }
-        manager.stopDeviceMotionUpdates()
-    }
-
-    deinit {
-        stopUpdates()
     }
 }
 
@@ -133,7 +101,7 @@ struct MainPrototypeView: View {
                     trackSurface
                         .environment(\.topSafeAreaInset, 0)
                         .environment(\.bottomSafeAreaInset, 0)
-                        .frame(width: proxy.size.width + proxy.safeAreaInsets.leading + proxy.safeAreaInsets.trailing, 
+                        .frame(width: proxy.size.width + proxy.safeAreaInsets.leading + proxy.safeAreaInsets.trailing,
                                height: proxy.size.height + topSafeArea + bottomSafeArea)
                         .offset(y: trackSurfaceOffset(containerHeight: proxy.size.height + topSafeArea + bottomSafeArea))
                         .opacity(trackSurfaceOpacity)
@@ -142,7 +110,7 @@ struct MainPrototypeView: View {
                     librarySurface
                         .environment(\.topSafeAreaInset, topSafeArea)
                         .environment(\.bottomSafeAreaInset, bottomSafeArea)
-                        .frame(width: proxy.size.width + proxy.safeAreaInsets.leading + proxy.safeAreaInsets.trailing, 
+                        .frame(width: proxy.size.width + proxy.safeAreaInsets.leading + proxy.safeAreaInsets.trailing,
                                height: proxy.size.height + topSafeArea + bottomSafeArea)
                         .offset(y: librarySurfaceOffset(containerHeight: proxy.size.height + topSafeArea + bottomSafeArea))
                         .opacity(librarySurfaceOpacity)
@@ -649,47 +617,6 @@ struct OnboardingFlowView: View {
                     .lineSpacing(6)
             }
         }
-    }
-}
-
-// Particle system for ambient life
-struct ParticleModifier: ViewModifier {
-    @State private var time = 0.0
-    let duration: Double = 20.0
-    
-    func body(content: Content) -> some View {
-        content
-            .overlay(
-                Canvas { context, size in
-                    for i in 0..<30 {
-                        let isEven = i % 2 == 0
-                        let speed = isEven ? 0.05 : 0.08
-                        let xOffset = sin(time * speed + Double(i)) * size.width * 0.4
-                        let yOffset = -time * speed * size.height + Double(i * 20)
-                        
-                        // Reset particle to bottom when it goes off top
-                        let normalizedY = yOffset.truncatingRemainder(dividingBy: size.height * 1.5)
-                        let y = size.height - (normalizedY < 0 ? normalizedY + size.height * 1.5 : normalizedY)
-                        
-                        let x = size.width / 2 + xOffset
-                        
-                        let rect = CGRect(x: x, y: y, width: 3, height: 3)
-                        context.opacity = 0.3 * sin(time * 2 + Double(i)) + 0.3
-                        context.fill(Path(ellipseIn: rect), with: .color(.white))
-                    }
-                }
-            )
-            .onAppear {
-                withAnimation(.linear(duration: duration).repeatForever(autoreverses: false)) {
-                    time = duration * 10
-                }
-            }
-    }
-}
-
-extension View {
-    func particleEffect() -> some View {
-        modifier(ParticleModifier())
     }
 }
 
