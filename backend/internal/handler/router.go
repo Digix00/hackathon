@@ -7,6 +7,8 @@ import (
 	"gorm.io/gorm"
 
 	"hackathon/internal/handler/middleware"
+	"hackathon/internal/infra/rdb"
+	"hackathon/internal/usecase"
 )
 
 type Dependencies struct {
@@ -17,7 +19,25 @@ type Dependencies struct {
 
 func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	InstallHTTPErrorHandler(e)
-	userHandler := newUserHandler(deps.DB, deps.AuthUserManager)
+	userRepo := rdb.NewUserRepository(deps.DB)
+	userSettingsRepo := rdb.NewUserSettingsRepository(deps.DB)
+	userDeviceRepo := rdb.NewUserDeviceRepository(deps.DB)
+	settingsUsecase := usecase.NewSettingsUsecase(
+		userRepo,
+		userSettingsRepo,
+	)
+	pushTokenUsecase := usecase.NewPushTokenUsecase(
+		userRepo,
+		userDeviceRepo,
+	)
+	userUsecase := usecase.NewUserUsecase(
+		userRepo,
+		userSettingsRepo,
+		rdb.NewBlockRepository(deps.DB),
+		rdb.NewEncounterRepository(deps.DB),
+		rdb.NewUserCurrentTrackRepository(deps.DB),
+	)
+	userHandler := newUserHandler(deps.AuthUserManager, userUsecase, settingsUsecase, pushTokenUsecase)
 
 	api := e.Group("/api/v1")
 	api.Use(middleware.FirebaseAuth(deps.AuthTokenVerifier))

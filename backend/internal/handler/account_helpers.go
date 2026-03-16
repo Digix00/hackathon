@@ -1,37 +1,13 @@
 package handler
 
 import (
-	"context"
-	"errors"
-	"net/http"
 	"time"
 
-	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
-
 	schemares "hackathon/internal/handler/schema/response"
-	"hackathon/internal/infra/rdb/model"
+	usecasedto "hackathon/internal/usecase/dto"
 )
 
-func (h *userHandler) loadCurrentUser(ctx context.Context, authUID string) (model.User, error) {
-	var user model.User
-	err := h.db.WithContext(ctx).
-		Where("auth_provider = ? AND provider_user_id = ?", firebaseProvider, authUID).
-		First(&user).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return model.User{}, echo.NewHTTPError(http.StatusNotFound, map[string]any{
-			"code":    "NOT_FOUND",
-			"message": "User was not found",
-			"details": nil,
-		})
-	}
-	if err != nil {
-		return model.User{}, err
-	}
-	return user, nil
-}
-
-func settingsToResponse(settings model.UserSettings) schemares.Settings {
+func settingsDTOToResponse(settings usecasedto.Settings) schemares.Settings {
 	return schemares.Settings{
 		BleEnabled:                      settings.BleEnabled,
 		LocationEnabled:                 settings.LocationEnabled,
@@ -53,12 +29,52 @@ func settingsToResponse(settings model.UserSettings) schemares.Settings {
 	}
 }
 
-func deviceToResponse(device model.UserDevice) schemares.Device {
+func deviceDTOToResponse(device usecasedto.Device) schemares.Device {
 	return schemares.Device{
 		ID:        device.ID,
 		Platform:  device.Platform,
 		DeviceID:  device.DeviceID,
 		Enabled:   device.Enabled,
 		UpdatedAt: device.UpdatedAt.UTC().Format(time.RFC3339),
+	}
+}
+
+func userDTOToResponse(user usecasedto.UserDTO) schemares.User {
+	return schemares.User{
+		ID:            user.ID,
+		DisplayName:   user.DisplayName,
+		AvatarURL:     user.AvatarURL,
+		Bio:           user.Bio,
+		Birthdate:     user.Birthdate,
+		AgeVisibility: user.AgeVisibility,
+		PrefectureID:  user.PrefectureID,
+		Sex:           user.Sex,
+		CreatedAt:     user.CreatedAt.UTC().Format(time.RFC3339),
+		UpdatedAt:     user.UpdatedAt.UTC().Format(time.RFC3339),
+	}
+}
+
+func publicUserDTOToResponse(user usecasedto.PublicUserDTO) schemares.PublicUser {
+	var sharedTrack *schemares.PublicTrack
+	if user.SharedTrack != nil {
+		sharedTrack = &schemares.PublicTrack{
+			ID:         user.SharedTrack.ID,
+			Title:      user.SharedTrack.Title,
+			ArtistName: user.SharedTrack.ArtistName,
+			ArtworkURL: user.SharedTrack.ArtworkURL,
+			PreviewURL: nil,
+		}
+	}
+
+	return schemares.PublicUser{
+		ID:             user.ID,
+		DisplayName:    user.DisplayName,
+		AvatarURL:      user.AvatarURL,
+		Bio:            user.Bio,
+		Birthplace:     user.Birthplace,
+		AgeRange:       user.AgeRange,
+		EncounterCount: user.EncounterCount,
+		SharedTrack:    sharedTrack,
+		UpdatedAt:      user.UpdatedAt.UTC().Format(time.RFC3339),
 	}
 }

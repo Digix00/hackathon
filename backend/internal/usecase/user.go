@@ -1,0 +1,252 @@
+package usecase
+
+import (
+	"context"
+	"errors"
+	"strconv"
+	"time"
+
+	"github.com/google/uuid"
+
+	"hackathon/internal/domain/entity"
+	domainerrs "hackathon/internal/domain/errs"
+	"hackathon/internal/domain/repository"
+	usecasedto "hackathon/internal/usecase/dto"
+)
+
+// UserUsecase handles user CRUD business logic.
+type UserUsecase interface {
+	CreateUser(ctx context.Context, authUID string, input usecasedto.CreateUserInput) (usecasedto.UserDTO, error)
+	GetMe(ctx context.Context, authUID string) (usecasedto.UserDTO, error)
+	GetUserByID(ctx context.Context, requesterAuthUID string, targetUserID string) (usecasedto.PublicUserDTO, error)
+	PatchMe(ctx context.Context, authUID string, input usecasedto.UpdateUserInput) (usecasedto.UserDTO, error)
+	DeleteMe(ctx context.Context, authUID string) error
+}
+
+type userUsecase struct {
+	userRepo         repository.UserRepository
+	userSettingsRepo repository.UserSettingsRepository
+	blockRepo        repository.BlockRepository
+	encounterRepo    repository.EncounterRepository
+	trackRepo        repository.UserCurrentTrackRepository
+}
+
+// NewUserUsecase creates a new UserUsecase. Firebase user deletion is handled in
+// the handler layer (it needs Firebase-specific error types), so no auth manager
+// is injected here.
+func NewUserUsecase(
+	userRepo repository.UserRepository,
+	userSettingsRepo repository.UserSettingsRepository,
+	blockRepo repository.BlockRepository,
+	encounterRepo repository.EncounterRepository,
+	trackRepo repository.UserCurrentTrackRepository,
+) UserUsecase {
+	return &userUsecase{
+		userRepo:         userRepo,
+		userSettingsRepo: userSettingsRepo,
+		blockRepo:        blockRepo,
+		encounterRepo:    encounterRepo,
+		trackRepo:        trackRepo,
+	}
+}
+
+func (u *userUsecase) CreateUser(ctx context.Context, authUID string, input usecasedto.CreateUserInput) (usecasedto.UserDTO, error) {
+	// Guard against duplicates
+	_, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, userUsecaseFirebaseProvider, authUID)
+	if err == nil {
+		return usecasedto.UserDTO{}, domainerrs.Conflict("User already exists")
+	}
+	if !errors.Is(err, domainerrs.ErrNotFound) {
+		return usecasedto.UserDTO{}, err
+	}
+
+	user, err := u.userRepo.Create(ctx, repository.CreateUserParams{
+		ID:             uuid.NewString(),
+		AuthProvider:   userUsecaseFirebaseProvider,
+		ProviderUserID: authUID,
+		DisplayName:    input.DisplayName,
+		Bio:            input.Bio,
+		Birthdate:      input.Birthdate,
+		AgeVisibility:  input.AgeVisibility,
+		PrefectureID:   input.PrefectureID,
+		Sex:            input.Sex,
+		AvatarURL:      input.AvatarURL,
+		CreateSettings: true,
+	})
+	if err != nil {
+		return usecasedto.UserDTO{}, err
+	}
+
+	return entityToUserDTO(user), nil
+}
+
+func (u *userUsecase) GetMe(ctx context.Context, authUID string) (usecasedto.UserDTO, error) {
+	user, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, userUsecaseFirebaseProvider, authUID)
+	if err != nil {
+		return usecasedto.UserDTO{}, err
+	}
+	return entityToUserDTO(user), nil
+}
+
+func (u *userUsecase) GetUserByID(ctx context.Context, requesterAuthUID string, targetUserID string) (usecasedto.PublicUserDTO, error) {
+	requester, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, userUsecaseFirebaseProvider, requesterAuthUID)
+	if err != nil {
+		return usecasedto.PublicUserDTO{}, err
+	}
+
+	blocked, err := u.blockRepo.ExistsBetween(ctx, requester.ID, targetUserID)
+	if err != nil {
+		return usecasedto.PublicUserDTO{}, err
+	}
+	if blocked {
+		return usecasedto.PublicUserDTO{}, domainerrs.NotFound("User was not found")
+	}
+
+	target, err := u.userRepo.FindByID(ctx, targetUserID)
+	if err != nil {
+		return usecasedto.PublicUserDTO{}, err
+	}
+
+	profileVisible := true
+	trackVisible := true
+	settings, settingsErr := u.userSettingsRepo.FindByUserID(ctx, target.ID)
+	if settingsErr == nil {
+		profileVisible = settings.ProfileVisible
+		trackVisible = settings.TrackVisible
+	} else if !errors.Is(settingsErr, domainerrs.ErrNotFound) {
+		return usecasedto.PublicUserDTO{}, settingsErr
+	}
+
+	encounterCount, err := u.encounterRepo.CountByUserID(ctx, target.ID)
+	if err != nil {
+		return usecasedto.PublicUserDTO{}, err
+	}
+
+	displayName := ""
+	if target.Name != nil {
+		displayName = *target.Name
+	}
+
+	ageRange := userCalcAgeRange(target.Birthdate, target.AgeVisibility)
+
+	pub := usecasedto.PublicUserDTO{
+		ID:             target.ID,
+		DisplayName:    displayName,
+		AvatarURL:      target.AvatarURL,
+		Bio:            target.Bio,
+		Birthplace:     target.PrefectureName,
+		AgeRange:       ageRange,
+		EncounterCount: encounterCount,
+		UpdatedAt:      target.UpdatedAt,
+	}
+
+	if !profileVisible {
+		pub.Bio = nil
+		pub.Birthplace = nil
+		pub.AgeRange = nil
+	}
+
+	if trackVisible {
+		track, found, trackErr := u.trackRepo.FindCurrentByUserID(ctx, target.ID)
+		if trackErr != nil {
+			return usecasedto.PublicUserDTO{}, trackErr
+		}
+		if found {
+			pub.SharedTrack = &usecasedto.TrackInfoDTO{
+				ID:         track.ID,
+				Title:      track.Title,
+				ArtistName: track.ArtistName,
+				ArtworkURL: track.ArtworkURL,
+			}
+		}
+	}
+
+	return pub, nil
+}
+
+func (u *userUsecase) PatchMe(ctx context.Context, authUID string, input usecasedto.UpdateUserInput) (usecasedto.UserDTO, error) {
+	user, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, userUsecaseFirebaseProvider, authUID)
+	if err != nil {
+		return usecasedto.UserDTO{}, err
+	}
+
+	updated, err := u.userRepo.Update(ctx, user.ID, repository.UpdateUserParams{
+		DisplayName:   input.DisplayName,
+		Bio:           input.Bio,
+		BirthdateSet:  input.BirthdateSet,
+		Birthdate:     input.Birthdate,
+		AgeVisibility: input.AgeVisibility,
+		PrefectureID:  input.PrefectureID,
+		Sex:           input.Sex,
+		AvatarURLSet:  input.AvatarURLSet,
+		AvatarURL:     input.AvatarURL,
+	})
+	if err != nil {
+		return usecasedto.UserDTO{}, err
+	}
+
+	return entityToUserDTO(updated), nil
+}
+
+func (u *userUsecase) DeleteMe(ctx context.Context, authUID string) error {
+	user, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, userUsecaseFirebaseProvider, authUID)
+	if err != nil {
+		return err
+	}
+	return u.userRepo.DeleteWithCleanup(ctx, user.ID)
+}
+
+// ─── helpers ──────────────────────────────────────────────────────────────────
+
+const userUsecaseFirebaseProvider = "firebase"
+
+func entityToUserDTO(user entity.User) usecasedto.UserDTO {
+	var birthdateStr *string
+	if user.Birthdate != nil {
+		s := user.Birthdate.UTC().Format("2006-01-02")
+		birthdateStr = &s
+	}
+
+	displayName := ""
+	if user.Name != nil {
+		displayName = *user.Name
+	}
+
+	return usecasedto.UserDTO{
+		ID:            user.ID,
+		DisplayName:   displayName,
+		AvatarURL:     user.AvatarURL,
+		Bio:           user.Bio,
+		Birthdate:     birthdateStr,
+		AgeVisibility: user.AgeVisibility,
+		PrefectureID:  user.PrefectureID,
+		Sex:           user.Sex,
+		CreatedAt:     user.CreatedAt,
+		UpdatedAt:     user.UpdatedAt,
+	}
+}
+
+func userCalcAgeRange(birthdate *time.Time, visibility string) *string {
+	if birthdate == nil || visibility == "hidden" {
+		return nil
+	}
+
+	now := time.Now().UTC()
+	age := now.Year() - birthdate.Year()
+	if now.Month() < birthdate.Month() || (now.Month() == birthdate.Month() && now.Day() < birthdate.Day()) {
+		age--
+	}
+	if age < 0 {
+		return nil
+	}
+
+	switch visibility {
+	case "exact":
+		v := strconv.Itoa(age)
+		return &v
+	default:
+		decade := (age / 10) * 10
+		v := strconv.Itoa(decade) + "s"
+		return &v
+	}
+}
