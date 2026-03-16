@@ -10,6 +10,9 @@ struct BLEAdvertisingToken {
 
 actor BLEBackendClient {
     private static let apiPrefixSegments = ["api", "v1"]
+    private static let pendingEncounterStorageKey = "ble.pending.encounters.v1"
+    private static let initialRetryDelaySeconds: UInt64 = 5
+    private static let maxRetryDelaySeconds: UInt64 = 300
 
     enum BackendError: Error {
         case invalidBaseURL
@@ -23,6 +26,8 @@ actor BLEBackendClient {
     private let baseURL: URL?
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
+    private var pendingEncounters: [PendingEncounter]
+    private var isDrainingQueue = false
 
     init(session: URLSession = .shared) {
         self.session = session
@@ -35,6 +40,9 @@ actor BLEBackendClient {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom(Self.decodeISO8601Date)
         self.decoder = decoder
+
+        self.pendingEncounters = Self.loadPendingEncounters()
+        self.startQueueDrainIfNeeded()
     }
 
     func fetchOrIssueCurrentToken() async throws -> BLEAdvertisingToken {
@@ -64,6 +72,18 @@ actor BLEBackendClient {
         guard result.response.statusCode == 200 || result.response.statusCode == 201 else {
             throw BackendError.unexpectedStatus(result.response.statusCode)
         }
+    }
+
+    func enqueueEncounter(targetBLEToken: String, rssi: Int, occurredAt: Date) {
+        pendingEncounters.append(
+            PendingEncounter(
+                targetBLEToken: targetBLEToken,
+                rssi: rssi,
+                occurredAtEpochMs: Int64(occurredAt.timeIntervalSince1970 * 1_000)
+            )
+        )
+        persistPendingEncounters()
+        startQueueDrainIfNeeded()
     }
 
     private func issueToken() async throws -> BLEAdvertisingToken {
@@ -221,6 +241,54 @@ actor BLEBackendClient {
             .map(String.init)
             .filter { !$0.isEmpty }
     }
+
+    private func startQueueDrainIfNeeded() {
+        guard !isDrainingQueue, !pendingEncounters.isEmpty else { return }
+
+        isDrainingQueue = true
+        Task {
+            await self.drainPendingEncounterQueue()
+        }
+    }
+
+    private func drainPendingEncounterQueue() async {
+        defer { isDrainingQueue = false }
+
+        var retryDelaySeconds = Self.initialRetryDelaySeconds
+        while !pendingEncounters.isEmpty {
+            let next = pendingEncounters[0]
+            let occurredAt = Date(timeIntervalSince1970: TimeInterval(next.occurredAtEpochMs) / 1_000)
+
+            do {
+                try await postEncounter(
+                    targetBLEToken: next.targetBLEToken,
+                    rssi: next.rssi,
+                    occurredAt: occurredAt
+                )
+                pendingEncounters.removeFirst()
+                persistPendingEncounters()
+                retryDelaySeconds = Self.initialRetryDelaySeconds
+            } catch {
+                try? await Task.sleep(nanoseconds: retryDelaySeconds * 1_000_000_000)
+                retryDelaySeconds = min(retryDelaySeconds * 2, Self.maxRetryDelaySeconds)
+            }
+        }
+    }
+
+    private func persistPendingEncounters() {
+        guard let data = try? JSONEncoder().encode(pendingEncounters) else { return }
+        UserDefaults.standard.set(data, forKey: Self.pendingEncounterStorageKey)
+    }
+
+    private static func loadPendingEncounters() -> [PendingEncounter] {
+        guard
+            let data = UserDefaults.standard.data(forKey: pendingEncounterStorageKey),
+            let decoded = try? JSONDecoder().decode([PendingEncounter].self, from: data)
+        else {
+            return []
+        }
+        return decoded
+    }
 }
 
 private struct BLETokenEnvelope: Decodable {
@@ -253,4 +321,10 @@ private struct EncounterCreateRequest: Encodable {
         case rssi
         case occurredAt = "occurred_at"
     }
+}
+
+private struct PendingEncounter: Codable {
+    let targetBLEToken: String
+    let rssi: Int
+    let occurredAtEpochMs: Int64
 }
