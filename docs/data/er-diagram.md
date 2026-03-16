@@ -380,7 +380,7 @@ erDiagram
 | prefecture_id | string | prefectures.idへの外部キー |
 | sex | string | "male", "female", "no-answer" |
 | is_restricted | boolean | 通報を数回受けるとtrue |
-| avatar_file_id | string | files.idへの外部キー |
+| avatar_file_id | string | files.idへの外部キー（API の `avatar_url` はこの参照から解決する公開 URL） |
 | avatar_shape | string | "circle" または "square" |
 | created_at | datetime | |
 | updated_at | datetime | |
@@ -575,6 +575,7 @@ erDiagram
 ## encounter_tracks
 
 すれ違いに紐づく交換曲情報。
+`source_user_id` はサーバー内部で利用し、公開 API には露出しない。
 
 | フィールド | 型 | 備考 |
 |-|-|-|
