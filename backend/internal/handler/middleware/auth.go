@@ -18,14 +18,6 @@ type TokenVerifier interface {
 func FirebaseAuth(verifier TokenVerifier) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			if verifier == nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, map[string]any{
-					"code":    "INTERNAL",
-					"message": "token verifier is not configured",
-					"details": nil,
-				})
-			}
-
 			token, err := extractBearerToken(c.Request().Header.Get(echo.HeaderAuthorization))
 			if err != nil {
 				return echo.NewHTTPError(http.StatusUnauthorized, map[string]any{

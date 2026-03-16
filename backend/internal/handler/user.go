@@ -1,110 +1,57 @@
 package handler
 
 import (
-	"context"
 	"net/http"
 	"time"
 
 	firebaseauth "firebase.google.com/go/v4/auth"
 	"github.com/labstack/echo/v4"
 
+	"hackathon/internal/handler/middleware"
 	schemareq "hackathon/internal/handler/schema/request"
 	schemares "hackathon/internal/handler/schema/response"
+	"hackathon/internal/usecase"
 	usecasedto "hackathon/internal/usecase/dto"
 )
 
-const firebaseProvider = "firebase"
-
 type userHandler struct {
-	authUserManager  FirebaseUserManager
-	userUsecase      UserUsecase
-	settingsUsecase  SettingsUsecase
-	pushTokenUsecase PushTokenUsecase
+	authUserManager FirebaseUserManager
+	userUsecase     usecase.UserUsecase
 }
 
-type FirebaseUserManager interface {
-	DeleteUser(ctx context.Context, uid string) error
-}
-
-type UserUsecase interface {
-	CreateUser(ctx context.Context, authUID string, input usecasedto.CreateUserInput) (usecasedto.UserDTO, error)
-	GetMe(ctx context.Context, authUID string) (usecasedto.UserDTO, error)
-	GetUserByID(ctx context.Context, requesterAuthUID string, targetUserID string) (usecasedto.PublicUserDTO, error)
-	PatchMe(ctx context.Context, authUID string, input usecasedto.UpdateUserInput) (usecasedto.UserDTO, error)
-	DeleteMe(ctx context.Context, authUID string) error
-}
-
-type SettingsUsecase interface {
-	GetMySettings(ctx context.Context, authUID string) (usecasedto.Settings, error)
-	PatchMySettings(ctx context.Context, authUID string, input usecasedto.UpdateSettingsInput) (usecasedto.Settings, error)
-}
-
-type PushTokenUsecase interface {
-	CreatePushToken(ctx context.Context, authUID string, input usecasedto.CreatePushTokenInput) (usecasedto.Device, bool, error)
-	PatchPushToken(ctx context.Context, authUID string, id string, input usecasedto.UpdatePushTokenInput) (usecasedto.Device, error)
-	DeletePushToken(ctx context.Context, authUID string, id string) error
-}
-
-func newUserHandler(authUserManager FirebaseUserManager, userUsecase UserUsecase, settingsUsecase SettingsUsecase, pushTokenUsecase PushTokenUsecase) *userHandler {
+func newUserHandler(authUserManager FirebaseUserManager, userUsecase usecase.UserUsecase) *userHandler {
 	return &userHandler{
-		authUserManager:  authUserManager,
-		userUsecase:      userUsecase,
-		settingsUsecase:  settingsUsecase,
-		pushTokenUsecase: pushTokenUsecase,
+		authUserManager: authUserManager,
+		userUsecase:     userUsecase,
 	}
 }
 
 func (h *userHandler) createUser(c echo.Context) error {
-	uid, ok := userIDFromAuthContext(c)
+	uid, ok := middleware.UserIDFromContext(c)
 	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, map[string]any{
-			"code":    "UNAUTHORIZED",
-			"message": "User context is missing",
-			"details": nil,
-		})
+		return errUnauthorized()
 	}
 
 	var req schemareq.CreateUserRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
-			"code":    "BAD_REQUEST",
-			"message": "Invalid request body",
-			"details": err.Error(),
-		})
+		return errBadRequest("Invalid request body")
 	}
 	if req.DisplayName == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
-			"code":    "BAD_REQUEST",
-			"message": "display_name is required",
-			"details": nil,
-		})
+		return errBadRequest("display_name is required")
 	}
 
 	birthdate, err := parseBirthdate(req.Birthdate)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
-			"code":    "BAD_REQUEST",
-			"message": "birthdate must be YYYY-MM-DD",
-			"details": nil,
-		})
-	}
-
-	ageVisibility := "hidden"
-	if req.AgeVisibility != nil && *req.AgeVisibility != "" {
-		ageVisibility = *req.AgeVisibility
-	}
-	sex := "no-answer"
-	if req.Sex != nil && *req.Sex != "" {
-		sex = *req.Sex
+		return errBadRequest("birthdate must be YYYY-MM-DD")
 	}
 
 	created, err := h.userUsecase.CreateUser(c.Request().Context(), uid, usecasedto.CreateUserInput{
 		DisplayName:   req.DisplayName,
 		Bio:           req.Bio,
 		Birthdate:     birthdate,
-		AgeVisibility: ageVisibility,
+		AgeVisibility: req.AgeVisibility,
 		PrefectureID:  req.PrefectureID,
-		Sex:           sex,
+		Sex:           req.Sex,
 		AvatarURL:     req.AvatarURL,
 	})
 	if err != nil {
@@ -115,13 +62,9 @@ func (h *userHandler) createUser(c echo.Context) error {
 }
 
 func (h *userHandler) getMe(c echo.Context) error {
-	uid, ok := userIDFromAuthContext(c)
+	uid, ok := middleware.UserIDFromContext(c)
 	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, map[string]any{
-			"code":    "UNAUTHORIZED",
-			"message": "User context is missing",
-			"details": nil,
-		})
+		return errUnauthorized()
 	}
 
 	user, err := h.userUsecase.GetMe(c.Request().Context(), uid)
@@ -132,22 +75,14 @@ func (h *userHandler) getMe(c echo.Context) error {
 }
 
 func (h *userHandler) getUserByID(c echo.Context) error {
-	requesterUID, ok := userIDFromAuthContext(c)
+	requesterUID, ok := middleware.UserIDFromContext(c)
 	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, map[string]any{
-			"code":    "UNAUTHORIZED",
-			"message": "User context is missing",
-			"details": nil,
-		})
+		return errUnauthorized()
 	}
 
 	targetUserID := c.Param("id")
 	if targetUserID == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
-			"code":    "BAD_REQUEST",
-			"message": "id path param is required",
-			"details": nil,
-		})
+		return errBadRequest("id path param is required")
 	}
 
 	user, err := h.userUsecase.GetUserByID(c.Request().Context(), requesterUID, targetUserID)
@@ -159,30 +94,18 @@ func (h *userHandler) getUserByID(c echo.Context) error {
 }
 
 func (h *userHandler) patchMe(c echo.Context) error {
-	uid, ok := userIDFromAuthContext(c)
+	uid, ok := middleware.UserIDFromContext(c)
 	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, map[string]any{
-			"code":    "UNAUTHORIZED",
-			"message": "User context is missing",
-			"details": nil,
-		})
+		return errUnauthorized()
 	}
 
 	var req schemareq.UpdateUserRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
-			"code":    "BAD_REQUEST",
-			"message": "Invalid request body",
-			"details": err.Error(),
-		})
+		return errBadRequest("Invalid request body")
 	}
 
 	if req.DisplayName != nil && *req.DisplayName == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
-			"code":    "BAD_REQUEST",
-			"message": "display_name must not be empty",
-			"details": nil,
-		})
+		return errBadRequest("display_name must not be empty")
 	}
 
 	var birthdate *time.Time
@@ -190,11 +113,7 @@ func (h *userHandler) patchMe(c echo.Context) error {
 	if req.Birthdate != nil {
 		parsed, err := parseBirthdate(req.Birthdate)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
-				"code":    "BAD_REQUEST",
-				"message": "birthdate must be YYYY-MM-DD",
-				"details": nil,
-			})
+			return errBadRequest("birthdate must be YYYY-MM-DD")
 		}
 		birthdate = parsed
 		birthdateSet = true
@@ -237,35 +156,20 @@ func (h *userHandler) patchMe(c echo.Context) error {
 }
 
 func (h *userHandler) deleteMe(c echo.Context) error {
-	uid, ok := userIDFromAuthContext(c)
+	uid, ok := middleware.UserIDFromContext(c)
 	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, map[string]any{
-			"code":    "UNAUTHORIZED",
-			"message": "User context is missing",
-			"details": nil,
-		})
+		return errUnauthorized()
 	}
 
 	if err := h.userUsecase.DeleteMe(c.Request().Context(), uid); err != nil {
 		return err
 	}
 
-	if h.authUserManager != nil {
-		if err := h.authUserManager.DeleteUser(c.Request().Context(), uid); err != nil && !firebaseauth.IsUserNotFound(err) {
-			return err
-		}
+	if err := h.authUserManager.DeleteUser(c.Request().Context(), uid); err != nil && !firebaseauth.IsUserNotFound(err) {
+		return err
 	}
 
 	return c.NoContent(http.StatusNoContent)
-}
-
-func userIDFromAuthContext(c echo.Context) (string, bool) {
-	value := c.Get("user_id")
-	userID, ok := value.(string)
-	if !ok || userID == "" {
-		return "", false
-	}
-	return userID, true
 }
 
 func parseBirthdate(raw *string) (*time.Time, error) {
@@ -278,4 +182,22 @@ func parseBirthdate(raw *string) (*time.Time, error) {
 	}
 	dateOnly := parsed.UTC()
 	return &dateOnly, nil
+}
+
+// errUnauthorized はUser contextが取得できない場合のHTTPエラーを返す。
+// ミドルウェアで認証済みのため通常は発生しないが、コンテキスト設定ミスに対する防御。
+func errUnauthorized() error {
+	return echo.NewHTTPError(http.StatusUnauthorized, map[string]any{
+		"code":    "UNAUTHORIZED",
+		"message": "User context is missing",
+		"details": nil,
+	})
+}
+
+func errBadRequest(msg string) error {
+	return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
+		"code":    "BAD_REQUEST",
+		"message": msg,
+		"details": nil,
+	})
 }

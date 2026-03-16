@@ -5,20 +5,30 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"hackathon/internal/handler/middleware"
 	schemareq "hackathon/internal/handler/schema/request"
 	schemares "hackathon/internal/handler/schema/response"
+	"hackathon/internal/usecase"
 	usecasedto "hackathon/internal/usecase/dto"
 )
 
-func (h *userHandler) createPushToken(c echo.Context) error {
-	uid, ok := userIDFromAuthContext(c)
+type pushTokenHandler struct {
+	pushTokenUsecase usecase.PushTokenUsecase
+}
+
+func newPushTokenHandler(pushTokenUsecase usecase.PushTokenUsecase) *pushTokenHandler {
+	return &pushTokenHandler{pushTokenUsecase: pushTokenUsecase}
+}
+
+func (h *pushTokenHandler) createPushToken(c echo.Context) error {
+	uid, ok := middleware.UserIDFromContext(c)
 	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, map[string]any{"code": "UNAUTHORIZED", "message": "User context is missing", "details": nil})
+		return errUnauthorized()
 	}
 
 	var req schemareq.CreatePushTokenRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{"code": "BAD_REQUEST", "message": "Invalid request body", "details": err.Error()})
+		return errBadRequest("Invalid request body")
 	}
 
 	device, created, err := h.pushTokenUsecase.CreatePushToken(c.Request().Context(), uid, usecasedto.CreatePushTokenInput{
@@ -38,15 +48,15 @@ func (h *userHandler) createPushToken(c echo.Context) error {
 	return c.JSON(status, schemares.DeviceResponse{Device: deviceDTOToResponse(device)})
 }
 
-func (h *userHandler) patchPushToken(c echo.Context) error {
-	uid, ok := userIDFromAuthContext(c)
+func (h *pushTokenHandler) patchPushToken(c echo.Context) error {
+	uid, ok := middleware.UserIDFromContext(c)
 	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, map[string]any{"code": "UNAUTHORIZED", "message": "User context is missing", "details": nil})
+		return errUnauthorized()
 	}
 
 	var req schemareq.UpdatePushTokenRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{"code": "BAD_REQUEST", "message": "Invalid request body", "details": err.Error()})
+		return errBadRequest("Invalid request body")
 	}
 
 	device, err := h.pushTokenUsecase.PatchPushToken(c.Request().Context(), uid, c.Param("id"), usecasedto.UpdatePushTokenInput{
@@ -61,10 +71,10 @@ func (h *userHandler) patchPushToken(c echo.Context) error {
 	return c.JSON(http.StatusOK, schemares.DeviceResponse{Device: deviceDTOToResponse(device)})
 }
 
-func (h *userHandler) deletePushToken(c echo.Context) error {
-	uid, ok := userIDFromAuthContext(c)
+func (h *pushTokenHandler) deletePushToken(c echo.Context) error {
+	uid, ok := middleware.UserIDFromContext(c)
 	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, map[string]any{"code": "UNAUTHORIZED", "message": "User context is missing", "details": nil})
+		return errUnauthorized()
 	}
 
 	if err := h.pushTokenUsecase.DeletePushToken(c.Request().Context(), uid, c.Param("id")); err != nil {

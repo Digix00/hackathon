@@ -18,7 +18,10 @@ import (
 
 	"hackathon/internal/infra/rdb"
 	"hackathon/internal/infra/rdb/model"
+	"hackathon/internal/usecase"
 )
+
+const testFirebaseProvider = "firebase"
 
 type testTokenVerifier struct {
 	uid string
@@ -31,6 +34,12 @@ func (v testTokenVerifier) VerifyIDToken(ctx context.Context, idToken string) (*
 	}
 	return &firebaseauth.Token{UID: v.uid}, nil
 }
+
+// testAuthUserManager はテスト用のFirebase Auth stub。
+// Firebase への実通信なしに DeleteUser を成功扱いにする。
+type testAuthUserManager struct{}
+
+func (testAuthUserManager) DeleteUser(_ context.Context, _ string) error { return nil }
 
 func newTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
@@ -111,7 +120,7 @@ func seedTestUser(t *testing.T, db *gorm.DB, providerUserID string) model.User {
 	name := "tester"
 	user := model.User{
 		ID:             uuid.NewString(),
-		AuthProvider:   firebaseProvider,
+		AuthProvider:   testFirebaseProvider,
 		ProviderUserID: providerUserID,
 		Name:           &name,
 		AgeVisibility:  "hidden",
@@ -125,10 +134,21 @@ func seedTestUser(t *testing.T, db *gorm.DB, providerUserID string) model.User {
 
 func newTestServer(t *testing.T, db *gorm.DB, authUID string) *echo.Echo {
 	t.Helper()
+
+	userRepo := rdb.NewUserRepository(db)
+	userSettingsRepo := rdb.NewUserSettingsRepository(db)
+	userDeviceRepo := rdb.NewUserDeviceRepository(db)
+	blockRepo := rdb.NewBlockRepository(db)
+	encounterRepo := rdb.NewEncounterRepository(db)
+	trackRepo := rdb.NewUserCurrentTrackRepository(db)
+
 	e := echo.New()
 	RegisterRoutes(e, Dependencies{
 		AuthTokenVerifier: testTokenVerifier{uid: authUID},
-		DB:                db,
+		AuthUserManager:   testAuthUserManager{},
+		UserUsecase:       usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
+		SettingsUsecase:   usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
+		PushTokenUsecase:  usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
 	})
 	return e
 }
@@ -495,7 +515,7 @@ func TestGetUserByIDMasksProfileAndTrack(t *testing.T) {
 	birthdate := jsonDate(t, "1998-03-10")
 	target := model.User{
 		ID:             uuid.NewString(),
-		AuthProvider:   firebaseProvider,
+		AuthProvider:   testFirebaseProvider,
 		ProviderUserID: "firebase-uid-target",
 		Name:           &targetName,
 		Bio:            &bio,
