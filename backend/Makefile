@@ -1,5 +1,6 @@
 .PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean reset-db \
-        generate-docs generate-android generate-ios generate-code \
+	test test-integration \
+	generate-docs generate-android generate-ios generate-code \
         _generate-android-only _generate-ios-only
 
 # ==============================================================================
@@ -49,6 +50,15 @@ tidy:
 # Goコードのフォーマット
 fmt:
 	go fmt ./...
+
+# ユニット/通常テストを実行
+test:
+	go test ./...
+
+# PostgreSQL コンテナを使う統合テストを実行（Docker 起動後に実行）
+# 必要に応じて PG_TEST_DATABASE_URL を上書き可能
+test-integration:
+	go test -tags=integration ./internal/handler -run PostgresIntegration
 
 # ==============================================================================
 # Code Generation (全て Docker で完結。ホストへのツールインストール不要)
