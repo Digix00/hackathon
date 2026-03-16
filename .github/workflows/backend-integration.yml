@@ -1,0 +1,53 @@
+name: backend-integration
+
+on:
+  pull_request:
+    paths:
+      - backend/**
+      - .github/workflows/backend-integration.yml
+  push:
+    paths:
+      - backend/**
+      - .github/workflows/backend-integration.yml
+
+jobs:
+  postgres-integration-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: hackathon
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d hackathon"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PG_TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/hackathon?sslmode=disable
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run PostgreSQL integration tests
+        run: make test-integration

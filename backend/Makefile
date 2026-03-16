@@ -1,4 +1,4 @@
-.PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean reset-db
+.PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean reset-db test test-integration
 
 # ==============================================================================
 # Docker Compose Commands
@@ -47,3 +47,12 @@ tidy:
 # Goコードのフォーマット
 fmt:
 	go fmt ./...
+
+# ユニット/通常テストを実行
+test:
+	go test ./...
+
+# PostgreSQL コンテナを使う統合テストを実行（Docker 起動後に実行）
+# 必要に応じて PG_TEST_DATABASE_URL を上書き可能
+test-integration:
+	go test -tags=integration ./internal/handler -run PostgresIntegration
