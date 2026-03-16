@@ -101,7 +101,7 @@ _generate-ios-only:
 		$(OPENAPI_GENERATOR_IMAGE) generate \
 			-i /local/swagger.json \
 			-g swift5 \
-			--package-name APIClient \
+			--package-name OpenAPIClient \
 			-o /local/out \
 			--additional-properties=responseAs=AsyncAwait,useSPMFileStructure=true
 	@echo "==> iOS クライアントを生成しました → $(IOS_OUT)"
