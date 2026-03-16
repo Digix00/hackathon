@@ -7,8 +7,7 @@ struct SettingsHubView: View {
         [
             SettingsDestination(id: "share-track", icon: "music.note", title: "シェアする曲", destination: AnyView(SearchView())),
             SettingsDestination(id: "encounter-settings", icon: "location.fill", title: "すれ違い設定", destination: AnyView(EncounterSettingsView())),
-            SettingsDestination(id: "notification-settings", icon: "bell.fill", title: "通知設定", destination: AnyView(NotificationSettingsView())),
-            SettingsDestination(id: "appearance-settings", icon: "paintbrush.fill", title: "外観", destination: AnyView(AppearanceSettingsView()))
+            SettingsDestination(id: "notification-settings", icon: "bell.fill", title: "通知設定", destination: AnyView(NotificationSettingsView()))
         ]
     }
 
@@ -109,4 +108,3 @@ struct SettingsHubView: View {
         }
     }
 }
-
