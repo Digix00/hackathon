@@ -134,31 +134,47 @@ ble_token 取得
 
 # 5. APIレイヤー
 
-BLEで取得したトークンをサーバーへ送信する。
+BLEで取得したトークンをサーバーへ送信し、手動でエンカウント（`type: "ble"`）を登録する。
+このAPIは認証必須（`Authorization: Bearer <Firebase ID Token>`）であるため、クライアントから自身のユーザーIDは送らない。
 
 ## エンドポイント
 
 ```
-POST /encounter
+POST /encounters
 ```
 
 ### Request
 
 ```json
 {
-  "self_user_id": "userA",
-  "ble_token": "abc123xyz"
+  "target_ble_token": "abc123xyz...",
+  "type": "ble",
+  "rssi": -58,
+  "occurred_at": "2026-03-15T09:30:00Z"
 }
 ```
 
-### Response（交換成功時）
+- `target_ble_token`: BLEスキャンで検出した相手のトークン
+- `type`: `ble` 固定
+- `rssi`: 受信信号強度。距離推定・フィルタ用。サーバーDBには保存しない。
+- `occurred_at`: クライアント側の検出時刻
+
+### Response（201 Created / 200 OK）
+
+レスポンスは軽量化のため `tracks` （曲情報）を**含まない**。
+同一トークンペアで5分以内の重複送信は、サーバー側で冪等に処理され（既存のレコードを返し `200 OK` となる）。
 
 ```json
 {
-  "encounter_id": "enc_xxx",
-  "partner_track": {
-    "title": "...",
-    "artist": "..."
+  "encounter": {
+    "id": "enc_xxx",
+    "type": "ble",
+    "user": {
+      "id": "uuid",
+      "display_name": "other_user",
+      "avatar_url": "https://..."
+    },
+    "occurred_at": "2026-03-15T09:30:00Z"
   }
 }
 ```
@@ -170,15 +186,20 @@ POST /encounter
 ## 6.1 判定フロー
 
 ```
-ble_token 受信
+POST /encounters リクエスト受信（Bearerトークンから self_user_id 解決）
   ↓
-ble_tokens テーブルで user_id 解決（期限チェック含む）
+ble_tokens テーブルで target_ble_token から other_user_id 解決（期限チェック含む）
   ↓
-同一ペアで本日交換済み？（Encounter テーブルを確認）
-  ↓ YES → 無視（409 or 200 空レスポンス）
-  ↓ NO  → Encounter 登録
-           DailyEncounterCount インクリメント
-           曲データ取得 → クライアントへ返却
+直近5分以内の同一ペア('ble'タイプ)重複送信か？
+  ↓ YES → 既存の encounter を返し 200 OK（冪等処理）
+  ↓ NO  → 制限チェックへ進む
+  ↓
+同一ペアで本日交換済み？（encounters テーブルを DATE(occurred_at) で確認）
+  ↓ YES → 無視（制限エラー or 既存エンカウント返却）
+  ↓ NO  → daily_encounter_counts をインクリメント
+  ↓
+Encounter 登録（201 Created） + 各ユーザーの現在シェア中の曲等を encounter_tracks に保存
+  ※ APIレスポンス自体に tracks は含めず、encounter(相手ユーザー情報) のみを返す
 ```
 
 ------------------------------------------------------------------------
@@ -246,16 +267,21 @@ WHERE user_id_1 = $1 AND user_id_2 = $2
 
 # 8. 曲情報取得
 
-Encounter 登録後、相手ユーザーの現在シェア中の曲（`user_current_tracks`）またはお気に入り曲（`user_tracks`）を取得し、`encounter_tracks` に保存してクライアントへ返す。
+Encounter 登録時、相手ユーザーの現在シェア中の曲（`user_current_tracks`）またはお気に入り曲（`user_tracks`）を取得し、サーバー内で自動的に `encounter_tracks` に保存する。
+
+**注意点**: バックエンドAPIの軽量化方針により、`POST /encounters` のレスポンスには `tracks` 配列が含まれない。
+クライアントが曲情報を必要とする場合は、返却された `encounter.id` を用いて、別途トラック情報込みのエンカウント詳細を取得する。
 
 ```
-user_id
-  ↓
+（POST /encounters 成功処理内）
 user_current_tracks（なければ user_tracks）から取得
   ↓
 encounter_tracks に保存
+
+（クライアント側の曲データ取得）
+クライアント → GET /encounters/{id} をリクエスト
   ↓
-クライアントへ返却
+encounter_tracks を含む完全なエンカウント詳細を返却
 ```
 
 ------------------------------------------------------------------------
@@ -287,17 +313,26 @@ encounter_tracks に保存
 # 11. すれ違い処理の全体フロー
 
 ```
-① サーバーから ble_token を事前取得（毎日0:00 UTC に再発行）
-② advertise(ble_token)
-③ scan → 相手の ble_token 検出
-④ クライアント cooldown チェック（10分以内の重複は無視）
-⑤ POST /encounter リクエスト送信
-⑥ サーバー: ble_token → user_id 解決（有効期限チェック含む）
-⑦ 同一ペア・当日の重複チェック（encounters テーブル）
-⑧ daily_encounter_counts チェック（しきい値超過でエラー）
-⑨ Encounter 登録 + encounter_tracks 保存 + daily_encounter_counts 更新
-⑩ 曲データをクライアントへ返却
-⑪ クライアント表示
+[事前準備]
+① クライアント起動時 or トークン期限切れ前に GET /ble-tokens/current (無ければ POST /ble-tokens) でサーバから ble_token を取得
+  （※トークン自体は毎日0:00 UTC にサーバー側で再発行される）
+
+[すれ違い発生]
+② 互いに advertise(ble_token)
+③ scan → 相手の ble_token (= target_ble_token) 検出
+④ クライアント cooldown チェック（10分以内の重複はアプリ内で無視）
+⑤ クライアントから POST /encounters リクエスト送信 (rssi, occurred_at 含む)
+
+[サーバー処理]
+⑥ target_ble_token → 相手 user_id 解決（有効期限チェック含む）
+⑦ 冪等性チェック（5分以内の重複送信は既存レコードを返す）
+⑧ 同一ペア・当日の重複チェック（encounters テーブル）
+⑨ daily_encounter_counts チェック（しきい値超過でエラー）
+⑩ Encounter 登録 + encounter_tracks 保存 + daily_encounter_counts 更新
+⑪ エンカウント情報(相手プロフィール等のみ)をクライアントへ返却 (201 Created)
+
+[曲情報が必要な場合]
+⑫ クライアントが GET /encounters/{id} を呼び出し、曲情報(tracks)を取得して表示
 ```
 
 ------------------------------------------------------------------------
