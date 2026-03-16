@@ -9,7 +9,6 @@ import Foundation
 /// - Applies client-side cooldown and RSSI filtering before surfacing detections.
 final class BLEManager: NSObject, ObservableObject {
     struct Constants {
-        static let serviceUUID = CBUUID(string: "00001234-0000-1000-8000-00805F9B34FB")
         static let manufacturerID: UInt16 = 0xD1A1
 
         static let scanWindow: TimeInterval = 2
@@ -120,8 +119,6 @@ final class BLEManager: NSObject, ObservableObject {
 
         let manufacturerData = encodeManufacturerData(token: token)
         let data: [String: Any] = [
-            CBAdvertisementDataLocalNameKey: "MusicSwap",
-            CBAdvertisementDataServiceUUIDsKey: [Constants.serviceUUID],
             CBAdvertisementDataManufacturerDataKey: manufacturerData,
             CBAdvertisementDataIsConnectable: false
         ]
@@ -138,7 +135,7 @@ final class BLEManager: NSObject, ObservableObject {
         }
 
         centralManager.scanForPeripherals(
-            withServices: [Constants.serviceUUID],
+            withServices: nil,
             options: [CBCentralManagerScanOptionAllowDuplicatesKey: true]
         )
 
@@ -211,6 +208,7 @@ extension BLEManager: CBCentralManagerDelegate {
         rssi RSSI: NSNumber
     ) {
         guard let token = decodeToken(fromAdvertisementData: advertisementData) else { return }
+        guard token != advertisedToken else { return }
 
         let now = Date()
         guard shouldEmitDetection(token: token, rssi: RSSI, now: now) else { return }
