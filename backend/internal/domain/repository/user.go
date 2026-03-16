@@ -8,7 +8,7 @@ import (
 	"hackathon/internal/domain/vo"
 )
 
-// CreateUserParams holds all data needed to create a new user
+// CreateUserParams はユーザー作成に必要なパラメータをまとめた構造体。
 type CreateUserParams struct {
 	ID             string
 	AuthProvider   string
@@ -23,7 +23,7 @@ type CreateUserParams struct {
 	CreateSettings bool
 }
 
-// UpdateUserParams holds change intentions for a user update
+// UpdateUserParams はユーザー更新の変更意図をまとめた構造体。ポインタ型フィールドが nil の場合は変更なし。
 type UpdateUserParams struct {
 	DisplayName   *string
 	Bio           *string

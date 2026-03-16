@@ -15,7 +15,7 @@ import (
 	usecasedto "hackathon/internal/usecase/dto"
 )
 
-// UserUsecase handles user CRUD business logic.
+// UserUsecase はユーザーの CRUD ビジネスロジックを担うインターフェース。
 type UserUsecase interface {
 	CreateUser(ctx context.Context, authUID string, input usecasedto.CreateUserInput) (usecasedto.UserDTO, error)
 	GetMe(ctx context.Context, authUID string) (usecasedto.UserDTO, error)
@@ -32,9 +32,8 @@ type userUsecase struct {
 	trackRepo        repository.UserCurrentTrackRepository
 }
 
-// NewUserUsecase creates a new UserUsecase. Firebase user deletion is handled in
-// the handler layer (it needs Firebase-specific error types), so no auth manager
-// is injected here.
+// NewUserUsecase は UserUsecase を生成する。
+// Firebase ユーザー削除は Firebase 固有のエラー型が必要なため handler 層で行い、ここでは注入しない。
 func NewUserUsecase(
 	userRepo repository.UserRepository,
 	userSettingsRepo repository.UserSettingsRepository,
@@ -52,7 +51,7 @@ func NewUserUsecase(
 }
 
 func (u *userUsecase) CreateUser(ctx context.Context, authUID string, input usecasedto.CreateUserInput) (usecasedto.UserDTO, error) {
-	// Guard against duplicates
+	// 重複登録を防止する
 	_, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, firebaseProvider, authUID)
 	if err == nil {
 		return usecasedto.UserDTO{}, domainerrs.Conflict("User already exists")
