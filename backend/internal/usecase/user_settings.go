@@ -10,22 +10,10 @@ import (
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
+	"hackathon/internal/domain/vo"
 	"hackathon/internal/usecase/dto"
+	"hackathon/internal/util"
 )
-
-const firebaseProvider = "firebase"
-
-var validNotificationFrequencies = map[string]struct{}{
-	"immediate": {},
-	"hourly":    {},
-	"daily":     {},
-}
-
-var validThemeModes = map[string]struct{}{
-	"light":  {},
-	"dark":   {},
-	"system": {},
-}
 
 type SettingsUsecase interface {
 	GetMySettings(ctx context.Context, authUID string) (dto.Settings, error)
@@ -75,16 +63,18 @@ func (u *settingsUsecase) PatchMySettings(ctx context.Context, authUID string, i
 		settings.DetectionDistance = *input.DetectionDistance
 	}
 	if input.NotificationFrequency != nil {
-		if _, exists := validNotificationFrequencies[*input.NotificationFrequency]; !exists {
-			return dto.Settings{}, domainerrs.BadRequest("notification_frequency is invalid")
+		freq, err := vo.ParseNotificationFrequency(*input.NotificationFrequency)
+		if err != nil {
+			return dto.Settings{}, err
 		}
-		settings.NotificationFrequency = *input.NotificationFrequency
+		settings.NotificationFrequency = freq
 	}
 	if input.ThemeMode != nil {
-		if _, exists := validThemeModes[*input.ThemeMode]; !exists {
-			return dto.Settings{}, domainerrs.BadRequest("theme_mode is invalid")
+		mode, err := vo.ParseThemeMode(*input.ThemeMode)
+		if err != nil {
+			return dto.Settings{}, err
 		}
-		settings.ThemeMode = *input.ThemeMode
+		settings.ThemeMode = mode
 	}
 	if input.ScheduleStartTime != nil {
 		if err := validateClockTime(*input.ScheduleStartTime); err != nil {
@@ -98,39 +88,18 @@ func (u *settingsUsecase) PatchMySettings(ctx context.Context, authUID string, i
 		}
 		settings.ScheduleEndTime = input.ScheduleEndTime
 	}
-	if input.BleEnabled != nil {
-		settings.BleEnabled = *input.BleEnabled
-	}
-	if input.LocationEnabled != nil {
-		settings.LocationEnabled = *input.LocationEnabled
-	}
-	if input.ScheduleEnabled != nil {
-		settings.ScheduleEnabled = *input.ScheduleEnabled
-	}
-	if input.ProfileVisible != nil {
-		settings.ProfileVisible = *input.ProfileVisible
-	}
-	if input.TrackVisible != nil {
-		settings.TrackVisible = *input.TrackVisible
-	}
-	if input.NotificationEnabled != nil {
-		settings.NotificationEnabled = *input.NotificationEnabled
-	}
-	if input.EncounterNotificationEnabled != nil {
-		settings.EncounterNotificationEnabled = *input.EncounterNotificationEnabled
-	}
-	if input.BatchNotificationEnabled != nil {
-		settings.BatchNotificationEnabled = *input.BatchNotificationEnabled
-	}
-	if input.CommentNotificationEnabled != nil {
-		settings.CommentNotificationEnabled = *input.CommentNotificationEnabled
-	}
-	if input.LikeNotificationEnabled != nil {
-		settings.LikeNotificationEnabled = *input.LikeNotificationEnabled
-	}
-	if input.AnnouncementNotificationEnabled != nil {
-		settings.AnnouncementNotificationEnabled = *input.AnnouncementNotificationEnabled
-	}
+
+	util.ApplyIfSet(&settings.BleEnabled, input.BleEnabled)
+	util.ApplyIfSet(&settings.LocationEnabled, input.LocationEnabled)
+	util.ApplyIfSet(&settings.ScheduleEnabled, input.ScheduleEnabled)
+	util.ApplyIfSet(&settings.ProfileVisible, input.ProfileVisible)
+	util.ApplyIfSet(&settings.TrackVisible, input.TrackVisible)
+	util.ApplyIfSet(&settings.NotificationEnabled, input.NotificationEnabled)
+	util.ApplyIfSet(&settings.EncounterNotificationEnabled, input.EncounterNotificationEnabled)
+	util.ApplyIfSet(&settings.BatchNotificationEnabled, input.BatchNotificationEnabled)
+	util.ApplyIfSet(&settings.CommentNotificationEnabled, input.CommentNotificationEnabled)
+	util.ApplyIfSet(&settings.LikeNotificationEnabled, input.LikeNotificationEnabled)
+	util.ApplyIfSet(&settings.AnnouncementNotificationEnabled, input.AnnouncementNotificationEnabled)
 
 	if err := u.settingsRepo.Update(ctx, &settings); err != nil {
 		return dto.Settings{}, err
@@ -148,24 +117,7 @@ func (u *settingsUsecase) getOrCreateSettings(ctx context.Context, userID string
 		return entity.UserSettings{}, err
 	}
 
-	settings = entity.UserSettings{
-		ID:                              uuid.NewString(),
-		UserID:                          userID,
-		BleEnabled:                      true,
-		LocationEnabled:                 true,
-		DetectionDistance:               50,
-		ScheduleEnabled:                 false,
-		ProfileVisible:                  true,
-		TrackVisible:                    true,
-		NotificationEnabled:             true,
-		EncounterNotificationEnabled:    true,
-		BatchNotificationEnabled:        true,
-		NotificationFrequency:           "hourly",
-		CommentNotificationEnabled:      true,
-		LikeNotificationEnabled:         true,
-		AnnouncementNotificationEnabled: true,
-		ThemeMode:                       "system",
-	}
+	settings = entity.NewUserSettings(uuid.NewString(), userID)
 	if err := u.settingsRepo.Create(ctx, &settings); err != nil {
 		return entity.UserSettings{}, err
 	}
@@ -193,11 +145,11 @@ func toSettingsDTO(settings entity.UserSettings) dto.Settings {
 		NotificationEnabled:             settings.NotificationEnabled,
 		EncounterNotificationEnabled:    settings.EncounterNotificationEnabled,
 		BatchNotificationEnabled:        settings.BatchNotificationEnabled,
-		NotificationFrequency:           settings.NotificationFrequency,
+		NotificationFrequency:           string(settings.NotificationFrequency),
 		CommentNotificationEnabled:      settings.CommentNotificationEnabled,
 		LikeNotificationEnabled:         settings.LikeNotificationEnabled,
 		AnnouncementNotificationEnabled: settings.AnnouncementNotificationEnabled,
-		ThemeMode:                       settings.ThemeMode,
+		ThemeMode:                       string(settings.ThemeMode),
 		UpdatedAt:                       settings.UpdatedAt,
 	}
 }

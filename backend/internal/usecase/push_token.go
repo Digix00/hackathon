@@ -6,16 +6,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
+	"hackathon/internal/domain/entity"
 	"hackathon/internal/domain/repository"
+	"hackathon/internal/domain/vo"
 	"hackathon/internal/usecase/dto"
 )
-
-var validPlatforms = map[string]struct{}{
-	"ios":     {},
-	"android": {},
-}
 
 type PushTokenUsecase interface {
 	CreatePushToken(ctx context.Context, authUID string, input dto.CreatePushTokenInput) (dto.Device, bool, error)
@@ -36,8 +32,9 @@ func (u *pushTokenUsecase) CreatePushToken(ctx context.Context, authUID string, 
 	if input.Platform == "" || input.DeviceID == "" || input.PushToken == "" {
 		return dto.Device{}, false, domainerrs.BadRequest("platform, device_id and push_token are required")
 	}
-	if _, ok := validPlatforms[input.Platform]; !ok {
-		return dto.Device{}, false, domainerrs.BadRequest("platform is invalid")
+	platform, err := vo.ParsePlatform(input.Platform)
+	if err != nil {
+		return dto.Device{}, false, err
 	}
 
 	user, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, firebaseProvider, authUID)
@@ -45,7 +42,7 @@ func (u *pushTokenUsecase) CreatePushToken(ctx context.Context, authUID string, 
 		return dto.Device{}, false, err
 	}
 
-	device, err := u.userDeviceRepo.FindByUserIDPlatformAndDeviceID(ctx, user.ID, input.Platform, input.DeviceID)
+	device, err := u.userDeviceRepo.FindByUserIDPlatformAndDeviceID(ctx, user.ID, platform, input.DeviceID)
 	if err == nil {
 		device.DeviceToken = input.PushToken
 		device.AppVersion = input.AppVersion
@@ -59,7 +56,7 @@ func (u *pushTokenUsecase) CreatePushToken(ctx context.Context, authUID string, 
 		return dto.Device{}, false, err
 	}
 
-	device = entityUserDevice(user.ID, input)
+	device = entity.NewUserDevice(uuid.NewString(), user.ID, platform, input.DeviceID, input.PushToken, input.AppVersion)
 	if err := u.userDeviceRepo.Create(ctx, &device); err != nil {
 		return dto.Device{}, false, err
 	}
@@ -109,22 +106,10 @@ func (u *pushTokenUsecase) DeletePushToken(ctx context.Context, authUID string, 
 	return err
 }
 
-func entityUserDevice(userID string, input dto.CreatePushTokenInput) entity.UserDevice {
-	return entity.UserDevice{
-		ID:          uuid.NewString(),
-		UserID:      userID,
-		Platform:    input.Platform,
-		DeviceID:    input.DeviceID,
-		DeviceToken: input.PushToken,
-		AppVersion:  input.AppVersion,
-		Enabled:     true,
-	}
-}
-
 func toDeviceDTO(device entity.UserDevice) dto.Device {
 	return dto.Device{
 		ID:        device.ID,
-		Platform:  device.Platform,
+		Platform:  string(device.Platform),
 		DeviceID:  device.DeviceID,
 		Enabled:   device.Enabled,
 		UpdatedAt: device.UpdatedAt,

@@ -38,13 +38,14 @@ type TrackInfoDTO struct {
 }
 
 // CreateUserInput holds validated data for creating a new user.
+// AgeVisibility and Sex are optional; nil means "use default".
 type CreateUserInput struct {
 	DisplayName   string
 	Bio           *string
 	Birthdate     *time.Time
-	AgeVisibility string
+	AgeVisibility *string
 	PrefectureID  *string
-	Sex           string
+	Sex           *string
 	AvatarURL     *string
 }
 

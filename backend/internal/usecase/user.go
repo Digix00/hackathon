@@ -11,6 +11,7 @@ import (
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
+	"hackathon/internal/domain/vo"
 	usecasedto "hackathon/internal/usecase/dto"
 )
 
@@ -52,7 +53,7 @@ func NewUserUsecase(
 
 func (u *userUsecase) CreateUser(ctx context.Context, authUID string, input usecasedto.CreateUserInput) (usecasedto.UserDTO, error) {
 	// Guard against duplicates
-	_, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, userUsecaseFirebaseProvider, authUID)
+	_, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, firebaseProvider, authUID)
 	if err == nil {
 		return usecasedto.UserDTO{}, domainerrs.Conflict("User already exists")
 	}
@@ -60,16 +61,34 @@ func (u *userUsecase) CreateUser(ctx context.Context, authUID string, input usec
 		return usecasedto.UserDTO{}, err
 	}
 
+	ageVisStr := string(vo.AgeVisibilityHidden)
+	if input.AgeVisibility != nil {
+		ageVisStr = *input.AgeVisibility
+	}
+	ageVis, err := vo.ParseAgeVisibility(ageVisStr)
+	if err != nil {
+		return usecasedto.UserDTO{}, err
+	}
+
+	sexStr := string(vo.SexNoAnswer)
+	if input.Sex != nil {
+		sexStr = *input.Sex
+	}
+	sex, err := vo.ParseSex(sexStr)
+	if err != nil {
+		return usecasedto.UserDTO{}, err
+	}
+
 	user, err := u.userRepo.Create(ctx, repository.CreateUserParams{
 		ID:             uuid.NewString(),
-		AuthProvider:   userUsecaseFirebaseProvider,
+		AuthProvider:   firebaseProvider,
 		ProviderUserID: authUID,
 		DisplayName:    input.DisplayName,
 		Bio:            input.Bio,
 		Birthdate:      input.Birthdate,
-		AgeVisibility:  input.AgeVisibility,
+		AgeVisibility:  ageVis,
 		PrefectureID:   input.PrefectureID,
-		Sex:            input.Sex,
+		Sex:            sex,
 		AvatarURL:      input.AvatarURL,
 		CreateSettings: true,
 	})
@@ -81,7 +100,7 @@ func (u *userUsecase) CreateUser(ctx context.Context, authUID string, input usec
 }
 
 func (u *userUsecase) GetMe(ctx context.Context, authUID string) (usecasedto.UserDTO, error) {
-	user, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, userUsecaseFirebaseProvider, authUID)
+	user, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, firebaseProvider, authUID)
 	if err != nil {
 		return usecasedto.UserDTO{}, err
 	}
@@ -89,7 +108,7 @@ func (u *userUsecase) GetMe(ctx context.Context, authUID string) (usecasedto.Use
 }
 
 func (u *userUsecase) GetUserByID(ctx context.Context, requesterAuthUID string, targetUserID string) (usecasedto.PublicUserDTO, error) {
-	requester, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, userUsecaseFirebaseProvider, requesterAuthUID)
+	requester, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, firebaseProvider, requesterAuthUID)
 	if err != nil {
 		return usecasedto.PublicUserDTO{}, err
 	}
@@ -165,9 +184,26 @@ func (u *userUsecase) GetUserByID(ctx context.Context, requesterAuthUID string, 
 }
 
 func (u *userUsecase) PatchMe(ctx context.Context, authUID string, input usecasedto.UpdateUserInput) (usecasedto.UserDTO, error) {
-	user, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, userUsecaseFirebaseProvider, authUID)
+	user, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, firebaseProvider, authUID)
 	if err != nil {
 		return usecasedto.UserDTO{}, err
+	}
+
+	var ageVis *vo.AgeVisibility
+	if input.AgeVisibility != nil {
+		parsed, err := vo.ParseAgeVisibility(*input.AgeVisibility)
+		if err != nil {
+			return usecasedto.UserDTO{}, err
+		}
+		ageVis = &parsed
+	}
+	var sex *vo.Sex
+	if input.Sex != nil {
+		parsed, err := vo.ParseSex(*input.Sex)
+		if err != nil {
+			return usecasedto.UserDTO{}, err
+		}
+		sex = &parsed
 	}
 
 	updated, err := u.userRepo.Update(ctx, user.ID, repository.UpdateUserParams{
@@ -175,9 +211,9 @@ func (u *userUsecase) PatchMe(ctx context.Context, authUID string, input usecase
 		Bio:           input.Bio,
 		BirthdateSet:  input.BirthdateSet,
 		Birthdate:     input.Birthdate,
-		AgeVisibility: input.AgeVisibility,
+		AgeVisibility: ageVis,
 		PrefectureID:  input.PrefectureID,
-		Sex:           input.Sex,
+		Sex:           sex,
 		AvatarURLSet:  input.AvatarURLSet,
 		AvatarURL:     input.AvatarURL,
 	})
@@ -189,7 +225,7 @@ func (u *userUsecase) PatchMe(ctx context.Context, authUID string, input usecase
 }
 
 func (u *userUsecase) DeleteMe(ctx context.Context, authUID string) error {
-	user, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, userUsecaseFirebaseProvider, authUID)
+	user, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, firebaseProvider, authUID)
 	if err != nil {
 		return err
 	}
@@ -197,8 +233,6 @@ func (u *userUsecase) DeleteMe(ctx context.Context, authUID string) error {
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
-
-const userUsecaseFirebaseProvider = "firebase"
 
 func entityToUserDTO(user entity.User) usecasedto.UserDTO {
 	var birthdateStr *string
@@ -218,16 +252,16 @@ func entityToUserDTO(user entity.User) usecasedto.UserDTO {
 		AvatarURL:     user.AvatarURL,
 		Bio:           user.Bio,
 		Birthdate:     birthdateStr,
-		AgeVisibility: user.AgeVisibility,
+		AgeVisibility: string(user.AgeVisibility),
 		PrefectureID:  user.PrefectureID,
-		Sex:           user.Sex,
+		Sex:           string(user.Sex),
 		CreatedAt:     user.CreatedAt,
 		UpdatedAt:     user.UpdatedAt,
 	}
 }
 
-func userCalcAgeRange(birthdate *time.Time, visibility string) *string {
-	if birthdate == nil || visibility == "hidden" {
+func userCalcAgeRange(birthdate *time.Time, visibility vo.AgeVisibility) *string {
+	if birthdate == nil || visibility == vo.AgeVisibilityHidden {
 		return nil
 	}
 
@@ -241,7 +275,7 @@ func userCalcAgeRange(birthdate *time.Time, visibility string) *string {
 	}
 
 	switch visibility {
-	case "exact":
+	case vo.AgeVisibilityExact:
 		v := strconv.Itoa(age)
 		return &v
 	default:
