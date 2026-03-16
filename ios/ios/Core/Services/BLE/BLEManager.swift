@@ -10,7 +10,6 @@ import Foundation
 final class BLEManager: NSObject, ObservableObject {
     struct Constants {
         static let manufacturerID: UInt16 = 0xD1A1
-        static let localNamePrefix = "MS:"
 
         static let scanWindow: TimeInterval = 2
         static let scanInterval: TimeInterval = 5
@@ -124,8 +123,9 @@ final class BLEManager: NSObject, ObservableObject {
             return
         }
 
+        let manufacturerData = buildManufacturerData(token: token)
         let data: [String: Any] = [
-            CBAdvertisementDataLocalNameKey: Constants.localNamePrefix + token,
+            CBAdvertisementDataManufacturerDataKey: manufacturerData,
             CBAdvertisementDataIsConnectable: false
         ]
 
@@ -173,23 +173,17 @@ final class BLEManager: NSObject, ObservableObject {
         return compact
     }
 
-    private func decodeToken(fromAdvertisementData advertisementData: [String: Any]) -> String? {
-        if
-            let localName = advertisementData[CBAdvertisementDataLocalNameKey] as? String,
-            let token = decodeToken(fromLocalName: localName)
-        {
-            return token
-        }
-
-        return decodeToken(fromManufacturerData: advertisementData)
+    private func buildManufacturerData(token: String) -> Data {
+        var bytes: [UInt8] = [
+            UInt8(Constants.manufacturerID & 0x00FF),
+            UInt8((Constants.manufacturerID & 0xFF00) >> 8)
+        ]
+        bytes.append(contentsOf: token.utf8)
+        return Data(bytes)
     }
 
-    private func decodeToken(fromLocalName localName: String) -> String? {
-        guard localName.hasPrefix(Constants.localNamePrefix) else { return nil }
-        let payload = String(localName.dropFirst(Constants.localNamePrefix.count))
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !payload.isEmpty else { return nil }
-        return String(payload.prefix(Constants.maxTokenLength))
+    private func decodeToken(fromAdvertisementData advertisementData: [String: Any]) -> String? {
+        return decodeToken(fromManufacturerData: advertisementData)
     }
 
     private func decodeToken(fromManufacturerData advertisementData: [String: Any]) -> String? {
