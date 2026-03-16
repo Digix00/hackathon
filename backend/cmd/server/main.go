@@ -99,11 +99,7 @@ func main() {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok", "db": "postgres"})
 	})
 
-	handler.RegisterRoutes(e, handler.Dependencies{
-		AuthTokenVerifier: authClient,
-		AuthUserManager:   authClient,
-		DB:                db,
-	})
+	handler.RegisterRoutes(e, buildDependencies(db, authClient))
 
 	log.Info("server starting", zap.String("port", cfg.Port))
 
