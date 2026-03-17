@@ -31,3 +31,30 @@ func (r *blockRepository) ExistsBetween(ctx context.Context, userID1, userID2 st
 	}
 	return count > 0, nil
 }
+
+func (r *blockRepository) ListBlockedUserIDs(ctx context.Context, requesterID string, targetUserIDs []string) (map[string]bool, error) {
+	if len(targetUserIDs) == 0 {
+		return map[string]bool{}, nil
+	}
+
+	var blocks []model.Block
+	err := r.db.WithContext(ctx).
+		Where(
+			"(blocker_user_id = ? AND blocked_user_id IN ?) OR (blocked_user_id = ? AND blocker_user_id IN ?)",
+			requesterID, targetUserIDs, requesterID, targetUserIDs,
+		).
+		Find(&blocks).Error
+	if err != nil {
+		return nil, err
+	}
+
+	blocked := make(map[string]bool, len(blocks))
+	for _, b := range blocks {
+		if b.BlockerUserID == requesterID {
+			blocked[b.BlockedUserID] = true
+		} else if b.BlockedUserID == requesterID {
+			blocked[b.BlockerUserID] = true
+		}
+	}
+	return blocked, nil
+}

@@ -151,6 +151,7 @@ func newTestServer(t *testing.T, db *gorm.DB, authUID string) *echo.Echo {
 		SettingsUsecase:   usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
 		PushTokenUsecase:  usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
 		BleTokenUsecase:   usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
+		EncounterUsecase:  usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
 	})
 	return e
 }

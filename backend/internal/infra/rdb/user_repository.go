@@ -54,6 +54,27 @@ func (r *userRepository) FindByID(ctx context.Context, id string) (entity.User, 
 	return converter.ModelToEntityUser(user), nil
 }
 
+func (r *userRepository) FindByIDs(ctx context.Context, ids []string) (map[string]entity.User, error) {
+	if len(ids) == 0 {
+		return map[string]entity.User{}, nil
+	}
+
+	var users []model.User
+	if err := r.db.WithContext(ctx).
+		Preload("AvatarFile").
+		Preload("Prefecture").
+		Where("id IN ?", ids).
+		Find(&users).Error; err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]entity.User, len(users))
+	for _, u := range users {
+		result[u.ID] = converter.ModelToEntityUser(u)
+	}
+	return result, nil
+}
+
 func (r *userRepository) Create(ctx context.Context, params repository.CreateUserParams) (entity.User, error) {
 	var created model.User
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
