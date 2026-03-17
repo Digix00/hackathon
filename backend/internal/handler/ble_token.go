@@ -19,6 +19,7 @@ func newBleTokenHandler(u usecase.BleTokenUsecase) *bleTokenHandler {
 }
 
 // createBleToken godoc
+// @ID           createBleToken
 // @Summary      BLE トークン発行
 // @Description  現在ログインしているユーザーの新規 BLE トークンを発行する（24時間有効）
 // @Tags         ble-tokens
@@ -49,6 +50,7 @@ func (h *bleTokenHandler) createBleToken(c echo.Context) error {
 }
 
 // getCurrentBleToken godoc
+// @ID           getCurrentBleToken
 // @Summary      有効な BLE トークン取得
 // @Description  現在ログインしているユーザーの有効な最新の BLE トークンを取得する
 // @Tags         ble-tokens
@@ -80,6 +82,7 @@ func (h *bleTokenHandler) getCurrentBleToken(c echo.Context) error {
 }
 
 // getUserByBleToken godoc
+// @ID           getUserByBleToken
 // @Summary      BLE トークンからユーザー情報取得
 // @Description  指定した BLE トークンに紐づくユーザーの公開プロフィールを取得する
 // @Tags         ble-tokens
