@@ -17,34 +17,25 @@ type BleTokenUsecase interface {
 	// GetCurrentBleToken retrieves the currently valid BLE token for the user
 	GetCurrentBleToken(ctx context.Context, authUID string) (usecasedto.BleTokenDTO, error)
 
-	// GetBleUserByToken looks up and returns public profile info of the target user who broadcasted the token
-	GetBleUserByToken(ctx context.Context, requesterAuthUID string, tokenStr string) (usecasedto.PublicUserDTO, error)
+	// GetBleUserByToken looks up and returns the minimal public info of the user who broadcasted the token
+	GetBleUserByToken(ctx context.Context, requesterAuthUID string, tokenStr string) (usecasedto.BleUserDTO, error)
 }
 
 type bleTokenUsecase struct {
-	bleTokenRepo     repository.BleTokenRepository
-	userRepo         repository.UserRepository
-	blockRepo        repository.BlockRepository
-	userSettingsRepo repository.UserSettingsRepository
-	encounterRepo    repository.EncounterRepository
-	trackRepo        repository.UserCurrentTrackRepository
+	bleTokenRepo repository.BleTokenRepository
+	userRepo     repository.UserRepository
+	blockRepo    repository.BlockRepository
 }
 
 func NewBleTokenUsecase(
 	bleTokenRepo repository.BleTokenRepository,
 	userRepo repository.UserRepository,
 	blockRepo repository.BlockRepository,
-	userSettingsRepo repository.UserSettingsRepository,
-	encounterRepo repository.EncounterRepository,
-	trackRepo repository.UserCurrentTrackRepository,
 ) BleTokenUsecase {
 	return &bleTokenUsecase{
-		bleTokenRepo:     bleTokenRepo,
-		userRepo:         userRepo,
-		blockRepo:        blockRepo,
-		userSettingsRepo: userSettingsRepo,
-		encounterRepo:    encounterRepo,
-		trackRepo:        trackRepo,
+		bleTokenRepo: bleTokenRepo,
+		userRepo:     userRepo,
+		blockRepo:    blockRepo,
 	}
 }
 
@@ -90,34 +81,43 @@ func (u *bleTokenUsecase) GetCurrentBleToken(ctx context.Context, authUID string
 	}, nil
 }
 
-func (u *bleTokenUsecase) GetBleUserByToken(ctx context.Context, requesterAuthUID string, tokenStr string) (usecasedto.PublicUserDTO, error) {
+func (u *bleTokenUsecase) GetBleUserByToken(ctx context.Context, requesterAuthUID string, tokenStr string) (usecasedto.BleUserDTO, error) {
 	tokenEntity, err := u.bleTokenRepo.FindByToken(ctx, tokenStr)
 	if err != nil {
-		return usecasedto.PublicUserDTO{}, err
+		return usecasedto.BleUserDTO{}, err
 	}
 
 	now := time.Now().UTC()
 	if !tokenEntity.IsValid(now) {
-		return usecasedto.PublicUserDTO{}, domainerrs.NotFound("BLE token has expired")
+		return usecasedto.BleUserDTO{}, domainerrs.NotFound("BLE token has expired")
 	}
 
 	requester, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, firebaseProvider, requesterAuthUID)
 	if err != nil {
-		return usecasedto.PublicUserDTO{}, err
+		return usecasedto.BleUserDTO{}, err
 	}
 
 	blocked, err := u.blockRepo.ExistsBetween(ctx, requester.ID, tokenEntity.UserID)
 	if err != nil {
-		return usecasedto.PublicUserDTO{}, err
+		return usecasedto.BleUserDTO{}, err
 	}
 	if blocked {
-		return usecasedto.PublicUserDTO{}, domainerrs.NotFound("User was not found")
+		return usecasedto.BleUserDTO{}, domainerrs.NotFound("User was not found")
 	}
 
 	target, err := u.userRepo.FindByID(ctx, tokenEntity.UserID)
 	if err != nil {
-		return usecasedto.PublicUserDTO{}, err
+		return usecasedto.BleUserDTO{}, err
 	}
 
-	return buildPublicUserDTO(ctx, target, u.userSettingsRepo, u.encounterRepo, u.trackRepo)
+	displayName := ""
+	if target.Name != nil {
+		displayName = *target.Name
+	}
+
+	return usecasedto.BleUserDTO{
+		ID:          target.ID,
+		DisplayName: displayName,
+		AvatarURL:   target.AvatarURL,
+	}, nil
 }

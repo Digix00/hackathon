@@ -68,7 +68,7 @@ func TestCreateBleToken(t *testing.T) {
 		byToken:  make(map[string]entity.BleToken),
 	}
 
-	uc := NewBleTokenUsecase(bleRepo, userRepo, &stubBlockRepo{}, &stubUserSettingsRepo{}, &stubEncounterRepo{}, &stubTrackRepo{})
+	uc := NewBleTokenUsecase(bleRepo, userRepo, &stubBlockRepo{})
 
 	token, err := uc.CreateBleToken(context.Background(), authUID)
 	if err != nil {
@@ -107,7 +107,7 @@ func TestGetCurrentBleToken(t *testing.T) {
 		byToken: make(map[string]entity.BleToken),
 	}
 
-	uc := NewBleTokenUsecase(bleRepo, userRepo, &stubBlockRepo{}, &stubUserSettingsRepo{}, &stubEncounterRepo{}, &stubTrackRepo{})
+	uc := NewBleTokenUsecase(bleRepo, userRepo, &stubBlockRepo{})
 
 	token, err := uc.GetCurrentBleToken(context.Background(), authUID)
 	if err != nil {
@@ -147,7 +147,7 @@ func TestGetBleUserByToken(t *testing.T) {
 		},
 	}
 
-	uc := NewBleTokenUsecase(bleRepo, userRepo, &stubBlockRepo{}, &stubUserSettingsRepo{data: make(map[string]entity.UserSettings)}, &stubEncounterRepo{}, &stubTrackRepo{})
+	uc := NewBleTokenUsecase(bleRepo, userRepo, &stubBlockRepo{})
 
 	pub, err := uc.GetBleUserByToken(context.Background(), requesterAuthUID, tokenStr)
 	if err != nil {

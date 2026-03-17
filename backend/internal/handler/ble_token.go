@@ -26,6 +26,7 @@ func newBleTokenHandler(u usecase.BleTokenUsecase) *bleTokenHandler {
 // @Produce      json
 // @Success      201  {object}  response.BleTokenResponse
 // @Failure      401  {object}  errorResponse
+// @Failure      404  {object}  errorResponse
 // @Failure      500  {object}  errorResponse
 // @Security     BearerAuth
 // @Router       /api/v1/ble-tokens [post]
@@ -89,6 +90,7 @@ func (h *bleTokenHandler) getCurrentBleToken(c echo.Context) error {
 // @Produce      json
 // @Param        token path string true "対象の BLE トークン"
 // @Success      200  {object}  response.BleTokenUserResponse
+// @Failure      400  {object}  errorResponse
 // @Failure      401  {object}  errorResponse
 // @Failure      404  {object}  errorResponse
 // @Failure      500  {object}  errorResponse
