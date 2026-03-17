@@ -368,3 +368,29 @@ extension BLEManager: CBPeripheralManagerDelegate {
         applyAdvertisingState()
     }
 }
+
+#if DEBUG
+extension BLEManager {
+    struct TestAdvertisingPayload: Equatable {
+        let backendToken: String
+        let tokenUUID: CBUUID
+    }
+
+    func _test_makeAdvertisingPayload(token: String) -> TestAdvertisingPayload? {
+        guard let payload = makeAdvertisingPayload(token: token) else { return nil }
+        return TestAdvertisingPayload(backendToken: payload.backendToken, tokenUUID: payload.tokenUUID)
+    }
+
+    func _test_decodeToken(fromAdvertisementData advertisementData: [String: Any]) -> String? {
+        decodeToken(fromAdvertisementData: advertisementData)
+    }
+
+    func _test_shouldEmitDetection(token: String, rssi: NSNumber, now: Date) -> Bool {
+        shouldEmitDetection(token: token, rssi: rssi, now: now)
+    }
+
+    func _test_resetCaches() {
+        resetCooldownCache()
+    }
+}
+#endif
