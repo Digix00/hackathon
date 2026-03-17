@@ -125,61 +125,7 @@ func (u *userUsecase) GetUserByID(ctx context.Context, requesterAuthUID string, 
 		return usecasedto.PublicUserDTO{}, err
 	}
 
-	profileVisible := true
-	trackVisible := true
-	settings, settingsErr := u.userSettingsRepo.FindByUserID(ctx, target.ID)
-	if settingsErr == nil {
-		profileVisible = settings.ProfileVisible
-		trackVisible = settings.TrackVisible
-	} else if !errors.Is(settingsErr, domainerrs.ErrNotFound) {
-		return usecasedto.PublicUserDTO{}, settingsErr
-	}
-
-	encounterCount, err := u.encounterRepo.CountByUserID(ctx, target.ID)
-	if err != nil {
-		return usecasedto.PublicUserDTO{}, err
-	}
-
-	displayName := ""
-	if target.Name != nil {
-		displayName = *target.Name
-	}
-
-	ageRange := userCalcAgeRange(target.Birthdate, target.AgeVisibility)
-
-	pub := usecasedto.PublicUserDTO{
-		ID:             target.ID,
-		DisplayName:    displayName,
-		AvatarURL:      target.AvatarURL,
-		Bio:            target.Bio,
-		Birthplace:     target.PrefectureName,
-		AgeRange:       ageRange,
-		EncounterCount: encounterCount,
-		UpdatedAt:      target.UpdatedAt,
-	}
-
-	if !profileVisible {
-		pub.Bio = nil
-		pub.Birthplace = nil
-		pub.AgeRange = nil
-	}
-
-	if trackVisible {
-		track, found, trackErr := u.trackRepo.FindCurrentByUserID(ctx, target.ID)
-		if trackErr != nil {
-			return usecasedto.PublicUserDTO{}, trackErr
-		}
-		if found {
-			pub.SharedTrack = &usecasedto.TrackInfoDTO{
-				ID:         track.ID,
-				Title:      track.Title,
-				ArtistName: track.ArtistName,
-				ArtworkURL: track.ArtworkURL,
-			}
-		}
-	}
-
-	return pub, nil
+	return buildPublicUserDTO(ctx, target, u.userSettingsRepo, u.encounterRepo, u.trackRepo)
 }
 
 func (u *userUsecase) PatchMe(ctx context.Context, authUID string, input usecasedto.UpdateUserInput) (usecasedto.UserDTO, error) {
@@ -257,6 +203,73 @@ func entityToUserDTO(user entity.User) usecasedto.UserDTO {
 		CreatedAt:     user.CreatedAt,
 		UpdatedAt:     user.UpdatedAt,
 	}
+}
+
+// buildPublicUserDTO assembles a PublicUserDTO from a target user entity,
+// applying privacy settings and fetching encounter count and shared track.
+// This logic is used by GetUserByID.
+func buildPublicUserDTO(
+	ctx context.Context,
+	target entity.User,
+	userSettingsRepo repository.UserSettingsRepository,
+	encounterRepo repository.EncounterRepository,
+	trackRepo repository.UserCurrentTrackRepository,
+) (usecasedto.PublicUserDTO, error) {
+	profileVisible := true
+	trackVisible := true
+	settings, settingsErr := userSettingsRepo.FindByUserID(ctx, target.ID)
+	if settingsErr == nil {
+		profileVisible = settings.ProfileVisible
+		trackVisible = settings.TrackVisible
+	} else if !errors.Is(settingsErr, domainerrs.ErrNotFound) {
+		return usecasedto.PublicUserDTO{}, settingsErr
+	}
+
+	encounterCount, err := encounterRepo.CountByUserID(ctx, target.ID)
+	if err != nil {
+		return usecasedto.PublicUserDTO{}, err
+	}
+
+	displayName := ""
+	if target.Name != nil {
+		displayName = *target.Name
+	}
+
+	ageRange := userCalcAgeRange(target.Birthdate, target.AgeVisibility)
+
+	pub := usecasedto.PublicUserDTO{
+		ID:             target.ID,
+		DisplayName:    displayName,
+		AvatarURL:      target.AvatarURL,
+		Bio:            target.Bio,
+		Birthplace:     target.PrefectureName,
+		AgeRange:       ageRange,
+		EncounterCount: encounterCount,
+		UpdatedAt:      target.UpdatedAt,
+	}
+
+	if !profileVisible {
+		pub.Bio = nil
+		pub.Birthplace = nil
+		pub.AgeRange = nil
+	}
+
+	if trackVisible {
+		track, found, trackErr := trackRepo.FindCurrentByUserID(ctx, target.ID)
+		if trackErr != nil {
+			return usecasedto.PublicUserDTO{}, trackErr
+		}
+		if found {
+			pub.SharedTrack = &usecasedto.TrackInfoDTO{
+				ID:         track.ID,
+				Title:      track.Title,
+				ArtistName: track.ArtistName,
+				ArtworkURL: track.ArtworkURL,
+			}
+		}
+	}
+
+	return pub, nil
 }
 
 func userCalcAgeRange(birthdate *time.Time, visibility vo.AgeVisibility) *string {
