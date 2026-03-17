@@ -142,6 +142,7 @@ func newTestServer(t *testing.T, db *gorm.DB, authUID string) *echo.Echo {
 	encounterRepo := rdb.NewEncounterRepository(db)
 	trackRepo := rdb.NewUserCurrentTrackRepository(db)
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
+	reportRepo := rdb.NewReportRepository(db)
 
 	e := echo.New()
 	RegisterRoutes(e, Dependencies{
@@ -151,6 +152,7 @@ func newTestServer(t *testing.T, db *gorm.DB, authUID string) *echo.Echo {
 		SettingsUsecase:   usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
 		PushTokenUsecase:  usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
 		BleTokenUsecase:   usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
+		ReportUsecase:     usecase.NewReportUsecase(userRepo, reportRepo),
 	})
 	return e
 }
