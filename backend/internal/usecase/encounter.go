@@ -83,8 +83,8 @@ func (u *encounterUsecase) CreateEncounter(ctx context.Context, authUID string, 
 	}
 
 	const dedupeWindow = 5 * time.Minute
-	serverNow := time.Now().UTC()
-	if existing, found, err := u.encounterRepo.FindRecentByUsersAndType(ctx, userID1, userID2, encounterType, serverNow, dedupeWindow); err != nil {
+	const dedupeWindow = 5 * time.Minute
+	if existing, found, err := u.encounterRepo.FindRecentByUsersAndType(ctx, userID1, userID2, encounterType, input.OccurredAt, dedupeWindow); err != nil {
 		return usecasedto.EncounterSummaryDTO{}, false, err
 	} else if found {
 		otherUser, err := u.userRepo.FindByID(ctx, otherUserID(existing, requester.ID))
