@@ -103,6 +103,10 @@ func (r *stubEncounterRepo) ListByUserID(_ context.Context, _ string, _ int, _ *
 	return []entity.Encounter{}, nil, false, nil
 }
 
+func (r *stubEncounterRepo) ListByUserIDExcludingBlocked(_ context.Context, _ string, _ int, _ *repository.EncounterCursor) ([]entity.Encounter, *repository.EncounterCursor, bool, error) {
+	return []entity.Encounter{}, nil, false, nil
+}
+
 func (r *stubEncounterRepo) FindByID(_ context.Context, _ string) (entity.Encounter, error) {
 	return entity.Encounter{}, domainerrs.NotFound("not found")
 }

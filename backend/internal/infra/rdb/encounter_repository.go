@@ -154,6 +154,58 @@ func (r *encounterRepository) ListByUserID(ctx context.Context, userID string, l
 	return encounters, nextCursor, hasMore, nil
 }
 
+func (r *encounterRepository) ListByUserIDExcludingBlocked(ctx context.Context, requesterID string, limit int, cursor *repository.EncounterCursor) ([]entity.Encounter, *repository.EncounterCursor, bool, error) {
+	if limit <= 0 {
+		return []entity.Encounter{}, nil, false, nil
+	}
+
+	query := r.db.WithContext(ctx).Model(&model.Encounter{}).
+		Where("user_id1 = ? OR user_id2 = ?", requesterID, requesterID).
+		Where(`
+			NOT EXISTS (
+				SELECT 1 FROM blocks b
+				WHERE
+					(b.blocker_user_id = ? AND b.blocked_user_id = CASE WHEN encounters.user_id1 = ? THEN encounters.user_id2 ELSE encounters.user_id1 END)
+					OR
+					(b.blocked_user_id = ? AND b.blocker_user_id = CASE WHEN encounters.user_id1 = ? THEN encounters.user_id2 ELSE encounters.user_id1 END)
+			)
+		`, requesterID, requesterID, requesterID, requesterID)
+
+	if cursor != nil {
+		query = query.Where(
+			"(encountered_at < ?) OR (encountered_at = ? AND id < ?)",
+			cursor.OccurredAt, cursor.OccurredAt, cursor.ID,
+		)
+	}
+
+	var records []model.Encounter
+	if err := query.
+		Order("encountered_at desc").
+		Order("id desc").
+		Limit(limit + 1).
+		Find(&records).Error; err != nil {
+		return nil, nil, false, err
+	}
+
+	hasMore := false
+	var nextCursor *repository.EncounterCursor
+	if len(records) > limit {
+		hasMore = true
+		last := records[limit-1]
+		nextCursor = &repository.EncounterCursor{
+			OccurredAt: last.EncounteredAt,
+			ID:         last.ID,
+		}
+		records = records[:limit]
+	}
+
+	encounters := make([]entity.Encounter, 0, len(records))
+	for _, rec := range records {
+		encounters = append(encounters, modelToEntityEncounter(rec))
+	}
+	return encounters, nextCursor, hasMore, nil
+}
+
 func (r *encounterRepository) FindByID(ctx context.Context, encounterID string) (entity.Encounter, error) {
 	var encounter model.Encounter
 	err := r.db.WithContext(ctx).

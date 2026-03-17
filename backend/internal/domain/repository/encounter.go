@@ -31,6 +31,8 @@ type EncounterRepository interface {
 
 	ListByUserID(ctx context.Context, userID string, limit int, cursor *EncounterCursor) ([]entity.Encounter, *EncounterCursor, bool, error)
 
+	ListByUserIDExcludingBlocked(ctx context.Context, requesterID string, limit int, cursor *EncounterCursor) ([]entity.Encounter, *EncounterCursor, bool, error)
+
 	FindByID(ctx context.Context, encounterID string) (entity.Encounter, error)
 
 	ListTracksByEncounterIDs(ctx context.Context, encounterIDs []string) (map[string][]entity.TrackInfo, error)

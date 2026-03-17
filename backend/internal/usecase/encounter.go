@@ -145,7 +145,7 @@ func (u *encounterUsecase) ListEncounters(ctx context.Context, authUID string, l
 		return nil, nil, false, err
 	}
 
-	encounters, nextCursor, hasMore, err := u.encounterRepo.ListByUserID(ctx, requester.ID, limit, parsedCursor)
+	encounters, nextCursor, hasMore, err := u.encounterRepo.ListByUserIDExcludingBlocked(ctx, requester.ID, limit, parsedCursor)
 	if err != nil {
 		return nil, nil, false, err
 	}
@@ -171,11 +171,6 @@ func (u *encounterUsecase) ListEncounters(ctx context.Context, authUID string, l
 		otherIDs = append(otherIDs, otherUserID(enc, requester.ID))
 	}
 
-	blockedIDs, err := u.blockRepo.ListBlockedUserIDs(ctx, requester.ID, otherIDs)
-	if err != nil {
-		return nil, nil, false, err
-	}
-
 	userMap, err := u.userRepo.FindByIDs(ctx, otherIDs)
 	if err != nil {
 		return nil, nil, false, err
@@ -183,9 +178,6 @@ func (u *encounterUsecase) ListEncounters(ctx context.Context, authUID string, l
 
 	for _, enc := range encounters {
 		otherID := otherUserID(enc, requester.ID)
-		if blockedIDs[otherID] {
-			continue
-		}
 		other, ok := userMap[otherID]
 		if !ok {
 			continue
