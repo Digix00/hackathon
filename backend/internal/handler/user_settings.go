@@ -20,6 +20,18 @@ func newSettingsHandler(settingsUsecase usecase.SettingsUsecase) *settingsHandle
 	return &settingsHandler{settingsUsecase: settingsUsecase}
 }
 
+// getMySettings godoc
+// @ID           getMySettings
+// @Summary      自分の設定取得
+// @Description  認証中のユーザーのアプリ設定を返す
+// @Tags         settings
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  schemares.SettingsResponse
+// @Failure      401  {object}  errorResponse
+// @Failure      404  {object}  errorResponse
+// @Failure      500  {object}  errorResponse
+// @Router       /api/v1/users/me/settings [get]
 func (h *settingsHandler) getMySettings(c echo.Context) error {
 	uid, ok := middleware.UserIDFromContext(c)
 	if !ok {
@@ -34,6 +46,21 @@ func (h *settingsHandler) getMySettings(c echo.Context) error {
 	return c.JSON(http.StatusOK, schemares.SettingsResponse{Settings: settingsDTOToResponse(settings)})
 }
 
+// patchMySettings godoc
+// @ID           patchMySettings
+// @Summary      自分の設定更新
+// @Description  指定したフィールドだけを部分更新する（null フィールドは変更しない）
+// @Tags         settings
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body      schemareq.UpdateSettingsRequest  true  "設定更新リクエスト"
+// @Success      200   {object}  schemares.SettingsResponse
+// @Failure      400   {object}  errorResponse
+// @Failure      401   {object}  errorResponse
+// @Failure      404   {object}  errorResponse
+// @Failure      500   {object}  errorResponse
+// @Router       /api/v1/users/me/settings [patch]
 func (h *settingsHandler) patchMySettings(c echo.Context) error {
 	uid, ok := middleware.UserIDFromContext(c)
 	if !ok {

@@ -2,7 +2,7 @@
 // @version         1.0
 // @description     MusicSwapping バックエンド API
 // @host            localhost:8000
-// @BasePath        /api/v1
+// @BasePath        /
 // @securityDefinitions.apikey BearerAuth
 // @in              header
 // @name            Authorization
@@ -81,11 +81,43 @@ func main() {
 		log.Info("swagger UI enabled", zap.String("url", "http://localhost:"+cfg.Port+"/swagger/index.html"))
 	}
 
-	e.GET("/healthz", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
-	})
+	e.GET("/healthz", healthzHandler)
+	e.GET("/healthz/postgres", healthzPostgresHandler(sqlDB))
 
-	e.GET("/healthz/postgres", func(c echo.Context) error {
+	handler.RegisterRoutes(e, buildDependencies(db, authClient))
+
+	log.Info("server starting", zap.String("port", cfg.Port))
+
+	if err := e.Start(":" + cfg.Port); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatal("server error", zap.Error(err))
+	}
+}
+
+// healthzHandler godoc
+// @ID           healthz
+// @Summary      ヘルスチェック
+// @Description  サーバーが起動しているか確認する
+// @Tags         health
+// @Produce      json
+// @Success      200  {object}  map[string]string
+// @Router       /healthz [get]
+func healthzHandler(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
+}
+
+// healthzPostgresHandler godoc
+// @ID           healthzPostgres
+// @Summary      PostgreSQL ヘルスチェック
+// @Description  PostgreSQL への接続を確認する（タイムアウト 5s）
+// @Tags         health
+// @Produce      json
+// @Success      200  {object}  map[string]string
+// @Failure      503  {object}  map[string]string
+// @Router       /healthz/postgres [get]
+func healthzPostgresHandler(sqlDB interface {
+	PingContext(context.Context) error
+}) echo.HandlerFunc {
+	return func(c echo.Context) error {
 		ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 		defer cancel()
 
@@ -97,13 +129,5 @@ func main() {
 		}
 
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok", "db": "postgres"})
-	})
-
-	handler.RegisterRoutes(e, buildDependencies(db, authClient))
-
-	log.Info("server starting", zap.String("port", cfg.Port))
-
-	if err := e.Start(":" + cfg.Port); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Fatal("server error", zap.Error(err))
 	}
 }

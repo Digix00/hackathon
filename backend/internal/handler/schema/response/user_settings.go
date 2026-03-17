@@ -1,9 +1,11 @@
 package response
 
+// @name SettingsResponse
 type SettingsResponse struct {
 	Settings Settings `json:"settings"`
 }
 
+// @name Settings
 type Settings struct {
 	BleEnabled                      bool    `json:"ble_enabled"`
 	LocationEnabled                 bool    `json:"location_enabled"`
@@ -16,10 +18,10 @@ type Settings struct {
 	NotificationEnabled             bool    `json:"notification_enabled"`
 	EncounterNotificationEnabled    bool    `json:"encounter_notification_enabled"`
 	BatchNotificationEnabled        bool    `json:"batch_notification_enabled"`
-	NotificationFrequency           string  `json:"notification_frequency"`
+	NotificationFrequency           string  `json:"notification_frequency" enums:"immediate,hourly,daily"`
 	CommentNotificationEnabled      bool    `json:"comment_notification_enabled"`
 	LikeNotificationEnabled         bool    `json:"like_notification_enabled"`
 	AnnouncementNotificationEnabled bool    `json:"announcement_notification_enabled"`
-	ThemeMode                       string  `json:"theme_mode"`
+	ThemeMode                       string  `json:"theme_mode" enums:"light,dark,system"`
 	UpdatedAt                       string  `json:"updated_at"`
 }

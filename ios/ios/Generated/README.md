@@ -22,14 +22,42 @@ Run `pod install`
 
 ## Documentation for API Endpoints
 
-All URIs are relative to *http://localhost:8000/api/v1*
+All URIs are relative to *http://localhost:8000*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*HealthAPI* | [**healthz**](docs/HealthAPI.md#healthz) | **GET** /healthz | ヘルスチェック
+*HealthAPI* | [**healthzPostgres**](docs/HealthAPI.md#healthzpostgres) | **GET** /healthz/postgres | PostgreSQL ヘルスチェック
+*PushTokensAPI* | [**createPushToken**](docs/PushTokensAPI.md#createpushtoken) | **POST** /api/v1/users/me/push-tokens | プッシュトークン登録（upsert）
+*PushTokensAPI* | [**deletePushToken**](docs/PushTokensAPI.md#deletepushtoken) | **DELETE** /api/v1/users/me/push-tokens/{id} | プッシュトークン削除
+*PushTokensAPI* | [**patchPushToken**](docs/PushTokensAPI.md#patchpushtoken) | **PATCH** /api/v1/users/me/push-tokens/{id} | プッシュトークン更新
+*SettingsAPI* | [**getMySettings**](docs/SettingsAPI.md#getmysettings) | **GET** /api/v1/users/me/settings | 自分の設定取得
+*SettingsAPI* | [**patchMySettings**](docs/SettingsAPI.md#patchmysettings) | **PATCH** /api/v1/users/me/settings | 自分の設定更新
+*UsersAPI* | [**createUser**](docs/UsersAPI.md#createuser) | **POST** /api/v1/users | ユーザー作成
+*UsersAPI* | [**deleteMe**](docs/UsersAPI.md#deleteme) | **DELETE** /api/v1/users/me | 自分のアカウント削除
+*UsersAPI* | [**getMe**](docs/UsersAPI.md#getme) | **GET** /api/v1/users/me | 自分のユーザー情報取得
+*UsersAPI* | [**getUserByID**](docs/UsersAPI.md#getuserbyid) | **GET** /api/v1/users/{id} | 他ユーザーのプロフィール取得
+*UsersAPI* | [**patchMe**](docs/UsersAPI.md#patchme) | **PATCH** /api/v1/users/me | 自分のプロフィール更新
 
 
 ## Documentation For Models
 
+ - [HackathonInternalHandlerSchemaRequestCreatePushTokenRequest](docs/HackathonInternalHandlerSchemaRequestCreatePushTokenRequest.md)
+ - [HackathonInternalHandlerSchemaRequestCreateUserRequest](docs/HackathonInternalHandlerSchemaRequestCreateUserRequest.md)
+ - [HackathonInternalHandlerSchemaRequestUpdatePushTokenRequest](docs/HackathonInternalHandlerSchemaRequestUpdatePushTokenRequest.md)
+ - [HackathonInternalHandlerSchemaRequestUpdateSettingsRequest](docs/HackathonInternalHandlerSchemaRequestUpdateSettingsRequest.md)
+ - [HackathonInternalHandlerSchemaRequestUpdateUserRequest](docs/HackathonInternalHandlerSchemaRequestUpdateUserRequest.md)
+ - [HackathonInternalHandlerSchemaResponseDevice](docs/HackathonInternalHandlerSchemaResponseDevice.md)
+ - [HackathonInternalHandlerSchemaResponseDeviceResponse](docs/HackathonInternalHandlerSchemaResponseDeviceResponse.md)
+ - [HackathonInternalHandlerSchemaResponsePublicTrack](docs/HackathonInternalHandlerSchemaResponsePublicTrack.md)
+ - [HackathonInternalHandlerSchemaResponsePublicUser](docs/HackathonInternalHandlerSchemaResponsePublicUser.md)
+ - [HackathonInternalHandlerSchemaResponsePublicUserResponse](docs/HackathonInternalHandlerSchemaResponsePublicUserResponse.md)
+ - [HackathonInternalHandlerSchemaResponseSettings](docs/HackathonInternalHandlerSchemaResponseSettings.md)
+ - [HackathonInternalHandlerSchemaResponseSettingsResponse](docs/HackathonInternalHandlerSchemaResponseSettingsResponse.md)
+ - [HackathonInternalHandlerSchemaResponseUser](docs/HackathonInternalHandlerSchemaResponseUser.md)
+ - [HackathonInternalHandlerSchemaResponseUserResponse](docs/HackathonInternalHandlerSchemaResponseUserResponse.md)
+ - [InternalHandlerErrorBody](docs/InternalHandlerErrorBody.md)
+ - [InternalHandlerErrorResponse](docs/InternalHandlerErrorResponse.md)
 
 
 <a id="documentation-for-authorization"></a>
@@ -54,5 +82,6 @@ https://openapi-generator.tech/docs/faq-generators#how-do-i-migrate-from-the-swi
 https://openapi-generator.tech/docs/faq-generators#how-do-i-implement-bearer-token-authentication-with-urlsession-on-the-swift-5-api-client
 
 ## Author
+
 
 

@@ -1,11 +1,687 @@
-basePath: /api/v1
+basePath: /
+definitions:
+  hackathon_internal_handler_schema_request.CreatePushTokenRequest:
+    properties:
+      app_version:
+        type: string
+      device_id:
+        type: string
+      platform:
+        enum:
+        - ios
+        - android
+        type: string
+      push_token:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_request.CreateUserRequest:
+    properties:
+      age_visibility:
+        enum:
+        - hidden
+        - exact
+        - by-10
+        type: string
+      avatar_url:
+        type: string
+      bio:
+        type: string
+      birthdate:
+        type: string
+      display_name:
+        type: string
+      prefecture_id:
+        type: string
+      sex:
+        enum:
+        - male
+        - female
+        - other
+        - no-answer
+        type: string
+    type: object
+  hackathon_internal_handler_schema_request.UpdatePushTokenRequest:
+    properties:
+      app_version:
+        type: string
+      enabled:
+        type: boolean
+      push_token:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_request.UpdateSettingsRequest:
+    properties:
+      announcement_notification_enabled:
+        type: boolean
+      batch_notification_enabled:
+        type: boolean
+      ble_enabled:
+        type: boolean
+      comment_notification_enabled:
+        type: boolean
+      detection_distance:
+        type: integer
+      encounter_notification_enabled:
+        type: boolean
+      like_notification_enabled:
+        type: boolean
+      location_enabled:
+        type: boolean
+      notification_enabled:
+        type: boolean
+      notification_frequency:
+        enum:
+        - immediate
+        - hourly
+        - daily
+        type: string
+      profile_visible:
+        type: boolean
+      schedule_enabled:
+        type: boolean
+      schedule_end_time:
+        type: string
+      schedule_start_time:
+        type: string
+      theme_mode:
+        enum:
+        - light
+        - dark
+        - system
+        type: string
+      track_visible:
+        type: boolean
+    type: object
+  hackathon_internal_handler_schema_request.UpdateUserRequest:
+    properties:
+      age_visibility:
+        enum:
+        - hidden
+        - exact
+        - by-10
+        type: string
+      avatar_url:
+        type: string
+      bio:
+        type: string
+      birthdate:
+        type: string
+      display_name:
+        type: string
+      prefecture_id:
+        type: string
+      sex:
+        enum:
+        - male
+        - female
+        - other
+        - no-answer
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.Device:
+    properties:
+      device_id:
+        type: string
+      enabled:
+        type: boolean
+      id:
+        type: string
+      platform:
+        enum:
+        - ios
+        - android
+        type: string
+      updated_at:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.DeviceResponse:
+    properties:
+      device:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.Device'
+    type: object
+  hackathon_internal_handler_schema_response.PublicTrack:
+    properties:
+      artist_name:
+        type: string
+      artwork_url:
+        type: string
+      id:
+        type: string
+      preview_url:
+        type: string
+      title:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.PublicUser:
+    properties:
+      age_range:
+        type: string
+      avatar_url:
+        type: string
+      bio:
+        type: string
+      birthplace:
+        type: string
+      display_name:
+        type: string
+      encounter_count:
+        type: integer
+      id:
+        type: string
+      shared_track:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.PublicTrack'
+      updated_at:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.PublicUserResponse:
+    properties:
+      user:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.PublicUser'
+    type: object
+  hackathon_internal_handler_schema_response.Settings:
+    properties:
+      announcement_notification_enabled:
+        type: boolean
+      batch_notification_enabled:
+        type: boolean
+      ble_enabled:
+        type: boolean
+      comment_notification_enabled:
+        type: boolean
+      detection_distance:
+        type: integer
+      encounter_notification_enabled:
+        type: boolean
+      like_notification_enabled:
+        type: boolean
+      location_enabled:
+        type: boolean
+      notification_enabled:
+        type: boolean
+      notification_frequency:
+        enum:
+        - immediate
+        - hourly
+        - daily
+        type: string
+      profile_visible:
+        type: boolean
+      schedule_enabled:
+        type: boolean
+      schedule_end_time:
+        type: string
+      schedule_start_time:
+        type: string
+      theme_mode:
+        enum:
+        - light
+        - dark
+        - system
+        type: string
+      track_visible:
+        type: boolean
+      updated_at:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.SettingsResponse:
+    properties:
+      settings:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.Settings'
+    type: object
+  hackathon_internal_handler_schema_response.User:
+    properties:
+      age_visibility:
+        enum:
+        - hidden
+        - exact
+        - by-10
+        type: string
+      avatar_url:
+        type: string
+      bio:
+        type: string
+      birthdate:
+        type: string
+      created_at:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: string
+      prefecture_id:
+        type: string
+      sex:
+        enum:
+        - male
+        - female
+        - other
+        - no-answer
+        type: string
+      updated_at:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.UserResponse:
+    properties:
+      user:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.User'
+    type: object
+  internal_handler.errorBody:
+    properties:
+      code:
+        type: string
+      details:
+        type: object
+      message:
+        type: string
+    type: object
+  internal_handler.errorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/internal_handler.errorBody'
+    type: object
 host: localhost:8000
 info:
   contact: {}
   description: MusicSwapping バックエンド API
   title: MusicSwapping API
   version: "1.0"
-paths: {}
+paths:
+  /api/v1/users:
+    post:
+      consumes:
+      - application/json
+      description: Firebase 認証済みの新規ユーザーを登録する（初回ログイン時に一度だけ呼ぶ）
+      operationId: createUser
+      parameters:
+      - description: ユーザー作成リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: ユーザー作成
+      tags:
+      - users
+  /api/v1/users/{id}:
+    get:
+      description: 指定した ID の公開プロフィールを返す
+      operationId: getUserByID
+      parameters:
+      - description: 対象ユーザー ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.PublicUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 他ユーザーのプロフィール取得
+      tags:
+      - users
+  /api/v1/users/me:
+    delete:
+      description: DB レコードと Firebase アカウントを削除する（Firebase 削除はベストエフォート）
+      operationId: deleteMe
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分のアカウント削除
+      tags:
+      - users
+    get:
+      description: 認証中のユーザー自身のプロフィールを返す
+      operationId: getMe
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分のユーザー情報取得
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: 指定したフィールドだけを部分更新する（null フィールドは変更しない）
+      operationId: patchMe
+      parameters:
+      - description: プロフィール更新リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分のプロフィール更新
+      tags:
+      - users
+  /api/v1/users/me/push-tokens:
+    post:
+      consumes:
+      - application/json
+      description: device_id が既存なら更新して 200、新規なら 201 を返す
+      operationId: createPushToken
+      parameters:
+      - description: プッシュトークン登録リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.CreatePushTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 既存デバイスを更新
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.DeviceResponse'
+        "201":
+          description: 新規デバイスを登録
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.DeviceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: プッシュトークン登録（upsert）
+      tags:
+      - push-tokens
+  /api/v1/users/me/push-tokens/{id}:
+    delete:
+      description: 指定デバイスのレコードを削除する
+      operationId: deletePushToken
+      parameters:
+      - description: デバイス ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: プッシュトークン削除
+      tags:
+      - push-tokens
+    patch:
+      consumes:
+      - application/json
+      description: 指定デバイスのトークン・有効フラグ・アプリバージョンを部分更新する
+      operationId: patchPushToken
+      parameters:
+      - description: デバイス ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: プッシュトークン更新リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.UpdatePushTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.DeviceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: プッシュトークン更新
+      tags:
+      - push-tokens
+  /api/v1/users/me/settings:
+    get:
+      description: 認証中のユーザーのアプリ設定を返す
+      operationId: getMySettings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.SettingsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分の設定取得
+      tags:
+      - settings
+    patch:
+      consumes:
+      - application/json
+      description: 指定したフィールドだけを部分更新する（null フィールドは変更しない）
+      operationId: patchMySettings
+      parameters:
+      - description: 設定更新リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.UpdateSettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.SettingsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分の設定更新
+      tags:
+      - settings
+  /healthz:
+    get:
+      description: サーバーが起動しているか確認する
+      operationId: healthz
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: ヘルスチェック
+      tags:
+      - health
+  /healthz/postgres:
+    get:
+      description: PostgreSQL への接続を確認する（タイムアウト 5s）
+      operationId: healthzPostgres
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: PostgreSQL ヘルスチェック
+      tags:
+      - health
 securityDefinitions:
   BearerAuth:
     description: Firebase ID トークン。"Bearer <token>" の形式で渡す。
