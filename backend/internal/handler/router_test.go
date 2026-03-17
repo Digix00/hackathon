@@ -75,7 +75,7 @@ func newTestDB(t *testing.T) *gorm.DB {
 	})
 
 	return db
-	}
+}
 
 func cleanupPostgresTestDataForRouter(t *testing.T, db *gorm.DB) {
 	t.Helper()
