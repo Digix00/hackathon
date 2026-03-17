@@ -8,6 +8,12 @@
 BLEは **ユーザー識別のための一時トークン交換のみ** に使用し、
 実際のデータ取得・エンカウント判定はバックエンドAPIを利用する。
 
+BLEでは以下を送信しない
+
+- user_id
+- 個人情報
+- 曲情報
+
 本設計書では以下を扱う。
 
 -   BLE通信設計
@@ -26,7 +32,11 @@ API詳細仕様は **API設計書を参照する。**
            ↓
     BLEトークン取得
            ↓
-    クライアントcooldownフィルタ
+    クライアントフィルタ
+      - cooldown
+      - rssi
+      - detection count
+      - debounce
            ↓
     Backend API 呼び出し
            ↓
@@ -56,22 +66,22 @@ BLEは以下のみを担当する。
 -   近距離ユーザー検出
 -   一時トークンの受信
 
-BLEでは **ユーザー情報や曲情報は送信しない。**
+BLEは **ユーザー識別専用**
 
 ------------------------------------------------------------------------
 
 ## 3.2 BLE通信方式
 
-    advertise(ble_token)  ←→  scan
+    advertise(serviceUUIDs = [APP_UUID, TOKEN_UUID])  ←→  scan(APP_UUID)
 
-**connectは使用しない。**
+connectは使用しない
 
 理由
 
--   実装がシンプル
--   電力消費が低い
--   スマホ同士でも安定
--   iOS / Android互換性が高い
+- 接続は不安定
+- 電力消費が増える
+- iOS background制約が多い
+
 
 ------------------------------------------------------------------------
 
@@ -79,47 +89,170 @@ BLEでは **ユーザー情報や曲情報は送信しない。**
 
 BLE advertising payloadは最大 **31 bytes** の制限がある。
 
-本アプリでは **BLEトークンのみ送信する。**
 
-  項目         内容
-  ------------ -------------------
-  送信データ   ble_token
-  格納場所     Manufacturer Data
-  サイズ       8〜16 bytes
+payload構成
+
+|項目|内容|
+|---|---|
+APP_SERVICE_UUID | アプリ識別 |
+TOKEN_UUID | 一時トークン |
+
+advertising
+serviceUUIDs = [
+  APP_SERVICE_UUID,
+  TOKEN_UUID
+]
+
+理由
+
+iOSバックグラウンドではService UUID指定スキャンが必要
+
+BLEはAdvertising PacketとScan Response Packetを使用する。
+
+Local Nameなど追加情報は
+Scan Responseに含まれる可能性がある。
 
 ------------------------------------------------------------------------
 
-## 3.4 BLE Scan / Advertising パラメータ
+# 3.4 Scan方式
 
-BLEは常時スキャンするとバッテリー消費が大きいため
-間欠スキャンを採用する。
+scan(serviceUUIDs=[APP_SERVICE_UUID])
 
-### Scan設定
+token取得
 
-  設定            値
-  --------------- -----------
-  scan_interval   5秒
-  scan_window     2秒
-  mode            low power
+advertisement.serviceUUIDs
+↓
+TOKEN_UUID抽出
 
-### Advertising設定
+## Scan開始条件
 
-  設定                 値
-  -------------------- -----------
-  advertise_interval   1秒
-  advertise_mode       low power
+centralManager.state == poweredOn
+
+## Scan duplicate policy
+
+iOS
+CBCentralManagerScanOptionAllowDuplicatesKey = true
+
+Android
+setReportDelay(0)
+
+# 3.5 Advertising / Scanパラメータ
+
+### iOS
+
+
+scan parameters controlled by OS
+
+
+iOSでは
+
+- scan_interval
+- scan_window
+
+は設定不可
+
+---
+
+### Android
+
+|設定|値|
+|---|---|
+scan_interval | 5s |
+scan_window | 2s |
+scan_mode | low_power |
+
+---
+
+### Advertising
+
+|設定|値|
+|---|---|
+advertise_interval | iOS / Android OS controlled |
+advertise_mode | low_power |
+
+# 3.6 BLE Detection Strategy
+
+BLE検出率向上のため
+以下の3つを組み合わせる
+
+iOSはバックグラウンドスキャン頻度を制限するため
+単純なadvertise + scanでは検出率が低くなる。
+
+そのため以下の戦略を組み合わせる。
+- BLE advertise
+- Opportunistic scan
+- Foreground boost
+
+---
+
+## Opportunistic Scan
+
+スキャンは常時実行せず
+一定周期で短時間のみ実行する
+
+Android
+scan 5秒
+sleep 10秒
+
+iOS
+OS-controlled scan scheduling
+
+iOSではscan intervalをアプリから制御できない
+
+Androidの実装
+
+while appRunning:
+
+  startScan()
+
+  sleep(scanWindow)
+
+  stopScan()
+
+  sleep(scanInterval)
+
+---
+
+## Foreground Boost
+
+アプリがForeground状態のとき
+scan強度を上げる
+
+foreground
+
+continuous scan
+
+background
+
+opportunistic scan
+
 
 ------------------------------------------------------------------------
 
 # 4. BLEトークン設計
 
-ユーザー識別は **サーバーが発行した一時トークン** を使用する。
+ユーザー識別は **サーバーが発行** 
 
 理由
 
 -   ユーザー追跡防止
 -   クライアントにsecretを持たせない
 -   サーバーで失効管理可能
+
+------------------------------------------------------------------------
+## トークンフォーマット
+
+ble_token = 8 bytes
+
+UUID変換
+
+TOKEN_UUID =
+APP_PREFIX(8bytes)
++
+TOKEN(8bytes)
+
+例
+xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 ------------------------------------------------------------------------
 
@@ -131,10 +264,9 @@ BLEは常時スキャンするとバッテリー消費が大きいため
 
 これにより
 
--   トラフィック分散
--   サーバースパイク回避
-
-が可能になる。
+- サーバー負荷を抑えた運用
+- MVPでの実装運用コスト最適化
+- 日次ローテーションによる最低限の追跡防止
 
 ------------------------------------------------------------------------
 
@@ -162,13 +294,38 @@ BLEは同じユーザーを短時間で何度も検出する。
 
 ------------------------------------------------------------------------
 
+## debounce
+
+同一token
+
+
+30秒以内
+API送信禁止
+
+------------------------------------------------------------------------
+
 ## RSSIフィルタ
 
 遠距離ノイズを防ぐため以下を適用する。
 
   条件          処理
   ------------- ------
-  rssi \< -90   無視
+  rssi \< -85   無視
+
+距離目安
+
+|RSSI|距離|
+|---|---|
+-60 | 約1m |
+-70 | 約2m |
+-80 | 約5m |
+
+------------------------------------------------------------------------
+
+## detection count
+
+誤検出防止
+detect_count >= 2
 
 ------------------------------------------------------------------------
 
@@ -189,7 +346,7 @@ APIのRequest / Response仕様は **API設計書を参照する。**
 
     APIリクエスト受信
     ↓
-    ble_token → user_id 解決
+    token → user_id 解決
     ↓
     重複チェック
     ↓
@@ -197,71 +354,96 @@ APIのRequest / Response仕様は **API設計書を参照する。**
     ↓
     Encounter登録
 
-制御
-
--   同一ユーザー1日1回
--   5分以内重複は冪等
--   レート制限
+|制御|内容|
+|---|---|
+1日制限 | 同一ユーザー1日1回 |
+冪等 | 5分以内重複 |
+rate limit | API保護 |
 
 ------------------------------------------------------------------------
 
 # 8. iOS Background 制約
 
-iOSでは以下の制約が存在する。
+iOSでは
 
--   アプリがフォアグラウンドまたはバックグラウンド実行中である必要がある
--   アプリが完全終了（ユーザーがスワイプ終了）した場合BLEは停止
--   iOSはバックグラウンドスキャン頻度を自動制限
+- ユーザーがアプリをスワイプ終了した場合、BLEは停止する
+- background scan throttling
+- scan頻度OS制御
 
-したがって
+また
 
-**完全スリープ状態での検出は保証されない。**
-
-------------------------------------------------------------------------
-
-# 9. Battery対策
-
-BLEスキャンは電力消費が大きいため以下を実施する。
-
--   間欠スキャン
--   low powerモード
--   RSSIフィルタ
--   cooldown制御
-
-さらに以下の場合スキャン停止
-
-  条件            動作
-  --------------- ------
-  BLE設定OFF      停止
-  battery saver   停止
-  schedule外      停止
+- Local Nameはadvertiseされない
+- Service UUIDはoverflow領域
 
 ------------------------------------------------------------------------
 
-# 10. セキュリティ設計
+# 9. iOS Capability
+
+Info.plist
+
+NSBluetoothAlwaysUsageDescription
+
+Capabilities
+
+Background Modes
+→バックグラウンドでBLEを動かすための設定
+
+- bluetooth-central(バックグラウンドでスキャン許可)
+- bluetooth-peripheral（バックグラウンドでアドバタイズ許可）
+
+------------------------------------------------------------------------
+
+# 10. Battery対策
+
+BLEは電力消費が大きい
+
+対策
+
+- low power advertising
+- RSSIフィルタ
+- cooldown
+- debounce
+
+さらに
+
+|条件|動作|
+|---|---|
+BLE OFF | 停止 |
+battery saver | 停止 |
+
+app background long time
+→ scan frequency reduce
+
+------------------------------------------------------------------------
+
+# 11. セキュリティ設計
 
   項目        内容
   ----------- --------------------
   user_id     BLEで送信しない
   token       サーバー発行
-  token期限   24h
+  token期限   24時間
   revoke      サーバーで失効可能
 
 ------------------------------------------------------------------------
 
-# 11. すれ違い処理フロー
+# 12. すれ違い処理フロー
 
-    ① クライアントがBLEトークン取得
+    ① token取得
     ② advertise開始
-    ③ scanで相手トークン検出
-    ④ cooldownチェック
-    ⑤ API送信
-    ⑥ サーバー判定
-    ⑦ encounter登録
+    ③ scan(APP_SERVICE_UUID)
+    ④ TOKEN_UUID取得
+    ⑤ RSSI check
+    ⑥ detection count
+    ⑦ cooldown
+    ⑧ debounce
+    ⑨ API送信
+    ⑩ server判定
+    ⑪ encounter登録
 
 ------------------------------------------------------------------------
 
-# 12. 技術スタック
+# 13. 技術スタック
 
 ## Mobile
 
@@ -279,7 +461,7 @@ PostgreSQL
 
 ------------------------------------------------------------------------
 
-# 13. 将来拡張
+# 14. 将来拡張
 
 -   すれ違い履歴
 -   曲レコメンド

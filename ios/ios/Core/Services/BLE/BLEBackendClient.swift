@@ -1,0 +1,459 @@
+import Foundation
+#if canImport(FirebaseAuth)
+import FirebaseAuth
+#endif
+import Security
+
+struct BLEAdvertisingToken {
+    let token: String
+    let expiresAt: Date
+}
+
+actor BLEBackendClient {
+    private static let apiPrefixSegments = ["api", "v1"]
+    private static let pendingEncounterStorageKey = "ble.pending.encounters.v1"
+    private static let failedEncounterStorageKey = "ble.failed.encounters.v1"
+    private static let initialRetryDelaySeconds: UInt64 = 5
+    private static let maxRetryDelaySeconds: UInt64 = 300
+    private static let maxRetryAttempts = 6
+
+    enum BackendError: Error {
+        case invalidBaseURL
+        case invalidResponse
+        case invalidTokenPayload
+        case missingAuthToken
+        case unexpectedStatus(Int)
+    }
+
+    private let session: URLSession
+    private let baseURL: URL?
+    private let encoder: JSONEncoder
+    private let decoder: JSONDecoder
+    private var pendingEncounters: [PendingEncounter]
+    private var failedEncounters: [FailedEncounter]
+    private var isDrainingQueue = false
+
+    init(session: URLSession = .shared) {
+        self.session = session
+        self.baseURL = Self.resolveBaseURL()
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        self.encoder = encoder
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom(Self.decodeISO8601Date)
+        self.decoder = decoder
+
+        self.pendingEncounters = Self.loadPendingEncounters()
+        self.failedEncounters = Self.loadFailedEncounters()
+        self.startQueueDrainIfNeeded()
+    }
+
+    func fetchOrIssueCurrentToken() async throws -> BLEAdvertisingToken {
+        let current = try await send(path: "ble-tokens/current", method: "GET")
+
+        if current.response.statusCode == 200 {
+            return try parseToken(from: current.data)
+        }
+
+        if current.response.statusCode == 404 {
+            return try await issueToken()
+        }
+
+        throw BackendError.unexpectedStatus(current.response.statusCode)
+    }
+
+    func postEncounter(targetBLEToken: String, rssi: Int, occurredAt: Date) async throws {
+        let request = EncounterCreateRequest(
+            targetBleToken: targetBLEToken,
+            type: "ble",
+            rssi: rssi,
+            occurredAt: occurredAt
+        )
+        let body = try encoder.encode(request)
+        let result = try await send(path: "encounters", method: "POST", body: body)
+
+        guard result.response.statusCode == 200 || result.response.statusCode == 201 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode)
+        }
+    }
+
+    func enqueueEncounter(targetBLEToken: String, rssi: Int, occurredAt: Date) {
+        pendingEncounters.append(
+            PendingEncounter(
+                targetBLEToken: targetBLEToken,
+                rssi: rssi,
+                occurredAtEpochMs: Int64(occurredAt.timeIntervalSince1970 * 1_000),
+                attempts: 0
+            )
+        )
+        persistPendingEncounters()
+        startQueueDrainIfNeeded()
+    }
+
+    private func issueToken() async throws -> BLEAdvertisingToken {
+        let issued = try await send(path: "ble-tokens", method: "POST")
+
+        guard issued.response.statusCode == 200 || issued.response.statusCode == 201 else {
+            throw BackendError.unexpectedStatus(issued.response.statusCode)
+        }
+
+        return try parseToken(from: issued.data)
+    }
+
+    private func parseToken(from data: Data) throws -> BLEAdvertisingToken {
+        let envelope = try decoder.decode(BLETokenEnvelope.self, from: data)
+        let token = envelope.bleToken.token.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !token.isEmpty else {
+            throw BackendError.invalidTokenPayload
+        }
+
+        return BLEAdvertisingToken(token: token, expiresAt: envelope.bleToken.expiresAt)
+    }
+
+    private func send(path: String, method: String, body: Data? = nil) async throws -> (data: Data, response: HTTPURLResponse) {
+        guard
+            let baseURL,
+            var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: true)
+        else {
+            throw BackendError.invalidBaseURL
+        }
+
+        let normalizedPath = path.hasPrefix("/") ? String(path.dropFirst()) : path
+        components.path = Self.buildAPIPath(basePath: components.path, endpointPath: normalizedPath)
+
+        guard let url = components.url else {
+            throw BackendError.invalidBaseURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        let bearerToken = try await fetchBearerToken()
+        request.setValue("Bearer \(bearerToken)", forHTTPHeaderField: "Authorization")
+
+        if let body {
+            request.httpBody = body
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw BackendError.invalidResponse
+        }
+
+        return (data, httpResponse)
+    }
+
+    private func fetchBearerToken() async throws -> String {
+        if let fixed = ProcessInfo.processInfo.environment["FIREBASE_ID_TOKEN"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+            !fixed.isEmpty
+        {
+            return fixed
+        }
+
+#if canImport(FirebaseAuth)
+        guard let user = Auth.auth().currentUser else {
+            throw BackendError.missingAuthToken
+        }
+
+        return try await withCheckedThrowingContinuation { continuation in
+            user.getIDToken { token, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                guard let token, !token.isEmpty else {
+                    continuation.resume(throwing: BackendError.missingAuthToken)
+                    return
+                }
+
+                continuation.resume(returning: token)
+            }
+        }
+#else
+        throw BackendError.missingAuthToken
+#endif
+    }
+
+    private static func resolveBaseURL() -> URL? {
+        let candidates = [
+            ProcessInfo.processInfo.environment["API_BASE_URL"],
+            Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String,
+            "http://localhost:8080"
+        ]
+
+        for raw in candidates {
+            guard let value = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else {
+                continue
+            }
+            if let url = URL(string: value.hasSuffix("/") ? value : value + "/") {
+                return url
+            }
+        }
+
+        return nil
+    }
+
+    private static func decodeISO8601Date(_ decoder: Decoder) throws -> Date {
+        let container = try decoder.singleValueContainer()
+        let string = try container.decode(String.self)
+
+        if let date = iso8601WithFractionalSeconds.date(from: string) ?? ISO8601DateFormatter().date(from: string) {
+            return date
+        }
+
+        throw DecodingError.dataCorruptedError(
+            in: container,
+            debugDescription: "Invalid ISO8601 date: \(string)"
+        )
+    }
+
+    private static let iso8601WithFractionalSeconds: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    private static func buildAPIPath(basePath: String, endpointPath: String) -> String {
+        let baseSegments = pathSegments(from: basePath)
+        let endpointSegments = pathSegments(from: endpointPath)
+
+        let endpointHasPrefix = endpointSegments.starts(with: apiPrefixSegments)
+        let baseHasPrefix = baseSegments.suffix(apiPrefixSegments.count).elementsEqual(apiPrefixSegments)
+        let needsPrefix = !endpointHasPrefix && !baseHasPrefix
+
+        var merged = baseSegments
+        if needsPrefix {
+            merged.append(contentsOf: apiPrefixSegments)
+        }
+        if baseHasPrefix && endpointHasPrefix {
+            merged.append(contentsOf: endpointSegments.dropFirst(apiPrefixSegments.count))
+        } else {
+            merged.append(contentsOf: endpointSegments)
+        }
+
+        return "/" + merged.joined(separator: "/")
+    }
+
+    private static func pathSegments(from rawPath: String) -> [String] {
+        rawPath
+            .split(separator: "/")
+            .map(String.init)
+            .filter { !$0.isEmpty }
+    }
+
+    private func startQueueDrainIfNeeded() {
+        guard !isDrainingQueue, !pendingEncounters.isEmpty else { return }
+
+        isDrainingQueue = true
+        Task {
+            await self.drainPendingEncounterQueue()
+        }
+    }
+
+    private func drainPendingEncounterQueue() async {
+        defer { isDrainingQueue = false }
+
+        var retryDelaySeconds = Self.initialRetryDelaySeconds
+        while !pendingEncounters.isEmpty {
+            var next = pendingEncounters[0]
+            let occurredAt = Date(timeIntervalSince1970: TimeInterval(next.occurredAtEpochMs) / 1_000)
+
+            do {
+                try await postEncounter(
+                    targetBLEToken: next.targetBLEToken,
+                    rssi: next.rssi,
+                    occurredAt: occurredAt
+                )
+                pendingEncounters.removeFirst()
+                persistPendingEncounters()
+                retryDelaySeconds = Self.initialRetryDelaySeconds
+            } catch {
+                if case let BackendError.unexpectedStatus(statusCode) = error,
+                   Self.isPermanentHTTPFailure(statusCode)
+                {
+                    markAsFailedAndDropPending(
+                        encounter: next,
+                        statusCode: statusCode,
+                        reason: "permanent_http_failure"
+                    )
+                    retryDelaySeconds = Self.initialRetryDelaySeconds
+                    continue
+                }
+
+                next.attempts += 1
+                if next.attempts >= Self.maxRetryAttempts {
+                    markAsFailedAndDropPending(
+                        encounter: next,
+                        statusCode: nil,
+                        reason: "max_retry_exceeded"
+                    )
+                    retryDelaySeconds = Self.initialRetryDelaySeconds
+                    continue
+                }
+
+                pendingEncounters[0] = next
+                persistPendingEncounters()
+                try? await Task.sleep(nanoseconds: retryDelaySeconds * 1_000_000_000)
+                retryDelaySeconds = min(retryDelaySeconds * 2, Self.maxRetryDelaySeconds)
+            }
+        }
+    }
+
+    private func markAsFailedAndDropPending(encounter: PendingEncounter, statusCode: Int?, reason: String) {
+        if !pendingEncounters.isEmpty {
+            pendingEncounters.removeFirst()
+        }
+        persistPendingEncounters()
+
+        failedEncounters.append(
+            FailedEncounter(
+                targetBLEToken: encounter.targetBLEToken,
+                rssi: encounter.rssi,
+                occurredAtEpochMs: encounter.occurredAtEpochMs,
+                attempts: encounter.attempts,
+                failedAtEpochMs: Int64(Date().timeIntervalSince1970 * 1_000),
+                statusCode: statusCode,
+                reason: reason
+            )
+        )
+        persistFailedEncounters()
+    }
+
+    private func persistPendingEncounters() {
+        guard let data = try? JSONEncoder().encode(pendingEncounters) else { return }
+        KeychainStore.write(data: data, key: Self.pendingEncounterStorageKey)
+    }
+
+    private static func loadPendingEncounters() -> [PendingEncounter] {
+        guard
+            let data = KeychainStore.readData(key: pendingEncounterStorageKey),
+            let decoded = try? JSONDecoder().decode([PendingEncounter].self, from: data)
+        else {
+            return []
+        }
+        return decoded
+    }
+
+    private func persistFailedEncounters() {
+        guard let data = try? JSONEncoder().encode(failedEncounters) else { return }
+        KeychainStore.write(data: data, key: Self.failedEncounterStorageKey)
+    }
+
+    private static func loadFailedEncounters() -> [FailedEncounter] {
+        guard
+            let data = KeychainStore.readData(key: failedEncounterStorageKey),
+            let decoded = try? JSONDecoder().decode([FailedEncounter].self, from: data)
+        else {
+            return []
+        }
+        return decoded
+    }
+
+    private static func isPermanentHTTPFailure(_ statusCode: Int) -> Bool {
+        if statusCode == 408 || statusCode == 429 {
+            return false
+        }
+        if (400...499).contains(statusCode) {
+            return true
+        }
+        return false
+    }
+}
+
+private struct BLETokenEnvelope: Decodable {
+    let bleToken: BLETokenPayload
+
+    enum CodingKeys: String, CodingKey {
+        case bleToken = "ble_token"
+    }
+}
+
+private struct BLETokenPayload: Decodable {
+    let token: String
+    let expiresAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case token
+        case expiresAt = "expires_at"
+    }
+}
+
+private struct EncounterCreateRequest: Encodable {
+    let targetBleToken: String
+    let type: String
+    let rssi: Int
+    let occurredAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case targetBleToken = "target_ble_token"
+        case type
+        case rssi
+        case occurredAt = "occurred_at"
+    }
+}
+
+private struct PendingEncounter: Codable {
+    let targetBLEToken: String
+    let rssi: Int
+    let occurredAtEpochMs: Int64
+    var attempts: Int
+}
+
+private struct FailedEncounter: Codable {
+    let targetBLEToken: String
+    let rssi: Int
+    let occurredAtEpochMs: Int64
+    let attempts: Int
+    let failedAtEpochMs: Int64
+    let statusCode: Int?
+    let reason: String
+}
+
+private enum KeychainStore {
+    private static let service = Bundle.main.bundleIdentifier ?? "com.digix00.musicswapping.ble"
+
+    static func write(data: Data, key: String) {
+        let baseQuery: [CFString: Any] = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrService: service,
+            kSecAttrAccount: key
+        ]
+
+        let attributes: [CFString: Any] = [
+            kSecValueData: data,
+            kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+
+        let updateStatus = SecItemUpdate(baseQuery as CFDictionary, attributes as CFDictionary)
+        if updateStatus == errSecSuccess {
+            return
+        }
+
+        var addQuery = baseQuery
+        addQuery[kSecValueData] = data
+        addQuery[kSecAttrAccessible] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        SecItemAdd(addQuery as CFDictionary, nil)
+    }
+
+    static func readData(key: String) -> Data? {
+        let query: [CFString: Any] = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrService: service,
+            kSecAttrAccount: key,
+            kSecReturnData: true,
+            kSecMatchLimit: kSecMatchLimitOne
+        ]
+
+        var item: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &item)
+        guard status == errSecSuccess else { return nil }
+        return item as? Data
+    }
+}

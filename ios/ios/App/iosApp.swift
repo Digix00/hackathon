@@ -1,18 +1,21 @@
-//
-//  iosApp.swift
-//  ios
-//
-//  Created by 三村雄斗 on 2026/03/14.
-//
-
 import SwiftUI
 
 @main
 struct iosApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+    @StateObject private var bleCoordinator = BLEAppCoordinator()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .prototypeTypography()
+                .environmentObject(bleCoordinator.bleManager)
+                .task {
+                    bleCoordinator.startIfNeeded(scenePhase: scenePhase)
+                }
+                .onChange(of: scenePhase) { _, newPhase in
+                    bleCoordinator.updateScenePhase(newPhase)
+                }
         }
     }
 }
