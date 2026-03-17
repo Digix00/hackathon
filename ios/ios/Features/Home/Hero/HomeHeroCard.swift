@@ -28,7 +28,7 @@ struct FeaturedTrackHeroCard: View {
                                 )
                         }
 
-                        MockArtworkView(color: track.color, symbol: "music.note", size: 240)
+                        MockArtworkView(color: track.color, symbol: "music.note", size: 240, artwork: track.artwork)
                             .shadow(color: track.color.opacity(0.15), radius: 40, x: 0, y: 20)
                             .offset(x: motionX, y: motionY)
                             .matchedGeometryEffect(id: "hero_artwork_\(track.id)", in: heroNamespace)
