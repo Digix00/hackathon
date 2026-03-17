@@ -99,8 +99,6 @@ func newPostgresIntegrationServer(t *testing.T, db *gorm.DB, authUID string) *ec
 	blockRepo := rdb.NewBlockRepository(db)
 	encounterRepo := rdb.NewEncounterRepository(db)
 	trackRepo := rdb.NewUserCurrentTrackRepository(db)
-	bleTokenRepo := rdb.NewBleTokenRepository(db)
-
 	userUsecase := usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo)
 
 	e := echo.New()
@@ -110,7 +108,7 @@ func newPostgresIntegrationServer(t *testing.T, db *gorm.DB, authUID string) *ec
 		UserUsecase:       userUsecase,
 		SettingsUsecase:   usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
 		PushTokenUsecase:  usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
-		BleTokenUsecase:   usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
+		BleTokenUsecase:   usecase.NewBleTokenUsecase(rdb.NewBleTokenRepository(db), userRepo, blockRepo),
 	})
 	return e
 }
