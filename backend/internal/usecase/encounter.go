@@ -110,25 +110,14 @@ func (u *encounterUsecase) CreateEncounter(ctx context.Context, authUID string, 
 		}
 	}
 
-	// レート制限（ユーザー単位の日次上限）
-	if dailyEncounterUserLimit > 0 {
-		if _, err := u.encounterRepo.IncrementDailyCountWithLimit(ctx, requester.ID, serverNow, dailyEncounterUserLimit); err != nil {
-			return usecasedto.EncounterSummaryDTO{}, false, err
-		}
-	}
-
-	created, err := u.encounterRepo.Create(ctx, entity.Encounter{
+	created, err := u.encounterRepo.CreateWithRateLimit(ctx, entity.Encounter{
 		ID:            uuid.NewString(),
 		UserID1:       userID1,
 		UserID2:       userID2,
 		EncounterType: encounterType,
 		OccurredAt:    input.OccurredAt,
-	})
+	}, []string{requester.ID, tokenEntity.UserID}, requester.ID, serverNow, dailyEncounterUserLimit)
 	if err != nil {
-		return usecasedto.EncounterSummaryDTO{}, false, err
-	}
-
-	if err := u.encounterRepo.CreateTracksFromCurrent(ctx, created.ID, []string{requester.ID, tokenEntity.UserID}); err != nil {
 		return usecasedto.EncounterSummaryDTO{}, false, err
 	}
 

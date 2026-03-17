@@ -253,6 +253,78 @@ func (r *encounterRepository) IncrementDailyCountWithLimit(ctx context.Context, 
 	return count, nil
 }
 
+func (r *encounterRepository) CreateWithRateLimit(ctx context.Context, encounter entity.Encounter, userIDsForTracks []string, dailyLimitUserID string, date time.Time, limit int) (entity.Encounter, error) {
+	start := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
+
+	var created model.Encounter
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if limit > 0 {
+			var count int
+			stmt := `
+				INSERT INTO daily_encounter_counts (id, user_id, date, count, created_at, updated_at)
+				VALUES (?, ?, ?, 1, NOW(), NOW())
+				ON CONFLICT (user_id, date)
+				DO UPDATE SET count = daily_encounter_counts.count + 1, updated_at = NOW()
+				RETURNING count
+			`
+			if err := tx.Raw(stmt, uuid.NewString(), dailyLimitUserID, start).Scan(&count).Error; err != nil {
+				return err
+			}
+			if count > limit {
+				return domainerrs.TooManyRequests("daily encounter limit exceeded")
+			}
+		}
+
+		created = model.Encounter{
+			ID:            encounter.ID,
+			UserID1:       encounter.UserID1,
+			UserID2:       encounter.UserID2,
+			EncounteredAt: encounter.OccurredAt,
+			EncounterType: string(encounter.EncounterType),
+			Latitude:      encounter.Latitude,
+			Longitude:     encounter.Longitude,
+		}
+		if err := tx.Create(&created).Error; err != nil {
+			return err
+		}
+
+		if len(userIDsForTracks) > 0 {
+			var currents []model.UserCurrentTrack
+			if err := tx.
+				Preload("Track").
+				Where("user_id IN ?", userIDsForTracks).
+				Find(&currents).Error; err != nil {
+				return err
+			}
+
+			tracks := make([]model.EncounterTrack, 0, len(currents))
+			for _, current := range currents {
+				if current.Track == nil || current.Track.ID == "" {
+					continue
+				}
+				tracks = append(tracks, model.EncounterTrack{
+					ID:           uuid.NewString(),
+					EncounterID:  created.ID,
+					TrackID:      current.Track.ID,
+					SourceUserID: current.UserID,
+				})
+			}
+			if len(tracks) > 0 {
+				if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&tracks).Error; err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return entity.Encounter{}, err
+	}
+
+	return modelToEntityEncounter(created), nil
+}
+
 func modelToEntityEncounter(encounter model.Encounter) entity.Encounter {
 	return entity.Encounter{
 		ID:            encounter.ID,
