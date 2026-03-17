@@ -11,9 +11,10 @@ struct EncounterDetailView: View {
         ZStack {
             PrototypeTheme.background.ignoresSafeArea()
 
+            // 空間を満たすオーラ
             LinearGradient(
                 colors: [
-                    encounter.track.color.opacity(0.12),
+                    encounter.track.color.opacity(0.1),
                     PrototypeTheme.background
                 ],
                 startPoint: .top,
@@ -28,8 +29,8 @@ struct EncounterDetailView: View {
                         Button {
                             dismiss()
                         } label: {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 20, weight: .bold))
+                            Image(systemName: "arrow.left") // より情緒的な矢印
+                                .font(.system(size: 18, weight: .bold))
                                 .foregroundStyle(PrototypeTheme.textPrimary)
                                 .frame(width: 44, height: 44, alignment: .leading)
                         }
@@ -37,59 +38,56 @@ struct EncounterDetailView: View {
                         Spacer()
 
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text("ENCOUNTERED")
-                                .font(PrototypeTheme.Typography.font(size: 10, weight: .black))
-                                .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
-                                .tracking(1.5)
+                            Text("CONNECTED MOMENT") // 「つながり」の記録
+                                .font(PrototypeTheme.Typography.font(size: 10, weight: .black, role: .data))
+                                .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.5))
+                                .tracking(2.0)
 
                             Text(encounter.relativeTime.uppercased())
                                 .font(PrototypeTheme.Typography.font(size: 12, weight: .bold, role: .data))
                                 .foregroundStyle(encounter.track.color)
                         }
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.top, 16)
+                    .padding(.horizontal, 32)
+                    .padding(.top, 24)
 
-                    // Hero Section: Music + Person
-                    VStack(spacing: 40) {
-                        ZStack(alignment: .bottomTrailing) {
-                            MockArtworkView(color: encounter.track.color, symbol: "music.note", size: 280, artwork: encounter.track.artwork)
-                                .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
-                                .shadow(color: encounter.track.color.opacity(0.25), radius: 50, x: 0, y: 25)
+                    // Hero: 空間を切り取るジャケット
+                    VStack(spacing: 60) {
+                        ZStack {
+                            // 背景のオーラ
+                            Circle()
+                                .fill(encounter.track.color.opacity(0.15))
+                                .frame(width: 400, height: 400)
+                                .blur(radius: 60)
 
-                            EncounterAvatarView(userName: encounter.userName, color: encounter.track.color, size: 84)
-                                .overlay(
-                                    Circle()
-                                        .stroke(PrototypeTheme.background, lineWidth: 6)
-                                )
-                                .offset(x: 24, y: 24)
+                            MockArtworkView(color: encounter.track.color, symbol: "music.note", size: 300)
+                                .clipShape(RoundedRectangle(cornerRadius: 48, style: .continuous))
+                                .shadow(color: encounter.track.color.opacity(0.2), radius: 60, x: 0, y: 30)
                         }
                         .padding(.top, 40)
-                        .padding(.trailing, 24)
 
-                        VStack(spacing: 16) {
-                            VStack(spacing: 4) {
+                        VStack(spacing: 24) {
+                            VStack(spacing: 8) {
                                 Text(encounter.userName)
-                                    .font(PrototypeTheme.Typography.font(size: 18, weight: .bold))
-                                    .foregroundStyle(PrototypeTheme.textSecondary)
+                                    .font(PrototypeTheme.Typography.font(size: 42, weight: .black, role: .primary))
+                                    .foregroundStyle(PrototypeTheme.textPrimary)
+                                    .tracking(-1.5)
                                 
-                                Text("が聴いていた曲")
-                                    .font(PrototypeTheme.Typography.Encounter.eyebrow)
-                                    .foregroundStyle(PrototypeTheme.textTertiary)
+                                Text("との共鳴")
+                                    .font(PrototypeTheme.Typography.font(size: 14, weight: .bold))
+                                    .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
                             }
 
-                            VStack(spacing: 8) {
+                            VStack(spacing: 4) {
                                 Text(encounter.track.title)
-                                    .font(PrototypeTheme.Typography.font(size: 38, weight: .black))
-                                    .foregroundStyle(PrototypeTheme.textPrimary)
-                                    .multilineTextAlignment(.center)
-                                    .lineLimit(2)
-                                    .tracking(-1)
-
-                                Text(encounter.track.artist)
-                                    .font(PrototypeTheme.Typography.font(size: 20, weight: .medium))
+                                    .font(PrototypeTheme.Typography.font(size: 24, weight: .bold, role: .accent))
+                                    .italic()
                                     .foregroundStyle(encounter.track.color)
                                     .multilineTextAlignment(.center)
+                                
+                                Text(encounter.track.artist)
+                                    .font(PrototypeTheme.Typography.font(size: 14, weight: .medium))
+                                    .foregroundStyle(PrototypeTheme.textSecondary)
                             }
                         }
                         .padding(.horizontal, 32)
@@ -97,106 +95,77 @@ struct EncounterDetailView: View {
 
                     // Shared Memory / Lyric
                     if !encounter.lyric.isEmpty {
-                        VStack(alignment: .leading, spacing: 20) {
-                            HStack(spacing: 12) {
-                                Image(systemName: "sparkles")
-                                    .font(.system(size: 18, weight: .bold))
-                                    .foregroundStyle(encounter.track.color)
-                                
-                                Text("記憶の欠片")
-                                    .font(PrototypeTheme.Typography.Encounter.eyebrow)
-                                    .foregroundStyle(PrototypeTheme.textSecondary)
-                            }
+                        VStack(alignment: .leading, spacing: 24) {
+                            Text("記憶の断片")
+                                .font(PrototypeTheme.Typography.font(size: 11, weight: .black, role: .data))
+                                .foregroundStyle(encounter.track.color.opacity(0.6))
+                                .kerning(3)
+                                .padding(.leading, 8)
                             
                             Text(encounter.lyric)
-                                .font(PrototypeTheme.Typography.font(size: 24, weight: .bold, role: .accent))
-                                .italic()
-                                .foregroundStyle(PrototypeTheme.textPrimary)
-                                .lineSpacing(10)
+                                .font(PrototypeTheme.Typography.font(size: 28, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.textPrimary.opacity(0.9))
+                                .lineSpacing(12)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(28)
+                                .padding(40)
                                 .background(
                                     ZStack {
-                                        PrototypeTheme.surface
-                                        encounter.track.color.opacity(0.04)
+                                        // 境界線のない面
+                                        Color.white.opacity(0.01)
+                                        encounter.track.color.opacity(0.03)
                                     }
                                 )
-                                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                                .shadow(color: Color.black.opacity(0.02), radius: 10, x: 0, y: 5)
+                                .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
                         }
                         .padding(.horizontal, 24)
-                        .padding(.top, 64)
+                        .padding(.top, 100)
                     }
 
-                    Spacer(minLength: 160)
+                    Spacer(minLength: 200)
                 }
             }
 
-            // Action Floating Bar
+            // Floating Action: 最小限に
             VStack {
                 Spacer()
-
                 HStack(spacing: 16) {
                     Button(action: {
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     }) {
                         Image(systemName: "heart.fill")
-                            .font(.system(size: 22, weight: .bold))
+                            .font(.system(size: 24, weight: .bold))
                             .foregroundStyle(.white)
-                            .frame(width: 64, height: 64)
+                            .frame(width: 72, height: 72)
                             .background(
-                                LinearGradient(
-                                    colors: [encounter.track.color, encounter.track.color.opacity(0.8)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
+                                Circle()
+                                    .fill(encounter.track.color)
+                                    .shadow(color: encounter.track.color.opacity(0.3), radius: 20, x: 0, y: 10)
                             )
-                            .clipShape(Circle())
-                            .shadow(color: encounter.track.color.opacity(0.3), radius: 15, x: 0, y: 8)
                     }
 
                     Button {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         showsLyricModal = true
                     } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "quote.bubble.fill")
-                                .font(.system(size: 16, weight: .bold))
-                            Text("歌詞を刻む")
-                                .font(.system(size: 16, weight: .bold))
+                        HStack(spacing: 12) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 18, weight: .bold))
+                            Text("想いを刻む")
+                                .font(PrototypeTheme.Typography.font(size: 16, weight: .bold))
                         }
                         .foregroundStyle(PrototypeTheme.textPrimary)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 64)
-                        .background(PrototypeTheme.surfaceElevated)
-                        .clipShape(Capsule())
-                        .shadow(color: Color.black.opacity(0.05), radius: 15, x: 0, y: 8)
-                    }
-
-                    Button(action: {
-                        showsProfile = true
-                    }) {
-                        Image(systemName: "person.crop.circle.fill")
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundStyle(PrototypeTheme.textPrimary)
-                            .frame(width: 64, height: 64)
-                            .background(PrototypeTheme.surface)
-                            .clipShape(Circle())
-                            .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                        .frame(height: 72)
+                        .background(
+                            Capsule()
+                                .fill(PrototypeTheme.surfaceElevated)
+                                .shadow(color: Color.black.opacity(0.08), radius: 20, x: 0, y: 10)
+                        )
                     }
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
+                .padding(.horizontal, 32)
+                .padding(.bottom, 40)
             }
         }
         .navigationBarHidden(true)
-        .ignoresSafeArea(.keyboard)
-        .sheet(isPresented: $showsProfile) {
-            // This is a placeholder for actual user profile
-            Text("Profile View for \(encounter.userName)")
-        }
-        .sheet(isPresented: $showsLyricModal) {
-            LyricInputModalView()
-        }
     }
 }
