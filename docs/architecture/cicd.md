@@ -20,7 +20,7 @@ PR 作成
 | `test` | `go test ./...` |
 | `schema-lint` | `spectral lint schema/openapi.yaml`（OpenAPI 仕様の構文・ルール検証） |
 | `schema-diff` | `oasdiff breaking`（破壊的変更を検出 → 変更があれば CI をブロック） |
-| `schema-gen-check` | コード生成を実行し、リポジトリ内の生成コードと差分がないか確認 |
+| `codegen-check` | コード生成を実行し、リポジトリ内の生成コードと差分がないか確認 |
 | `terraform-plan` | `environments/dev` の `terraform plan` を実行し結果を PR コメントに投稿 |
 
 ## main マージ時（CD）

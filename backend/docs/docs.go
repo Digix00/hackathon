@@ -952,6 +952,10 @@ const docTemplate = `{
         },
         "hackathon_internal_handler_schema_response.BleToken": {
             "type": "object",
+            "required": [
+                "expires_at",
+                "token"
+            ],
             "properties": {
                 "expires_at": {
                     "type": "string"
@@ -963,6 +967,9 @@ const docTemplate = `{
         },
         "hackathon_internal_handler_schema_response.BleTokenResponse": {
             "type": "object",
+            "required": [
+                "ble_token"
+            ],
             "properties": {
                 "ble_token": {
                     "$ref": "#/definitions/hackathon_internal_handler_schema_response.BleToken"
@@ -971,6 +978,10 @@ const docTemplate = `{
         },
         "hackathon_internal_handler_schema_response.BleTokenUser": {
             "type": "object",
+            "required": [
+                "display_name",
+                "id"
+            ],
             "properties": {
                 "avatar_url": {
                     "type": "string"
@@ -985,6 +996,9 @@ const docTemplate = `{
         },
         "hackathon_internal_handler_schema_response.BleTokenUserResponse": {
             "type": "object",
+            "required": [
+                "user"
+            ],
             "properties": {
                 "user": {
                     "$ref": "#/definitions/hackathon_internal_handler_schema_response.BleTokenUser"

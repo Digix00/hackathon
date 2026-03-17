@@ -9,6 +9,12 @@ struct BLEAdvertisingToken {
     let expiresAt: Date
 }
 
+struct BLEPublicUser: Equatable {
+    let id: String
+    let displayName: String
+    let avatarURL: String?
+}
+
 actor BLEBackendClient {
     private static let apiPrefixSegments = ["api", "v1"]
     private static let pendingEncounterStorageKey = "ble.pending.encounters.v1"
@@ -77,6 +83,22 @@ actor BLEBackendClient {
         guard result.response.statusCode == 200 || result.response.statusCode == 201 else {
             throw BackendError.unexpectedStatus(result.response.statusCode)
         }
+    }
+
+    func fetchUser(forBLEToken token: String) async throws -> BLEPublicUser {
+        let encodedToken = token.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? token
+        let result = try await send(path: "ble-tokens/\(encodedToken)/user", method: "GET")
+
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode)
+        }
+
+        let envelope = try decoder.decode(BLEUserEnvelope.self, from: result.data)
+        return BLEPublicUser(
+            id: envelope.user.id,
+            displayName: envelope.user.displayName,
+            avatarURL: envelope.user.avatarURL
+        )
     }
 
     func enqueueEncounter(targetBLEToken: String, rssi: Int, occurredAt: Date) {
@@ -372,6 +394,22 @@ private struct BLETokenEnvelope: Decodable {
 
     enum CodingKeys: String, CodingKey {
         case bleToken = "ble_token"
+    }
+}
+
+private struct BLEUserEnvelope: Decodable {
+    let user: BLEUserPayload
+}
+
+private struct BLEUserPayload: Decodable {
+    let id: String
+    let displayName: String
+    let avatarURL: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case displayName = "display_name"
+        case avatarURL = "avatar_url"
     }
 }
 

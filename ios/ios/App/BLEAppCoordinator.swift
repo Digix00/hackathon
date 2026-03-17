@@ -4,6 +4,7 @@ import SwiftUI
 @MainActor
 final class BLEAppCoordinator: ObservableObject {
     let bleManager: BLEManager
+    @Published private(set) var latestDetectedUser: BLEPublicUser?
 
     private let backendClient: BLEBackendClient
     private var hasStartedBLE = false
@@ -49,12 +50,21 @@ final class BLEAppCoordinator: ObservableObject {
         detectionSubscription = bleManager.$latestDetection
             .compactMap { $0 }
             .sink { [backendClient] detection in
-                Task {
+                Task { [weak self] in
                     await backendClient.enqueueEncounter(
                         targetBLEToken: detection.token,
                         rssi: detection.rssi,
                         occurredAt: detection.detectedAt
                     )
+
+                    do {
+                        let user = try await backendClient.fetchUser(forBLEToken: detection.token)
+                        await MainActor.run {
+                            self?.latestDetectedUser = user
+                        }
+                    } catch {
+                        // Ignore lookup failures (expired token / blocked / network).
+                    }
                 }
             }
     }
