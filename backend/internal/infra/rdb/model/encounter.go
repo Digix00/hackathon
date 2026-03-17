@@ -74,11 +74,12 @@ type Mute struct {
 }
 
 type OutboxNotification struct {
-	ID          string    `gorm:"primaryKey"`
-	UserID      string    `gorm:"not null;index"`
-	EncounterID string    `gorm:"not null"`
-	Status      string    `gorm:"not null;default:pending;index"` // 'pending' | 'sent' | 'failed'
-	RetryCount  int       `gorm:"not null;default:0"`
-	CreatedAt   time.Time `gorm:"not null;autoCreateTime;index"`
+	ID          string     `gorm:"primaryKey"`
+	UserID      string     `gorm:"not null;index"`
+	EncounterID string     `gorm:"not null"`
+	Status      string     `gorm:"not null;default:pending;index"` // 'pending' | 'sent' | 'failed'
+	RetryCount  int        `gorm:"not null;default:0"`
+	CreatedAt   time.Time  `gorm:"not null;autoCreateTime;index"`
 	ProcessedAt *time.Time
+	ReadAt      *time.Time
 }
