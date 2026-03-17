@@ -37,7 +37,7 @@ private struct HeroJacketCollageView: View {
     var body: some View {
         GeometryReader { geometry in
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: -70) {
+                HStack(spacing: -24) {
                     ForEach(Array(tracks.prefix(8).enumerated()), id: \.offset) { index, track in
                         VStack(alignment: .leading, spacing: 24) {
                             MockArtworkView(color: track.color, symbol: "music.note", size: 300, artwork: track.artwork)
