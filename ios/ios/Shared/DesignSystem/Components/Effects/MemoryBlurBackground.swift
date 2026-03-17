@@ -26,6 +26,7 @@ struct MemoryBlurBackground: View {
                         .blendMode(.plusLighter)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .drawingGroup() // 描画計算を一本化
             
             // 質感を整えるオーバーレイ

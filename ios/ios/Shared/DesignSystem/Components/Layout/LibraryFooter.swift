@@ -4,40 +4,65 @@ struct LibraryFooter: View {
     @Binding var selectedTab: MainPrototypeView.LibraryTab
     @Environment(\.bottomSafeAreaInset) private var bottomSafeArea
     let tabs: [MainPrototypeView.LibraryTab]
+    
+    @Namespace private var animation
 
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(tabs, id: \.rawValue) { tab in
-                Button {
-                    HapticsService.impact(.light)
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        selectedTab = tab
-                    }
-                } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: tab.symbol)
-                            .font(.system(size: 24, weight: .medium))
-                            .symbolRenderingMode(.hierarchical)
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                ForEach(tabs, id: \.rawValue) { tab in
+                    let isActive = selectedTab == tab
+                    
+                    Button {
+                        HapticsService.impact(.medium)
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                            selectedTab = tab
+                        }
+                    } label: {
+                        VStack(spacing: 4) {
+                            ZStack {
+                                if isActive {
+                                    Circle()
+                                        .fill(PrototypeTheme.textPrimary.opacity(0.06))
+                                        .frame(width: 48, height: 48)
+                                        .matchedGeometryEffect(id: "bg", in: animation)
+                                }
+                                
+                                Image(systemName: isActive ? tab.symbol : tab.symbol)
+                                    .font(.system(size: 20, weight: isActive ? .bold : .medium))
+                                    .symbolVariant(isActive ? .fill : .none)
+                                    .foregroundStyle(isActive ? PrototypeTheme.textPrimary : PrototypeTheme.textSecondary.opacity(0.6))
+                            }
+                            .frame(width: 48, height: 48)
 
-                        Text(tab.title)
-                            .font(.system(size: 10, weight: .medium))
+                            if isActive {
+                                Text(tab.title)
+                                    .font(PrototypeTheme.Typography.font(size: 10, weight: .bold, role: .data))
+                                    .foregroundStyle(PrototypeTheme.textPrimary)
+                                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .contentShape(Rectangle())
                     }
-                    .foregroundStyle(selectedTab == tab ? PrototypeTheme.textPrimary : PrototypeTheme.textSecondary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 64)
-                    .contentShape(Rectangle())
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(
+                Capsule()
+                    .fill(.ultraThinMaterial)
+                    .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                    )
+            )
+            .padding(.horizontal, 24)
+            .padding(.bottom, bottomSafeArea > 0 ? max(10, bottomSafeArea - 18) : 16)
         }
-        .background(.thinMaterial)
-        .overlay(alignment: .top) {
-            Rectangle()
-                .fill(PrototypeTheme.border.opacity(0.5))
-                .frame(height: 0.5)
-        }
-        .padding(.bottom, bottomSafeArea)
         .frame(maxWidth: .infinity)
-        .frame(height: 64 + bottomSafeArea, alignment: .top)
+        .ignoresSafeArea(.all, edges: .bottom)
     }
 }

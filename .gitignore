@@ -64,3 +64,6 @@ tools/gradle-*-bin.zip
 **/override.tf.json
 **/*_override.tf
 **/*_override.tf.json
+
+# Xcode
+.deriveddata/

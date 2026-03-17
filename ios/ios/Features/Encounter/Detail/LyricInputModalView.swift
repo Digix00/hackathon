@@ -61,8 +61,8 @@ struct LyricInputModalView: View {
                             )
                             .frame(height: 160)
                             .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 5)
-                            .onChange(of: lyric) { newValue in
-                                let isNearLimit = newValue.count >= 90
+                            .onChange(of: lyric) {
+                                let isNearLimit = lyric.count >= 90
                                 if isNearLimit && !didTriggerNearLimitHaptic {
                                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                     didTriggerNearLimitHaptic = true
@@ -105,4 +105,3 @@ struct LyricInputModalView: View {
         .presentationDetents([.large])
     }
 }
-

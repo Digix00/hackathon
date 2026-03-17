@@ -22,7 +22,7 @@ struct ContentView: View {
         .task {
             guard phase == .splash else { return }
             try? await Task.sleep(for: .milliseconds(900))
-            phase = .onboarding
+            phase = .main
         }
     }
 

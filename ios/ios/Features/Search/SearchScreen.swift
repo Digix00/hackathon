@@ -67,7 +67,7 @@ struct SearchView: View {
                 SectionCard(title: "選択中の曲") {
                     VStack(alignment: .leading, spacing: 20) {
                         HStack(spacing: 16) {
-                            MockArtworkView(color: MockData.featuredTrack.color, symbol: "music.note", size: 52)
+                            MockArtworkView(color: MockData.featuredTrack.color, symbol: "music.note", size: 52, artwork: MockData.featuredTrack.artwork)
                                 .shadow(color: MockData.featuredTrack.color.opacity(0.15), radius: 8, x: 0, y: 4)
                                 .matchedGeometryEffect(id: "hero_artwork_\(MockData.featuredTrack.id)", in: heroNamespace)
                             

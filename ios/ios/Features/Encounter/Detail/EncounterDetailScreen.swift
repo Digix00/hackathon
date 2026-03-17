@@ -11,9 +11,10 @@ struct EncounterDetailView: View {
         ZStack {
             PrototypeTheme.background.ignoresSafeArea()
 
+            // 空間を満たすオーラ
             LinearGradient(
                 colors: [
-                    encounter.track.color.opacity(0.15),
+                    encounter.track.color.opacity(0.1),
                     PrototypeTheme.background
                 ],
                 startPoint: .top,
@@ -23,175 +24,150 @@ struct EncounterDetailView: View {
 
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
-                    HStack(alignment: .top) {
+                    // Navigation Header
+                    HStack {
                         Button {
                             dismiss()
                         } label: {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 20, weight: .bold))
+                            Image(systemName: "arrow.left") // より情緒的な矢印
+                                .font(.system(size: 18, weight: .bold))
                                 .foregroundStyle(PrototypeTheme.textPrimary)
                                 .frame(width: 44, height: 44, alignment: .leading)
                         }
 
                         Spacer()
 
-                        VStack(alignment: .trailing, spacing: 4) {
-                            Text("ENCOUNTERED")
-                                .font(.system(size: 9, weight: .black))
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("CONNECTED MOMENT") // 「つながり」の記録
+                                .font(PrototypeTheme.Typography.font(size: 10, weight: .black, role: .data))
                                 .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.5))
-                                .kerning(2.5)
+                                .tracking(2.0)
 
-                            Text(encounterMetaText)
-                                .font(.system(size: 11, weight: .heavy))
+                            Text(encounter.relativeTime.uppercased())
+                                .font(PrototypeTheme.Typography.font(size: 12, weight: .bold, role: .data))
                                 .foregroundStyle(encounter.track.color)
-                                .kerning(1.0)
                         }
-                        .padding(.top, 8)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.top, 16)
+                    .padding(.horizontal, 32)
+                    .padding(.top, 24)
 
-                    VStack(spacing: 48) {
-                        MockArtworkView(color: encounter.track.color, symbol: "music.note", size: 280)
-                            .shadow(color: encounter.track.color.opacity(0.3), radius: 60, x: 0, y: 30)
-                            .padding(.top, 32)
+                    // Hero: 空間を切り取るジャケット
+                    VStack(spacing: 60) {
+                        ZStack {
+                            // 背景のオーラ
+                            Circle()
+                                .fill(encounter.track.color.opacity(0.15))
+                                .frame(width: 400, height: 400)
+                                .blur(radius: 60)
 
-                        VStack(spacing: 12) {
-                            Text(encounter.track.title)
-                                .font(.system(size: 42, weight: .black))
-                                .foregroundStyle(PrototypeTheme.textPrimary)
-                                .multilineTextAlignment(.center)
-                                .lineLimit(2)
-                                .tracking(-1.5)
+                            MockArtworkView(color: encounter.track.color, symbol: "music.note", size: 300, artwork: encounter.track.artwork)
+                                .shadow(color: encounter.track.color.opacity(0.2), radius: 60, x: 0, y: 30)
+                        }
+                        .padding(.top, 40)
 
-                            Text(encounter.track.artist)
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundStyle(PrototypeTheme.textSecondary)
-                                .tracking(1.2)
-                                .multilineTextAlignment(.center)
-                                .lineLimit(2)
+                        VStack(spacing: 24) {
+                            VStack(spacing: 8) {
+                                Text(encounter.userName)
+                                    .font(PrototypeTheme.Typography.font(size: 42, weight: .black, role: .primary))
+                                    .foregroundStyle(PrototypeTheme.textPrimary)
+                                    .tracking(-1.5)
+                                
+                                Text("との共鳴")
+                                    .font(PrototypeTheme.Typography.font(size: 14, weight: .bold))
+                                    .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
+                            }
+
+                            VStack(spacing: 4) {
+                                Text(encounter.track.title)
+                                    .font(PrototypeTheme.Typography.font(size: 24, weight: .bold, role: .accent))
+                                    .italic()
+                                    .foregroundStyle(encounter.track.color)
+                                    .multilineTextAlignment(.center)
+                                
+                                Text(encounter.track.artist)
+                                    .font(PrototypeTheme.Typography.font(size: 14, weight: .medium))
+                                    .foregroundStyle(PrototypeTheme.textSecondary)
+                            }
                         }
                         .padding(.horizontal, 32)
                     }
 
-                    Button {
-                        showsProfile = true
-                    } label: {
-                        HStack(spacing: 16) {
-                            MockArtworkView(color: .gray.opacity(0.2), symbol: "person.fill", size: 36)
-                                .clipShape(Circle())
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("SHARED BY")
-                                    .font(.system(size: 9, weight: .heavy))
-                                    .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.5))
-                                    .kerning(1.5)
-
-                                Text(encounter.userName)
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundStyle(PrototypeTheme.textPrimary)
-                            }
-
-                            Spacer()
-
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(PrototypeTheme.textTertiary)
-                        }
-                        .padding(16)
-                        .background(PrototypeTheme.surface.opacity(0.3))
-                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, 28)
-                    .padding(.top, 56)
-
+                    // Shared Memory / Lyric
                     if !encounter.lyric.isEmpty {
                         VStack(alignment: .leading, spacing: 24) {
-                            Image(systemName: "quote.opening")
-                                .font(.system(size: 32, weight: .black))
-                                .foregroundStyle(encounter.track.color.opacity(0.2))
-                                .offset(x: -12)
-
+                            Text("記憶の断片")
+                                .font(PrototypeTheme.Typography.font(size: 11, weight: .black, role: .data))
+                                .foregroundStyle(encounter.track.color.opacity(0.6))
+                                .kerning(3)
+                                .padding(.leading, 8)
+                            
                             Text(encounter.lyric)
-                                .font(.system(size: 28, weight: .bold, design: .serif))
-                                .italic()
-                                .foregroundStyle(PrototypeTheme.textPrimary)
-                                .lineSpacing(8)
-                                .padding(.horizontal, 16)
-
-                            HStack {
-                                Spacer()
-                                Image(systemName: "quote.closing")
-                                    .font(.system(size: 32, weight: .black))
-                                    .foregroundStyle(encounter.track.color.opacity(0.2))
-                                    .offset(x: 12)
-                            }
+                                .font(PrototypeTheme.Typography.font(size: 28, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.textPrimary.opacity(0.9))
+                                .lineSpacing(12)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(40)
+                                .background(
+                                    ZStack {
+                                        // 境界線のない面
+                                        Color.white.opacity(0.01)
+                                        encounter.track.color.opacity(0.03)
+                                    }
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
                         }
-                        .padding(.horizontal, 40)
-                        .padding(.top, 64)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 100)
                     }
 
-                    Spacer(minLength: 140)
+                    Spacer(minLength: 200)
                 }
             }
 
+            // Floating Action: 最小限に
             VStack {
                 Spacer()
-
                 HStack(spacing: 16) {
-                    Button(action: {}) {
+                    Button(action: {
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    }) {
                         Image(systemName: "heart.fill")
-                            .font(.system(size: 22, weight: .bold))
+                            .font(.system(size: 24, weight: .bold))
                             .foregroundStyle(.white)
-                            .frame(width: 64, height: 64)
-                            .background(encounter.track.color)
-                            .clipShape(Circle())
-                            .shadow(color: encounter.track.color.opacity(0.4), radius: 20, x: 0, y: 10)
+                            .frame(width: 72, height: 72)
+                            .background(
+                                Circle()
+                                    .fill(encounter.track.color)
+                                    .shadow(color: encounter.track.color.opacity(0.3), radius: 20, x: 0, y: 10)
+                            )
                     }
 
                     Button {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         showsLyricModal = true
                     } label: {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 12) {
                             Image(systemName: "sparkles")
-                                .font(.system(size: 16, weight: .bold))
-                            Text("歌詞を残す")
-                                .font(.system(size: 16, weight: .bold))
+                                .font(.system(size: 18, weight: .bold))
+                            Text("想いを刻む")
+                                .font(PrototypeTheme.Typography.font(size: 16, weight: .bold))
                         }
                         .foregroundStyle(PrototypeTheme.textPrimary)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 64)
-                        .background(PrototypeTheme.surfaceElevated)
-                        .clipShape(Capsule())
-                        .shadow(color: Color.black.opacity(0.15), radius: 20, x: 0, y: 10)
-                    }
-
-                    Button(action: {}) {
-                        Image(systemName: "ellipsis")
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundStyle(PrototypeTheme.textPrimary)
-                            .frame(width: 64, height: 64)
-                            .background(PrototypeTheme.surface)
-                            .clipShape(Circle())
-                            .shadow(color: Color.black.opacity(0.08), radius: 15, x: 0, y: 5)
+                        .frame(height: 72)
+                        .background(
+                            Capsule()
+                                .fill(PrototypeTheme.surfaceElevated)
+                                .shadow(color: Color.black.opacity(0.08), radius: 20, x: 0, y: 10)
+                        )
                     }
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 32)
+                .padding(.horizontal, 32)
+                .padding(.bottom, 40)
             }
-        }
-        .navigationBarHidden(true)
-        .sheet(isPresented: $showsProfile) {
-            OtherUserProfileView()
         }
         .sheet(isPresented: $showsLyricModal) {
             LyricInputModalView()
         }
-    }
-
-    private var encounterMetaText: String {
-        "\(encounter.relativeTime.uppercased()) • SHIBUYA"
+        .navigationBarHidden(true)
     }
 }

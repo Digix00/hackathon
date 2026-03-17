@@ -4,13 +4,14 @@ enum MockData {
     static let featuredTrack = Track(
         title: "夜に駆ける",
         artist: "YOASOBI",
-        color: .indigo
+        color: .indigo,
+        artwork: "YoruniKakeru"
     )
 
     static let tracks: [Track] = [
         featuredTrack,
-        Track(title: "怪獣の花唄", artist: "Vaundy", color: .orange),
-        Track(title: "Subtitle", artist: "Official髭男dism", color: .teal),
+        Track(title: "怪獣の花唄", artist: "Vaundy", color: .orange, artwork: "KaijuuNoHanauta"),
+        Track(title: "Subtitle", artist: "Official髭男dism", color: .teal, artwork: "Subtitle"),
         Track(title: "愛が一層メロウ", artist: "離婚伝説", color: .pink),
         Track(title: "KICK BACK", artist: "米津玄師", color: .red),
         Track(title: "ナハトムジーク", artist: "Mrs. GREEN APPLE", color: .green),

@@ -6,6 +6,7 @@ struct MainPrototypeView: View {
         static let dragResponseFactor: CGFloat = 0.9
         static let backgroundScale: CGFloat = 0.95
         static let inactiveOpacity: Double = 0.5
+        static let libraryFooterReserve: CGFloat = 84
     }
 
     private enum Surface {
@@ -21,17 +22,17 @@ struct MainPrototypeView: View {
 
         var title: String {
             switch self {
-            case .insights: return "すれ違い情報"
-            case .history: return "履歴"
-            case .songs: return "生成曲"
-            case .profile: return "プロフィール"
+            case .insights: return "気配"
+            case .history: return "つながり"
+            case .songs: return "旋律"
+            case .profile: return "自分"
             }
         }
 
         var symbol: String {
             switch self {
             case .insights: return "dot.radiowaves.left.and.right"
-            case .history: return "clock.arrow.circlepath"
+            case .history: return "hands.sparkles" // More emotional symbol for connection
             case .songs: return "waveform"
             case .profile: return "person.crop.circle"
             }
@@ -54,9 +55,9 @@ struct MainPrototypeView: View {
                     .opacity(isShowingTrackSurface ? 1.0 : Layout.inactiveOpacity)
                     .scaleEffect(isShowingTrackSurface ? 1.0 : Layout.backgroundScale)
 
-                librarySurface
+                librarySurface(bottomSafeArea: proxy.safeAreaInsets.bottom)
                     .environment(\.topSafeAreaInset, proxy.safeAreaInsets.top)
-                    .environment(\.bottomSafeAreaInset, proxy.safeAreaInsets.bottom)
+                    .environment(\.bottomSafeAreaInset, proxy.safeAreaInsets.bottom + Layout.libraryFooterReserve)
                     .offset(y: librarySurfaceOffset(screenHeight: screenHeight))
                     .opacity(isShowingTrackSurface ? Layout.inactiveOpacity : 1.0)
             }
@@ -101,7 +102,7 @@ struct MainPrototypeView: View {
         .environment(\.bottomSafeAreaInset, 0)
     }
 
-    private var librarySurface: some View {
+    private func librarySurface(bottomSafeArea: CGFloat) -> some View {
         TabView(selection: $selectedLibraryTab) {
             navigationContainer {
                 HomeInsightsPage(
@@ -134,12 +135,13 @@ struct MainPrototypeView: View {
                     handleVerticalSwipe(translation: value.translation.height)
                 }
         )
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+        .overlay(alignment: .bottom) {
             if selectedSurface == .library {
                 LibraryFooter(
                     selectedTab: $selectedLibraryTab,
                     tabs: LibraryTab.allCases
                 )
+                .environment(\.bottomSafeAreaInset, bottomSafeArea)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
