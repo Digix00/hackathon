@@ -63,7 +63,6 @@ final class BLEAppCoordinator: ObservableObject {
                             self?.latestDetectedUser = user
                         }
                     } catch {
-                        return
                         // Ignore lookup failures (expired token / blocked / network).
                     }
                 }
