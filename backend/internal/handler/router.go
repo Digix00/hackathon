@@ -16,6 +16,9 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	musicHandler := newMusicHandler(deps.MusicUsecase)
 	lyricHandler := newLyricHandler(deps.LyricUsecase)
 
+	// OAuth コールバックは Spotify からのリダイレクトで呼ばれるため Firebase Auth 不要
+	e.GET("/api/v1/music-connections/:provider/callback", musicHandler.handleMusicCallback)
+
 	api := e.Group("/api/v1")
 	api.Use(middleware.FirebaseAuth(deps.AuthTokenVerifier))
 
@@ -42,7 +45,6 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 
 	// music-connections
 	api.GET("/music-connections/:provider/authorize", musicHandler.getMusicAuthorizeURL)
-	api.GET("/music-connections/:provider/callback", musicHandler.handleMusicCallback)
 	api.GET("/users/me/music-connections", musicHandler.getMyMusicConnections)
 	api.DELETE("/users/me/music-connections/:provider", musicHandler.deleteMyMusicConnection)
 

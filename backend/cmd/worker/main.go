@@ -39,7 +39,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("worker: db open failed: %v", err)
 	}
-	sqlDB, _ := db.DB()
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatalf("worker: db get sql.DB failed: %v", err)
+	}
 	defer sqlDB.Close()
 
 	if err := rdb.Migrate(db); err != nil {
@@ -212,7 +215,6 @@ func (p *lyriaJobProcessor) generateSong(ctx context.Context, chainID string) er
 	if err != nil {
 		// 見つからなければ新規作成
 		song = entity.GeneratedSong{
-			ID:      uuid.NewString(),
 			ChainID: chainID,
 		}
 	}
@@ -227,6 +229,7 @@ func (p *lyriaJobProcessor) generateSong(ctx context.Context, chainID string) er
 	song.GeneratedAt = &now
 
 	if song.ID == "" {
+		song.ID = uuid.NewString()
 		_, err = p.songRepo.Create(ctx, song)
 	} else {
 		err = p.songRepo.Update(ctx, song)
