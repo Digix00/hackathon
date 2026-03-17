@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/labstack/echo/v4"
 
@@ -108,26 +107,7 @@ func (h *bleTokenHandler) getUserByBleToken(c echo.Context) error {
 		return err
 	}
 
-	res := response.PublicUserResponse{
-		User: response.PublicUser{
-			ID:             dto.ID,
-			DisplayName:    dto.DisplayName,
-			AvatarURL:      dto.AvatarURL,
-			Bio:            dto.Bio,
-			Birthplace:     dto.Birthplace,
-			AgeRange:       dto.AgeRange,
-			EncounterCount: dto.EncounterCount,
-			UpdatedAt:      dto.UpdatedAt.UTC().Format(time.RFC3339),
-		},
-	}
-	if dto.SharedTrack != nil {
-		res.User.SharedTrack = &response.PublicTrack{
-			ID:         dto.SharedTrack.ID,
-			Title:      dto.SharedTrack.Title,
-			ArtistName: dto.SharedTrack.ArtistName,
-			ArtworkURL: dto.SharedTrack.ArtworkURL,
-		}
-	}
-
-	return c.JSON(http.StatusOK, res)
+	return c.JSON(http.StatusOK, response.PublicUserResponse{
+		User: publicUserDTOToResponse(dto),
+	})
 }
