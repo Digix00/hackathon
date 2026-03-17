@@ -24,7 +24,7 @@ func (r *stubBleTokenRepo) Create(_ context.Context, token entity.BleToken) erro
 	return nil
 }
 
-func (r *stubBleTokenRepo) FindCurrentByUserID(_ context.Context, userID string) (entity.BleToken, error) {
+func (r *stubBleTokenRepo) FindLatestByUserID(_ context.Context, userID string) (entity.BleToken, error) {
 	token, ok := r.byUserID[userID]
 	if !ok {
 		return entity.BleToken{}, domainerrs.NotFound("not found")
@@ -66,7 +66,7 @@ func TestCreateBleToken(t *testing.T) {
 	}
 
 	// Verify it was saved to the repo
-	savedToken, err := bleRepo.FindCurrentByUserID(context.Background(), userID)
+	savedToken, err := bleRepo.FindLatestByUserID(context.Background(), userID)
 	if err != nil {
 		t.Fatalf("expected token to be saved: %v", err)
 	}
@@ -85,9 +85,10 @@ func TestGetCurrentBleToken(t *testing.T) {
 			authUID: {ID: userID},
 		},
 	}
+	now := time.Now().UTC()
 	bleRepo := &stubBleTokenRepo{
 		byUserID: map[string]entity.BleToken{
-			userID: {UserID: userID, Token: tokenStr},
+			userID: {UserID: userID, Token: tokenStr, ValidFrom: now.Add(-1 * time.Hour), ValidTo: now.Add(1 * time.Hour)},
 		},
 		byToken: make(map[string]entity.BleToken),
 	}

@@ -76,9 +76,14 @@ func (u *bleTokenUsecase) GetCurrentBleToken(ctx context.Context, authUID string
 		return usecasedto.BleTokenDTO{}, err
 	}
 
-	tokenEntity, err := u.bleTokenRepo.FindCurrentByUserID(ctx, user.ID)
+	tokenEntity, err := u.bleTokenRepo.FindLatestByUserID(ctx, user.ID)
 	if err != nil {
 		return usecasedto.BleTokenDTO{}, err
+	}
+
+	now := time.Now().UTC()
+	if !tokenEntity.IsValid(now) {
+		return usecasedto.BleTokenDTO{}, domainerrs.NotFound("No valid ble-token found for user")
 	}
 
 	return usecasedto.BleTokenDTO{

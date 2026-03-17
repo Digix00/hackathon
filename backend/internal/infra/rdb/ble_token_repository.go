@@ -3,7 +3,6 @@ package rdb
 import (
 	"context"
 	"errors"
-	"time"
 
 	"gorm.io/gorm"
 
@@ -36,20 +35,17 @@ func (r *bleTokenRepository) Create(ctx context.Context, e entity.BleToken) erro
 	return nil
 }
 
-func (r *bleTokenRepository) FindCurrentByUserID(ctx context.Context, userID string) (entity.BleToken, error) {
+func (r *bleTokenRepository) FindLatestByUserID(ctx context.Context, userID string) (entity.BleToken, error) {
 	var m model.BleToken
-	now := time.Now().UTC()
 
-	// Find the latest valid token for the user
 	err := r.db.WithContext(ctx).
 		Where("user_id = ?", userID).
-		Where("valid_to > ?", now).
 		Order("created_at DESC").
 		First(&m).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return entity.BleToken{}, domainerrs.NotFound("No valid ble-token found for user")
+			return entity.BleToken{}, domainerrs.NotFound("No ble-token found for user")
 		}
 		return entity.BleToken{}, err
 	}
