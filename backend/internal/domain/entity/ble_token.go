@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,17 +18,28 @@ type BleToken struct {
 }
 
 // NewBleToken generates a new BleToken.
-// To keep things simple, let's say a BLE Token is valid for 24 hours.
+// Token is 8 random bytes encoded as a 16-character hex string, matching the
+// BLE design spec (ble_token = 8 bytes, used as the TOKEN portion of TOKEN_UUID).
 func NewBleToken(userID string, ttlHours int) BleToken {
 	now := time.Now().UTC()
 	return BleToken{
-		ID:        uuid.NewString(), // assuming UUID is fine for ID
+		ID:        uuid.NewString(),
 		UserID:    userID,
-		Token:     uuid.NewString(), // this is the 128-bit BLE token payload identifier
+		Token:     newBleTokenString(),
 		ValidFrom: now,
 		ValidTo:   now.Add(time.Duration(ttlHours) * time.Hour),
 		CreatedAt: now,
 	}
+}
+
+// newBleTokenString generates 8 cryptographically random bytes and returns
+// them as a 16-character lowercase hex string.
+func newBleTokenString() string {
+	b := make([]byte, 8)
+	if _, err := rand.Read(b); err != nil {
+		panic("ble_token: failed to generate random bytes: " + err.Error())
+	}
+	return hex.EncodeToString(b)
 }
 
 // IsValid checks if the token is currently within its validity period.
