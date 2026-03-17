@@ -73,7 +73,7 @@ data class HackathonInternalHandlerSchemaResponseSettings (
     val notificationEnabled: kotlin.Boolean? = null,
 
     @SerialName(value = "notification_frequency")
-    val notificationFrequency: kotlin.String? = null,
+    val notificationFrequency: HackathonInternalHandlerSchemaResponseSettings.NotificationFrequency? = null,
 
     @SerialName(value = "profile_visible")
     val profileVisible: kotlin.Boolean? = null,
@@ -88,7 +88,7 @@ data class HackathonInternalHandlerSchemaResponseSettings (
     val scheduleStartTime: kotlin.String? = null,
 
     @SerialName(value = "theme_mode")
-    val themeMode: kotlin.String? = null,
+    val themeMode: HackathonInternalHandlerSchemaResponseSettings.ThemeMode? = null,
 
     @SerialName(value = "track_visible")
     val trackVisible: kotlin.Boolean? = null,
@@ -98,6 +98,28 @@ data class HackathonInternalHandlerSchemaResponseSettings (
 
 ) {
 
+    /**
+     * 
+     *
+     * Values: immediate,hourly,daily
+     */
+    @Serializable
+    enum class NotificationFrequency(val value: kotlin.String) {
+        @SerialName(value = "immediate") immediate("immediate"),
+        @SerialName(value = "hourly") hourly("hourly"),
+        @SerialName(value = "daily") daily("daily");
+    }
+    /**
+     * 
+     *
+     * Values: light,dark,system
+     */
+    @Serializable
+    enum class ThemeMode(val value: kotlin.String) {
+        @SerialName(value = "light") light("light"),
+        @SerialName(value = "dark") dark("dark"),
+        @SerialName(value = "system") system("system");
+    }
 
 }
 

@@ -39,13 +39,23 @@ data class HackathonInternalHandlerSchemaRequestCreatePushTokenRequest (
     val deviceId: kotlin.String? = null,
 
     @SerialName(value = "platform")
-    val platform: kotlin.String? = null,
+    val platform: HackathonInternalHandlerSchemaRequestCreatePushTokenRequest.Platform? = null,
 
     @SerialName(value = "push_token")
     val pushToken: kotlin.String? = null
 
 ) {
 
+    /**
+     * 
+     *
+     * Values: ios,android
+     */
+    @Serializable
+    enum class Platform(val value: kotlin.String) {
+        @SerialName(value = "ios") ios("ios"),
+        @SerialName(value = "android") android("android");
+    }
 
 }
 

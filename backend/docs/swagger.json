@@ -635,7 +635,11 @@
                     "type": "string"
                 },
                 "platform": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "ios",
+                        "android"
+                    ]
                 },
                 "push_token": {
                     "type": "string"
@@ -646,7 +650,12 @@
             "type": "object",
             "properties": {
                 "age_visibility": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "hidden",
+                        "exact",
+                        "by-10"
+                    ]
                 },
                 "avatar_url": {
                     "type": "string"
@@ -664,7 +673,13 @@
                     "type": "string"
                 },
                 "sex": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "male",
+                        "female",
+                        "other",
+                        "no-answer"
+                    ]
                 }
             }
         },
@@ -713,7 +728,12 @@
                     "type": "boolean"
                 },
                 "notification_frequency": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "immediate",
+                        "hourly",
+                        "daily"
+                    ]
                 },
                 "profile_visible": {
                     "type": "boolean"
@@ -728,7 +748,12 @@
                     "type": "string"
                 },
                 "theme_mode": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "light",
+                        "dark",
+                        "system"
+                    ]
                 },
                 "track_visible": {
                     "type": "boolean"
@@ -739,7 +764,12 @@
             "type": "object",
             "properties": {
                 "age_visibility": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "hidden",
+                        "exact",
+                        "by-10"
+                    ]
                 },
                 "avatar_url": {
                     "type": "string"
@@ -757,7 +787,13 @@
                     "type": "string"
                 },
                 "sex": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "male",
+                        "female",
+                        "other",
+                        "no-answer"
+                    ]
                 }
             }
         },
@@ -774,7 +810,11 @@
                     "type": "string"
                 },
                 "platform": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "ios",
+                        "android"
+                    ]
                 },
                 "updated_at": {
                     "type": "string"
@@ -880,7 +920,12 @@
                     "type": "boolean"
                 },
                 "notification_frequency": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "immediate",
+                        "hourly",
+                        "daily"
+                    ]
                 },
                 "profile_visible": {
                     "type": "boolean"
@@ -895,7 +940,12 @@
                     "type": "string"
                 },
                 "theme_mode": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "light",
+                        "dark",
+                        "system"
+                    ]
                 },
                 "track_visible": {
                     "type": "boolean"
@@ -917,7 +967,12 @@
             "type": "object",
             "properties": {
                 "age_visibility": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "hidden",
+                        "exact",
+                        "by-10"
+                    ]
                 },
                 "avatar_url": {
                     "type": "string"
@@ -941,7 +996,13 @@
                     "type": "string"
                 },
                 "sex": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "male",
+                        "female",
+                        "other",
+                        "no-answer"
+                    ]
                 },
                 "updated_at": {
                     "type": "string"

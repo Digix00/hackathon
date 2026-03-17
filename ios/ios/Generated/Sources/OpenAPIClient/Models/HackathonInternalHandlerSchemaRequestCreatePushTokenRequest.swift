@@ -12,12 +12,16 @@ import AnyCodable
 
 public struct HackathonInternalHandlerSchemaRequestCreatePushTokenRequest: Codable, JSONEncodable, Hashable {
 
+    public enum Platform: String, Codable, CaseIterable {
+        case ios = "ios"
+        case android = "android"
+    }
     public var appVersion: String?
     public var deviceId: String?
-    public var platform: String?
+    public var platform: Platform?
     public var pushToken: String?
 
-    public init(appVersion: String? = nil, deviceId: String? = nil, platform: String? = nil, pushToken: String? = nil) {
+    public init(appVersion: String? = nil, deviceId: String? = nil, platform: Platform? = nil, pushToken: String? = nil) {
         self.appVersion = appVersion
         self.deviceId = deviceId
         self.platform = platform

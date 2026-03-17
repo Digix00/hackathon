@@ -36,7 +36,7 @@ import kotlinx.serialization.Contextual
 data class HackathonInternalHandlerSchemaRequestUpdateUserRequest (
 
     @SerialName(value = "age_visibility")
-    val ageVisibility: kotlin.String? = null,
+    val ageVisibility: HackathonInternalHandlerSchemaRequestUpdateUserRequest.AgeVisibility? = null,
 
     @SerialName(value = "avatar_url")
     val avatarUrl: kotlin.String? = null,
@@ -54,10 +54,33 @@ data class HackathonInternalHandlerSchemaRequestUpdateUserRequest (
     val prefectureId: kotlin.String? = null,
 
     @SerialName(value = "sex")
-    val sex: kotlin.String? = null
+    val sex: HackathonInternalHandlerSchemaRequestUpdateUserRequest.Sex? = null
 
 ) {
 
+    /**
+     * 
+     *
+     * Values: hidden,exact,byMinus10
+     */
+    @Serializable
+    enum class AgeVisibility(val value: kotlin.String) {
+        @SerialName(value = "hidden") hidden("hidden"),
+        @SerialName(value = "exact") exact("exact"),
+        @SerialName(value = "by-10") byMinus10("by-10");
+    }
+    /**
+     * 
+     *
+     * Values: male,female,other,noMinusAnswer
+     */
+    @Serializable
+    enum class Sex(val value: kotlin.String) {
+        @SerialName(value = "male") male("male"),
+        @SerialName(value = "female") female("female"),
+        @SerialName(value = "other") other("other"),
+        @SerialName(value = "no-answer") noMinusAnswer("no-answer");
+    }
 
 }
 

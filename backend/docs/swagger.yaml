@@ -7,6 +7,9 @@ definitions:
       device_id:
         type: string
       platform:
+        enum:
+        - ios
+        - android
         type: string
       push_token:
         type: string
@@ -14,6 +17,10 @@ definitions:
   hackathon_internal_handler_schema_request.CreateUserRequest:
     properties:
       age_visibility:
+        enum:
+        - hidden
+        - exact
+        - by-10
         type: string
       avatar_url:
         type: string
@@ -26,6 +33,11 @@ definitions:
       prefecture_id:
         type: string
       sex:
+        enum:
+        - male
+        - female
+        - other
+        - no-answer
         type: string
     type: object
   hackathon_internal_handler_schema_request.UpdatePushTokenRequest:
@@ -58,6 +70,10 @@ definitions:
       notification_enabled:
         type: boolean
       notification_frequency:
+        enum:
+        - immediate
+        - hourly
+        - daily
         type: string
       profile_visible:
         type: boolean
@@ -68,6 +84,10 @@ definitions:
       schedule_start_time:
         type: string
       theme_mode:
+        enum:
+        - light
+        - dark
+        - system
         type: string
       track_visible:
         type: boolean
@@ -75,6 +95,10 @@ definitions:
   hackathon_internal_handler_schema_request.UpdateUserRequest:
     properties:
       age_visibility:
+        enum:
+        - hidden
+        - exact
+        - by-10
         type: string
       avatar_url:
         type: string
@@ -87,6 +111,11 @@ definitions:
       prefecture_id:
         type: string
       sex:
+        enum:
+        - male
+        - female
+        - other
+        - no-answer
         type: string
     type: object
   hackathon_internal_handler_schema_response.Device:
@@ -98,6 +127,9 @@ definitions:
       id:
         type: string
       platform:
+        enum:
+        - ios
+        - android
         type: string
       updated_at:
         type: string
@@ -167,6 +199,10 @@ definitions:
       notification_enabled:
         type: boolean
       notification_frequency:
+        enum:
+        - immediate
+        - hourly
+        - daily
         type: string
       profile_visible:
         type: boolean
@@ -177,6 +213,10 @@ definitions:
       schedule_start_time:
         type: string
       theme_mode:
+        enum:
+        - light
+        - dark
+        - system
         type: string
       track_visible:
         type: boolean
@@ -191,6 +231,10 @@ definitions:
   hackathon_internal_handler_schema_response.User:
     properties:
       age_visibility:
+        enum:
+        - hidden
+        - exact
+        - by-10
         type: string
       avatar_url:
         type: string
@@ -207,6 +251,11 @@ definitions:
       prefecture_id:
         type: string
       sex:
+        enum:
+        - male
+        - female
+        - other
+        - no-answer
         type: string
       updated_at:
         type: string

@@ -12,6 +12,16 @@ import AnyCodable
 
 public struct HackathonInternalHandlerSchemaResponseSettings: Codable, JSONEncodable, Hashable {
 
+    public enum NotificationFrequency: String, Codable, CaseIterable {
+        case immediate = "immediate"
+        case hourly = "hourly"
+        case daily = "daily"
+    }
+    public enum ThemeMode: String, Codable, CaseIterable {
+        case light = "light"
+        case dark = "dark"
+        case system = "system"
+    }
     public var announcementNotificationEnabled: Bool?
     public var batchNotificationEnabled: Bool?
     public var bleEnabled: Bool?
@@ -21,16 +31,16 @@ public struct HackathonInternalHandlerSchemaResponseSettings: Codable, JSONEncod
     public var likeNotificationEnabled: Bool?
     public var locationEnabled: Bool?
     public var notificationEnabled: Bool?
-    public var notificationFrequency: String?
+    public var notificationFrequency: NotificationFrequency?
     public var profileVisible: Bool?
     public var scheduleEnabled: Bool?
     public var scheduleEndTime: String?
     public var scheduleStartTime: String?
-    public var themeMode: String?
+    public var themeMode: ThemeMode?
     public var trackVisible: Bool?
     public var updatedAt: String?
 
-    public init(announcementNotificationEnabled: Bool? = nil, batchNotificationEnabled: Bool? = nil, bleEnabled: Bool? = nil, commentNotificationEnabled: Bool? = nil, detectionDistance: Int? = nil, encounterNotificationEnabled: Bool? = nil, likeNotificationEnabled: Bool? = nil, locationEnabled: Bool? = nil, notificationEnabled: Bool? = nil, notificationFrequency: String? = nil, profileVisible: Bool? = nil, scheduleEnabled: Bool? = nil, scheduleEndTime: String? = nil, scheduleStartTime: String? = nil, themeMode: String? = nil, trackVisible: Bool? = nil, updatedAt: String? = nil) {
+    public init(announcementNotificationEnabled: Bool? = nil, batchNotificationEnabled: Bool? = nil, bleEnabled: Bool? = nil, commentNotificationEnabled: Bool? = nil, detectionDistance: Int? = nil, encounterNotificationEnabled: Bool? = nil, likeNotificationEnabled: Bool? = nil, locationEnabled: Bool? = nil, notificationEnabled: Bool? = nil, notificationFrequency: NotificationFrequency? = nil, profileVisible: Bool? = nil, scheduleEnabled: Bool? = nil, scheduleEndTime: String? = nil, scheduleStartTime: String? = nil, themeMode: ThemeMode? = nil, trackVisible: Bool? = nil, updatedAt: String? = nil) {
         self.announcementNotificationEnabled = announcementNotificationEnabled
         self.batchNotificationEnabled = batchNotificationEnabled
         self.bleEnabled = bleEnabled

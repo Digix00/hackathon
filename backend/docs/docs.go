@@ -641,7 +641,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "platform": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "ios",
+                        "android"
+                    ]
                 },
                 "push_token": {
                     "type": "string"
@@ -652,7 +656,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "age_visibility": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "hidden",
+                        "exact",
+                        "by-10"
+                    ]
                 },
                 "avatar_url": {
                     "type": "string"
@@ -670,7 +679,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sex": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "male",
+                        "female",
+                        "other",
+                        "no-answer"
+                    ]
                 }
             }
         },
@@ -719,7 +734,12 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "notification_frequency": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "immediate",
+                        "hourly",
+                        "daily"
+                    ]
                 },
                 "profile_visible": {
                     "type": "boolean"
@@ -734,7 +754,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "theme_mode": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "light",
+                        "dark",
+                        "system"
+                    ]
                 },
                 "track_visible": {
                     "type": "boolean"
@@ -745,7 +770,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "age_visibility": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "hidden",
+                        "exact",
+                        "by-10"
+                    ]
                 },
                 "avatar_url": {
                     "type": "string"
@@ -763,7 +793,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sex": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "male",
+                        "female",
+                        "other",
+                        "no-answer"
+                    ]
                 }
             }
         },
@@ -780,7 +816,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "platform": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "ios",
+                        "android"
+                    ]
                 },
                 "updated_at": {
                     "type": "string"
@@ -886,7 +926,12 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "notification_frequency": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "immediate",
+                        "hourly",
+                        "daily"
+                    ]
                 },
                 "profile_visible": {
                     "type": "boolean"
@@ -901,7 +946,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "theme_mode": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "light",
+                        "dark",
+                        "system"
+                    ]
                 },
                 "track_visible": {
                     "type": "boolean"
@@ -923,7 +973,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "age_visibility": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "hidden",
+                        "exact",
+                        "by-10"
+                    ]
                 },
                 "avatar_url": {
                     "type": "string"
@@ -947,7 +1002,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sex": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "male",
+                        "female",
+                        "other",
+                        "no-answer"
+                    ]
                 },
                 "updated_at": {
                     "type": "string"

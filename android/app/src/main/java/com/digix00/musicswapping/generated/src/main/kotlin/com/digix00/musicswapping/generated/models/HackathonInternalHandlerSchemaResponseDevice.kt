@@ -43,13 +43,23 @@ data class HackathonInternalHandlerSchemaResponseDevice (
     val id: kotlin.String? = null,
 
     @SerialName(value = "platform")
-    val platform: kotlin.String? = null,
+    val platform: HackathonInternalHandlerSchemaResponseDevice.Platform? = null,
 
     @SerialName(value = "updated_at")
     val updatedAt: kotlin.String? = null
 
 ) {
 
+    /**
+     * 
+     *
+     * Values: ios,android
+     */
+    @Serializable
+    enum class Platform(val value: kotlin.String) {
+        @SerialName(value = "ios") ios("ios"),
+        @SerialName(value = "android") android("android");
+    }
 
 }
 

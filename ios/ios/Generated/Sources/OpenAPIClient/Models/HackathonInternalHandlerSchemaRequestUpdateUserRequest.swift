@@ -12,15 +12,26 @@ import AnyCodable
 
 public struct HackathonInternalHandlerSchemaRequestUpdateUserRequest: Codable, JSONEncodable, Hashable {
 
-    public var ageVisibility: String?
+    public enum AgeVisibility: String, Codable, CaseIterable {
+        case hidden = "hidden"
+        case exact = "exact"
+        case by10 = "by-10"
+    }
+    public enum Sex: String, Codable, CaseIterable {
+        case male = "male"
+        case female = "female"
+        case other = "other"
+        case noAnswer = "no-answer"
+    }
+    public var ageVisibility: AgeVisibility?
     public var avatarUrl: String?
     public var bio: String?
     public var birthdate: String?
     public var displayName: String?
     public var prefectureId: String?
-    public var sex: String?
+    public var sex: Sex?
 
-    public init(ageVisibility: String? = nil, avatarUrl: String? = nil, bio: String? = nil, birthdate: String? = nil, displayName: String? = nil, prefectureId: String? = nil, sex: String? = nil) {
+    public init(ageVisibility: AgeVisibility? = nil, avatarUrl: String? = nil, bio: String? = nil, birthdate: String? = nil, displayName: String? = nil, prefectureId: String? = nil, sex: Sex? = nil) {
         self.ageVisibility = ageVisibility
         self.avatarUrl = avatarUrl
         self.bio = bio

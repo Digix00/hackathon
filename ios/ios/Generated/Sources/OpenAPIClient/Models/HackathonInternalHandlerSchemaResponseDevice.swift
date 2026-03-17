@@ -12,13 +12,17 @@ import AnyCodable
 
 public struct HackathonInternalHandlerSchemaResponseDevice: Codable, JSONEncodable, Hashable {
 
+    public enum Platform: String, Codable, CaseIterable {
+        case ios = "ios"
+        case android = "android"
+    }
     public var deviceId: String?
     public var enabled: Bool?
     public var id: String?
-    public var platform: String?
+    public var platform: Platform?
     public var updatedAt: String?
 
-    public init(deviceId: String? = nil, enabled: Bool? = nil, id: String? = nil, platform: String? = nil, updatedAt: String? = nil) {
+    public init(deviceId: String? = nil, enabled: Bool? = nil, id: String? = nil, platform: Platform? = nil, updatedAt: String? = nil) {
         self.deviceId = deviceId
         self.enabled = enabled
         self.id = id
