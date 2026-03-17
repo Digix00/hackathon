@@ -61,7 +61,6 @@ struct EncounterDetailView: View {
                                 .blur(radius: 60)
 
                             MockArtworkView(color: encounter.track.color, symbol: "music.note", size: 300, artwork: encounter.track.artwork)
-                                .clipShape(RoundedRectangle(cornerRadius: 48, style: .continuous))
                                 .shadow(color: encounter.track.color.opacity(0.2), radius: 60, x: 0, y: 30)
                         }
                         .padding(.top, 40)

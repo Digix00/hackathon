@@ -206,7 +206,6 @@ struct EncounterRow: View {
 
     private func jacketView(size: CGFloat) -> some View {
         MockArtworkView(color: encounter.track.color, symbol: "music.note", size: size, artwork: encounter.track.artwork)
-            .clipShape(RoundedRectangle(cornerRadius: size * 0.28, style: .continuous))
             .shadow(color: encounter.track.color.opacity(0.1), radius: 20, x: 0, y: 10)
     }
 

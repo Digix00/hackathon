@@ -41,7 +41,6 @@ private struct HeroJacketCollageView: View {
                     ForEach(Array(tracks.prefix(8).enumerated()), id: \.offset) { index, track in
                         VStack(alignment: .leading, spacing: 20) {
                             MockArtworkView(color: track.color, symbol: "music.note", size: 300, artwork: track.artwork)
-                                .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
                                 // Sophisticated Shadow: Base soft shadow + subtle ambient occlusion
                                 .shadow(color: Color.black.opacity(0.12), radius: 30, x: 0, y: 20)
                                 .shadow(color: track.color.opacity(0.15), radius: 40, x: 0, y: 30) // Subtle color glow

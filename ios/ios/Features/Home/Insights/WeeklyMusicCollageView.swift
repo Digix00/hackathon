@@ -13,7 +13,6 @@ struct WeeklyMusicCollageView: View {
                         EncounterListView()
                     } label: {
                         MockArtworkView(color: track.color, symbol: "music.note", size: 100, artwork: track.artwork)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 8)
                             .rotationEffect(.degrees(rotation(for: index)))
                             .offset(y: offset(for: index))
