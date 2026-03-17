@@ -31,4 +31,3 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	api.PATCH("/users/me/push-tokens/:id", pushTokenHandler.patchPushToken)
 	api.DELETE("/users/me/push-tokens/:id", pushTokenHandler.deletePushToken)
 }
-
