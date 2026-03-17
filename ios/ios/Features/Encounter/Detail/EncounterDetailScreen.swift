@@ -166,6 +166,9 @@ struct EncounterDetailView: View {
                 .padding(.bottom, 40)
             }
         }
+        .sheet(isPresented: $showsLyricModal) {
+            LyricInputModalView()
+        }
         .navigationBarHidden(true)
     }
 }
