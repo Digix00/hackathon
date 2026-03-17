@@ -14,12 +14,13 @@ type txKey struct{}
 // トランザクションがない場合は fallback を返す。
 // リポジトリの各メソッドは r.db の代わりにこの関数を呼び出すことで、
 // usecase 層から開始されたトランザクションに自動的に参加できる。
-func dbFromCtx(ctx context.Context, fallback *gorm.DB) *gorm.DB {
-	if tx, ok := ctx.Value(txKey{}).(*gorm.DB); ok {
-		return tx
-	}
-	return fallback
-}
+//
+// func dbFromCtx(ctx context.Context, fallback *gorm.DB) *gorm.DB {
+// 	if tx, ok := ctx.Value(txKey{}).(*gorm.DB); ok {
+// 		return tx
+// 	}
+// 	return fallback
+// }
 
 type gormTransactor struct{ db *gorm.DB }
 
