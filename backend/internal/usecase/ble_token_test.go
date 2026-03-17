@@ -24,6 +24,14 @@ func (r *stubBleTokenRepo) Create(_ context.Context, token entity.BleToken) erro
 	return nil
 }
 
+func (r *stubBleTokenRepo) InvalidateByUserID(_ context.Context, userID string) error {
+	if token, ok := r.byUserID[userID]; ok {
+		token.ValidTo = token.ValidFrom // expire immediately
+		r.byUserID[userID] = token
+	}
+	return nil
+}
+
 func (r *stubBleTokenRepo) FindLatestByUserID(_ context.Context, userID string) (entity.BleToken, error) {
 	token, ok := r.byUserID[userID]
 	if !ok {
