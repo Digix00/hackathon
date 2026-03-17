@@ -75,8 +75,8 @@ func TestCreateBleToken(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if token.Token == "" {
-		t.Errorf("expected non-empty token")
+	if len(token.Token) != 16 {
+		t.Errorf("expected 16-char hex token (8 bytes), got len=%d: %q", len(token.Token), token.Token)
 	}
 
 	// Verify it was saved to the repo

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 
@@ -45,7 +46,7 @@ func (h *bleTokenHandler) createBleToken(c echo.Context) error {
 	return c.JSON(http.StatusCreated, response.BleTokenResponse{
 		BleToken: response.BleToken{
 			Token:     dto.Token,
-			ExpiresAt: dto.ValidTo,
+			ExpiresAt: dto.ValidTo.UTC().Format(time.RFC3339),
 		},
 	})
 }
@@ -77,7 +78,7 @@ func (h *bleTokenHandler) getCurrentBleToken(c echo.Context) error {
 	return c.JSON(http.StatusOK, response.BleTokenResponse{
 		BleToken: response.BleToken{
 			Token:     dto.Token,
-			ExpiresAt: dto.ValidTo,
+			ExpiresAt: dto.ValidTo.UTC().Format(time.RFC3339),
 		},
 	})
 }

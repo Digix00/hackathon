@@ -1,14 +1,12 @@
 package response
 
-import "time"
-
 type BleTokenResponse struct {
 	BleToken BleToken `json:"ble_token"`
 }
 
 type BleToken struct {
-	Token     string    `json:"token"`
-	ExpiresAt time.Time `json:"expires_at"`
+	Token     string `json:"token"`
+	ExpiresAt string `json:"expires_at"`
 }
 
 // BleTokenUserResponse is the response for GET /ble-tokens/{token}/user.

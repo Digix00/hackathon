@@ -20,26 +20,30 @@ type BleToken struct {
 // NewBleToken generates a new BleToken.
 // Token is 8 random bytes encoded as a 16-character hex string, matching the
 // BLE design spec (ble_token = 8 bytes, used as the TOKEN portion of TOKEN_UUID).
-func NewBleToken(userID string, ttlHours int) BleToken {
+func NewBleToken(userID string, ttlHours int) (BleToken, error) {
+	token, err := newBleTokenString()
+	if err != nil {
+		return BleToken{}, err
+	}
 	now := time.Now().UTC()
 	return BleToken{
 		ID:        uuid.NewString(),
 		UserID:    userID,
-		Token:     newBleTokenString(),
+		Token:     token,
 		ValidFrom: now,
 		ValidTo:   now.Add(time.Duration(ttlHours) * time.Hour),
 		CreatedAt: now,
-	}
+	}, nil
 }
 
 // newBleTokenString generates 8 cryptographically random bytes and returns
 // them as a 16-character lowercase hex string.
-func newBleTokenString() string {
+func newBleTokenString() (string, error) {
 	b := make([]byte, 8)
 	if _, err := rand.Read(b); err != nil {
-		panic("ble_token: failed to generate random bytes: " + err.Error())
+		return "", err
 	}
-	return hex.EncodeToString(b)
+	return hex.EncodeToString(b), nil
 }
 
 // IsValid checks if the token is currently within its validity period.

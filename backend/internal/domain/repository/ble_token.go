@@ -19,6 +19,6 @@ type BleTokenRepository interface {
 	// regardless of its validity. Callers are responsible for checking expiry.
 	FindLatestByUserID(ctx context.Context, userID string) (entity.BleToken, error)
 
-	// FindByToken returns the token record based on the UUID string emitted via BLE.
+	// FindByToken returns the token record based on the 16-character hex string (8 bytes) emitted via BLE.
 	FindByToken(ctx context.Context, tokenStr string) (entity.BleToken, error)
 }
