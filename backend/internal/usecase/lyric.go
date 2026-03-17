@@ -85,36 +85,14 @@ func (u *lyricUsecase) PostLyric(ctx context.Context, authUID string, input Post
 		}
 	}
 
-	// 同一チェーンへの重複投稿チェック
-	exists, err := u.entryRepo.ExistsByChainIDAndUserID(ctx, chain.ID, user.ID)
-	if err != nil {
-		return usecasedto.PostLyricResultDTO{}, err
-	}
-	if exists {
-		return usecasedto.PostLyricResultDTO{}, domainerrs.Conflict("Already posted to this lyric chain")
-	}
-
-	// 現在のエントリ数で sequence_num を決める
-	existingEntries, err := u.entryRepo.FindByChainID(ctx, chain.ID)
-	if err != nil {
-		return usecasedto.PostLyricResultDTO{}, err
-	}
-	seqNum := len(existingEntries) + 1
-
-	entry, err := u.entryRepo.Create(ctx, entity.LyricEntry{
-		ID:          uuid.NewString(),
+	// 重複チェック・seqNum 計算・エントリ作成・カウント更新を単一トランザクションでアトミックに実行
+	updatedChain, entry, reached, err := u.chainRepo.AppendEntry(ctx, repository.AppendEntryParams{
 		ChainID:     chain.ID,
 		UserID:      user.ID,
 		EncounterID: input.EncounterID,
 		Content:     input.Content,
-		SequenceNum: seqNum,
+		Threshold:   u.lyricThreshold,
 	})
-	if err != nil {
-		return usecasedto.PostLyricResultDTO{}, err
-	}
-
-	// participant_count をインクリメント、threshold 到達時に Lyria ジョブを登録
-	updatedChain, reached, err := u.chainRepo.IncrementParticipantCount(ctx, chain.ID, u.lyricThreshold)
 	if err != nil {
 		return usecasedto.PostLyricResultDTO{}, err
 	}

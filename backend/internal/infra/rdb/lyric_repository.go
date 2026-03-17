@@ -85,6 +85,62 @@ func (r *lyricChainRepository) UpdateStatus(ctx context.Context, chainID string,
 		Update("status", string(status)).Error
 }
 
+func (r *lyricChainRepository) AppendEntry(ctx context.Context, params repository.AppendEntryParams) (entity.LyricChain, entity.LyricEntry, bool, error) {
+	var chain model.LyricChain
+	var entry model.LyricEntry
+	reached := false
+
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// chain を FOR UPDATE でロックして他の同時リクエストをブロック
+		if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&chain, "id = ?", params.ChainID).Error; err != nil {
+			return err
+		}
+
+		// 重複投稿チェック
+		var count int64
+		if err := tx.Model(&model.LyricEntry{}).
+			Where("chain_id = ? AND user_id = ?", params.ChainID, params.UserID).
+			Count(&count).Error; err != nil {
+			return err
+		}
+		if count > 0 {
+			return domainerrs.Conflict("Already posted to this lyric chain")
+		}
+
+		// sequence_num をトランザクション内で計算（同時投稿の衝突を防ぐ）
+		var entryCount int64
+		if err := tx.Model(&model.LyricEntry{}).
+			Where("chain_id = ?", params.ChainID).
+			Count(&entryCount).Error; err != nil {
+			return err
+		}
+
+		entry = model.LyricEntry{
+			ID:          uuid.NewString(),
+			ChainID:     params.ChainID,
+			UserID:      params.UserID,
+			EncounterID: params.EncounterID,
+			Content:     params.Content,
+			SequenceNum: int(entryCount) + 1,
+		}
+		if err := tx.Create(&entry).Error; err != nil {
+			return err
+		}
+
+		// participant_count をインクリメントして threshold チェック
+		chain.ParticipantCount++
+		if chain.ParticipantCount >= params.Threshold && chain.Status == string(vo.LyricChainStatusPending) {
+			chain.Status = string(vo.LyricChainStatusGenerating)
+			reached = true
+		}
+		return tx.Save(&chain).Error
+	})
+	if err != nil {
+		return entity.LyricChain{}, entity.LyricEntry{}, false, err
+	}
+	return converter.ModelToEntityLyricChain(chain), converter.ModelToEntityLyricEntry(entry), reached, nil
+}
+
 // ─── LyricEntryRepository ─────────────────────────────────────────────────────
 
 type lyricEntryRepository struct{ db *gorm.DB }

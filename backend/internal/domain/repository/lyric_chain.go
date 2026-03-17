@@ -24,4 +24,19 @@ type LyricChainRepository interface {
 
 	// UpdateStatus はチェーンのステータスを更新する。
 	UpdateStatus(ctx context.Context, chainID string, status vo.LyricChainStatus) error
+
+	// AppendEntry は歌詞エントリの投稿に必要な一連の操作を単一トランザクションでアトミックに実行する。
+	// chain を SELECT FOR UPDATE でロック → 重複投稿チェック → sequence_num 計算 →
+	// entry 作成 → participant_count インクリメント → threshold 到達時に status を generating に変更。
+	// 返り値の bool は threshold に到達したかどうかを示す。
+	AppendEntry(ctx context.Context, params AppendEntryParams) (entity.LyricChain, entity.LyricEntry, bool, error)
+}
+
+// AppendEntryParams は AppendEntry の入力パラメータ。
+type AppendEntryParams struct {
+	ChainID     string
+	UserID      string
+	EncounterID string
+	Content     string
+	Threshold   int
 }

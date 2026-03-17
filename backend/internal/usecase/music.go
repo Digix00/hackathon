@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 
@@ -154,7 +155,10 @@ func (u *musicUsecase) SearchTracks(ctx context.Context, authUID, query string, 
 	}
 	conn, err := u.musicConnRepo.FindByUserIDAndProvider(ctx, user.ID, string(vo.MusicProviderSpotify))
 	if err != nil {
-		return dto.TrackSearchResultDTO{}, domainerrs.BadRequest("Spotify connection required. Please connect your Spotify account first.")
+		if errors.Is(err, domainerrs.ErrNotFound) {
+			return dto.TrackSearchResultDTO{}, domainerrs.BadRequest("Spotify connection required. Please connect your Spotify account first.")
+		}
+		return dto.TrackSearchResultDTO{}, err
 	}
 
 	result, err := u.spotifyTrackClient.SearchTracks(ctx, conn.AccessToken, query, limit, cursor)
@@ -197,7 +201,10 @@ func (u *musicUsecase) GetTrack(ctx context.Context, authUID, trackID string) (d
 
 	conn, err := u.musicConnRepo.FindByUserIDAndProvider(ctx, user.ID, provider)
 	if err != nil {
-		return dto.TrackDTO{}, domainerrs.BadRequest(provider + " connection required")
+		if errors.Is(err, domainerrs.ErrNotFound) {
+			return dto.TrackDTO{}, domainerrs.BadRequest(provider + " connection required")
+		}
+		return dto.TrackDTO{}, err
 	}
 
 	var trackClient port.MusicTrackClient
