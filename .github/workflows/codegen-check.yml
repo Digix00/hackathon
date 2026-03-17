@@ -1,0 +1,33 @@
+name: Codegen Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  check:
+    name: Verify Generated Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Generate Code
+        # ルートの Makefile から backend/Makefile を呼び出す
+        run: make generate-code
+
+      - name: Check for differences
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Error: Generated code is out of sync with source files."
+            echo "Please run 'make generate-code' locally and commit the changes."
+            git status
+            git diff
+            exit 1
+          fi
+        shell: bash
