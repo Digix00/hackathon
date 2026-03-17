@@ -3,6 +3,7 @@ import SwiftUI
 struct EncounterRow: View {
     let encounter: Encounter
     let isFixed: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     
     private var seed: Int {
         let magnitude = encounter.id.hashValue.magnitude
@@ -210,7 +211,9 @@ struct EncounterRow: View {
     }
 
     private var auraView: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
+        let interval = reduceMotion ? 1.0 / 10.0 : 1.0 / 20.0
+
+        return TimelineView(.animation(minimumInterval: interval)) { timeline in
             let t = timeline.date.timeIntervalSinceReferenceDate
             let seedPhase = Double(seed % 11) * 0.37
             let driftX = CGFloat(sin(t * 0.78 + seedPhase) * 46)

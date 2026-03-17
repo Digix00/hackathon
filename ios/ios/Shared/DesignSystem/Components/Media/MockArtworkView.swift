@@ -4,14 +4,24 @@ import UIKit
 struct MockArtworkView: View {
     let color: Color
     let symbol: String
-    var size: CGFloat = 56
+    let size: CGFloat
     // TODO: API実装後は必ずartworkをAPIから取得したURLに置き換える（現在はローカルアセット使用）
-    var artwork: String? = nil
+    let artwork: String?
 
     // アセット画像を1回だけ解決し、存在しない場合はフォールバックする
-    private var artworkImage: UIImage? {
-        guard let artwork else { return nil }
-        return UIImage(named: artwork)
+    private let artworkImage: UIImage?
+
+    init(
+        color: Color,
+        symbol: String,
+        size: CGFloat = 56,
+        artwork: String? = nil
+    ) {
+        self.color = color
+        self.symbol = symbol
+        self.size = size
+        self.artwork = artwork
+        self.artworkImage = artwork.flatMap { UIImage(named: $0) }
     }
 
     var body: some View {
