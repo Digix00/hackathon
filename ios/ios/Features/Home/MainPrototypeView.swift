@@ -32,7 +32,7 @@ struct MainPrototypeView: View {
         var symbol: String {
             switch self {
             case .insights: return "dot.radiowaves.left.and.right"
-            case .history: return "hands.sparkles.fill" // More emotional symbol for connection
+            case .history: return "hands.sparkles" // More emotional symbol for connection
             case .songs: return "waveform"
             case .profile: return "person.crop.circle"
             }
