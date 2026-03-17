@@ -87,7 +87,6 @@ func (h *bleTokenHandler) getCurrentBleToken(c echo.Context) error {
 // @Param        token path string true "対象の BLE トークン"
 // @Success      200  {object}  response.PublicUserResponse
 // @Failure      401  {object}  errorResponse
-// @Failure      403  {object}  errorResponse
 // @Failure      404  {object}  errorResponse
 // @Failure      500  {object}  errorResponse
 // @Security     BearerAuth
@@ -99,6 +98,9 @@ func (h *bleTokenHandler) getUserByBleToken(c echo.Context) error {
 		return errUnauthorized()
 	}
 	targetToken := c.Param("token")
+	if targetToken == "" {
+		return errBadRequest("token path param is required")
+	}
 
 	dto, err := h.usecase.GetBleUserByToken(ctx, authUID, targetToken)
 	if err != nil {

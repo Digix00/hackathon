@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"hackathon/internal/domain/entity"
@@ -64,9 +63,8 @@ func (u *bleTokenUsecase) CreateBleToken(ctx context.Context, authUID string) (u
 	}
 
 	return usecasedto.BleTokenDTO{
-		Token:     tokenEntity.Token,
-		ValidFrom: tokenEntity.ValidFrom,
-		ValidTo:   tokenEntity.ValidTo,
+		Token:   tokenEntity.Token,
+		ValidTo: tokenEntity.ValidTo,
 	}, nil
 }
 
@@ -87,9 +85,8 @@ func (u *bleTokenUsecase) GetCurrentBleToken(ctx context.Context, authUID string
 	}
 
 	return usecasedto.BleTokenDTO{
-		Token:     tokenEntity.Token,
-		ValidFrom: tokenEntity.ValidFrom,
-		ValidTo:   tokenEntity.ValidTo,
+		Token:   tokenEntity.Token,
+		ValidTo: tokenEntity.ValidTo,
 	}, nil
 }
 
@@ -122,59 +119,5 @@ func (u *bleTokenUsecase) GetBleUserByToken(ctx context.Context, requesterAuthUI
 		return usecasedto.PublicUserDTO{}, err
 	}
 
-	profileVisible := true
-	trackVisible := true
-	settings, settingsErr := u.userSettingsRepo.FindByUserID(ctx, target.ID)
-	if settingsErr == nil {
-		profileVisible = settings.ProfileVisible
-		trackVisible = settings.TrackVisible
-	} else if !errors.Is(settingsErr, domainerrs.ErrNotFound) {
-		return usecasedto.PublicUserDTO{}, settingsErr
-	}
-
-	encounterCount, err := u.encounterRepo.CountByUserID(ctx, target.ID)
-	if err != nil {
-		return usecasedto.PublicUserDTO{}, err
-	}
-
-	displayName := ""
-	if target.Name != nil {
-		displayName = *target.Name
-	}
-
-	ageRange := userCalcAgeRange(target.Birthdate, target.AgeVisibility)
-
-	pub := usecasedto.PublicUserDTO{
-		ID:             target.ID,
-		DisplayName:    displayName,
-		AvatarURL:      target.AvatarURL,
-		Bio:            target.Bio,
-		Birthplace:     target.PrefectureName,
-		AgeRange:       ageRange,
-		EncounterCount: encounterCount,
-		UpdatedAt:      target.UpdatedAt,
-	}
-
-	if !profileVisible {
-		pub.Bio = nil
-		pub.Birthplace = nil
-		pub.AgeRange = nil
-	}
-
-	if trackVisible {
-		track, found, trackErr := u.trackRepo.FindCurrentByUserID(ctx, target.ID)
-		if trackErr != nil {
-			return usecasedto.PublicUserDTO{}, trackErr
-		}
-		if found {
-			pub.SharedTrack = &usecasedto.TrackInfoDTO{
-				ID:         track.ID,
-				Title:      track.Title,
-				ArtistName: track.ArtistName,
-				ArtworkURL: track.ArtworkURL,
-			}
-		}
-	}
-
-	return pub, nil
+	return buildPublicUserDTO(ctx, target, u.userSettingsRepo, u.encounterRepo, u.trackRepo)
 }
