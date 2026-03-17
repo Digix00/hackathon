@@ -1,9 +1,11 @@
 package response
 
+// @name SettingsResponse
 type SettingsResponse struct {
 	Settings Settings `json:"settings"`
 }
 
+// @name Settings
 type Settings struct {
 	BleEnabled                      bool    `json:"ble_enabled"`
 	LocationEnabled                 bool    `json:"location_enabled"`

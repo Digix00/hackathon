@@ -1,5 +1,6 @@
 package request
 
+// @name UpdateSettingsRequest
 type UpdateSettingsRequest struct {
 	BleEnabled                      *bool   `json:"ble_enabled"`
 	LocationEnabled                 *bool   `json:"location_enabled"`

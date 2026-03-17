@@ -26,6 +26,21 @@ func newUserHandler(authUserManager FirebaseUserManager, userUsecase usecase.Use
 	}
 }
 
+// createUser godoc
+// @ID           createUser
+// @Summary      ユーザー作成
+// @Description  Firebase 認証済みの新規ユーザーを登録する（初回ログイン時に一度だけ呼ぶ）
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body      schemareq.CreateUserRequest  true  "ユーザー作成リクエスト"
+// @Success      201   {object}  schemares.UserResponse
+// @Failure      400   {object}  errorResponse
+// @Failure      401   {object}  errorResponse
+// @Failure      409   {object}  errorResponse
+// @Failure      500   {object}  errorResponse
+// @Router       /api/v1/users [post]
 func (h *userHandler) createUser(c echo.Context) error {
 	uid, ok := middleware.UserIDFromContext(c)
 	if !ok {
@@ -61,6 +76,18 @@ func (h *userHandler) createUser(c echo.Context) error {
 	return c.JSON(http.StatusCreated, schemares.UserResponse{User: userDTOToResponse(created)})
 }
 
+// getMe godoc
+// @ID           getMe
+// @Summary      自分のユーザー情報取得
+// @Description  認証中のユーザー自身のプロフィールを返す
+// @Tags         users
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  schemares.UserResponse
+// @Failure      401  {object}  errorResponse
+// @Failure      404  {object}  errorResponse
+// @Failure      500  {object}  errorResponse
+// @Router       /api/v1/users/me [get]
 func (h *userHandler) getMe(c echo.Context) error {
 	uid, ok := middleware.UserIDFromContext(c)
 	if !ok {
@@ -74,6 +101,21 @@ func (h *userHandler) getMe(c echo.Context) error {
 	return c.JSON(http.StatusOK, schemares.UserResponse{User: userDTOToResponse(user)})
 }
 
+// getUserByID godoc
+// @ID           getUserByID
+// @Summary      他ユーザーのプロフィール取得
+// @Description  指定した ID の公開プロフィールを返す
+// @Tags         users
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      string  true  "対象ユーザー ID"
+// @Success      200  {object}  schemares.PublicUserResponse
+// @Failure      400  {object}  errorResponse
+// @Failure      401  {object}  errorResponse
+// @Failure      403  {object}  errorResponse
+// @Failure      404  {object}  errorResponse
+// @Failure      500  {object}  errorResponse
+// @Router       /api/v1/users/{id} [get]
 func (h *userHandler) getUserByID(c echo.Context) error {
 	requesterUID, ok := middleware.UserIDFromContext(c)
 	if !ok {
@@ -93,6 +135,21 @@ func (h *userHandler) getUserByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, schemares.PublicUserResponse{User: publicUserDTOToResponse(user)})
 }
 
+// patchMe godoc
+// @ID           patchMe
+// @Summary      自分のプロフィール更新
+// @Description  指定したフィールドだけを部分更新する（null フィールドは変更しない）
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body      schemareq.UpdateUserRequest  true  "プロフィール更新リクエスト"
+// @Success      200   {object}  schemares.UserResponse
+// @Failure      400   {object}  errorResponse
+// @Failure      401   {object}  errorResponse
+// @Failure      404   {object}  errorResponse
+// @Failure      500   {object}  errorResponse
+// @Router       /api/v1/users/me [patch]
 func (h *userHandler) patchMe(c echo.Context) error {
 	uid, ok := middleware.UserIDFromContext(c)
 	if !ok {
@@ -155,6 +212,17 @@ func (h *userHandler) patchMe(c echo.Context) error {
 	return c.JSON(http.StatusOK, schemares.UserResponse{User: userDTOToResponse(updated)})
 }
 
+// deleteMe godoc
+// @ID           deleteMe
+// @Summary      自分のアカウント削除
+// @Description  DB レコードと Firebase アカウントを削除する（Firebase 削除はベストエフォート）
+// @Tags         users
+// @Security     BearerAuth
+// @Success      204
+// @Failure      401  {object}  errorResponse
+// @Failure      404  {object}  errorResponse
+// @Failure      500  {object}  errorResponse
+// @Router       /api/v1/users/me [delete]
 func (h *userHandler) deleteMe(c echo.Context) error {
 	uid, ok := middleware.UserIDFromContext(c)
 	if !ok {

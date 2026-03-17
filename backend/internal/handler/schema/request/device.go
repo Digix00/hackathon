@@ -1,5 +1,6 @@
 package request
 
+// @name CreatePushTokenRequest
 type CreatePushTokenRequest struct {
 	Platform   string  `json:"platform"`
 	DeviceID   string  `json:"device_id"`
@@ -7,6 +8,7 @@ type CreatePushTokenRequest struct {
 	AppVersion *string `json:"app_version"`
 }
 
+// @name UpdatePushTokenRequest
 type UpdatePushTokenRequest struct {
 	PushToken  *string `json:"push_token"`
 	Enabled    *bool   `json:"enabled"`

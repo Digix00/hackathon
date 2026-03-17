@@ -1,5 +1,6 @@
 package request
 
+// @name CreateUserRequest
 type CreateUserRequest struct {
 	DisplayName   string  `json:"display_name"`
 	AvatarURL     *string `json:"avatar_url"`
@@ -10,6 +11,7 @@ type CreateUserRequest struct {
 	Sex           *string `json:"sex"`
 }
 
+// @name UpdateUserRequest
 type UpdateUserRequest struct {
 	DisplayName   *string `json:"display_name"`
 	AvatarURL     *string `json:"avatar_url"`

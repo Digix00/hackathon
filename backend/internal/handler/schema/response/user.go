@@ -1,13 +1,16 @@
 package response
 
+// @name UserResponse
 type UserResponse struct {
 	User User `json:"user"`
 }
 
+// @name PublicUserResponse
 type PublicUserResponse struct {
 	User PublicUser `json:"user"`
 }
 
+// @name User
 type User struct {
 	ID            string  `json:"id"`
 	DisplayName   string  `json:"display_name"`
@@ -21,6 +24,7 @@ type User struct {
 	UpdatedAt     string  `json:"updated_at"`
 }
 
+// @name PublicUser
 type PublicUser struct {
 	ID             string       `json:"id"`
 	DisplayName    string       `json:"display_name"`
@@ -33,6 +37,7 @@ type PublicUser struct {
 	UpdatedAt      string       `json:"updated_at"`
 }
 
+// @name PublicTrack
 type PublicTrack struct {
 	ID         string  `json:"id"`
 	Title      string  `json:"title"`

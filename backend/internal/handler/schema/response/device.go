@@ -1,9 +1,11 @@
 package response
 
+// @name DeviceResponse
 type DeviceResponse struct {
 	Device Device `json:"device"`
 }
 
+// @name Device
 type Device struct {
 	ID        string `json:"id"`
 	Platform  string `json:"platform"`

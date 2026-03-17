@@ -10,12 +10,14 @@ import (
 	domainerrs "hackathon/internal/domain/errs"
 )
 
+// @name ErrorBody
 type errorBody struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
-	Details any    `json:"details"`
+	Details any    `json:"details" swaggertype:"object"`
 }
 
+// @name ErrorResponse
 type errorResponse struct {
 	Error errorBody `json:"error"`
 }
