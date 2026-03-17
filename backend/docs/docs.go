@@ -15,6 +15,141 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/ble-tokens": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "現在ログインしているユーザーの新規 BLE トークンを発行する（24時間有効）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ble-tokens"
+                ],
+                "summary": "BLE トークン発行",
+                "operationId": "createBleToken",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.BleTokenResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/ble-tokens/current": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "現在ログインしているユーザーの有効な最新の BLE トークンを取得する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ble-tokens"
+                ],
+                "summary": "有効な BLE トークン取得",
+                "operationId": "getCurrentBleToken",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.BleTokenResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/ble-tokens/{token}/user": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定した BLE トークンに紐づくユーザーの公開プロフィールを取得する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ble-tokens"
+                ],
+                "summary": "BLE トークンからユーザー情報取得",
+                "operationId": "getUserByBleToken",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "対象の BLE トークン",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.BleTokenUserResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users": {
             "post": {
                 "security": [
@@ -800,6 +935,47 @@ const docTemplate = `{
                         "other",
                         "no-answer"
                     ]
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.BleToken": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.BleTokenResponse": {
+            "type": "object",
+            "properties": {
+                "ble_token": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.BleToken"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.BleTokenUser": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.BleTokenUserResponse": {
+            "type": "object",
+            "properties": {
+                "user": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.BleTokenUser"
                 }
             }
         },

@@ -118,6 +118,32 @@ definitions:
         - no-answer
         type: string
     type: object
+  hackathon_internal_handler_schema_response.BleToken:
+    properties:
+      expires_at:
+        type: string
+      token:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.BleTokenResponse:
+    properties:
+      ble_token:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.BleToken'
+    type: object
+  hackathon_internal_handler_schema_response.BleTokenUser:
+    properties:
+      avatar_url:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.BleTokenUserResponse:
+    properties:
+      user:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.BleTokenUser'
+    type: object
   hackathon_internal_handler_schema_response.Device:
     properties:
       device_id:
@@ -286,6 +312,92 @@ info:
   title: MusicSwapping API
   version: "1.0"
 paths:
+  /api/v1/ble-tokens:
+    post:
+      description: 現在ログインしているユーザーの新規 BLE トークンを発行する（24時間有効）
+      operationId: createBleToken
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.BleTokenResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: BLE トークン発行
+      tags:
+      - ble-tokens
+  /api/v1/ble-tokens/{token}/user:
+    get:
+      description: 指定した BLE トークンに紐づくユーザーの公開プロフィールを取得する
+      operationId: getUserByBleToken
+      parameters:
+      - description: 対象の BLE トークン
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.BleTokenUserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: BLE トークンからユーザー情報取得
+      tags:
+      - ble-tokens
+  /api/v1/ble-tokens/current:
+    get:
+      description: 現在ログインしているユーザーの有効な最新の BLE トークンを取得する
+      operationId: getCurrentBleToken
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.BleTokenResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 有効な BLE トークン取得
+      tags:
+      - ble-tokens
   /api/v1/users:
     post:
       consumes:
