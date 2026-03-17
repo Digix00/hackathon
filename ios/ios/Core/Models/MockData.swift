@@ -26,6 +26,12 @@ enum MockData {
         Encounter(userName: "Suzu", track: tracks[5], relativeTime: "昨日", lyric: "夕焼けがドラムみたいに跳ねる")
     ]
 
+    static let encountersWithoutLyrics: [Encounter] = [
+        Encounter(userName: "Hana", track: tracks[0], relativeTime: "たった今", lyric: ""),
+        Encounter(userName: "Toma", track: tracks[6], relativeTime: "28分前", lyric: ""),
+        Encounter(userName: "Yuna", track: tracks[2], relativeTime: "昨日", lyric: "")
+    ]
+
     static let generatedSongs: [GeneratedSong] = [
         GeneratedSong(title: "夜明けの詩", subtitle: "4人で作成・3/15", color: .purple),
         GeneratedSong(title: "街角の記憶", subtitle: "5人で作成・3/14", color: .blue),
