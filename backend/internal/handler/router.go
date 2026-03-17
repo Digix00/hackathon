@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/labstack/echo/v4"
 
 	"hackathon/internal/handler/middleware"
@@ -30,15 +28,4 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	api.POST("/users/me/push-tokens", pushTokenHandler.createPushToken)
 	api.PATCH("/users/me/push-tokens/:id", pushTokenHandler.patchPushToken)
 	api.DELETE("/users/me/push-tokens/:id", pushTokenHandler.deletePushToken)
-}
-
-func notImplemented(operation string) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		c.Logger().Warnf("not implemented endpoint called: operation=%s method=%s path=%s", operation, c.Request().Method, c.Path())
-		return echo.NewHTTPError(http.StatusNotImplemented, map[string]any{
-			"code":    "NOT_IMPLEMENTED",
-			"message": operation + " is not implemented yet",
-			"details": nil,
-		})
-	}
 }

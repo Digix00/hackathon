@@ -8,8 +8,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/entity"
+	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
 	"hackathon/internal/infra/rdb/converter"
 	"hackathon/internal/infra/rdb/model"
@@ -208,7 +208,6 @@ const (
 	rdbDeletedUserDisplayName    = "削除済みユーザー"
 )
 
-
 func userCleanupRelatedData(tx *gorm.DB, userID string) error {
 	// encounter に連鎖する子レコードを先に削除
 	var encounterIDs []string
@@ -343,4 +342,3 @@ func rdbGetOrCreateDeletedUserID(tx *gorm.DB) (string, error) {
 	}
 	return deletedUser.ID, nil
 }
-
