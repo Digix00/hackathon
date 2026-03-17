@@ -13,6 +13,7 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	settingsHandler := newSettingsHandler(deps.SettingsUsecase)
 	pushTokenHandler := newPushTokenHandler(deps.PushTokenUsecase)
 	bleTokenHandler := newBleTokenHandler(deps.BleTokenUsecase)
+	playlistHandler := newPlaylistHandler(deps.PlaylistUsecase)
 
 	api := e.Group("/api/v1")
 	api.Use(middleware.FirebaseAuth(deps.AuthTokenVerifier))
@@ -33,4 +34,16 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	api.POST("/ble-tokens", bleTokenHandler.createBleToken)
 	api.GET("/ble-tokens/current", bleTokenHandler.getCurrentBleToken)
 	api.GET("/ble-tokens/:token/user", bleTokenHandler.getUserByBleToken)
+
+	api.POST("/playlists", playlistHandler.createPlaylist)
+	api.GET("/playlists/me", playlistHandler.getMyPlaylists)
+	api.GET("/playlists/:id", playlistHandler.getPlaylist)
+	api.PATCH("/playlists/:id", playlistHandler.updatePlaylist)
+	api.DELETE("/playlists/:id", playlistHandler.deletePlaylist)
+
+	api.POST("/playlists/:id/tracks", playlistHandler.addPlaylistTrack)
+	api.DELETE("/playlists/:id/tracks/:trackId", playlistHandler.removePlaylistTrack)
+
+	api.POST("/playlists/:id/favorites", playlistHandler.addPlaylistFavorite)
+	api.DELETE("/playlists/:id/favorites", playlistHandler.removePlaylistFavorite)
 }
