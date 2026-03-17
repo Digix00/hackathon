@@ -10,12 +10,12 @@ struct TrackSelectionRow: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(track.title)
-                    .font(.system(size: 16, weight: .bold))
+                    .font(PrototypeTheme.Typography.Encounter.cardTitle)
                     .foregroundStyle(PrototypeTheme.textPrimary)
                     .lineLimit(1)
                     .truncationMode(.tail)
                 Text(track.artist)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(PrototypeTheme.Typography.Encounter.body)
                     .foregroundStyle(PrototypeTheme.textSecondary)
                     .lineLimit(1)
                     .truncationMode(.tail)

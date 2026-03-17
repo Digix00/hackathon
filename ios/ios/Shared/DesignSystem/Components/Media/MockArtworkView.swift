@@ -8,17 +8,17 @@ struct MockArtworkView: View {
     // TODO: API実装後は必ずartworkをAPIから取得したURLに置き換える（現在はローカルアセット使用）
     var artwork: String? = nil
 
-    // 画像が存在するかチェック
-    private var isValidArtwork: Bool {
-        guard let artwork = artwork else { return false }
-        return UIImage(named: artwork) != nil
+    // アセット画像を1回だけ解決し、存在しない場合はフォールバックする
+    private var artworkImage: UIImage? {
+        guard let artwork else { return nil }
+        return UIImage(named: artwork)
     }
 
     var body: some View {
         Group {
-            if let artwork = artwork, isValidArtwork {
+            if let artworkImage {
                 // TODO: API実装後はURLからの画像読み込みに変更
-                Image(artwork)
+                Image(uiImage: artworkImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: size, height: size)

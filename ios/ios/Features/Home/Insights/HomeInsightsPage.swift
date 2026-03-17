@@ -12,56 +12,69 @@ struct HomeInsightsPage: View {
             )
         ) {
             VStack(alignment: .leading, spacing: 0) {
-                
-                // --- 1. THE HERO COLLAGE ---
-                if !state.weeklyTracks.isEmpty {
-                    HeroJacketCollageView(tracks: state.weeklyTracks)
-                        .padding(.horizontal, -24)
-                        .padding(.top, 20)
-                        .padding(.bottom, 80)
-                }
-
-                // --- 2. RECENT ENCOUNTERS ---
-                VStack(alignment: .leading, spacing: 40) {
-                    Text("最近のすれ違い")
-                        .font(PrototypeTheme.Typography.font(size: 22, weight: .black, role: .primary))
-                        .foregroundStyle(PrototypeTheme.textPrimary)
-                        .tracking(-0.5)
-
-                    if state.recentEncounters.isEmpty {
-                        FirstEncounterEmptyState()
-                    } else {
-                        VStack(spacing: 28) {
-                            ForEach(state.recentEncounters.prefix(7)) { encounter in
-                                NavigationLink {
-                                    EncounterDetailView(encounter: encounter)
-                                } label: {
-                                    HeroEncounterRow(encounter: encounter)
-                                }
-                                .buttonStyle(ScaleButtonStyle())
-                            }
-                        }
-                    }
-                    
-                    NavigationLink {
-                        EncounterListView()
-                    } label: {
-                        HStack(spacing: 12) {
-                            Text("すべての出会いを見る")
-                                .font(PrototypeTheme.Typography.font(size: 15, weight: .bold, role: .primary))
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 14, weight: .black))
-                        }
-                        .foregroundStyle(PrototypeTheme.accent)
-                        .padding(.vertical, 16)
-                        .padding(.horizontal, 32)
-                        .background(PrototypeTheme.accent.opacity(0.1))
-                        .clipShape(Capsule())
-                    }
-                    .padding(.top, 20)
-                }
+                heroCollageSection
+                recentEncountersSection
                 .padding(.bottom, 120)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var heroCollageSection: some View {
+        if !state.weeklyTracks.isEmpty {
+            HeroJacketCollageView(tracks: state.weeklyTracks)
+                .padding(.horizontal, -24)
+                .padding(.top, 20)
+                .padding(.bottom, 80)
+        }
+    }
+
+    private var recentEncountersSection: some View {
+        VStack(alignment: .leading, spacing: 40) {
+            Text("最近のすれ違い")
+                .font(PrototypeTheme.Typography.font(size: 22, weight: .black, role: .primary))
+                .foregroundStyle(PrototypeTheme.textPrimary)
+                .tracking(-0.5)
+
+            recentEncountersContent
+            allEncountersLink
+                .padding(.top, 20)
+        }
+    }
+
+    @ViewBuilder
+    private var recentEncountersContent: some View {
+        if state.recentEncounters.isEmpty {
+            FirstEncounterEmptyState()
+        } else {
+            VStack(spacing: 28) {
+                ForEach(Array(state.recentEncounters.prefix(7))) { encounter in
+                    NavigationLink {
+                        EncounterDetailView(encounter: encounter)
+                    } label: {
+                        HeroEncounterRow(encounter: encounter)
+                    }
+                    .buttonStyle(ScaleButtonStyle())
+                }
+            }
+        }
+    }
+
+    private var allEncountersLink: some View {
+        NavigationLink {
+            EncounterListView()
+        } label: {
+            HStack(spacing: 12) {
+                Text("すべての出会いを見る")
+                    .font(PrototypeTheme.Typography.font(size: 15, weight: .bold, role: .primary))
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 14, weight: .black))
+            }
+            .foregroundStyle(PrototypeTheme.accent)
+            .padding(.vertical, 16)
+            .padding(.horizontal, 32)
+            .background(PrototypeTheme.accent.opacity(0.1))
+            .clipShape(Capsule())
         }
     }
 }
@@ -76,7 +89,7 @@ private struct HeroJacketCollageView: View {
             HStack(spacing: -70) {
                 ForEach(Array(tracks.prefix(8).enumerated()), id: \.offset) { index, track in
                     VStack(alignment: .leading, spacing: 24) {
-                        MockArtworkView(color: track.color, symbol: "music.note", size: 300)
+                        MockArtworkView(color: track.color, symbol: "music.note", size: 300, artwork: track.artwork)
                             .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
                             .shadow(color: Color.black.opacity(0.35), radius: 40, x: 0, y: 25)
                             .rotationEffect(.degrees(Double(index % 2 == 0 ? -5 : 5)))
@@ -107,7 +120,7 @@ private struct HeroEncounterRow: View {
     
     var body: some View {
         HStack(spacing: 24) {
-            MockArtworkView(color: encounter.track.color, symbol: "music.note", size: 68)
+            MockArtworkView(color: encounter.track.color, symbol: "music.note", size: 68, artwork: encounter.track.artwork)
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .shadow(color: encounter.track.color.opacity(0.2), radius: 15, x: 0, y: 8)
             

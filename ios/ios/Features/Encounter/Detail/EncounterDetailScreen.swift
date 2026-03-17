@@ -52,7 +52,7 @@ struct EncounterDetailView: View {
                     .padding(.top, 16)
 
                     VStack(spacing: 48) {
-                        MockArtworkView(color: encounter.track.color, symbol: "music.note", size: 280)
+                        MockArtworkView(color: encounter.track.color, symbol: "music.note", size: 280, artwork: encounter.track.artwork)
                             .shadow(color: encounter.track.color.opacity(0.3), radius: 60, x: 0, y: 30)
                             .padding(.top, 32)
 

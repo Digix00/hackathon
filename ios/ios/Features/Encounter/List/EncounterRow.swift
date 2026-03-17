@@ -5,7 +5,7 @@ struct EncounterRow: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            MockArtworkView(color: encounter.track.color, symbol: "music.note", size: 52)
+            MockArtworkView(color: encounter.track.color, symbol: "music.note", size: 52, artwork: encounter.track.artwork)
                 .shadow(color: encounter.track.color.opacity(0.15), radius: 8, x: 0, y: 4)
 
             VStack(alignment: .leading, spacing: 4) {
