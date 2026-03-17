@@ -66,7 +66,10 @@ func (h *encounterHandler) createEncounter(c echo.Context) error {
 	if req.Type != "ble" {
 		return errBadRequest("type must be ble")
 	}
-	if req.RSSI < -100 || req.RSSI > 0 {
+	if req.RSSI == nil {
+		return errBadRequest("rssi is required")
+	}
+	if *req.RSSI < -100 || *req.RSSI > 0 {
 		return errBadRequest("rssi must be between -100 and 0")
 	}
 	if req.OccurredAt == "" {
@@ -80,7 +83,7 @@ func (h *encounterHandler) createEncounter(c echo.Context) error {
 	dto, created, err := h.usecase.CreateEncounter(ctx, authUID, usecasedto.CreateEncounterInput{
 		TargetBleToken: req.TargetBleToken,
 		Type:           req.Type,
-		RSSI:           req.RSSI,
+		RSSI:           *req.RSSI,
 		OccurredAt:     occurredAt,
 	})
 	if err != nil {
