@@ -88,7 +88,7 @@ func (h *bleTokenHandler) getCurrentBleToken(c echo.Context) error {
 // @Tags         ble-tokens
 // @Produce      json
 // @Param        token path string true "対象の BLE トークン"
-// @Success      200  {object}  response.PublicUserResponse
+// @Success      200  {object}  response.BleTokenUserResponse
 // @Failure      401  {object}  errorResponse
 // @Failure      404  {object}  errorResponse
 // @Failure      500  {object}  errorResponse
@@ -110,7 +110,11 @@ func (h *bleTokenHandler) getUserByBleToken(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, response.PublicUserResponse{
-		User: publicUserDTOToResponse(dto),
+	return c.JSON(http.StatusOK, response.BleTokenUserResponse{
+		User: response.BleTokenUser{
+			ID:          dto.ID,
+			DisplayName: dto.DisplayName,
+			AvatarURL:   dto.AvatarURL,
+		},
 	})
 }
