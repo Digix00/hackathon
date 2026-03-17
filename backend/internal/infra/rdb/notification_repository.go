@@ -24,7 +24,7 @@ func NewNotificationRepository(db *gorm.DB) repository.NotificationRepository {
 func (r *notificationRepository) ListByUserID(ctx context.Context, userID string, limit, offset int) ([]entity.Notification, error) {
 	var records []model.OutboxNotification
 	err := r.db.WithContext(ctx).
-		Where("user_id = ?", userID).
+		Where("user_id = ? AND status = 'sent'", userID).
 		Order("created_at DESC").
 		Limit(limit).
 		Offset(offset).
@@ -43,7 +43,7 @@ func (r *notificationRepository) CountByUserID(ctx context.Context, userID strin
 	var count int64
 	err := r.db.WithContext(ctx).
 		Model(&model.OutboxNotification{}).
-		Where("user_id = ?", userID).
+		Where("user_id = ? AND status = 'sent'", userID).
 		Count(&count).Error
 	return count, err
 }
@@ -52,7 +52,7 @@ func (r *notificationRepository) CountUnreadByUserID(ctx context.Context, userID
 	var count int64
 	err := r.db.WithContext(ctx).
 		Model(&model.OutboxNotification{}).
-		Where("user_id = ? AND read_at IS NULL", userID).
+		Where("user_id = ? AND status = 'sent' AND read_at IS NULL", userID).
 		Count(&count).Error
 	return count, err
 }
@@ -60,7 +60,7 @@ func (r *notificationRepository) CountUnreadByUserID(ctx context.Context, userID
 func (r *notificationRepository) FindByIDAndUserID(ctx context.Context, id, userID string) (entity.Notification, error) {
 	var record model.OutboxNotification
 	err := r.db.WithContext(ctx).
-		Where("id = ? AND user_id = ?", id, userID).
+		Where("id = ? AND user_id = ? AND status = 'sent'", id, userID).
 		First(&record).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return entity.Notification{}, domainerrs.NotFound("Notification was not found")
@@ -75,7 +75,7 @@ func (r *notificationRepository) MarkAsRead(ctx context.Context, id, userID stri
 	now := time.Now().UTC()
 	result := r.db.WithContext(ctx).
 		Model(&model.OutboxNotification{}).
-		Where("id = ? AND user_id = ? AND read_at IS NULL", id, userID).
+		Where("id = ? AND user_id = ? AND status = 'sent' AND read_at IS NULL", id, userID).
 		Update("read_at", now)
 	if result.Error != nil {
 		return result.Error
@@ -83,7 +83,7 @@ func (r *notificationRepository) MarkAsRead(ctx context.Context, id, userID stri
 	if result.RowsAffected == 0 {
 		var count int64
 		if err := r.db.WithContext(ctx).Model(&model.OutboxNotification{}).
-			Where("id = ? AND user_id = ?", id, userID).Count(&count).Error; err != nil {
+			Where("id = ? AND user_id = ? AND status = 'sent'", id, userID).Count(&count).Error; err != nil {
 			return err
 		}
 		if count == 0 {
@@ -95,7 +95,7 @@ func (r *notificationRepository) MarkAsRead(ctx context.Context, id, userID stri
 
 func (r *notificationRepository) DeleteByIDAndUserID(ctx context.Context, id, userID string) error {
 	result := r.db.WithContext(ctx).
-		Where("id = ? AND user_id = ?", id, userID).
+		Where("id = ? AND user_id = ? AND status = 'sent'", id, userID).
 		Delete(&model.OutboxNotification{})
 	if result.Error != nil {
 		return result.Error
