@@ -8,7 +8,7 @@ type DeviceResponse struct {
 // @name Device
 type Device struct {
 	ID        string `json:"id"`
-	Platform  string `json:"platform"`
+	Platform  string `json:"platform" enums:"ios,android"`
 	DeviceID  string `json:"device_id"`
 	Enabled   bool   `json:"enabled"`
 	UpdatedAt string `json:"updated_at"`

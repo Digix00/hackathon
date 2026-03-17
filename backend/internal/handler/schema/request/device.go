@@ -2,7 +2,7 @@ package request
 
 // @name CreatePushTokenRequest
 type CreatePushTokenRequest struct {
-	Platform   string  `json:"platform"`
+	Platform   string  `json:"platform" enums:"ios,android"`
 	DeviceID   string  `json:"device_id"`
 	PushToken  string  `json:"push_token"`
 	AppVersion *string `json:"app_version"`
