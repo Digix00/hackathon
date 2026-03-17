@@ -207,10 +207,87 @@ struct EncounterRow: View {
     }
 
     private var auraView: some View {
-        Circle()
-            .fill(encounter.track.color.opacity(0.10))
-            .frame(width: 300, height: 300)
-            .blur(radius: auraBlurRadius)
-            .offset(x: horizontalShift * 2, y: 0)
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
+            let t = timeline.date.timeIntervalSinceReferenceDate
+            let seedPhase = Double(seed % 11) * 0.37
+            let driftX = CGFloat(sin(t * 0.78 + seedPhase) * 46)
+            let driftY = CGFloat(cos(t * 0.62 + seedPhase * 1.3) * 32)
+            let secondaryX = CGFloat(cos(t * 0.66 + seedPhase + 1.2) * 62)
+            let secondaryY = CGFloat(sin(t * 0.56 + seedPhase * 0.9) * 40)
+            let shimmerX = CGFloat(sin(t * 1.08 + seedPhase + 0.7) * 84)
+            let shimmerY = CGFloat(cos(t * 0.84 + seedPhase * 1.1) * 46)
+            let pulse = 1 + CGFloat(sin(t * 0.72 + seedPhase) * 0.12)
+            let secondaryPulse = 1 + CGFloat(cos(t * 0.64 + seedPhase + 0.8) * 0.16)
+            let tertiaryPulse = 1 + CGFloat(sin(t * 0.7 + seedPhase + 2.0) * 0.13)
+            let shimmerOpacity = 0.24 + CGFloat(sin(t * 0.92 + seedPhase) * 0.10)
+
+            ZStack {
+                Ellipse()
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                encounter.track.color.opacity(0.44),
+                                encounter.track.color.opacity(0.18),
+                                encounter.track.color.opacity(0.02)
+                            ],
+                            center: .center,
+                            startRadius: 12,
+                            endRadius: 180
+                        )
+                    )
+                    .frame(width: 340, height: 280)
+                    .scaleEffect(pulse)
+                    .blur(radius: auraBlurRadius * 0.94)
+                    .offset(x: horizontalShift * 1.8 + driftX, y: driftY - 12)
+
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                encounter.track.color.opacity(0.34),
+                                encounter.track.color.opacity(0.10),
+                                .clear
+                            ],
+                            center: .center,
+                            startRadius: 8,
+                            endRadius: 120
+                        )
+                    )
+                    .frame(width: 228, height: 228)
+                    .scaleEffect(secondaryPulse)
+                    .blur(radius: auraBlurRadius * 0.62)
+                    .offset(x: horizontalShift * 1.2 - secondaryX, y: -26 + secondaryY)
+
+                Ellipse()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                encounter.track.color.opacity(0.28),
+                                encounter.track.color.opacity(0.10),
+                                .clear
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 188, height: 248)
+                    .scaleEffect(
+                        x: 0.86 + CGFloat(sin(t * 0.66 + seedPhase) * 0.18),
+                        y: 0.94 * tertiaryPulse
+                    )
+                    .rotationEffect(.degrees(sin(t * 0.61 + seedPhase) * 24))
+                    .blur(radius: auraBlurRadius * 0.48)
+                    .offset(x: horizontalShift * 2.2 + secondaryX * 1.02, y: 34 - secondaryY * 0.95)
+
+                Circle()
+                    .fill(Color.white.opacity(0.24))
+                    .frame(width: 96, height: 96)
+                    .blur(radius: 24)
+                    .opacity(shimmerOpacity)
+                    .offset(x: horizontalShift * 1.4 + shimmerX, y: shimmerY - 18)
+            }
+            .saturation(1.15)
+            .rotationEffect(.degrees(sin(t * 0.24 + seedPhase) * 7))
+        }
     }
 }
