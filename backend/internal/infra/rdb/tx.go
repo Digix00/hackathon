@@ -15,6 +15,9 @@ type txKey struct{}
 // リポジトリの各メソッドは r.db の代わりにこの関数を呼び出すことで、
 // usecase 層から開始されたトランザクションに自動的に参加できる。
 //
+// 現時点では呼び出し元がなく golangci-lint の unused チェックで弾かれるため
+// コメントアウトしている。各リポジトリ実装を RunInTx に対応させる際に有効化すること。
+//
 // func dbFromCtx(ctx context.Context, fallback *gorm.DB) *gorm.DB {
 // 	if tx, ok := ctx.Value(txKey{}).(*gorm.DB); ok {
 // 		return tx
