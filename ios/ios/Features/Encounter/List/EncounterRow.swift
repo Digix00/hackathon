@@ -4,7 +4,10 @@ struct EncounterRow: View {
     let encounter: Encounter
     let isFixed: Bool
     
-    private var seed: Int { abs(encounter.id.hashValue) }
+    private var seed: Int {
+        let magnitude = encounter.id.hashValue.magnitude
+        return Int(magnitude % UInt(Int.max))
+    }
 
     // --- プロフェッショナル・デザイン・エンジン ---
 
