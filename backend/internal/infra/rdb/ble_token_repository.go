@@ -36,12 +36,23 @@ func (r *bleTokenRepository) Create(ctx context.Context, e entity.BleToken) erro
 	return nil
 }
 
-func (r *bleTokenRepository) InvalidateByUserID(ctx context.Context, userID string) error {
-	now := time.Now().UTC()
-	return r.db.WithContext(ctx).
-		Model(&model.BleToken{}).
-		Where("user_id = ? AND valid_to > ?", userID, now).
-		Update("valid_to", now).Error
+func (r *bleTokenRepository) RotateToken(ctx context.Context, newToken entity.BleToken) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		now := time.Now().UTC()
+		if err := tx.Model(&model.BleToken{}).
+			Where("user_id = ? AND valid_to > ?", newToken.UserID, now).
+			Update("valid_to", now).Error; err != nil {
+			return err
+		}
+		m := model.BleToken{
+			ID:        newToken.ID,
+			UserID:    newToken.UserID,
+			Token:     newToken.Token,
+			ValidFrom: newToken.ValidFrom,
+			ValidTo:   newToken.ValidTo,
+		}
+		return tx.Create(&m).Error
+	})
 }
 
 func (r *bleTokenRepository) FindLatestByUserID(ctx context.Context, userID string) (entity.BleToken, error) {

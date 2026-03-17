@@ -10,9 +10,10 @@ type BleTokenRepository interface {
 	// Create persists a new BLE token.
 	Create(ctx context.Context, token entity.BleToken) error
 
-	// InvalidateByUserID immediately expires all active tokens for the user
-	// by setting valid_to to now. Used for token rotation on re-issuance.
-	InvalidateByUserID(ctx context.Context, userID string) error
+	// RotateToken atomically invalidates all active tokens for the user and
+	// creates the new token in a single transaction, preventing a window where
+	// the user has no valid token.
+	RotateToken(ctx context.Context, newToken entity.BleToken) error
 
 	// FindLatestByUserID returns the most recently issued token for the user,
 	// regardless of its validity. Callers are responsible for checking expiry.

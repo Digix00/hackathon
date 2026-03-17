@@ -24,11 +24,17 @@ func (r *stubBleTokenRepo) Create(_ context.Context, token entity.BleToken) erro
 	return nil
 }
 
-func (r *stubBleTokenRepo) InvalidateByUserID(_ context.Context, userID string) error {
-	if token, ok := r.byUserID[userID]; ok {
-		token.ValidTo = token.ValidFrom // expire immediately
-		r.byUserID[userID] = token
+func (r *stubBleTokenRepo) RotateToken(_ context.Context, newToken entity.BleToken) error {
+	if r.createErr != nil {
+		return r.createErr
 	}
+	// Expire existing token for the user
+	if old, ok := r.byUserID[newToken.UserID]; ok {
+		old.ValidTo = old.ValidFrom
+		r.byUserID[newToken.UserID] = old
+	}
+	r.byUserID[newToken.UserID] = newToken
+	r.byToken[newToken.Token] = newToken
 	return nil
 }
 

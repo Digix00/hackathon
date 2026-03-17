@@ -55,16 +55,11 @@ func (u *bleTokenUsecase) CreateBleToken(ctx context.Context, authUID string) (u
 		return usecasedto.BleTokenDTO{}, err
 	}
 
-	// Invalidate existing tokens before issuing a new one (rotation)
-	if err = u.bleTokenRepo.InvalidateByUserID(ctx, user.ID); err != nil {
-		return usecasedto.BleTokenDTO{}, err
-	}
-
 	// Token TTL 24 hours
 	tokenEntity := entity.NewBleToken(user.ID, 24)
 
-	err = u.bleTokenRepo.Create(ctx, tokenEntity)
-	if err != nil {
+	// Atomically invalidate existing tokens and create the new one
+	if err = u.bleTokenRepo.RotateToken(ctx, tokenEntity); err != nil {
 		return usecasedto.BleTokenDTO{}, err
 	}
 
