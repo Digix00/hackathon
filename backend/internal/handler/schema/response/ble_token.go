@@ -8,6 +8,5 @@ type BleTokenResponse struct {
 
 type BleToken struct {
 	Token     string    `json:"token"`
-	ValidFrom time.Time `json:"valid_from"`
-	ValidTo   time.Time `json:"valid_to"`
+	ExpiresAt time.Time `json:"expires_at"`
 }

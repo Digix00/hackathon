@@ -43,8 +43,7 @@ func (h *bleTokenHandler) createBleToken(c echo.Context) error {
 	return c.JSON(http.StatusCreated, response.BleTokenResponse{
 		BleToken: response.BleToken{
 			Token:     dto.Token,
-			ValidFrom: dto.ValidFrom,
-			ValidTo:   dto.ValidTo,
+			ExpiresAt: dto.ValidTo,
 		},
 	})
 }
@@ -75,8 +74,7 @@ func (h *bleTokenHandler) getCurrentBleToken(c echo.Context) error {
 	return c.JSON(http.StatusOK, response.BleTokenResponse{
 		BleToken: response.BleToken{
 			Token:     dto.Token,
-			ValidFrom: dto.ValidFrom,
-			ValidTo:   dto.ValidTo,
+			ExpiresAt: dto.ValidTo,
 		},
 	})
 }

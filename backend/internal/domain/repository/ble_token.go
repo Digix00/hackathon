@@ -7,9 +7,12 @@ import (
 )
 
 type BleTokenRepository interface {
-	// Create persists a new BLE token. If a user only needs one active token,
-	// older tokens can be deleted or soft-deleted periodically by a worker.
+	// Create persists a new BLE token.
 	Create(ctx context.Context, token entity.BleToken) error
+
+	// InvalidateByUserID immediately expires all active tokens for the user
+	// by setting valid_to to now. Used for token rotation on re-issuance.
+	InvalidateByUserID(ctx context.Context, userID string) error
 
 	// FindLatestByUserID returns the most recently issued token for the user,
 	// regardless of its validity. Callers are responsible for checking expiry.

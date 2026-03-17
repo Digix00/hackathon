@@ -3,6 +3,7 @@ package rdb
 import (
 	"context"
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -33,6 +34,14 @@ func (r *bleTokenRepository) Create(ctx context.Context, e entity.BleToken) erro
 		return err
 	}
 	return nil
+}
+
+func (r *bleTokenRepository) InvalidateByUserID(ctx context.Context, userID string) error {
+	now := time.Now().UTC()
+	return r.db.WithContext(ctx).
+		Model(&model.BleToken{}).
+		Where("user_id = ? AND valid_to > ?", userID, now).
+		Update("valid_to", now).Error
 }
 
 func (r *bleTokenRepository) FindLatestByUserID(ctx context.Context, userID string) (entity.BleToken, error) {
