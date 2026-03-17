@@ -117,7 +117,7 @@ func (h *bleTokenHandler) getUserByBleToken(c echo.Context) error {
 			Birthplace:     dto.Birthplace,
 			AgeRange:       dto.AgeRange,
 			EncounterCount: dto.EncounterCount,
-			UpdatedAt:      dto.UpdatedAt.Format(time.RFC3339),
+			UpdatedAt:      dto.UpdatedAt.UTC().Format(time.RFC3339),
 		},
 	}
 	if dto.SharedTrack != nil {
