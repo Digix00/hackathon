@@ -24,6 +24,7 @@ interface EncountersApi {
      *  - 401: Unauthorized
      *  - 404: Not Found
      *  - 409: Conflict
+     *  - 429: Too Many Requests
      *  - 500: Internal Server Error
      *
      * @param body すれ違い登録リクエスト
