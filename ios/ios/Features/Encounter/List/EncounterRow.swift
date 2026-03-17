@@ -208,7 +208,7 @@ struct EncounterRow: View {
 
     private var auraView: some View {
         Circle()
-            .fill(encounter.track.color.opacity(0.05))
+            .fill(encounter.track.color.opacity(0.10))
             .frame(width: 300, height: 300)
             .blur(radius: auraBlurRadius)
             .offset(x: horizontalShift * 2, y: 0)
