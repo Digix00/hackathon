@@ -683,7 +683,7 @@ erDiagram
 - `valid_to`（期限切れトークンの定期削除用）
 
 **運用:**
-- 毎日 0:00 UTC に全ユーザーの BLE ID を再発行
+- BLE ID は発行時刻から24時間有効（`valid_to = issued_at + 24h`）
 - `valid_to` が超過しているレコードは定期的に削除
 
 ---

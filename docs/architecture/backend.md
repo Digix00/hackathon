@@ -197,7 +197,7 @@ BLE 交換成立
 
 ## BLE 短命トークン設計
 
-- 毎日 0:00 UTC に全ユーザーの BLE ID を再発行（Cloud Scheduler → worker）
+- BLE ID は発行時刻から 24 時間有効（`valid_to = issued_at + 24h`）
 - worker のバッチ処理で期限切れトークンを定期削除（Cloud SQL の WHERE valid_to < NOW()）
 - クライアントは起動時またはトークン期限切れ時に新しい ID を取得
 

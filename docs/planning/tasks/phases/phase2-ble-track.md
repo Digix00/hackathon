@@ -18,10 +18,10 @@ BLE近接検知と外部音楽API連携の実装。
 - [ ] **Backend** `GET /ble-tokens/current` - 現在有効なトークン取得
 - [ ] **Backend** `GET /ble-tokens/:token/user` - トークンからユーザー情報取得
 
-### 2.1.3 BLE トークン定期処理
+### 2.1.3 BLE トークン期限管理
 
 - [ ] **Backend** `cmd/worker/` に期限切れトークン削除処理実装
-- [ ] **Infra** Cloud Scheduler で毎日 0:00 UTC にトークンローテーションをキック
+- [ ] **Backend** トークン TTL を「発行時刻から24時間」に統一
 
 ## 2.2 iOS BLE 実装
 
