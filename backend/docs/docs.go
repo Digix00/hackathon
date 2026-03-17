@@ -14,7 +14,977 @@ const docTemplate = `{
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
-    "paths": {},
+    "paths": {
+        "/api/v1/users": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Firebase 認証済みの新規ユーザーを登録する（初回ログイン時に一度だけ呼ぶ）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "ユーザー作成",
+                "operationId": "createUser",
+                "parameters": [
+                    {
+                        "description": "ユーザー作成リクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.CreateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証中のユーザー自身のプロフィールを返す",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "自分のユーザー情報取得",
+                "operationId": "getMe",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.UserResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "DB レコードと Firebase アカウントを削除する（Firebase 削除はベストエフォート）",
+                "tags": [
+                    "users"
+                ],
+                "summary": "自分のアカウント削除",
+                "operationId": "deleteMe",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したフィールドだけを部分更新する（null フィールドは変更しない）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "自分のプロフィール更新",
+                "operationId": "patchMe",
+                "parameters": [
+                    {
+                        "description": "プロフィール更新リクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.UpdateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/push-tokens": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "device_id が既存なら更新して 200、新規なら 201 を返す",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "push-tokens"
+                ],
+                "summary": "プッシュトークン登録（upsert）",
+                "operationId": "createPushToken",
+                "parameters": [
+                    {
+                        "description": "プッシュトークン登録リクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.CreatePushTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "既存デバイスを更新",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.DeviceResponse"
+                        }
+                    },
+                    "201": {
+                        "description": "新規デバイスを登録",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.DeviceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/push-tokens/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定デバイスのレコードを削除する",
+                "tags": [
+                    "push-tokens"
+                ],
+                "summary": "プッシュトークン削除",
+                "operationId": "deletePushToken",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "デバイス ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定デバイスのトークン・有効フラグ・アプリバージョンを部分更新する",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "push-tokens"
+                ],
+                "summary": "プッシュトークン更新",
+                "operationId": "patchPushToken",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "デバイス ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "プッシュトークン更新リクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.UpdatePushTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.DeviceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/settings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証中のユーザーのアプリ設定を返す",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "自分の設定取得",
+                "operationId": "getMySettings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.SettingsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したフィールドだけを部分更新する（null フィールドは変更しない）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "自分の設定更新",
+                "operationId": "patchMySettings",
+                "parameters": [
+                    {
+                        "description": "設定更新リクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.UpdateSettingsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.SettingsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定した ID の公開プロフィールを返す",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "他ユーザーのプロフィール取得",
+                "operationId": "getUserByID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "対象ユーザー ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.PublicUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/healthz": {
+            "get": {
+                "description": "サーバーが起動しているか確認する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "ヘルスチェック",
+                "operationId": "healthz",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/healthz/postgres": {
+            "get": {
+                "description": "PostgreSQL への接続を確認する（タイムアウト 5s）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "PostgreSQL ヘルスチェック",
+                "operationId": "healthzPostgres",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "hackathon_internal_handler_schema_request.CreatePushTokenRequest": {
+            "type": "object",
+            "properties": {
+                "app_version": {
+                    "type": "string"
+                },
+                "device_id": {
+                    "type": "string"
+                },
+                "platform": {
+                    "type": "string"
+                },
+                "push_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_request.CreateUserRequest": {
+            "type": "object",
+            "properties": {
+                "age_visibility": {
+                    "type": "string"
+                },
+                "avatar_url": {
+                    "type": "string"
+                },
+                "bio": {
+                    "type": "string"
+                },
+                "birthdate": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "prefecture_id": {
+                    "type": "string"
+                },
+                "sex": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_request.UpdatePushTokenRequest": {
+            "type": "object",
+            "properties": {
+                "app_version": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "push_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_request.UpdateSettingsRequest": {
+            "type": "object",
+            "properties": {
+                "announcement_notification_enabled": {
+                    "type": "boolean"
+                },
+                "batch_notification_enabled": {
+                    "type": "boolean"
+                },
+                "ble_enabled": {
+                    "type": "boolean"
+                },
+                "comment_notification_enabled": {
+                    "type": "boolean"
+                },
+                "detection_distance": {
+                    "type": "integer"
+                },
+                "encounter_notification_enabled": {
+                    "type": "boolean"
+                },
+                "like_notification_enabled": {
+                    "type": "boolean"
+                },
+                "location_enabled": {
+                    "type": "boolean"
+                },
+                "notification_enabled": {
+                    "type": "boolean"
+                },
+                "notification_frequency": {
+                    "type": "string"
+                },
+                "profile_visible": {
+                    "type": "boolean"
+                },
+                "schedule_enabled": {
+                    "type": "boolean"
+                },
+                "schedule_end_time": {
+                    "type": "string"
+                },
+                "schedule_start_time": {
+                    "type": "string"
+                },
+                "theme_mode": {
+                    "type": "string"
+                },
+                "track_visible": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_request.UpdateUserRequest": {
+            "type": "object",
+            "properties": {
+                "age_visibility": {
+                    "type": "string"
+                },
+                "avatar_url": {
+                    "type": "string"
+                },
+                "bio": {
+                    "type": "string"
+                },
+                "birthdate": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "prefecture_id": {
+                    "type": "string"
+                },
+                "sex": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.Device": {
+            "type": "object",
+            "properties": {
+                "device_id": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "platform": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.DeviceResponse": {
+            "type": "object",
+            "properties": {
+                "device": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.Device"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.PublicTrack": {
+            "type": "object",
+            "properties": {
+                "artist_name": {
+                    "type": "string"
+                },
+                "artwork_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "preview_url": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.PublicUser": {
+            "type": "object",
+            "properties": {
+                "age_range": {
+                    "type": "string"
+                },
+                "avatar_url": {
+                    "type": "string"
+                },
+                "bio": {
+                    "type": "string"
+                },
+                "birthplace": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "encounter_count": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "shared_track": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.PublicTrack"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.PublicUserResponse": {
+            "type": "object",
+            "properties": {
+                "user": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.PublicUser"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.Settings": {
+            "type": "object",
+            "properties": {
+                "announcement_notification_enabled": {
+                    "type": "boolean"
+                },
+                "batch_notification_enabled": {
+                    "type": "boolean"
+                },
+                "ble_enabled": {
+                    "type": "boolean"
+                },
+                "comment_notification_enabled": {
+                    "type": "boolean"
+                },
+                "detection_distance": {
+                    "type": "integer"
+                },
+                "encounter_notification_enabled": {
+                    "type": "boolean"
+                },
+                "like_notification_enabled": {
+                    "type": "boolean"
+                },
+                "location_enabled": {
+                    "type": "boolean"
+                },
+                "notification_enabled": {
+                    "type": "boolean"
+                },
+                "notification_frequency": {
+                    "type": "string"
+                },
+                "profile_visible": {
+                    "type": "boolean"
+                },
+                "schedule_enabled": {
+                    "type": "boolean"
+                },
+                "schedule_end_time": {
+                    "type": "string"
+                },
+                "schedule_start_time": {
+                    "type": "string"
+                },
+                "theme_mode": {
+                    "type": "string"
+                },
+                "track_visible": {
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.SettingsResponse": {
+            "type": "object",
+            "properties": {
+                "settings": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.Settings"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.User": {
+            "type": "object",
+            "properties": {
+                "age_visibility": {
+                    "type": "string"
+                },
+                "avatar_url": {
+                    "type": "string"
+                },
+                "bio": {
+                    "type": "string"
+                },
+                "birthdate": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "prefecture_id": {
+                    "type": "string"
+                },
+                "sex": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.UserResponse": {
+            "type": "object",
+            "properties": {
+                "user": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.User"
+                }
+            }
+        },
+        "internal_handler.errorBody": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "object"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handler.errorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "$ref": "#/definitions/internal_handler.errorBody"
+                }
+            }
+        }
+    },
     "securityDefinitions": {
         "BearerAuth": {
             "description": "Firebase ID トークン。\"Bearer \u003ctoken\u003e\" の形式で渡す。",
@@ -29,7 +999,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8000",
-	BasePath:         "/api/v1",
+	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "MusicSwapping API",
 	Description:      "MusicSwapping バックエンド API",
