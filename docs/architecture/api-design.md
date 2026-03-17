@@ -36,6 +36,7 @@
 - **401 Unauthorized**: Firebase ID Token 不正、または未指定
 - **404 Not Found**: 対象リソース未存在、またはアクセス不可を秘匿する場合
 - **409 Conflict**: 重複投稿や、現在の状態では受け付けられない操作
+- **429 Too Many Requests**: レート制限超過（code: TOO_MANY_REQUESTS）
 
 ### API フィールドと DB カラムの主なマッピング
 
