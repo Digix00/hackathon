@@ -13,10 +13,10 @@ import AnyCodable
 public struct HackathonInternalHandlerSchemaResponseBleTokenUser: Codable, JSONEncodable, Hashable {
 
     public var avatarUrl: String?
-    public var displayName: String?
-    public var id: String?
+    public var displayName: String
+    public var id: String
 
-    public init(avatarUrl: String? = nil, displayName: String? = nil, id: String? = nil) {
+    public init(avatarUrl: String? = nil, displayName: String, id: String) {
         self.avatarUrl = avatarUrl
         self.displayName = displayName
         self.id = id
@@ -33,8 +33,8 @@ public struct HackathonInternalHandlerSchemaResponseBleTokenUser: Codable, JSONE
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(avatarUrl, forKey: .avatarUrl)
-        try container.encodeIfPresent(displayName, forKey: .displayName)
-        try container.encodeIfPresent(id, forKey: .id)
+        try container.encode(displayName, forKey: .displayName)
+        try container.encode(id, forKey: .id)
     }
 }
 
