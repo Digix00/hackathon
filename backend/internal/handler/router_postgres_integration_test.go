@@ -99,16 +99,16 @@ func newPostgresIntegrationServer(t *testing.T, db *gorm.DB, authUID string) *ec
 	blockRepo := rdb.NewBlockRepository(db)
 	encounterRepo := rdb.NewEncounterRepository(db)
 	trackRepo := rdb.NewUserCurrentTrackRepository(db)
-	userUsecase := usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo)
+	bleTokenRepo := rdb.NewBleTokenRepository(db)
 
 	e := echo.New()
 	RegisterRoutes(e, Dependencies{
 		AuthTokenVerifier: testTokenVerifier{uid: authUID},
 		AuthUserManager:   testAuthUserManager{},
-		UserUsecase:       userUsecase,
+		UserUsecase:       usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
 		SettingsUsecase:   usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
 		PushTokenUsecase:  usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
-		BleTokenUsecase:   usecase.NewBleTokenUsecase(rdb.NewBleTokenRepository(db), userRepo, blockRepo),
+		BleTokenUsecase:   usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
 	})
 	return e
 }
