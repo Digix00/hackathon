@@ -33,12 +33,13 @@ jobs:
           go-version-file: backend/go.mod
           cache-dependency-path: backend/go.sum
 
-      - name: Install swag CLI
-        run: go install github.com/swaggo/swag/cmd/swag@v1.16.6
-
       - name: Download Go dependencies
         working-directory: backend
         run: go mod download
+
+      - name: Install swag CLI
+        working-directory: backend
+        run: go install github.com/swaggo/swag/cmd/swag
 
       - name: Regenerate swagger docs (backend)
         working-directory: backend
