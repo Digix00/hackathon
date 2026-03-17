@@ -23,22 +23,22 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param avatarUrl 
  * @param displayName 
  * @param id 
+ * @param avatarUrl 
  */
 @Serializable
 
 data class HackathonInternalHandlerSchemaResponseBleTokenUser (
 
-    @SerialName(value = "avatar_url")
-    val avatarUrl: kotlin.String? = null,
-
     @SerialName(value = "display_name")
-    val displayName: kotlin.String? = null,
+    val displayName: kotlin.String,
 
     @SerialName(value = "id")
-    val id: kotlin.String? = null
+    val id: kotlin.String,
+
+    @SerialName(value = "avatar_url")
+    val avatarUrl: kotlin.String? = null
 
 ) {
 

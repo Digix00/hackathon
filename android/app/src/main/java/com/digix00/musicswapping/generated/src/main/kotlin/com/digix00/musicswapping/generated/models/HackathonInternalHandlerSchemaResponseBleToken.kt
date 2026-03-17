@@ -31,10 +31,10 @@ import kotlinx.serialization.Contextual
 data class HackathonInternalHandlerSchemaResponseBleToken (
 
     @SerialName(value = "expires_at")
-    val expiresAt: kotlin.String? = null,
+    val expiresAt: kotlin.String,
 
     @SerialName(value = "token")
-    val token: kotlin.String? = null
+    val token: kotlin.String
 
 ) {
 
