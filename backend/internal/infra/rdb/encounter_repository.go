@@ -165,9 +165,12 @@ func (r *encounterRepository) ListByUserIDExcludingBlocked(ctx context.Context, 
 			NOT EXISTS (
 				SELECT 1 FROM blocks b
 				WHERE
-					(b.blocker_user_id = ? AND b.blocked_user_id = CASE WHEN encounters.user_id1 = ? THEN encounters.user_id2 ELSE encounters.user_id1 END)
-					OR
-					(b.blocked_user_id = ? AND b.blocker_user_id = CASE WHEN encounters.user_id1 = ? THEN encounters.user_id2 ELSE encounters.user_id1 END)
+					b.deleted_at IS NULL
+					AND (
+						(b.blocker_user_id = ? AND b.blocked_user_id = CASE WHEN encounters.user_id1 = ? THEN encounters.user_id2 ELSE encounters.user_id1 END)
+						OR
+						(b.blocked_user_id = ? AND b.blocker_user_id = CASE WHEN encounters.user_id1 = ? THEN encounters.user_id2 ELSE encounters.user_id1 END)
+					)
 			)
 		`, requesterID, requesterID, requesterID, requesterID)
 
