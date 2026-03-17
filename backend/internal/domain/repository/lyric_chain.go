@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"hackathon/internal/domain/entity"
+	"hackathon/internal/domain/vo"
 )
 
 // LyricChainRepository は歌詞チェーンの永続化インターフェース。
@@ -20,4 +21,7 @@ type LyricChainRepository interface {
 	// IncrementParticipantCount は participant_count をインクリメントし、threshold 到達時に status を generating に変更する。
 	// 返り値の bool は threshold に到達したかどうかを示す。
 	IncrementParticipantCount(ctx context.Context, chainID string, threshold int) (entity.LyricChain, bool, error)
+
+	// UpdateStatus はチェーンのステータスを更新する。
+	UpdateStatus(ctx context.Context, chainID string, status vo.LyricChainStatus) error
 }

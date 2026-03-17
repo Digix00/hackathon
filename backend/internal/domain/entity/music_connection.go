@@ -18,3 +18,13 @@ type MusicConnection struct {
 	ExpiresAt        *time.Time
 	UpdatedAt        time.Time
 }
+
+// NewMusicConnection は新規 MusicConnection を生成する。
+func NewMusicConnection(userID string, provider vo.MusicProvider, providerUserID string, accessToken string) MusicConnection {
+	return MusicConnection{
+		UserID:         userID,
+		Provider:       provider,
+		ProviderUserID: providerUserID,
+		AccessToken:    accessToken,
+	}
+}

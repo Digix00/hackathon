@@ -79,6 +79,12 @@ func (r *lyricChainRepository) IncrementParticipantCount(ctx context.Context, ch
 	return converter.ModelToEntityLyricChain(m), reached, nil
 }
 
+func (r *lyricChainRepository) UpdateStatus(ctx context.Context, chainID string, status vo.LyricChainStatus) error {
+	return r.db.WithContext(ctx).Model(&model.LyricChain{}).
+		Where("id = ?", chainID).
+		Update("status", string(status)).Error
+}
+
 // ─── LyricEntryRepository ─────────────────────────────────────────────────────
 
 type lyricEntryRepository struct{ db *gorm.DB }
@@ -146,10 +152,15 @@ func (r *generatedSongRepository) FindByChainID(ctx context.Context, chainID str
 
 func (r *generatedSongRepository) Create(ctx context.Context, song entity.GeneratedSong) (entity.GeneratedSong, error) {
 	m := model.GeneratedSong{
-		ID:      song.ID,
-		ChainID: song.ChainID,
-		Title:   song.Title,
-		Status:  string(song.Status),
+		ID:          song.ID,
+		ChainID:     song.ChainID,
+		Title:       song.Title,
+		AudioURL:    song.AudioURL,
+		DurationSec: song.DurationSec,
+		Mood:        song.Mood,
+		Genre:       song.Genre,
+		Status:      string(song.Status),
+		GeneratedAt: song.GeneratedAt,
 	}
 	if err := r.db.WithContext(ctx).Create(&m).Error; err != nil {
 		return entity.GeneratedSong{}, err

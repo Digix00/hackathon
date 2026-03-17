@@ -146,7 +146,7 @@ func (c *SpotifyOAuthClient) RefreshToken(ctx context.Context, refreshToken stri
 }
 
 // SearchTracks は Spotify Web API でトラック検索する。
-func (c *SpotifyOAuthClient) SearchTracks(_ context.Context, accessToken string, query string, limit int, cursor string) (*port.MusicTrackSearchResult, error) {
+func (c *SpotifyOAuthClient) SearchTracks(ctx context.Context, accessToken string, query string, limit int, cursor string) (*port.MusicTrackSearchResult, error) {
 	if limit <= 0 || limit > 50 {
 		limit = 20
 	}
@@ -165,7 +165,7 @@ func (c *SpotifyOAuthClient) SearchTracks(_ context.Context, accessToken string,
 	params.Set("offset", strconv.Itoa(offset))
 
 	reqURL := spotifyAPIBase + "/search?" + params.Encode()
-	req, err := http.NewRequest(http.MethodGet, reqURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -204,8 +204,8 @@ func (c *SpotifyOAuthClient) SearchTracks(_ context.Context, accessToken string,
 }
 
 // GetTrack は単一トラックの詳細を返す。
-func (c *SpotifyOAuthClient) GetTrack(_ context.Context, accessToken string, externalID string) (*port.MusicTrackDetail, error) {
-	req, err := http.NewRequest(http.MethodGet, spotifyAPIBase+"/tracks/"+externalID, nil)
+func (c *SpotifyOAuthClient) GetTrack(ctx context.Context, accessToken string, externalID string) (*port.MusicTrackDetail, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, spotifyAPIBase+"/tracks/"+externalID, nil)
 	if err != nil {
 		return nil, err
 	}

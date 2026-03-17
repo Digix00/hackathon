@@ -134,14 +134,14 @@ func (p *lyriaJobProcessor) processJob(ctx context.Context, job entity.OutboxLyr
 	if err := p.generateSong(ctx, job.ChainID); err != nil {
 		errMsg := err.Error()
 		_ = p.outboxRepo.SetFailed(ctx, job.ID, errMsg)
-		// chain status を failed に更新
-		_, _, _ = p.chainRepo.IncrementParticipantCount(ctx, job.ChainID, 0) // no-op count
+		_ = p.chainRepo.UpdateStatus(ctx, job.ChainID, vo.LyricChainStatusFailed)
 		log.Printf("worker: song generation failed for chain %s: %v", job.ChainID, err)
 		return err
 	}
 
 	now := time.Now().UTC()
 	_ = p.outboxRepo.SetCompleted(ctx, job.ID, now)
+	_ = p.chainRepo.UpdateStatus(ctx, job.ChainID, vo.LyricChainStatusCompleted)
 	log.Printf("worker: song generation completed for chain %s", job.ChainID)
 	return nil
 }
