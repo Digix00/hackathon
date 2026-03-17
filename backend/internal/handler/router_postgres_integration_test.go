@@ -70,6 +70,7 @@ TRUNCATE TABLE
 	reports,
 	comments,
 	encounter_reads,
+	encounter_tracks,
 	daily_encounter_counts,
 	outbox_notifications,
 	music_connections,
