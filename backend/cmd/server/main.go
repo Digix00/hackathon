@@ -84,7 +84,7 @@ func main() {
 	e.GET("/healthz", healthzHandler)
 	e.GET("/healthz/postgres", healthzPostgresHandler(sqlDB))
 
-	handler.RegisterRoutes(e, buildDependencies(db, authClient))
+	handler.RegisterRoutes(e, buildDependencies(db, authClient, cfg))
 
 	log.Info("server starting", zap.String("port", cfg.Port))
 

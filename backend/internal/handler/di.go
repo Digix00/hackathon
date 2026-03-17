@@ -16,6 +16,8 @@ type Dependencies struct {
 	SettingsUsecase   usecase.SettingsUsecase
 	PushTokenUsecase  usecase.PushTokenUsecase
 	BleTokenUsecase   usecase.BleTokenUsecase
+	MusicUsecase      usecase.MusicUsecase
+	LyricUsecase      usecase.LyricUsecase
 }
 
 // FirebaseUserManager はFirebase Auth上のユーザー削除操作を抽象化する。
