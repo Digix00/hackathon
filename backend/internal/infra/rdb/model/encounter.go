@@ -7,11 +7,11 @@ import (
 )
 
 type Encounter struct {
-	ID            string         `gorm:"primaryKey"`
-	UserID1       string         `gorm:"not null;index;check:chk_encounters_user_order,user_id1 < user_id2"`
-	UserID2       string         `gorm:"not null;index"`
-	EncounteredAt time.Time      `gorm:"not null;index"`
-	EncounterType string         `gorm:"not null"` // 'ble' | 'location'
+	ID            string    `gorm:"primaryKey"`
+	UserID1       string    `gorm:"not null;index;check:chk_encounters_user_order,user_id1 < user_id2"`
+	UserID2       string    `gorm:"not null;index"`
+	EncounteredAt time.Time `gorm:"not null;index"`
+	EncounterType string    `gorm:"not null"` // 'ble' | 'location'
 	Latitude      *float64
 	Longitude     *float64
 	CreatedAt     time.Time      `gorm:"not null;autoCreateTime"`
@@ -74,11 +74,11 @@ type Mute struct {
 }
 
 type OutboxNotification struct {
-	ID          string     `gorm:"primaryKey"`
-	UserID      string     `gorm:"not null;index"`
-	EncounterID string     `gorm:"not null"`
-	Status      string     `gorm:"not null;default:pending;index"` // 'pending' | 'sent' | 'failed'
-	RetryCount  int        `gorm:"not null;default:0"`
-	CreatedAt   time.Time  `gorm:"not null;autoCreateTime;index"`
+	ID          string    `gorm:"primaryKey"`
+	UserID      string    `gorm:"not null;index"`
+	EncounterID string    `gorm:"not null"`
+	Status      string    `gorm:"not null;default:pending;index"` // 'pending' | 'sent' | 'failed'
+	RetryCount  int       `gorm:"not null;default:0"`
+	CreatedAt   time.Time `gorm:"not null;autoCreateTime;index"`
 	ProcessedAt *time.Time
 }
