@@ -33,7 +33,7 @@ func (h *bleTokenHandler) createBleToken(c echo.Context) error {
 	ctx := c.Request().Context()
 	authUID, ok := middleware.UserIDFromContext(c)
 	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, "User context is missing")
+		return errUnauthorized()
 	}
 
 	dto, err := h.usecase.CreateBleToken(ctx, authUID)
@@ -65,7 +65,7 @@ func (h *bleTokenHandler) getCurrentBleToken(c echo.Context) error {
 	ctx := c.Request().Context()
 	authUID, ok := middleware.UserIDFromContext(c)
 	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, "User context is missing")
+		return errUnauthorized()
 	}
 
 	dto, err := h.usecase.GetCurrentBleToken(ctx, authUID)
@@ -99,7 +99,7 @@ func (h *bleTokenHandler) getUserByBleToken(c echo.Context) error {
 	ctx := c.Request().Context()
 	authUID, ok := middleware.UserIDFromContext(c)
 	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, "User context is missing")
+		return errUnauthorized()
 	}
 	targetToken := c.Param("token")
 
