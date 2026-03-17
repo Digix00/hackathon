@@ -3,8 +3,8 @@ package usecase
 import (
 	"context"
 
-	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/entity"
+	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
 	usecasedto "hackathon/internal/usecase/dto"
 )
