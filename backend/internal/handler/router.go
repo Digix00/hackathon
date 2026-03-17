@@ -12,6 +12,7 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	userHandler := newUserHandler(deps.AuthUserManager, deps.UserUsecase)
 	settingsHandler := newSettingsHandler(deps.SettingsUsecase)
 	pushTokenHandler := newPushTokenHandler(deps.PushTokenUsecase)
+	bleTokenHandler := newBleTokenHandler(deps.BleTokenUsecase)
 
 	api := e.Group("/api/v1")
 	api.Use(middleware.FirebaseAuth(deps.AuthTokenVerifier))
@@ -28,4 +29,8 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	api.POST("/users/me/push-tokens", pushTokenHandler.createPushToken)
 	api.PATCH("/users/me/push-tokens/:id", pushTokenHandler.patchPushToken)
 	api.DELETE("/users/me/push-tokens/:id", pushTokenHandler.deletePushToken)
+
+	api.POST("/ble-tokens", bleTokenHandler.createBleToken)
+	api.GET("/ble-tokens/current", bleTokenHandler.getCurrentBleToken)
+	api.GET("/ble-tokens/:token/user", bleTokenHandler.getUserByBleToken)
 }
