@@ -31,11 +31,19 @@ Class | Method | HTTP request | Description
 *BleTokensAPI* | [**getUserByBleToken**](docs/BleTokensAPI.md#getuserbybletoken) | **GET** /api/v1/ble-tokens/{token}/user | BLE トークンからユーザー情報取得
 *HealthAPI* | [**healthz**](docs/HealthAPI.md#healthz) | **GET** /healthz | ヘルスチェック
 *HealthAPI* | [**healthzPostgres**](docs/HealthAPI.md#healthzpostgres) | **GET** /healthz/postgres | PostgreSQL ヘルスチェック
+*LyricsAPI* | [**getLyricChain**](docs/LyricsAPI.md#getlyricchain) | **GET** /api/v1/lyrics/chains/{chain_id} | 歌詞チェーン詳細取得
+*LyricsAPI* | [**postLyric**](docs/LyricsAPI.md#postlyric) | **POST** /api/v1/lyrics | 歌詞投稿
+*MusicConnectionsAPI* | [**deleteMyMusicConnection**](docs/MusicConnectionsAPI.md#deletemymusicconnection) | **DELETE** /api/v1/users/me/music-connections/{provider} | 音楽サービス連携解除
+*MusicConnectionsAPI* | [**getMusicAuthorizeURL**](docs/MusicConnectionsAPI.md#getmusicauthorizeurl) | **GET** /api/v1/music-connections/{provider}/authorize | 音楽サービス OAuth 認可 URL 取得
+*MusicConnectionsAPI* | [**getMyMusicConnections**](docs/MusicConnectionsAPI.md#getmymusicconnections) | **GET** /api/v1/users/me/music-connections | 音楽サービス連携一覧取得
+*MusicConnectionsAPI* | [**handleMusicCallback**](docs/MusicConnectionsAPI.md#handlemusiccallback) | **GET** /api/v1/music-connections/{provider}/callback | 音楽サービス OAuth コールバック
 *PushTokensAPI* | [**createPushToken**](docs/PushTokensAPI.md#createpushtoken) | **POST** /api/v1/users/me/push-tokens | プッシュトークン登録（upsert）
 *PushTokensAPI* | [**deletePushToken**](docs/PushTokensAPI.md#deletepushtoken) | **DELETE** /api/v1/users/me/push-tokens/{id} | プッシュトークン削除
 *PushTokensAPI* | [**patchPushToken**](docs/PushTokensAPI.md#patchpushtoken) | **PATCH** /api/v1/users/me/push-tokens/{id} | プッシュトークン更新
 *SettingsAPI* | [**getMySettings**](docs/SettingsAPI.md#getmysettings) | **GET** /api/v1/users/me/settings | 自分の設定取得
 *SettingsAPI* | [**patchMySettings**](docs/SettingsAPI.md#patchmysettings) | **PATCH** /api/v1/users/me/settings | 自分の設定更新
+*TracksAPI* | [**getTrack**](docs/TracksAPI.md#gettrack) | **GET** /api/v1/tracks/{id} | トラック詳細取得
+*TracksAPI* | [**searchTracks**](docs/TracksAPI.md#searchtracks) | **GET** /api/v1/tracks/search | トラック検索
 *UsersAPI* | [**createUser**](docs/UsersAPI.md#createuser) | **POST** /api/v1/users | ユーザー作成
 *UsersAPI* | [**deleteMe**](docs/UsersAPI.md#deleteme) | **DELETE** /api/v1/users/me | 自分のアカウント削除
 *UsersAPI* | [**getMe**](docs/UsersAPI.md#getme) | **GET** /api/v1/users/me | 自分のユーザー情報取得
@@ -47,6 +55,7 @@ Class | Method | HTTP request | Description
 
  - [HackathonInternalHandlerSchemaRequestCreatePushTokenRequest](docs/HackathonInternalHandlerSchemaRequestCreatePushTokenRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateUserRequest](docs/HackathonInternalHandlerSchemaRequestCreateUserRequest.md)
+ - [HackathonInternalHandlerSchemaRequestPostLyricRequest](docs/HackathonInternalHandlerSchemaRequestPostLyricRequest.md)
  - [HackathonInternalHandlerSchemaRequestUpdatePushTokenRequest](docs/HackathonInternalHandlerSchemaRequestUpdatePushTokenRequest.md)
  - [HackathonInternalHandlerSchemaRequestUpdateSettingsRequest](docs/HackathonInternalHandlerSchemaRequestUpdateSettingsRequest.md)
  - [HackathonInternalHandlerSchemaRequestUpdateUserRequest](docs/HackathonInternalHandlerSchemaRequestUpdateUserRequest.md)
@@ -56,12 +65,28 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseBleTokenUserResponse](docs/HackathonInternalHandlerSchemaResponseBleTokenUserResponse.md)
  - [HackathonInternalHandlerSchemaResponseDevice](docs/HackathonInternalHandlerSchemaResponseDevice.md)
  - [HackathonInternalHandlerSchemaResponseDeviceResponse](docs/HackathonInternalHandlerSchemaResponseDeviceResponse.md)
+ - [HackathonInternalHandlerSchemaResponseGeneratedSongItem](docs/HackathonInternalHandlerSchemaResponseGeneratedSongItem.md)
+ - [HackathonInternalHandlerSchemaResponseLyricChainDetailItem](docs/HackathonInternalHandlerSchemaResponseLyricChainDetailItem.md)
+ - [HackathonInternalHandlerSchemaResponseLyricChainDetailResponse](docs/HackathonInternalHandlerSchemaResponseLyricChainDetailResponse.md)
+ - [HackathonInternalHandlerSchemaResponseLyricChainItem](docs/HackathonInternalHandlerSchemaResponseLyricChainItem.md)
+ - [HackathonInternalHandlerSchemaResponseLyricEntryItem](docs/HackathonInternalHandlerSchemaResponseLyricEntryItem.md)
+ - [HackathonInternalHandlerSchemaResponseLyricEntryWithUserItem](docs/HackathonInternalHandlerSchemaResponseLyricEntryWithUserItem.md)
+ - [HackathonInternalHandlerSchemaResponseMusicAuthorizeResponse](docs/HackathonInternalHandlerSchemaResponseMusicAuthorizeResponse.md)
+ - [HackathonInternalHandlerSchemaResponseMusicConnectionItem](docs/HackathonInternalHandlerSchemaResponseMusicConnectionItem.md)
+ - [HackathonInternalHandlerSchemaResponseMusicConnectionsResponse](docs/HackathonInternalHandlerSchemaResponseMusicConnectionsResponse.md)
+ - [HackathonInternalHandlerSchemaResponsePaginationResult](docs/HackathonInternalHandlerSchemaResponsePaginationResult.md)
+ - [HackathonInternalHandlerSchemaResponsePostLyricResponse](docs/HackathonInternalHandlerSchemaResponsePostLyricResponse.md)
  - [HackathonInternalHandlerSchemaResponsePublicTrack](docs/HackathonInternalHandlerSchemaResponsePublicTrack.md)
  - [HackathonInternalHandlerSchemaResponsePublicUser](docs/HackathonInternalHandlerSchemaResponsePublicUser.md)
  - [HackathonInternalHandlerSchemaResponsePublicUserResponse](docs/HackathonInternalHandlerSchemaResponsePublicUserResponse.md)
  - [HackathonInternalHandlerSchemaResponseSettings](docs/HackathonInternalHandlerSchemaResponseSettings.md)
  - [HackathonInternalHandlerSchemaResponseSettingsResponse](docs/HackathonInternalHandlerSchemaResponseSettingsResponse.md)
+ - [HackathonInternalHandlerSchemaResponseTrackDetailItem](docs/HackathonInternalHandlerSchemaResponseTrackDetailItem.md)
+ - [HackathonInternalHandlerSchemaResponseTrackDetailResponse](docs/HackathonInternalHandlerSchemaResponseTrackDetailResponse.md)
+ - [HackathonInternalHandlerSchemaResponseTrackItem](docs/HackathonInternalHandlerSchemaResponseTrackItem.md)
+ - [HackathonInternalHandlerSchemaResponseTrackSearchResponse](docs/HackathonInternalHandlerSchemaResponseTrackSearchResponse.md)
  - [HackathonInternalHandlerSchemaResponseUser](docs/HackathonInternalHandlerSchemaResponseUser.md)
+ - [HackathonInternalHandlerSchemaResponseUserBrief](docs/HackathonInternalHandlerSchemaResponseUserBrief.md)
  - [HackathonInternalHandlerSchemaResponseUserResponse](docs/HackathonInternalHandlerSchemaResponseUserResponse.md)
  - [InternalHandlerErrorBody](docs/InternalHandlerErrorBody.md)
  - [InternalHandlerErrorResponse](docs/InternalHandlerErrorResponse.md)

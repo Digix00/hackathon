@@ -40,6 +40,13 @@ definitions:
         - no-answer
         type: string
     type: object
+  hackathon_internal_handler_schema_request.PostLyricRequest:
+    properties:
+      content:
+        type: string
+      encounter_id:
+        type: string
+    type: object
   hackathon_internal_handler_schema_request.UpdatePushTokenRequest:
     properties:
       app_version:
@@ -175,6 +182,128 @@ definitions:
       device:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.Device'
     type: object
+  hackathon_internal_handler_schema_response.GeneratedSongItem:
+    properties:
+      audio_url:
+        type: string
+      duration_sec:
+        type: integer
+      id:
+        type: string
+      mood:
+        type: string
+      title:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.LyricChainDetailItem:
+    properties:
+      id:
+        type: string
+      participant_count:
+        type: integer
+      status:
+        enum:
+        - pending
+        - generating
+        - completed
+        - failed
+        type: string
+      threshold:
+        type: integer
+    type: object
+  hackathon_internal_handler_schema_response.LyricChainDetailResponse:
+    properties:
+      chain:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.LyricChainDetailItem'
+      entries:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.LyricEntryWithUserItem'
+        type: array
+      song:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.GeneratedSongItem'
+    type: object
+  hackathon_internal_handler_schema_response.LyricChainItem:
+    properties:
+      id:
+        type: string
+      participant_count:
+        type: integer
+      status:
+        enum:
+        - pending
+        - generating
+        - completed
+        - failed
+        type: string
+      threshold:
+        type: integer
+    type: object
+  hackathon_internal_handler_schema_response.LyricEntryItem:
+    properties:
+      chain_id:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      sequence_num:
+        type: integer
+    type: object
+  hackathon_internal_handler_schema_response.LyricEntryWithUserItem:
+    properties:
+      content:
+        type: string
+      sequence_num:
+        type: integer
+      user:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.UserBrief'
+    type: object
+  hackathon_internal_handler_schema_response.MusicAuthorizeResponse:
+    properties:
+      authorize_url:
+        type: string
+      state:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.MusicConnectionItem:
+    properties:
+      expires_at:
+        type: string
+      provider:
+        enum:
+        - spotify
+        - apple_music
+        type: string
+      provider_user_id:
+        type: string
+      provider_username:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.MusicConnectionsResponse:
+    properties:
+      music_connections:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.MusicConnectionItem'
+        type: array
+    type: object
+  hackathon_internal_handler_schema_response.PaginationResult:
+    properties:
+      has_more:
+        type: boolean
+      next_cursor:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.PostLyricResponse:
+    properties:
+      chain:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.LyricChainItem'
+      lyric_entry:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.LyricEntryItem'
+    type: object
   hackathon_internal_handler_schema_response.PublicTrack:
     properties:
       artist_name:
@@ -264,6 +393,50 @@ definitions:
       settings:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.Settings'
     type: object
+  hackathon_internal_handler_schema_response.TrackDetailItem:
+    properties:
+      album_name:
+        type: string
+      artist_name:
+        type: string
+      artwork_url:
+        type: string
+      duration_ms:
+        type: integer
+      id:
+        type: string
+      preview_url:
+        type: string
+      title:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.TrackDetailResponse:
+    properties:
+      track:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.TrackDetailItem'
+    type: object
+  hackathon_internal_handler_schema_response.TrackItem:
+    properties:
+      artist_name:
+        type: string
+      artwork_url:
+        type: string
+      id:
+        type: string
+      preview_url:
+        type: string
+      title:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.TrackSearchResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.PaginationResult'
+      tracks:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.TrackItem'
+        type: array
+    type: object
   hackathon_internal_handler_schema_response.User:
     properties:
       age_visibility:
@@ -294,6 +467,15 @@ definitions:
         - no-answer
         type: string
       updated_at:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.UserBrief:
+    properties:
+      avatar_url:
+        type: string
+      display_name:
+        type: string
+      id:
         type: string
     type: object
   hackathon_internal_handler_schema_response.UserResponse:
@@ -416,6 +598,201 @@ paths:
       summary: 有効な BLE トークン取得
       tags:
       - ble-tokens
+  /api/v1/lyrics:
+    post:
+      consumes:
+      - application/json
+      description: エンカウントをきっかけに歌詞チェーンへ1行を投稿する。チェーンが threshold に達すると楽曲生成ジョブが登録される。
+      operationId: postLyric
+      parameters:
+      - description: 歌詞投稿リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.PostLyricRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.PostLyricResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 歌詞投稿
+      tags:
+      - lyrics
+  /api/v1/lyrics/chains/{chain_id}:
+    get:
+      description: チェーンの詳細と全歌詞エントリを返す。completed 時のみ song フィールドが含まれる。
+      operationId: getLyricChain
+      parameters:
+      - description: チェーン ID
+        in: path
+        name: chain_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.LyricChainDetailResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 歌詞チェーン詳細取得
+      tags:
+      - lyrics
+  /api/v1/music-connections/{provider}/authorize:
+    get:
+      description: 指定プロバイダーの OAuth 認可フローを開始し authorize_url を返す
+      operationId: getMusicAuthorizeURL
+      parameters:
+      - description: spotify | apple_music
+        in: path
+        name: provider
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.MusicAuthorizeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 音楽サービス OAuth 認可 URL 取得
+      tags:
+      - music-connections
+  /api/v1/music-connections/{provider}/callback:
+    get:
+      description: OAuth コールバックを処理し、認可コードをトークンに交換してアプリへリダイレクト
+      operationId: handleMusicCallback
+      parameters:
+      - description: spotify | apple_music
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: 認可コード
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: CSRF state
+        in: query
+        name: state
+        required: true
+        type: string
+      responses:
+        "302":
+          description: Found
+      summary: 音楽サービス OAuth コールバック
+      tags:
+      - music-connections
+  /api/v1/tracks/{id}:
+    get:
+      description: '指定トラックの詳細を返す（ID: <provider>:track:<external_id>）'
+      operationId: getTrack
+      parameters:
+      - description: 'トラック ID（例: spotify:track:123）'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.TrackDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: トラック詳細取得
+      tags:
+      - tracks
+  /api/v1/tracks/search:
+    get:
+      description: Spotify Web API にプロキシするトラック検索
+      operationId: searchTracks
+      parameters:
+      - description: 検索キーワード
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: 件数（省略時20、最大50）
+        in: query
+        name: limit
+        type: integer
+      - description: 次ページカーソル
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.TrackSearchResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: トラック検索
+      tags:
+      - tracks
   /api/v1/users:
     post:
       consumes:
@@ -590,6 +967,52 @@ paths:
       summary: 自分のプロフィール更新
       tags:
       - users
+  /api/v1/users/me/music-connections:
+    get:
+      description: 自分の音楽サービス連携一覧を返す
+      operationId: getMyMusicConnections
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.MusicConnectionsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 音楽サービス連携一覧取得
+      tags:
+      - music-connections
+  /api/v1/users/me/music-connections/{provider}:
+    delete:
+      description: 指定プロバイダーの連携を解除する
+      operationId: deleteMyMusicConnection
+      parameters:
+      - description: spotify | apple_music
+        in: path
+        name: provider
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 音楽サービス連携解除
+      tags:
+      - music-connections
   /api/v1/users/me/push-tokens:
     post:
       consumes:

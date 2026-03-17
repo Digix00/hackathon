@@ -162,6 +162,308 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/lyrics": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "エンカウントをきっかけに歌詞チェーンへ1行を投稿する。チェーンが threshold に達すると楽曲生成ジョブが登録される。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lyrics"
+                ],
+                "summary": "歌詞投稿",
+                "operationId": "postLyric",
+                "parameters": [
+                    {
+                        "description": "歌詞投稿リクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.PostLyricRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.PostLyricResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lyrics/chains/{chain_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "チェーンの詳細と全歌詞エントリを返す。completed 時のみ song フィールドが含まれる。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lyrics"
+                ],
+                "summary": "歌詞チェーン詳細取得",
+                "operationId": "getLyricChain",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チェーン ID",
+                        "name": "chain_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.LyricChainDetailResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/music-connections/{provider}/authorize": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定プロバイダーの OAuth 認可フローを開始し authorize_url を返す",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "music-connections"
+                ],
+                "summary": "音楽サービス OAuth 認可 URL 取得",
+                "operationId": "getMusicAuthorizeURL",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "spotify | apple_music",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.MusicAuthorizeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/music-connections/{provider}/callback": {
+            "get": {
+                "description": "OAuth コールバックを処理し、認可コードをトークンに交換してアプリへリダイレクト",
+                "tags": [
+                    "music-connections"
+                ],
+                "summary": "音楽サービス OAuth コールバック",
+                "operationId": "handleMusicCallback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "spotify | apple_music",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "認可コード",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "CSRF state",
+                        "name": "state",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Found"
+                    }
+                }
+            }
+        },
+        "/api/v1/tracks/search": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Spotify Web API にプロキシするトラック検索",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tracks"
+                ],
+                "summary": "トラック検索",
+                "operationId": "searchTracks",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "検索キーワード",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "件数（省略時20、最大50）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "次ページカーソル",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.TrackSearchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tracks/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定トラックの詳細を返す（ID: \u003cprovider\u003e:track:\u003cexternal_id\u003e）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tracks"
+                ],
+                "summary": "トラック詳細取得",
+                "operationId": "getTrack",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "トラック ID（例: spotify:track:123）",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.TrackDetailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users": {
             "post": {
                 "security": [
@@ -361,6 +663,79 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/music-connections": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "自分の音楽サービス連携一覧を返す",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "music-connections"
+                ],
+                "summary": "音楽サービス連携一覧取得",
+                "operationId": "getMyMusicConnections",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.MusicConnectionsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/music-connections/{provider}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定プロバイダーの連携を解除する",
+                "tags": [
+                    "music-connections"
+                ],
+                "summary": "音楽サービス連携解除",
+                "operationId": "deleteMyMusicConnection",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "spotify | apple_music",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/internal_handler.errorResponse"
                         }
@@ -836,6 +1211,17 @@ const docTemplate = `{
                 }
             }
         },
+        "hackathon_internal_handler_schema_request.PostLyricRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "encounter_id": {
+                    "type": "string"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_request.UpdatePushTokenRequest": {
             "type": "object",
             "properties": {
@@ -1037,6 +1423,191 @@ const docTemplate = `{
                 }
             }
         },
+        "hackathon_internal_handler_schema_response.GeneratedSongItem": {
+            "type": "object",
+            "properties": {
+                "audio_url": {
+                    "type": "string"
+                },
+                "duration_sec": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mood": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.LyricChainDetailItem": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "participant_count": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "generating",
+                        "completed",
+                        "failed"
+                    ]
+                },
+                "threshold": {
+                    "type": "integer"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.LyricChainDetailResponse": {
+            "type": "object",
+            "properties": {
+                "chain": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.LyricChainDetailItem"
+                },
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.LyricEntryWithUserItem"
+                    }
+                },
+                "song": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.GeneratedSongItem"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.LyricChainItem": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "participant_count": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "generating",
+                        "completed",
+                        "failed"
+                    ]
+                },
+                "threshold": {
+                    "type": "integer"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.LyricEntryItem": {
+            "type": "object",
+            "properties": {
+                "chain_id": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "sequence_num": {
+                    "type": "integer"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.LyricEntryWithUserItem": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "sequence_num": {
+                    "type": "integer"
+                },
+                "user": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.UserBrief"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.MusicAuthorizeResponse": {
+            "type": "object",
+            "properties": {
+                "authorize_url": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.MusicConnectionItem": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string",
+                    "enum": [
+                        "spotify",
+                        "apple_music"
+                    ]
+                },
+                "provider_user_id": {
+                    "type": "string"
+                },
+                "provider_username": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.MusicConnectionsResponse": {
+            "type": "object",
+            "properties": {
+                "music_connections": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.MusicConnectionItem"
+                    }
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.PaginationResult": {
+            "type": "object",
+            "properties": {
+                "has_more": {
+                    "type": "boolean"
+                },
+                "next_cursor": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.PostLyricResponse": {
+            "type": "object",
+            "properties": {
+                "chain": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.LyricChainItem"
+                },
+                "lyric_entry": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.LyricEntryItem"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_response.PublicTrack": {
             "type": "object",
             "properties": {
@@ -1171,6 +1742,74 @@ const docTemplate = `{
                 }
             }
         },
+        "hackathon_internal_handler_schema_response.TrackDetailItem": {
+            "type": "object",
+            "properties": {
+                "album_name": {
+                    "type": "string"
+                },
+                "artist_name": {
+                    "type": "string"
+                },
+                "artwork_url": {
+                    "type": "string"
+                },
+                "duration_ms": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "preview_url": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.TrackDetailResponse": {
+            "type": "object",
+            "properties": {
+                "track": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.TrackDetailItem"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.TrackItem": {
+            "type": "object",
+            "properties": {
+                "artist_name": {
+                    "type": "string"
+                },
+                "artwork_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "preview_url": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.TrackSearchResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.PaginationResult"
+                },
+                "tracks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.TrackItem"
+                    }
+                }
+            }
+        },
         "hackathon_internal_handler_schema_response.User": {
             "type": "object",
             "properties": {
@@ -1213,6 +1852,20 @@ const docTemplate = `{
                     ]
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.UserBrief": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
                     "type": "string"
                 }
             }
