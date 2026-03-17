@@ -99,7 +99,8 @@ _generate-android-only:
 			--library jvm-retrofit2 \
 			--package-name com.digix00.musicswapping.generated \
 			-o /local/out \
-			--additional-properties=serializationLibrary=kotlinx_serialization,useCoroutines=true
+			--additional-properties=serializationLibrary=kotlinx_serialization,useCoroutines=true \
+			--global-property=apis,models,supportingFiles,apiTests=false,modelTests=false
 	@echo "==> Android クライアントを生成しました → $(ANDROID_OUT)"
 
 # swagger.json から iOS (Swift 5 + async/await) クライアントだけを生成する内部ターゲット
