@@ -1,0 +1,95 @@
+name: codegen-check
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - backend/**
+      - android/app/src/main/java/com/digix00/musicswapping/generated/**
+      - ios/ios/Generated/**
+      - .github/workflows/codegen-check.yml
+  push:
+    branches:
+      - main
+    paths:
+      - backend/**
+      - android/app/src/main/java/com/digix00/musicswapping/generated/**
+      - ios/ios/Generated/**
+      - .github/workflows/codegen-check.yml
+
+jobs:
+  check:
+    name: swaggo / openapi-generator が最新か確認
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+
+      - name: Install swag CLI
+        run: go install github.com/swaggo/swag/cmd/swag@v1.16.6
+
+      - name: Download Go dependencies
+        working-directory: backend
+        run: go mod download
+
+      - name: Regenerate swagger docs (backend)
+        working-directory: backend
+        run: |
+          swag init \
+            --generalInfo cmd/server/main.go \
+            --output docs \
+            --parseDependency \
+            --parseInternal
+
+      - name: Regenerate Android client
+        run: |
+          ANDROID_OUT="$(pwd)/android/app/src/main/java/com/digix00/musicswapping/generated"
+          mkdir -p "$ANDROID_OUT"
+          docker run --rm \
+            -v "$(pwd)/backend/docs/swagger.json:/local/swagger.json" \
+            -v "$ANDROID_OUT:/local/out" \
+            openapitools/openapi-generator-cli:v7.10.0 generate \
+              -i /local/swagger.json \
+              -g kotlin \
+              --library jvm-retrofit2 \
+              --package-name com.digix00.musicswapping.generated \
+              -o /local/out \
+              --additional-properties=serializationLibrary=kotlinx_serialization,useCoroutines=true \
+              --global-property=apis,models,supportingFiles,apiTests=false,modelTests=false
+
+      - name: Regenerate iOS client
+        run: |
+          IOS_OUT="$(pwd)/ios/ios/Generated"
+          mkdir -p "$IOS_OUT"
+          docker run --rm \
+            -v "$(pwd)/backend/docs/swagger.json:/local/swagger.json" \
+            -v "$IOS_OUT:/local/out" \
+            openapitools/openapi-generator-cli:v7.10.0 generate \
+              -i /local/swagger.json \
+              -g swift5 \
+              --package-name OpenAPIClient \
+              -o /local/out \
+              --additional-properties=responseAs=AsyncAwait,useSPMFileStructure=true
+
+      - name: 生成コードが最新かチェック
+        run: |
+          CHANGED=$(git status --porcelain \
+            backend/docs/ \
+            android/app/src/main/java/com/digix00/musicswapping/generated/ \
+            ios/ios/Generated/)
+          if [ -n "$CHANGED" ]; then
+            echo "::error::生成コードが最新ではありません。'make generate-code' を実行してコミットしてください。"
+            echo ""
+            echo "変更されたファイル:"
+            echo "$CHANGED"
+            exit 1
+          fi
+          echo "生成コードは最新です。"
