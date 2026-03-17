@@ -234,12 +234,7 @@ final class BLEManager: NSObject, ObservableObject {
         let normalizedToken = token.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !normalizedToken.isEmpty else { return nil }
 
-        // 1) If token is already UUID, advertise it directly as TOKEN_UUID.
-        if UUID(uuidString: normalizedToken) != nil {
-            return AdvertisingPayload(backendToken: normalizedToken, tokenUUID: CBUUID(string: normalizedToken))
-        }
-
-        // 2) If token is 8-byte (16 hex chars), embed it as APP_PREFIX(8 bytes) + TOKEN(8 bytes).
+        // Token must be 8-byte (16 hex chars), embed it as APP_PREFIX(8 bytes) + TOKEN(8 bytes).
         guard normalizedToken.count == 16, normalizedToken.range(of: "^[0-9a-f]{16}$", options: .regularExpression) != nil else {
             return nil
         }

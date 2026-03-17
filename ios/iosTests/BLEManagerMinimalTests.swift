@@ -17,16 +17,6 @@ final class BLEManagerMinimalTests: XCTestCase {
         super.tearDown()
     }
 
-    func test_makeAdvertisingPayload_acceptsUUIDToken() {
-        let token = "123e4567-e89b-12d3-a456-426614174000"
-
-        let payload = sut._test_makeAdvertisingPayload(token: token)
-
-        XCTAssertNotNil(payload)
-        XCTAssertEqual(payload?.backendToken, token.lowercased())
-        XCTAssertEqual(payload?.tokenUUID.uuidString.lowercased(), token.lowercased())
-    }
-
     func test_makeAdvertisingPayload_convertsHexTokenToUUID() {
         let token = "0011223344556677"
 
@@ -38,6 +28,7 @@ final class BLEManagerMinimalTests: XCTestCase {
     }
 
     func test_makeAdvertisingPayload_rejectsInvalidToken() {
+        XCTAssertNil(sut._test_makeAdvertisingPayload(token: "123e4567-e89b-12d3-a456-426614174000"))
         XCTAssertNil(sut._test_makeAdvertisingPayload(token: ""))
         XCTAssertNil(sut._test_makeAdvertisingPayload(token: "not-hex-token"))
         XCTAssertNil(sut._test_makeAdvertisingPayload(token: "1234"))
