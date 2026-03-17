@@ -2,7 +2,10 @@ import SwiftUI
 
 struct EncounterListView: View {
     private var encounters: [Encounter] {
-        EncounterSection.allCases.flatMap { MockData.encounters(in: $0) }
+        let previewEncounters = MockData.encountersWithoutLyrics + MockData.encounters
+        return EncounterSection.allCases.flatMap { section in
+            previewEncounters.filter(section.includes)
+        }
     }
 
     var body: some View {
