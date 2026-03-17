@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"hackathon/internal/domain/entity"
@@ -22,20 +23,29 @@ type BleTokenUsecase interface {
 }
 
 type bleTokenUsecase struct {
-	bleTokenRepo repository.BleTokenRepository
-	userRepo     repository.UserRepository
-	userUsecase  UserUsecase
+	bleTokenRepo     repository.BleTokenRepository
+	userRepo         repository.UserRepository
+	blockRepo        repository.BlockRepository
+	userSettingsRepo repository.UserSettingsRepository
+	encounterRepo    repository.EncounterRepository
+	trackRepo        repository.UserCurrentTrackRepository
 }
 
 func NewBleTokenUsecase(
 	bleTokenRepo repository.BleTokenRepository,
 	userRepo repository.UserRepository,
-	userUsecase UserUsecase,
+	blockRepo repository.BlockRepository,
+	userSettingsRepo repository.UserSettingsRepository,
+	encounterRepo repository.EncounterRepository,
+	trackRepo repository.UserCurrentTrackRepository,
 ) BleTokenUsecase {
 	return &bleTokenUsecase{
-		bleTokenRepo: bleTokenRepo,
-		userRepo:     userRepo,
-		userUsecase:  userUsecase,
+		bleTokenRepo:     bleTokenRepo,
+		userRepo:         userRepo,
+		blockRepo:        blockRepo,
+		userSettingsRepo: userSettingsRepo,
+		encounterRepo:    encounterRepo,
+		trackRepo:        trackRepo,
 	}
 }
 
@@ -89,6 +99,77 @@ func (u *bleTokenUsecase) GetBleUserByToken(ctx context.Context, requesterAuthUI
 		return usecasedto.PublicUserDTO{}, domainerrs.NotFound("BLE token has expired")
 	}
 
-	// Use UserUsecase to get public profile which handles visibility and blocks
-	return u.userUsecase.GetUserByID(ctx, requesterAuthUID, tokenEntity.UserID)
+	requester, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, firebaseProvider, requesterAuthUID)
+	if err != nil {
+		return usecasedto.PublicUserDTO{}, err
+	}
+
+	blocked, err := u.blockRepo.ExistsBetween(ctx, requester.ID, tokenEntity.UserID)
+	if err != nil {
+		return usecasedto.PublicUserDTO{}, err
+	}
+	if blocked {
+		return usecasedto.PublicUserDTO{}, domainerrs.NotFound("User was not found")
+	}
+
+	target, err := u.userRepo.FindByID(ctx, tokenEntity.UserID)
+	if err != nil {
+		return usecasedto.PublicUserDTO{}, err
+	}
+
+	profileVisible := true
+	trackVisible := true
+	settings, settingsErr := u.userSettingsRepo.FindByUserID(ctx, target.ID)
+	if settingsErr == nil {
+		profileVisible = settings.ProfileVisible
+		trackVisible = settings.TrackVisible
+	} else if !errors.Is(settingsErr, domainerrs.ErrNotFound) {
+		return usecasedto.PublicUserDTO{}, settingsErr
+	}
+
+	encounterCount, err := u.encounterRepo.CountByUserID(ctx, target.ID)
+	if err != nil {
+		return usecasedto.PublicUserDTO{}, err
+	}
+
+	displayName := ""
+	if target.Name != nil {
+		displayName = *target.Name
+	}
+
+	ageRange := userCalcAgeRange(target.Birthdate, target.AgeVisibility)
+
+	pub := usecasedto.PublicUserDTO{
+		ID:             target.ID,
+		DisplayName:    displayName,
+		AvatarURL:      target.AvatarURL,
+		Bio:            target.Bio,
+		Birthplace:     target.PrefectureName,
+		AgeRange:       ageRange,
+		EncounterCount: encounterCount,
+		UpdatedAt:      target.UpdatedAt,
+	}
+
+	if !profileVisible {
+		pub.Bio = nil
+		pub.Birthplace = nil
+		pub.AgeRange = nil
+	}
+
+	if trackVisible {
+		track, found, trackErr := u.trackRepo.FindCurrentByUserID(ctx, target.ID)
+		if trackErr != nil {
+			return usecasedto.PublicUserDTO{}, trackErr
+		}
+		if found {
+			pub.SharedTrack = &usecasedto.TrackInfoDTO{
+				ID:         track.ID,
+				Title:      track.Title,
+				ArtistName: track.ArtistName,
+				ArtworkURL: track.ArtworkURL,
+			}
+		}
+	}
+
+	return pub, nil
 }
