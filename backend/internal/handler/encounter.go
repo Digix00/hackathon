@@ -40,6 +40,7 @@ func newEncounterHandler(u usecase.EncounterUsecase) *encounterHandler {
 // @Failure      401   {object}  errorResponse
 // @Failure      404   {object}  errorResponse
 // @Failure      409   {object}  errorResponse
+// @Failure      429   {object}  errorResponse
 // @Failure      500   {object}  errorResponse
 // @Router       /api/v1/encounters [post]
 func (h *encounterHandler) createEncounter(c echo.Context) error {
