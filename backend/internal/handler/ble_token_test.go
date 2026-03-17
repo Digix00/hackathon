@@ -1,3 +1,5 @@
+//go:build integration
+
 package handler
 
 import (
@@ -12,8 +14,8 @@ import (
 	"hackathon/internal/infra/rdb/model"
 )
 
-// TestBleToken_CreateAndGetCurrent は POST /ble-tokens → GET /ble-tokens/current の正常フロー
-func TestBleToken_CreateAndGetCurrent(t *testing.T) {
+// TestPostgresIntegration_BleToken は POST /ble-tokens → GET /ble-tokens/current の正常フロー
+func TestPostgresIntegration_BleToken(t *testing.T) {
 	db := newTestDB(t)
 	user := seedTestUser(t, db, "firebase-uid-ble-1")
 	_ = user
@@ -65,8 +67,8 @@ func TestBleToken_CreateAndGetCurrent(t *testing.T) {
 	}
 }
 
-// TestBleToken_GetCurrentReturns404WhenNoToken は有効なトークンが存在しない場合 404 を返す
-func TestBleToken_GetCurrentReturns404WhenNoToken(t *testing.T) {
+// TestPostgresIntegration_BleToken_GetCurrentReturns404WhenNoToken は有効なトークンが存在しない場合 404 を返す
+func TestPostgresIntegration_BleToken_GetCurrentReturns404WhenNoToken(t *testing.T) {
 	db := newTestDB(t)
 	seedTestUser(t, db, "firebase-uid-ble-2")
 
@@ -83,8 +85,8 @@ func TestBleToken_GetCurrentReturns404WhenNoToken(t *testing.T) {
 	}
 }
 
-// TestBleToken_GetUserByToken はBLEトークンから相手のプロフィールが取得できる
-func TestBleToken_GetUserByToken(t *testing.T) {
+// TestPostgresIntegration_BleToken_GetUserByToken はBLEトークンから相手のプロフィールが取得できる
+func TestPostgresIntegration_BleToken_GetUserByToken(t *testing.T) {
 	db := newTestDB(t)
 	requester := seedTestUser(t, db, "firebase-uid-ble-requester")
 	target := seedTestUser(t, db, "firebase-uid-ble-target")
@@ -128,8 +130,8 @@ func TestBleToken_GetUserByToken(t *testing.T) {
 	}
 }
 
-// TestBleToken_GetUserByExpiredToken は有効期限切れのトークンの場合 404 を返す
-func TestBleToken_GetUserByExpiredToken(t *testing.T) {
+// TestPostgresIntegration_BleToken_GetUserByExpiredToken は有効期限切れのトークンの場合 404 を返す
+func TestPostgresIntegration_BleToken_GetUserByExpiredToken(t *testing.T) {
 	db := newTestDB(t)
 	requester := seedTestUser(t, db, "firebase-uid-ble-req-expired")
 	target := seedTestUser(t, db, "firebase-uid-ble-target-expired")
@@ -161,8 +163,8 @@ func TestBleToken_GetUserByExpiredToken(t *testing.T) {
 	}
 }
 
-// TestBleToken_GetUserByTokenReturns404WhenBlocked はブロック状態の場合 404 を返す
-func TestBleToken_GetUserByTokenReturns404WhenBlocked(t *testing.T) {
+// TestPostgresIntegration_BleToken_GetUserByTokenReturns404WhenBlocked はブロック状態の場合 404 を返す
+func TestPostgresIntegration_BleToken_GetUserByTokenReturns404WhenBlocked(t *testing.T) {
 	db := newTestDB(t)
 	requester := seedTestUser(t, db, "firebase-uid-ble-blocker")
 	target := seedTestUser(t, db, "firebase-uid-ble-blocked")
@@ -201,8 +203,8 @@ func TestBleToken_GetUserByTokenReturns404WhenBlocked(t *testing.T) {
 	}
 }
 
-// TestBleToken_GetUserByNonExistentToken は存在しないトークンの場合 404 を返す
-func TestBleToken_GetUserByNonExistentToken(t *testing.T) {
+// TestPostgresIntegration_BleToken_GetUserByNonExistentToken は存在しないトークンの場合 404 を返す
+func TestPostgresIntegration_BleToken_GetUserByNonExistentToken(t *testing.T) {
 	db := newTestDB(t)
 	seedTestUser(t, db, "firebase-uid-ble-notfound")
 
