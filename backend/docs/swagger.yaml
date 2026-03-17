@@ -1,5 +1,16 @@
 basePath: /
 definitions:
+  hackathon_internal_handler_schema_request.CreateEncounterRequest:
+    properties:
+      occurred_at:
+        type: string
+      rssi:
+        type: integer
+      target_ble_token:
+        type: string
+      type:
+        type: string
+    type: object
   hackathon_internal_handler_schema_request.CreatePushTokenRequest:
     properties:
       app_version:
@@ -174,6 +185,106 @@ definitions:
     properties:
       device:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.Device'
+    type: object
+  hackathon_internal_handler_schema_response.EncounterDetail:
+    properties:
+      id:
+        type: string
+      occurred_at:
+        type: string
+      tracks:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterTrack'
+        type: array
+      type:
+        enum:
+        - ble
+        - location
+        type: string
+      user:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterUser'
+    type: object
+  hackathon_internal_handler_schema_response.EncounterDetailResponse:
+    properties:
+      encounter:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterDetail'
+    type: object
+  hackathon_internal_handler_schema_response.EncounterListItem:
+    properties:
+      id:
+        type: string
+      is_read:
+        type: boolean
+      occurred_at:
+        type: string
+      tracks:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterTrack'
+        type: array
+      type:
+        enum:
+        - ble
+        - location
+        type: string
+      user:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterUser'
+    type: object
+  hackathon_internal_handler_schema_response.EncounterListResponse:
+    properties:
+      encounters:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterListItem'
+        type: array
+      pagination:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.Pagination'
+    type: object
+  hackathon_internal_handler_schema_response.EncounterResponse:
+    properties:
+      encounter:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterSummary'
+    type: object
+  hackathon_internal_handler_schema_response.EncounterSummary:
+    properties:
+      id:
+        type: string
+      occurred_at:
+        type: string
+      type:
+        enum:
+        - ble
+        - location
+        type: string
+      user:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterUser'
+    type: object
+  hackathon_internal_handler_schema_response.EncounterTrack:
+    properties:
+      artist_name:
+        type: string
+      artwork_url:
+        type: string
+      id:
+        type: string
+      preview_url:
+        type: string
+      title:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.EncounterUser:
+    properties:
+      avatar_url:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.Pagination:
+    properties:
+      has_more:
+        type: boolean
+      next_cursor:
+        type: string
     type: object
   hackathon_internal_handler_schema_response.PublicTrack:
     properties:
@@ -416,6 +527,129 @@ paths:
       summary: 有効な BLE トークン取得
       tags:
       - ble-tokens
+  /api/v1/encounters:
+    get:
+      description: 認証ユーザーのすれ違い履歴を取得する
+      operationId: listEncounters
+      parameters:
+      - description: 取得件数（省略時 20, 最大 50）
+        in: query
+        name: limit
+        type: integer
+      - description: 次ページ取得用カーソル
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: すれ違い履歴一覧取得
+      tags:
+      - encounters
+    post:
+      consumes:
+      - application/json
+      description: BLE 検出トークンからすれ違いを登録する（同一ペア・短時間内は冪等）
+      operationId: createEncounter
+      parameters:
+      - description: すれ違い登録リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.CreateEncounterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterResponse'
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: すれ違い登録
+      tags:
+      - encounters
+  /api/v1/encounters/{id}:
+    get:
+      description: 指定した ID のすれ違い詳細を取得する
+      operationId: getEncounterByID
+      parameters:
+      - description: 対象すれ違い ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: すれ違い詳細取得
+      tags:
+      - encounters
   /api/v1/users:
     post:
       consumes:
