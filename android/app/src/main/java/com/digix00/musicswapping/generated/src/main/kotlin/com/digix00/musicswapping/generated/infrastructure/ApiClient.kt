@@ -124,7 +124,7 @@ class ApiClient(
 
         @JvmStatic
         val defaultBasePath: String by lazy {
-            System.getProperties().getProperty(baseUrlKey, "http://localhost:8000/api/v1")
+            System.getProperties().getProperty(baseUrlKey, "http://localhost:8000")
         }
     }
 }
