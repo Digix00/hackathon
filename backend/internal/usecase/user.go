@@ -207,7 +207,7 @@ func entityToUserDTO(user entity.User) usecasedto.UserDTO {
 
 // buildPublicUserDTO assembles a PublicUserDTO from a target user entity,
 // applying privacy settings and fetching encounter count and shared track.
-// This logic is shared by GetUserByID and GetBleUserByToken.
+// This logic is used by GetUserByID.
 func buildPublicUserDTO(
 	ctx context.Context,
 	target entity.User,
