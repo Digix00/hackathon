@@ -117,7 +117,7 @@ private struct HeroJacketCollageView: View {
 
 private struct HeroEncounterRow: View {
     let encounter: Encounter
-    
+
     var body: some View {
         HStack(spacing: 24) {
             MockArtworkView(color: encounter.track.color, symbol: "music.note", size: 68, artwork: encounter.track.artwork)
