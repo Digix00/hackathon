@@ -48,8 +48,8 @@ type LyricChainDetailItem struct {
 // @name LyricEntryWithUserItem
 // LyricEntryWithUserItem はユーザー情報付き歌詞エントリ。
 type LyricEntryWithUserItem struct {
-	SequenceNum int      `json:"sequence_num"`
-	Content     string   `json:"content"`
+	SequenceNum int       `json:"sequence_num"`
+	Content     string    `json:"content"`
 	User        UserBrief `json:"user"`
 }
 

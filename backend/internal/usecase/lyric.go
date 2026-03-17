@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/entity"
+	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
 	"hackathon/internal/domain/vo"
 	usecasedto "hackathon/internal/usecase/dto"

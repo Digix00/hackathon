@@ -46,7 +46,7 @@ type TrackDetailItem struct {
 // @name TrackSearchResponse
 // TrackSearchResponse はトラック検索レスポンス。
 type TrackSearchResponse struct {
-	Tracks     []TrackItem     `json:"tracks"`
+	Tracks     []TrackItem      `json:"tracks"`
 	Pagination PaginationResult `json:"pagination"`
 }
 

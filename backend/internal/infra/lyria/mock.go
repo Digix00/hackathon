@@ -37,10 +37,10 @@ func makeEmptyWAV(durationSec int) []byte {
 	putUint32LE(header[4:8], uint32(fileSize))
 	copy(header[8:12], "WAVE")
 	copy(header[12:16], "fmt ")
-	putUint32LE(header[16:20], 16)                 // PCM chunk size
-	putUint16LE(header[20:22], 1)                  // PCM format
-	putUint16LE(header[22:24], 1)                  // mono
-	putUint32LE(header[24:28], uint32(sampleRate)) // sample rate
+	putUint32LE(header[16:20], 16)                   // PCM chunk size
+	putUint16LE(header[20:22], 1)                    // PCM format
+	putUint16LE(header[22:24], 1)                    // mono
+	putUint32LE(header[24:28], uint32(sampleRate))   // sample rate
 	putUint32LE(header[28:32], uint32(sampleRate*2)) // byte rate
 	putUint16LE(header[32:34], 2)                    // block align
 	putUint16LE(header[34:36], 16)                   // bits per sample

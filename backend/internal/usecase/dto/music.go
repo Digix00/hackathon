@@ -13,7 +13,7 @@ type MusicConnectionDTO struct {
 
 // TrackDTO はトラック情報のDTO。
 type TrackDTO struct {
-	ID         string  // "<provider>:track:<external_id>"
+	ID         string // "<provider>:track:<external_id>"
 	Title      string
 	ArtistName string
 	ArtworkURL *string
