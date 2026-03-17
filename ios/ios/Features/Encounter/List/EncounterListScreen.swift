@@ -12,7 +12,7 @@ struct EncounterListView: View {
             trailingSymbol: "slider.horizontal.3"
         ) {
             VStack(alignment: .leading, spacing: 100) {
-                VStack(spacing: 80) {
+                LazyVStack(spacing: 80) {
                     ForEach(Array(encounters.enumerated()), id: \.offset) { index, encounter in
                         NavigationLink {
                             EncounterDetailView(encounter: encounter)
