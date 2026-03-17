@@ -12,10 +12,10 @@ import AnyCodable
 
 public struct HackathonInternalHandlerSchemaResponseBleToken: Codable, JSONEncodable, Hashable {
 
-    public var expiresAt: String?
-    public var token: String?
+    public var expiresAt: String
+    public var token: String
 
-    public init(expiresAt: String? = nil, token: String? = nil) {
+    public init(expiresAt: String, token: String) {
         self.expiresAt = expiresAt
         self.token = token
     }
@@ -29,8 +29,8 @@ public struct HackathonInternalHandlerSchemaResponseBleToken: Codable, JSONEncod
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(expiresAt, forKey: .expiresAt)
-        try container.encodeIfPresent(token, forKey: .token)
+        try container.encode(expiresAt, forKey: .expiresAt)
+        try container.encode(token, forKey: .token)
     }
 }
 

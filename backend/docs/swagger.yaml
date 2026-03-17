@@ -138,11 +138,16 @@ definitions:
         type: string
       token:
         type: string
+    required:
+    - expires_at
+    - token
     type: object
   hackathon_internal_handler_schema_response.BleTokenResponse:
     properties:
       ble_token:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.BleToken'
+    required:
+    - ble_token
     type: object
   hackathon_internal_handler_schema_response.BleTokenUser:
     properties:
@@ -152,11 +157,16 @@ definitions:
         type: string
       id:
         type: string
+    required:
+    - display_name
+    - id
     type: object
   hackathon_internal_handler_schema_response.BleTokenUserResponse:
     properties:
       user:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.BleTokenUser'
+    required:
+    - user
     type: object
   hackathon_internal_handler_schema_response.Device:
     properties:

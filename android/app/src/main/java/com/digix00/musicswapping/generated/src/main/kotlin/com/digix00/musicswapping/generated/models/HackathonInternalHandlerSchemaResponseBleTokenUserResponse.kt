@@ -31,7 +31,7 @@ import kotlinx.serialization.Contextual
 data class HackathonInternalHandlerSchemaResponseBleTokenUserResponse (
 
     @SerialName(value = "user")
-    val user: HackathonInternalHandlerSchemaResponseBleTokenUser? = null
+    val user: HackathonInternalHandlerSchemaResponseBleTokenUser
 
 ) {
 

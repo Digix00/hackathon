@@ -12,9 +12,9 @@ import AnyCodable
 
 public struct HackathonInternalHandlerSchemaResponseBleTokenResponse: Codable, JSONEncodable, Hashable {
 
-    public var bleToken: HackathonInternalHandlerSchemaResponseBleToken?
+    public var bleToken: HackathonInternalHandlerSchemaResponseBleToken
 
-    public init(bleToken: HackathonInternalHandlerSchemaResponseBleToken? = nil) {
+    public init(bleToken: HackathonInternalHandlerSchemaResponseBleToken) {
         self.bleToken = bleToken
     }
 
@@ -26,7 +26,7 @@ public struct HackathonInternalHandlerSchemaResponseBleTokenResponse: Codable, J
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(bleToken, forKey: .bleToken)
+        try container.encode(bleToken, forKey: .bleToken)
     }
 }
 
