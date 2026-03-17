@@ -8,7 +8,7 @@ struct HomeInsightsPage: View {
             title: "INSIGHTS",
             subtitle: "都市に漂う音楽の断片",
             customBackground: AnyView(
-                MemoryBlurBackground(colors: state.weeklyTracks.map(\.color))
+                InsightsBackground(colors: state.weeklyTracks.map(\.color))
             )
         ) {
             VStack(alignment: .leading, spacing: 0) {
@@ -39,32 +39,37 @@ private struct HeroJacketCollageView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: -24) {
                     ForEach(Array(tracks.prefix(8).enumerated()), id: \.offset) { index, track in
-                        VStack(alignment: .leading, spacing: 24) {
+                        VStack(alignment: .leading, spacing: 20) {
                             MockArtworkView(color: track.color, symbol: "music.note", size: 300, artwork: track.artwork)
-                                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-                                .shadow(color: Color.black.opacity(0.35), radius: 40, x: 0, y: 25)
-                                .rotationEffect(.degrees(Double(index % 2 == 0 ? -5 : 5)))
+                                .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+                                // Sophisticated Shadow: Base soft shadow + subtle ambient occlusion
+                                .shadow(color: Color.black.opacity(0.12), radius: 30, x: 0, y: 20)
+                                .shadow(color: track.color.opacity(0.15), radius: 40, x: 0, y: 30) // Subtle color glow
+                                .rotationEffect(.degrees(Double(index % 2 == 0 ? -4 : 4)))
                             
-                            VStack(alignment: .leading, spacing: 6) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text(track.title)
-                                    .font(PrototypeTheme.Typography.font(size: 20, weight: .black, role: .primary))
+                                    .font(PrototypeTheme.Typography.font(size: 22, weight: .black, role: .primary))
                                     .foregroundStyle(PrototypeTheme.textPrimary)
+                                    .tracking(-0.5)
                                     .lineLimit(1)
-                                Text(track.artist)
-                                    .font(PrototypeTheme.Typography.font(size: 16, weight: .bold, role: .primary))
+                                
+                                Text(track.artist.uppercased())
+                                    .font(PrototypeTheme.Typography.font(size: 12, weight: .black, role: .data))
                                     .foregroundStyle(PrototypeTheme.textSecondary)
+                                    .tracking(2.0)
                                     .lineLimit(1)
                             }
-                            .padding(.leading, 16)
+                            .padding(.leading, 12)
                         }
                         .zIndex(Double(tracks.count - index))
                     }
                 }
                 .frame(minWidth: max(geometry.size.width - 96, 0), alignment: .center)
                 .padding(.horizontal, 48)
-                .padding(.vertical, 40)
+                .padding(.vertical, 60)
             }
         }
-        .frame(height: 460)
+        .frame(height: 500)
     }
 }

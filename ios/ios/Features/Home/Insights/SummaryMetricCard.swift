@@ -6,30 +6,30 @@ struct SummaryMetricCard: View {
     let zeroMessage: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.system(size: 11, weight: .black))
-                .foregroundStyle(PrototypeTheme.textSecondary)
-                .kerning(1.0)
+        GlassmorphicCard {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(title)
+                    .font(PrototypeTheme.Typography.font(size: 10, weight: .black, role: .data))
+                    .foregroundStyle(PrototypeTheme.textSecondary)
+                    .tracking(1.5)
 
-            HStack(alignment: .lastTextBaseline, spacing: 4) {
-                Text("\(count)")
-                    .font(.system(size: 36, weight: .black))
-                    .foregroundStyle(count > 0 ? PrototypeTheme.accent : PrototypeTheme.textPrimary)
-                Text("人")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(PrototypeTheme.textTertiary)
-            }
+                HStack(alignment: .lastTextBaseline, spacing: 4) {
+                    Text("\(count)")
+                        .font(PrototypeTheme.Typography.font(size: 40, weight: .black, role: .data))
+                        .foregroundStyle(count > 0 ? PrototypeTheme.accent : PrototypeTheme.textPrimary)
+                    Text("人")
+                        .font(PrototypeTheme.Typography.font(size: 11, weight: .bold, role: .primary))
+                        .foregroundStyle(PrototypeTheme.textTertiary)
+                }
 
-            if count == 0 {
-                Text(zeroMessage)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(PrototypeTheme.textTertiary)
+                if count == 0 {
+                    Text(zeroMessage)
+                        .font(PrototypeTheme.Typography.font(size: 12, weight: .medium, role: .primary))
+                        .foregroundStyle(PrototypeTheme.textTertiary)
+                        .opacity(0.8)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(20)
-        .background(count > 0 ? PrototypeTheme.surface : PrototypeTheme.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 }
