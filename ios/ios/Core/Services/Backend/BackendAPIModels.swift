@@ -205,9 +205,23 @@ typealias BackendEncounterUser = BackendPublicUser
 
 typealias BackendEncounterTrack = BackendPublicTrack
 
-enum BackendEncounterType: String, Decodable, Equatable {
+enum BackendEncounterType: Decodable, Equatable {
     case ble
     case location
+    case unknown(String)
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        switch rawValue {
+        case "ble":
+            self = .ble
+        case "location":
+            self = .location
+        default:
+            self = .unknown(rawValue)
+        }
+    }
 }
 
 enum BackendEncounterCreateType: String, Encodable, Equatable {
