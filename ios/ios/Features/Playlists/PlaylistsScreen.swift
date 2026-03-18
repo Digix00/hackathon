@@ -8,8 +8,7 @@ struct PlaylistsView: View {
     var body: some View {
         AppScaffold(
             title: "プレイリスト",
-            subtitle: viewModel.subtitleText,
-            trailingSymbol: "plus.app"
+            subtitle: viewModel.subtitleText
         ) {
             VStack(alignment: .leading, spacing: 24) {
                 PrimaryButton(title: viewModel.isCreating ? "作成中..." : "新しいプレイリストを作成") {

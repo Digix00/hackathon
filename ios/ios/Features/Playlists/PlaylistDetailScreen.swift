@@ -15,8 +15,7 @@ struct PlaylistDetailView: View {
     var body: some View {
         AppScaffold(
             title: viewModel.playlist?.name ?? "プレイリスト",
-            subtitle: subtitleText,
-            trailingSymbol: "pencil"
+            subtitle: subtitleText
         ) {
             VStack(alignment: .leading, spacing: 24) {
                 if viewModel.isLoading && viewModel.playlist == nil {
