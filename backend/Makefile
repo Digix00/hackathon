@@ -58,7 +58,7 @@ test:
 # PostgreSQL コンテナを使う統合テストを実行（Docker 起動後に実行）
 # 必要に応じて PG_TEST_DATABASE_URL を上書き可能
 test-integration:
-	docker compose exec server go test -tags=integration ./internal/handler -run PostgresIntegration
+	go test -tags=integration ./internal/handler -run PostgresIntegration
 
 # ==============================================================================
 # Code Generation (全て Docker で完結。ホストへのツールインストール不要)
