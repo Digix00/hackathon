@@ -74,8 +74,8 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
- - [HackathonInternalHandlerSchemaRequestCreateBlockRequest](docs/HackathonInternalHandlerSchemaRequestCreateBlockRequest.md)
  - [HackathonInternalHandlerSchemaRequestAddPlaylistTrackRequest](docs/HackathonInternalHandlerSchemaRequestAddPlaylistTrackRequest.md)
+ - [HackathonInternalHandlerSchemaRequestCreateBlockRequest](docs/HackathonInternalHandlerSchemaRequestCreateBlockRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateCommentRequest](docs/HackathonInternalHandlerSchemaRequestCreateCommentRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateEncounterRequest](docs/HackathonInternalHandlerSchemaRequestCreateEncounterRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateMuteRequest](docs/HackathonInternalHandlerSchemaRequestCreateMuteRequest.md)
