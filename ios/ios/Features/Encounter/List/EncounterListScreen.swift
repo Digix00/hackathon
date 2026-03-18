@@ -9,18 +9,16 @@ struct EncounterListView: View {
 
     @Namespace private var encounterNamespace
     @Binding private var isDetailPresented: Bool
-    @State private var selectedEncounter: Encounter?
+    @State private var selectedEncounterID: String?
     @State private var showDetailContent = false
     @SceneStorage("encounter.list.scrollTargetID") private var scrollTargetID: String?
+    @StateObject private var viewModel = EncounterListViewModel()
     
     private let wheelItemHeight: CGFloat = 300
     private let wheelItemSpacing: CGFloat = 10
 
     private var encounters: [Encounter] {
-        let previewEncounters = MockData.encountersWithoutLyrics + MockData.encounters
-        return EncounterSection.allCases.flatMap { section in
-            previewEncounters.filter(section.includes)
-        }
+        viewModel.encounters
     }
 
     init(isDetailPresented: Binding<Bool> = .constant(false)) {
@@ -36,7 +34,8 @@ struct EncounterListView: View {
             listContent
 
             // Detail mode - overlays when selected
-            if let selected = selectedEncounter {
+            if let selectedID = selectedEncounterID,
+               let selected = viewModel.encounter(for: selectedID) {
                 detailContent(for: selected)
                     .zIndex(1)
             }
@@ -44,13 +43,19 @@ struct EncounterListView: View {
         .background(PrototypeTheme.background.ignoresSafeArea())
         .environment(\.encounterNamespace, encounterNamespace)
         .onAppear {
+            viewModel.loadIfNeeded()
             if scrollTargetID == nil {
                 scrollTargetID = encounters.first?.id
             }
             syncDetailPresentationState()
         }
-        .onChange(of: selectedEncounter?.id) { _ in
+        .onChange(of: selectedEncounterID) { _ in
             syncDetailPresentationState()
+        }
+        .onChange(of: viewModel.encounters) { _ in
+            if scrollTargetID == nil {
+                scrollTargetID = encounters.first?.id
+            }
         }
     }
 
@@ -67,17 +72,17 @@ struct EncounterListView: View {
                         DotGridBackground()
                         .opacity(0.15)
                 }
-                    .opacity(selectedEncounter == nil ? 1 : 0)
+                    .opacity(selectedEncounterID == nil ? 1 : 0)
 
                     VStack(spacing: 0) {
                         GeometryReader { wheelGeometry in
                             ScrollView(.vertical, showsIndicators: false) {
                                 LazyVStack(spacing: wheelItemSpacing) {
                                 ForEach(Array(encounters.enumerated()), id: \.offset) { index, encounter in
-                                    let isSelected = selectedEncounter?.id == encounter.id
+                                    let isSelected = selectedEncounterID == encounter.id
                                     let isCentered = (scrollTargetID ?? encounters.first?.id) == encounter.id
-                                    let isBefore = selectedEncounter.flatMap { selected -> Bool? in
-                                        guard let selectedIndex = encounters.firstIndex(where: { $0.id == selected.id }),
+                                    let isBefore = selectedEncounterID.flatMap { selectedID -> Bool? in
+                                        guard let selectedIndex = encounters.firstIndex(where: { $0.id == selectedID }),
                                               let encounterIndex = encounters.firstIndex(where: { $0.id == encounter.id }) else {
                                             return nil
                                         }
@@ -89,8 +94,9 @@ struct EncounterListView: View {
                                         
                                         Button {
                                             withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
-                                                selectedEncounter = encounter
+                                                selectedEncounterID = encounter.id
                                             }
+                                            viewModel.loadDetail(id: encounter.id)
                                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                                                 withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
                                                     showDetailContent = true
@@ -100,21 +106,21 @@ struct EncounterListView: View {
                                             EncounterRow(
                                                 encounter: encounter,
                                                 isFixed: index == 0,
-                                                hideMatchedElements: isSelected && selectedEncounter != nil
+                                                hideMatchedElements: isSelected && selectedEncounterID != nil
                                             )
                                             .scaleEffect(metrics.scale)
-                                            .opacity(selectedEncounter != nil && !isSelected ? 0 : metrics.opacity)
+                                            .opacity(selectedEncounterID != nil && !isSelected ? 0 : metrics.opacity)
                                             .blur(radius: metrics.blur)
                                             .saturation(metrics.saturation)
                                             .offset(
-                                                y: selectedEncounter != nil && !isSelected
+                                                y: selectedEncounterID != nil && !isSelected
                                                     ? (isBefore ? -200 : 200)
                                                     : metrics.verticalOffset
                                             )
                                             .zIndex(metrics.zIndex)
                                         }
                                         .buttonStyle(EncounterScaleButtonStyle())
-                                        .disabled(!isCentered || selectedEncounter != nil)
+                                        .disabled(!isCentered || selectedEncounterID != nil)
                                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                                     }
                                     .frame(height: wheelItemHeight)
@@ -130,7 +136,19 @@ struct EncounterListView: View {
                         .scrollTargetBehavior(.viewAligned)
                         .scrollClipDisabled()
                     }
-                    .padding(.top, topPadding + 8)
+                        .padding(.top, topPadding + 8)
+                        .overlay(alignment: .center) {
+                            if viewModel.isLoading && encounters.isEmpty {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                            } else if let message = viewModel.errorMessage, encounters.isEmpty {
+                                Text(message)
+                                    .font(PrototypeTheme.Typography.font(size: 14, weight: .medium))
+                                    .foregroundStyle(PrototypeTheme.textSecondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 24)
+                            }
+                        }
                 }
             }
         }
@@ -245,7 +263,7 @@ struct EncounterListView: View {
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                     withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
-                        selectedEncounter = nil
+                        selectedEncounterID = nil
                     }
                 }
             }
@@ -300,7 +318,7 @@ struct EncounterListView: View {
     }
 
     private func syncDetailPresentationState() {
-        isDetailPresented = selectedEncounter != nil
+        isDetailPresented = selectedEncounterID != nil
     }
 }
 

@@ -1,7 +1,7 @@
 import Foundation
 
 struct Encounter: Identifiable, Hashable {
-    var id: String { "\(userName)-\(track.id)-\(relativeTime)-\(lyric)" }
+    let id: String
     let userName: String
     let track: Track
     let relativeTime: String
