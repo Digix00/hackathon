@@ -50,6 +50,7 @@ docker compose logs -f worker
 - `make restart-dev` : 環境の再起動
 - `make logs` : 全コンテナのログを追従して表示
 - `make clean` : ボリューム（DB等）を含めて環境を完全に削除
+- `make init-db` : ローカルDBにマイグレーションとシードデータを投入
 - `make db-shell` : PostgreSQLコンテナ内のDBクライアント(`psql`)を起動
 - `make tidy` : Goの依存パッケージ整理 (`go mod tidy`)
 - `make fmt` : Goコードのフォーマット (`go fmt ./...`)
