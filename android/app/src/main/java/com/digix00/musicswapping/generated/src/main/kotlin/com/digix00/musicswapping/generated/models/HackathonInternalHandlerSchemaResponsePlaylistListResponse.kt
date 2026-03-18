@@ -15,7 +15,7 @@
 
 package com.digix00.musicswapping.generated.models
 
-import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchemaResponsePlaylist
+import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchemaResponsePlaylistSummary
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -31,7 +31,7 @@ import kotlinx.serialization.Contextual
 data class HackathonInternalHandlerSchemaResponsePlaylistListResponse (
 
     @SerialName(value = "playlists")
-    val playlists: kotlin.collections.List<HackathonInternalHandlerSchemaResponsePlaylist>
+    val playlists: kotlin.collections.List<HackathonInternalHandlerSchemaResponsePlaylistSummary>
 
 ) {
 

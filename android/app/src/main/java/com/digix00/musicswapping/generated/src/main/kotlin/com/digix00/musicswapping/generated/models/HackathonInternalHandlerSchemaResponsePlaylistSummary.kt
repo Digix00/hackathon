@@ -23,22 +23,38 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param name 
- * @param description 
+ * @param createdAt 
+ * @param id 
  * @param isPublic 
+ * @param name 
+ * @param updatedAt 
+ * @param userId 
+ * @param description 
  */
 @Serializable
 
-data class HackathonInternalHandlerSchemaRequestCreatePlaylistRequest (
+data class HackathonInternalHandlerSchemaResponsePlaylistSummary (
+
+    @SerialName(value = "created_at")
+    val createdAt: kotlin.String,
+
+    @SerialName(value = "id")
+    val id: kotlin.String,
+
+    @SerialName(value = "is_public")
+    val isPublic: kotlin.Boolean,
 
     @SerialName(value = "name")
     val name: kotlin.String,
 
-    @SerialName(value = "description")
-    val description: kotlin.String? = null,
+    @SerialName(value = "updated_at")
+    val updatedAt: kotlin.String,
 
-    @SerialName(value = "is_public")
-    val isPublic: kotlin.Boolean? = null
+    @SerialName(value = "user_id")
+    val userId: kotlin.String,
+
+    @SerialName(value = "description")
+    val description: kotlin.String? = null
 
 ) {
 

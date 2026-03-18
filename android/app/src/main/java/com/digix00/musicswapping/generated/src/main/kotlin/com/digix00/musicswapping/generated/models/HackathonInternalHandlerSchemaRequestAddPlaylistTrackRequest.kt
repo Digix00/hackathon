@@ -30,7 +30,7 @@ import kotlinx.serialization.Contextual
 data class HackathonInternalHandlerSchemaRequestAddPlaylistTrackRequest (
 
     @SerialName(value = "track_id")
-    val trackId: kotlin.String? = null
+    val trackId: kotlin.String
 
 ) {
 

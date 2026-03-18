@@ -12,9 +12,9 @@ import AnyCodable
 
 public struct HackathonInternalHandlerSchemaRequestAddPlaylistTrackRequest: Codable, JSONEncodable, Hashable {
 
-    public var trackId: String?
+    public var trackId: String
 
-    public init(trackId: String? = nil) {
+    public init(trackId: String) {
         self.trackId = trackId
     }
 
@@ -26,7 +26,7 @@ public struct HackathonInternalHandlerSchemaRequestAddPlaylistTrackRequest: Coda
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(trackId, forKey: .trackId)
+        try container.encode(trackId, forKey: .trackId)
     }
 }
 

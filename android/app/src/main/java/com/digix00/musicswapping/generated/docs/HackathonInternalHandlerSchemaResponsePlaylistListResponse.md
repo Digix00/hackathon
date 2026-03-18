@@ -4,7 +4,7 @@
 ## Properties
 | Name | Type | Description | Notes |
 | ------------ | ------------- | ------------- | ------------- |
-| **playlists** | [**kotlin.collections.List&lt;HackathonInternalHandlerSchemaResponsePlaylist&gt;**](HackathonInternalHandlerSchemaResponsePlaylist.md) |  |  |
+| **playlists** | [**kotlin.collections.List&lt;HackathonInternalHandlerSchemaResponsePlaylistSummary&gt;**](HackathonInternalHandlerSchemaResponsePlaylistSummary.md) |  |  |
 
 
 

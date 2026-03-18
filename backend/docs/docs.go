@@ -2839,7 +2839,7 @@ const docTemplate = `{
                 "playlists": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.Playlist"
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.PlaylistSummary"
                     }
                 }
             }
@@ -2852,6 +2852,40 @@ const docTemplate = `{
             "properties": {
                 "playlist": {
                     "$ref": "#/definitions/hackathon_internal_handler_schema_response.Playlist"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.PlaylistSummary": {
+            "type": "object",
+            "required": [
+                "created_at",
+                "id",
+                "is_public",
+                "name",
+                "updated_at",
+                "user_id"
+            ],
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },

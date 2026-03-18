@@ -105,6 +105,7 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponsePlaylist](docs/HackathonInternalHandlerSchemaResponsePlaylist.md)
  - [HackathonInternalHandlerSchemaResponsePlaylistListResponse](docs/HackathonInternalHandlerSchemaResponsePlaylistListResponse.md)
  - [HackathonInternalHandlerSchemaResponsePlaylistResponse](docs/HackathonInternalHandlerSchemaResponsePlaylistResponse.md)
+ - [HackathonInternalHandlerSchemaResponsePlaylistSummary](docs/HackathonInternalHandlerSchemaResponsePlaylistSummary.md)
  - [HackathonInternalHandlerSchemaResponsePlaylistTrack](docs/HackathonInternalHandlerSchemaResponsePlaylistTrack.md)
  - [HackathonInternalHandlerSchemaResponsePublicTrack](docs/HackathonInternalHandlerSchemaResponsePublicTrack.md)
  - [HackathonInternalHandlerSchemaResponsePublicUser](docs/HackathonInternalHandlerSchemaResponsePublicUser.md)

@@ -433,7 +433,7 @@ definitions:
     properties:
       playlists:
         items:
-          $ref: '#/definitions/hackathon_internal_handler_schema_response.Playlist'
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.PlaylistSummary'
         type: array
     required:
     - playlists
@@ -444,6 +444,30 @@ definitions:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.Playlist'
     required:
     - playlist
+    type: object
+  hackathon_internal_handler_schema_response.PlaylistSummary:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_public:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    required:
+    - created_at
+    - id
+    - is_public
+    - name
+    - updated_at
+    - user_id
     type: object
   hackathon_internal_handler_schema_response.PlaylistTrack:
     properties:

@@ -4,7 +4,7 @@
 ## Properties
 | Name | Type | Description | Notes |
 | ------------ | ------------- | ------------- | ------------- |
-| **trackId** | **kotlin.String** |  |  [optional] |
+| **trackId** | **kotlin.String** |  |  |
 
 
 

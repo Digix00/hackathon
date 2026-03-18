@@ -14,9 +14,9 @@ public struct HackathonInternalHandlerSchemaRequestCreatePlaylistRequest: Codabl
 
     public var description: String?
     public var isPublic: Bool?
-    public var name: String?
+    public var name: String
 
-    public init(description: String? = nil, isPublic: Bool? = nil, name: String? = nil) {
+    public init(description: String? = nil, isPublic: Bool? = nil, name: String) {
         self.description = description
         self.isPublic = isPublic
         self.name = name
@@ -34,7 +34,7 @@ public struct HackathonInternalHandlerSchemaRequestCreatePlaylistRequest: Codabl
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(description, forKey: .description)
         try container.encodeIfPresent(isPublic, forKey: .isPublic)
-        try container.encodeIfPresent(name, forKey: .name)
+        try container.encode(name, forKey: .name)
     }
 }
 

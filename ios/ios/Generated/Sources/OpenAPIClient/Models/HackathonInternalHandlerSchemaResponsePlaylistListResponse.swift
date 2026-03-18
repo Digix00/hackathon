@@ -12,9 +12,9 @@ import AnyCodable
 
 public struct HackathonInternalHandlerSchemaResponsePlaylistListResponse: Codable, JSONEncodable, Hashable {
 
-    public var playlists: [HackathonInternalHandlerSchemaResponsePlaylist]
+    public var playlists: [HackathonInternalHandlerSchemaResponsePlaylistSummary]
 
-    public init(playlists: [HackathonInternalHandlerSchemaResponsePlaylist]) {
+    public init(playlists: [HackathonInternalHandlerSchemaResponsePlaylistSummary]) {
         self.playlists = playlists
     }
 
