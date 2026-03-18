@@ -177,11 +177,6 @@ func seedDemoData(db *gorm.DB) error {
 				{Name: "track_id"},
 				{Name: "source_user_id"},
 			},
-			TargetWhere: clause.Where{
-				Exprs: []clause.Expression{
-					clause.Expr{SQL: "deleted_at IS NULL"},
-				},
-			},
 			DoNothing: true,
 		}).Create(&model.EncounterTrack{
 			ID:           encounterTrackID,
