@@ -6,7 +6,8 @@ final class UserSettingsViewModel: ObservableObject {
     private enum SaveField: Hashable {
         case detectionDistance
         case profileVisible
-        case notifications
+        case encounterNotification
+        case generatedNotification
         case themeMode
     }
 
@@ -110,7 +111,7 @@ final class UserSettingsViewModel: ObservableObject {
                 notificationEnabled: newGlobal,
                 encounterNotificationEnabled: isEnabled
             ),
-            field: .notifications,
+            field: .encounterNotification,
             revert: {
                 self.encounterNotificationEnabled = previousEncounter
                 self.notificationEnabled = previousGlobal
@@ -131,7 +132,7 @@ final class UserSettingsViewModel: ObservableObject {
                 notificationEnabled: newGlobal,
                 batchNotificationEnabled: isEnabled
             ),
-            field: .notifications,
+            field: .generatedNotification,
             revert: {
                 self.generatedNotificationEnabled = previousBatch
                 self.notificationEnabled = previousGlobal
