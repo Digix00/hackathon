@@ -53,7 +53,7 @@ actor BLEBackendClient {
 
         self.pendingEncounters = Self.loadPendingEncounters()
         self.failedEncounters = Self.loadFailedEncounters()
-        self.startQueueDrainIfNeeded()
+        Task { await self.startQueueDrainIfNeeded() }
     }
 
     func fetchOrIssueCurrentToken() async throws -> BLEAdvertisingToken {
@@ -111,7 +111,7 @@ actor BLEBackendClient {
             )
         )
         persistPendingEncounters()
-        startQueueDrainIfNeeded()
+        Task { await self.startQueueDrainIfNeeded() }
     }
 
     private func issueToken() async throws -> BLEAdvertisingToken {
@@ -270,7 +270,7 @@ actor BLEBackendClient {
             .filter { !$0.isEmpty }
     }
 
-    private func startQueueDrainIfNeeded() {
+    private func startQueueDrainIfNeeded() async {
         guard !isDrainingQueue, !pendingEncounters.isEmpty else { return }
 
         isDrainingQueue = true

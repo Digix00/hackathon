@@ -49,7 +49,7 @@ struct EncounterListView: View {
             }
             syncDetailPresentationState()
         }
-        .onChange(of: selectedEncounter?.id) { _ in
+        .onChange(of: selectedEncounter?.id) { _, _ in
             syncDetailPresentationState()
         }
     }
