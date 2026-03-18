@@ -136,7 +136,7 @@ actor BackendAPIClient {
     func markNotificationAsRead(id: String) async throws {
         let escapedId = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id
         let result = try await send(path: "users/me/notifications/\(escapedId)/read", method: "PATCH")
-        guard result.response.statusCode == 200 else {
+        guard result.response.statusCode == 204 else {
             throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
         }
     }
