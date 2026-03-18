@@ -2,7 +2,9 @@ import SwiftUI
 
 struct MainPrototypeView: View {
     private enum Layout {
-        static let swipeThreshold: CGFloat = 90
+        static let trackToLibrarySwipeThreshold: CGFloat = 90
+        static let libraryToTrackSwipeThreshold: CGFloat = 180
+        static let libraryToTrackPredictedThreshold: CGFloat = 240
         static let dragResponseFactor: CGFloat = 0.9
         static let backgroundScale: CGFloat = 0.95
         static let inactiveOpacity: Double = 0.5
@@ -71,7 +73,7 @@ struct MainPrototypeView: View {
                     }
                     .onEnded { value in
                         guard isVerticalSwipe(value.translation) else { return }
-                        handleVerticalSwipe(translation: value.translation.height)
+                        handleVerticalSwipe(value)
                     }
             )
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: selectedSurface)
@@ -132,7 +134,7 @@ struct MainPrototypeView: View {
             DragGesture(minimumDistance: 20, coordinateSpace: .local)
                 .onEnded { value in
                     guard isVerticalSwipe(value.translation) else { return }
-                    handleVerticalSwipe(translation: value.translation.height)
+                    handleVerticalSwipe(value)
                 }
         )
         .overlay(alignment: .bottom) {
@@ -178,11 +180,18 @@ struct MainPrototypeView: View {
         abs(translation.height) > abs(translation.width)
     }
 
-    private func handleVerticalSwipe(translation: CGFloat) {
-        if translation < -Layout.swipeThreshold, selectedSurface == .track {
+    private func handleVerticalSwipe(_ value: DragGesture.Value) {
+        let translation = value.translation.height
+        let predicted = value.predictedEndTranslation.height
+
+        if translation < -Layout.trackToLibrarySwipeThreshold, selectedSurface == .track {
             HapticsService.impact(.medium)
             selectedSurface = .library
-        } else if translation > Layout.swipeThreshold, selectedSurface == .library {
+        } else if
+            selectedSurface == .library &&
+            translation > Layout.libraryToTrackSwipeThreshold &&
+            predicted > Layout.libraryToTrackPredictedThreshold
+        {
             HapticsService.impact(.medium)
             selectedSurface = .track
         }
