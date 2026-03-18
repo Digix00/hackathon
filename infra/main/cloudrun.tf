@@ -13,8 +13,11 @@ resource "google_cloud_run_v2_service" "api" {
   template {
     service_account = google_service_account.cloudrun.email
 
-    annotations = {
-      "run.googleapis.com/cloudsql-instances" = google_sql_database_instance.main.connection_name
+    volumes {
+      name = "cloudsql"
+      cloud_sql_instance {
+        instances = [google_sql_database_instance.main.connection_name]
+      }
     }
 
     scaling {
@@ -88,6 +91,11 @@ resource "google_cloud_run_v2_service" "api" {
             version = "latest"
           }
         }
+      }
+
+      volume_mounts {
+        name       = "cloudsql"
+        mount_path = "/cloudsql"
       }
     }
   }
