@@ -2,7 +2,7 @@ package request
 
 // @name CreatePlaylistRequest
 type CreatePlaylistRequest struct {
-	Name        string  `json:"name"`
+	Name        string  `json:"name" validate:"required"`
 	Description *string `json:"description"`
 	IsPublic    *bool   `json:"is_public"`
 }
@@ -16,5 +16,5 @@ type UpdatePlaylistRequest struct {
 
 // @name AddPlaylistTrackRequest
 type AddPlaylistTrackRequest struct {
-	TrackID string `json:"track_id"`
+	TrackID string `json:"track_id" validate:"required"`
 }

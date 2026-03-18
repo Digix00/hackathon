@@ -2186,6 +2186,9 @@ const docTemplate = `{
     "definitions": {
         "hackathon_internal_handler_schema_request.AddPlaylistTrackRequest": {
             "type": "object",
+            "required": [
+                "track_id"
+            ],
             "properties": {
                 "track_id": {
                     "type": "string"
@@ -2219,6 +2222,9 @@ const docTemplate = `{
         },
         "hackathon_internal_handler_schema_request.CreatePlaylistRequest": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
                 "description": {
                     "type": "string"

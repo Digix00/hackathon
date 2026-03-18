@@ -4,6 +4,8 @@ definitions:
     properties:
       track_id:
         type: string
+    required:
+    - track_id
     type: object
   hackathon_internal_handler_schema_request.CreateEncounterRequest:
     properties:
@@ -29,6 +31,8 @@ definitions:
         type: boolean
       name:
         type: string
+    required:
+    - name
     type: object
   hackathon_internal_handler_schema_request.CreatePushTokenRequest:
     properties:
