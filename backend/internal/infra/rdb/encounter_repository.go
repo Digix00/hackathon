@@ -3,6 +3,7 @@ package rdb
 import (
 	"context"
 	"errors"
+	"hash/fnv"
 	"time"
 
 	"github.com/google/uuid"
@@ -303,18 +304,30 @@ func (r *encounterRepository) IncrementDailyCountWithLimit(ctx context.Context, 
 	return count, nil
 }
 
-func (r *encounterRepository) CreateWithRateLimit(ctx context.Context, encounter entity.Encounter, userIDsForTracks []string, dailyLimitUserID string, date time.Time, limit int) (entity.Encounter, error) {
+func (r *encounterRepository) CreateWithRateLimit(ctx context.Context, encounter entity.Encounter, userIDsForTracks []string, dailyLimitUserID string, date time.Time, userLimit int, pairLimit int) (entity.Encounter, error) {
 	var created model.Encounter
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		now := time.Now().UTC()
-		if limit > 0 {
+		if pairLimit > 0 {
+			if err := lockEncounterPair(tx, encounter.UserID1, encounter.UserID2, encounter.EncounterType, date); err != nil {
+				return err
+			}
+			exists, err := existsByUsersAndTypeOnDateTx(tx, encounter.UserID1, encounter.UserID2, encounter.EncounterType, date)
+			if err != nil {
+				return err
+			}
+			if exists {
+				return domainerrs.Conflict("daily encounter limit reached for this pair")
+			}
+		}
+		if userLimit > 0 {
 			var count int
 			var err error
 			count, err = incrementDailyCountTx(tx, dailyLimitUserID, date, now)
 			if err != nil {
 				return err
 			}
-			if count > limit {
+			if count > userLimit {
 				return domainerrs.TooManyRequests("daily encounter limit exceeded")
 			}
 		}
@@ -367,6 +380,39 @@ func (r *encounterRepository) CreateWithRateLimit(ctx context.Context, encounter
 	}
 
 	return modelToEntityEncounter(created), nil
+}
+
+func existsByUsersAndTypeOnDateTx(tx *gorm.DB, userID1 string, userID2 string, encounterType vo.EncounterType, date time.Time) (bool, error) {
+	start := startOfUTCDate(date)
+	end := start.Add(24 * time.Hour)
+
+	var count int64
+	err := tx.Model(&model.Encounter{}).
+		Where("user_id1 = ? AND user_id2 = ? AND encounter_type = ? AND created_at >= ? AND created_at < ?",
+			userID1, userID2, string(encounterType), start, end).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func lockEncounterPair(tx *gorm.DB, userID1 string, userID2 string, encounterType vo.EncounterType, date time.Time) error {
+	start := startOfUTCDate(date)
+	key := encounterPairLockKey(userID1, userID2, encounterType, start)
+	return tx.Exec("SELECT pg_advisory_xact_lock(?)", key).Error
+}
+
+func encounterPairLockKey(userID1 string, userID2 string, encounterType vo.EncounterType, date time.Time) int64 {
+	h := fnv.New64a()
+	_, _ = h.Write([]byte(userID1))
+	_, _ = h.Write([]byte("|"))
+	_, _ = h.Write([]byte(userID2))
+	_, _ = h.Write([]byte("|"))
+	_, _ = h.Write([]byte(encounterType))
+	_, _ = h.Write([]byte("|"))
+	_, _ = h.Write([]byte(date.Format("2006-01-02")))
+	return int64(h.Sum64())
 }
 
 func startOfUTCDate(date time.Time) time.Time {

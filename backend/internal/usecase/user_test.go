@@ -127,7 +127,7 @@ func (r *stubEncounterRepo) IncrementDailyCountWithLimit(_ context.Context, _ st
 	return 1, nil
 }
 
-func (r *stubEncounterRepo) CreateWithRateLimit(_ context.Context, encounter entity.Encounter, _ []string, _ string, _ time.Time, _ int) (entity.Encounter, error) {
+func (r *stubEncounterRepo) CreateWithRateLimit(_ context.Context, encounter entity.Encounter, _ []string, _ string, _ time.Time, _ int, _ int) (entity.Encounter, error) {
 	return encounter, nil
 }
 

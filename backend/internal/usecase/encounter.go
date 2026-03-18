@@ -93,24 +93,13 @@ func (u *encounterUsecase) CreateEncounter(ctx context.Context, authUID string, 
 		return summary, false, false, nil
 	}
 
-	// 1日1回制限（同一ユーザーペア・同一タイプ）
-	if dailyEncounterPairLimit > 0 {
-		exists, err := u.encounterRepo.ExistsByUsersAndTypeOnDate(ctx, userID1, userID2, encounterType, now)
-		if err != nil {
-			return usecasedto.EncounterSummaryDTO{}, false, false, err
-		}
-		if exists {
-			return usecasedto.EncounterSummaryDTO{}, false, false, domainerrs.Conflict("daily encounter limit reached for this pair")
-		}
-	}
-
 	created, err := u.encounterRepo.CreateWithRateLimit(ctx, entity.Encounter{
 		ID:            uuid.NewString(),
 		UserID1:       userID1,
 		UserID2:       userID2,
 		EncounterType: encounterType,
 		OccurredAt:    input.OccurredAt,
-	}, []string{requester.ID, tokenEntity.UserID}, requester.ID, now, dailyEncounterUserLimit)
+	}, []string{requester.ID, tokenEntity.UserID}, requester.ID, now, dailyEncounterUserLimit, dailyEncounterPairLimit)
 	if err != nil {
 		return usecasedto.EncounterSummaryDTO{}, false, false, err
 	}

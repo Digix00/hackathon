@@ -43,5 +43,5 @@ type EncounterRepository interface {
 
 	IncrementDailyCountWithLimit(ctx context.Context, userID string, date time.Time, limit int) (int, error)
 
-	CreateWithRateLimit(ctx context.Context, encounter entity.Encounter, userIDsForTracks []string, dailyLimitUserID string, date time.Time, limit int) (entity.Encounter, error)
+	CreateWithRateLimit(ctx context.Context, encounter entity.Encounter, userIDsForTracks []string, dailyLimitUserID string, date time.Time, userLimit int, pairLimit int) (entity.Encounter, error)
 }
