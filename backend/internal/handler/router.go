@@ -14,6 +14,7 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	pushTokenHandler := newPushTokenHandler(deps.PushTokenUsecase)
 	bleTokenHandler := newBleTokenHandler(deps.BleTokenUsecase)
 	reportHandler := newReportHandler(deps.ReportUsecase)
+	notificationHandler := newNotificationHandler(deps.NotificationUsecase)
 
 	api := e.Group("/api/v1")
 	api.Use(middleware.FirebaseAuth(deps.AuthTokenVerifier))
@@ -36,4 +37,8 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	api.GET("/ble-tokens/:token/user", bleTokenHandler.getUserByBleToken)
 
 	api.POST("/reports", reportHandler.createReport)
+
+	api.GET("/users/me/notifications", notificationHandler.listNotifications)
+	api.PATCH("/users/me/notifications/:id/read", notificationHandler.markNotificationAsRead)
+	api.DELETE("/users/me/notifications/:id", notificationHandler.deleteNotification)
 }

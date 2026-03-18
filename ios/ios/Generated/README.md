@@ -31,6 +31,9 @@ Class | Method | HTTP request | Description
 *BleTokensAPI* | [**getUserByBleToken**](docs/BleTokensAPI.md#getuserbybletoken) | **GET** /api/v1/ble-tokens/{token}/user | BLE トークンからユーザー情報取得
 *HealthAPI* | [**healthz**](docs/HealthAPI.md#healthz) | **GET** /healthz | ヘルスチェック
 *HealthAPI* | [**healthzPostgres**](docs/HealthAPI.md#healthzpostgres) | **GET** /healthz/postgres | PostgreSQL ヘルスチェック
+*NotificationsAPI* | [**deleteNotification**](docs/NotificationsAPI.md#deletenotification) | **DELETE** /api/v1/users/me/notifications/{id} | 通知削除
+*NotificationsAPI* | [**listNotifications**](docs/NotificationsAPI.md#listnotifications) | **GET** /api/v1/users/me/notifications | 通知一覧取得
+*NotificationsAPI* | [**markNotificationAsRead**](docs/NotificationsAPI.md#marknotificationasread) | **PATCH** /api/v1/users/me/notifications/{id}/read | 通知を既読にする
 *PushTokensAPI* | [**createPushToken**](docs/PushTokensAPI.md#createpushtoken) | **POST** /api/v1/users/me/push-tokens | プッシュトークン登録（upsert）
 *PushTokensAPI* | [**deletePushToken**](docs/PushTokensAPI.md#deletepushtoken) | **DELETE** /api/v1/users/me/push-tokens/{id} | プッシュトークン削除
 *PushTokensAPI* | [**patchPushToken**](docs/PushTokensAPI.md#patchpushtoken) | **PATCH** /api/v1/users/me/push-tokens/{id} | プッシュトークン更新
@@ -58,6 +61,8 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseBleTokenUserResponse](docs/HackathonInternalHandlerSchemaResponseBleTokenUserResponse.md)
  - [HackathonInternalHandlerSchemaResponseDevice](docs/HackathonInternalHandlerSchemaResponseDevice.md)
  - [HackathonInternalHandlerSchemaResponseDeviceResponse](docs/HackathonInternalHandlerSchemaResponseDeviceResponse.md)
+ - [HackathonInternalHandlerSchemaResponseNotificationItem](docs/HackathonInternalHandlerSchemaResponseNotificationItem.md)
+ - [HackathonInternalHandlerSchemaResponseNotificationListResponse](docs/HackathonInternalHandlerSchemaResponseNotificationListResponse.md)
  - [HackathonInternalHandlerSchemaResponsePublicTrack](docs/HackathonInternalHandlerSchemaResponsePublicTrack.md)
  - [HackathonInternalHandlerSchemaResponsePublicUser](docs/HackathonInternalHandlerSchemaResponsePublicUser.md)
  - [HackathonInternalHandlerSchemaResponsePublicUserResponse](docs/HackathonInternalHandlerSchemaResponsePublicUserResponse.md)
