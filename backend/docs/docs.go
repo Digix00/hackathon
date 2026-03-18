@@ -162,6 +162,76 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/reports": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "ユーザーまたはコメントを通報する。同じ対象への重複通報はエラーになる。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "通報作成",
+                "operationId": "createReport",
+                "parameters": [
+                    {
+                        "description": "通報リクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.CreateReportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.ReportResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users": {
             "post": {
                 "security": [
@@ -948,6 +1018,27 @@ const docTemplate = `{
                 }
             }
         },
+        "hackathon_internal_handler_schema_request.CreateReportRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string"
+                },
+                "report_type": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "comment"
+                    ]
+                },
+                "reported_user_id": {
+                    "type": "string"
+                },
+                "target_comment_id": {
+                    "type": "string"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_request.CreateUserRequest": {
             "type": "object",
             "properties": {
@@ -1280,6 +1371,41 @@ const docTemplate = `{
             "properties": {
                 "user": {
                     "$ref": "#/definitions/hackathon_internal_handler_schema_response.PublicUser"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.Report": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "report_type": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "comment"
+                    ]
+                },
+                "reported_user_id": {
+                    "type": "string"
+                },
+                "target_comment_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.ReportResponse": {
+            "type": "object",
+            "properties": {
+                "report": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.Report"
                 }
             }
         },

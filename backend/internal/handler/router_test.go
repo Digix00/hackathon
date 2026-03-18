@@ -142,6 +142,7 @@ func newTestServer(t *testing.T, db *gorm.DB, authUID string) *echo.Echo {
 	encounterRepo := rdb.NewEncounterRepository(db)
 	trackRepo := rdb.NewUserCurrentTrackRepository(db)
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
+	reportRepo := rdb.NewReportRepository(db)
 	notificationRepo := rdb.NewNotificationRepository(db)
 
 	e := echo.New()
@@ -152,6 +153,7 @@ func newTestServer(t *testing.T, db *gorm.DB, authUID string) *echo.Echo {
 		SettingsUsecase:     usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
 		PushTokenUsecase:    usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
 		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
+		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
 		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
 	})
 	return e

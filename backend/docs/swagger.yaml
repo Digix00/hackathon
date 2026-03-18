@@ -14,6 +14,20 @@ definitions:
       push_token:
         type: string
     type: object
+  hackathon_internal_handler_schema_request.CreateReportRequest:
+    properties:
+      reason:
+        type: string
+      report_type:
+        enum:
+        - user
+        - comment
+        type: string
+      reported_user_id:
+        type: string
+      target_comment_id:
+        type: string
+    type: object
   hackathon_internal_handler_schema_request.CreateUserRequest:
     properties:
       age_visibility:
@@ -238,6 +252,29 @@ definitions:
       user:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.PublicUser'
     type: object
+  hackathon_internal_handler_schema_response.Report:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      reason:
+        type: string
+      report_type:
+        enum:
+        - user
+        - comment
+        type: string
+      reported_user_id:
+        type: string
+      target_comment_id:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.ReportResponse:
+    properties:
+      report:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.Report'
+    type: object
   hackathon_internal_handler_schema_response.Settings:
     properties:
       announcement_notification_enabled:
@@ -440,6 +477,51 @@ paths:
       summary: 有効な BLE トークン取得
       tags:
       - ble-tokens
+  /api/v1/reports:
+    post:
+      consumes:
+      - application/json
+      description: ユーザーまたはコメントを通報する。同じ対象への重複通報はエラーになる。
+      operationId: createReport
+      parameters:
+      - description: 通報リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.CreateReportRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.ReportResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 通報作成
+      tags:
+      - reports
   /api/v1/users:
     post:
       consumes:
