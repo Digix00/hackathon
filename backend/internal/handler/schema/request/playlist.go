@@ -4,7 +4,7 @@ package request
 type CreatePlaylistRequest struct {
 	Name        string  `json:"name"`
 	Description *string `json:"description"`
-	IsPublic    bool    `json:"is_public"`
+	IsPublic    *bool   `json:"is_public"`
 }
 
 // @name UpdatePlaylistRequest

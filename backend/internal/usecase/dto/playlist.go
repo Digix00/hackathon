@@ -26,7 +26,7 @@ type PlaylistDTO struct {
 type CreatePlaylistInput struct {
 	Name        string
 	Description *string
-	IsPublic    bool
+	IsPublic    *bool
 }
 
 type UpdatePlaylistInput struct {
