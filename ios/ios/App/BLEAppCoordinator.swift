@@ -270,9 +270,18 @@ final class BLEAppCoordinator: ObservableObject {
         return text.replacingOccurrences(of: " ", with: "")
     }
 
+    private static func stableHash(_ s: String) -> UInt64 {
+        var hash: UInt64 = 14695981039346656037
+        for byte in s.utf8 {
+            hash ^= UInt64(byte)
+            hash &*= 1099511628211
+        }
+        return hash
+    }
+
     private static func colorSeed(for key: String) -> Color {
         let palette: [Color] = [.orange, .teal, .pink, .red, .green, .indigo, .mint]
-        let index = Int(key.hashValue.magnitude % UInt(palette.count))
+        let index = Int(stableHash(key) % UInt64(palette.count))
         return palette[index]
     }
 }
