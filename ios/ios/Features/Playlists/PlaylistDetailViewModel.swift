@@ -108,7 +108,7 @@ final class PlaylistDetailViewModel: ObservableObject {
         do {
             let request = UpdatePlaylistRequest(
                 name: name,
-                description: description.isEmpty ? nil : description,
+                description: description,
                 isPublic: isPublic
             )
             let playlist = try await client.updatePlaylist(id: playlistId, request: request)
