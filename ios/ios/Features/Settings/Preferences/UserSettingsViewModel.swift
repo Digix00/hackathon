@@ -222,6 +222,5 @@ final class UserSettingsViewModel: ObservableObject {
         if request.themeMode != nil {
             themeMode = ThemeMode(rawValue: settings.themeMode) ?? .system
         }
-        hasLoaded = true
     }
 }
