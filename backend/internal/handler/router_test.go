@@ -16,12 +16,16 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	"hackathon/internal/infra/crypto"
 	"hackathon/internal/infra/music"
 	"hackathon/internal/infra/rdb"
 	"hackathon/internal/infra/rdb/model"
 	"hackathon/internal/usecase"
 	usecaseport "hackathon/internal/usecase/port"
 )
+
+// testTokenEncryptionKey はテスト用の固定暗号鍵（32バイト = 64文字の16進数）
+const testTokenEncryptionKey = "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20"
 
 const testFirebaseProvider = "firebase"
 
@@ -150,7 +154,11 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 	encounterRepo := rdb.NewEncounterRepository(db)
 	trackRepo := rdb.NewUserCurrentTrackRepository(db)
 	trackCatalogRepo := rdb.NewTrackCatalogRepository(db)
-	musicConnectionRepo := rdb.NewMusicConnectionRepository(db)
+	enc, err := crypto.NewTokenEncrypter(testTokenEncryptionKey)
+	if err != nil {
+		t.Fatalf("token encrypter init: %v", err)
+	}
+	musicConnectionRepo := rdb.NewMusicConnectionRepository(db, enc)
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
 	reportRepo := rdb.NewReportRepository(db)
 	notificationRepo := rdb.NewNotificationRepository(db)

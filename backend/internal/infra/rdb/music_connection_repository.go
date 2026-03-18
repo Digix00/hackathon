@@ -11,16 +11,18 @@ import (
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
+	"hackathon/internal/infra/crypto"
 	"hackathon/internal/infra/rdb/converter"
 	"hackathon/internal/infra/rdb/model"
 )
 
 type musicConnectionRepository struct {
-	db *gorm.DB
+	db        *gorm.DB
+	encrypter *crypto.TokenEncrypter
 }
 
-func NewMusicConnectionRepository(db *gorm.DB) repository.MusicConnectionRepository {
-	return &musicConnectionRepository{db: db}
+func NewMusicConnectionRepository(db *gorm.DB, encrypter *crypto.TokenEncrypter) repository.MusicConnectionRepository {
+	return &musicConnectionRepository{db: db, encrypter: encrypter}
 }
 
 func (r *musicConnectionRepository) ListByUserID(ctx context.Context, userID string) ([]entity.MusicConnection, error) {
@@ -30,7 +32,11 @@ func (r *musicConnectionRepository) ListByUserID(ctx context.Context, userID str
 	}
 	result := make([]entity.MusicConnection, 0, len(rows))
 	for _, row := range rows {
-		result = append(result, converter.ModelToEntityMusicConnection(row))
+		conn, err := r.decryptTokens(row)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, converter.ModelToEntityMusicConnection(conn))
 	}
 	return result, nil
 }
@@ -43,18 +49,35 @@ func (r *musicConnectionRepository) FindByUserIDAndProvider(ctx context.Context,
 		}
 		return entity.MusicConnection{}, err
 	}
-	return converter.ModelToEntityMusicConnection(row), nil
+	decrypted, err := r.decryptTokens(row)
+	if err != nil {
+		return entity.MusicConnection{}, err
+	}
+	return converter.ModelToEntityMusicConnection(decrypted), nil
 }
 
 func (r *musicConnectionRepository) Upsert(ctx context.Context, params repository.UpsertMusicConnectionParams) (entity.MusicConnection, error) {
+	encryptedAccess, err := r.encrypter.Encrypt(params.AccessToken)
+	if err != nil {
+		return entity.MusicConnection{}, err
+	}
+	var encryptedRefresh *string
+	if params.RefreshToken != nil {
+		s, err := r.encrypter.Encrypt(*params.RefreshToken)
+		if err != nil {
+			return entity.MusicConnection{}, err
+		}
+		encryptedRefresh = &s
+	}
+
 	row := model.MusicConnection{
 		ID:               uuid.NewString(),
 		UserID:           params.UserID,
 		Provider:         params.Provider,
 		ProviderUserID:   params.ProviderUserID,
 		ProviderUsername: params.ProviderUsername,
-		AccessToken:      params.AccessToken,
-		RefreshToken:     params.RefreshToken,
+		AccessToken:      encryptedAccess,
+		RefreshToken:     encryptedRefresh,
 		ExpiresAt:        params.ExpiresAt,
 	}
 	if err := r.db.WithContext(ctx).Clauses(clause.OnConflict{
@@ -75,4 +98,22 @@ func (r *musicConnectionRepository) DeleteByUserIDAndProvider(ctx context.Contex
 		return domainerrs.NotFound("music connection was not found")
 	}
 	return nil
+}
+
+// decryptTokens はDB行のAccessToken/RefreshTokenを復号したコピーを返す。
+func (r *musicConnectionRepository) decryptTokens(row model.MusicConnection) (model.MusicConnection, error) {
+	decryptedAccess, err := r.encrypter.Decrypt(row.AccessToken)
+	if err != nil {
+		return model.MusicConnection{}, err
+	}
+	row.AccessToken = decryptedAccess
+
+	if row.RefreshToken != nil {
+		decryptedRefresh, err := r.encrypter.Decrypt(*row.RefreshToken)
+		if err != nil {
+			return model.MusicConnection{}, err
+		}
+		row.RefreshToken = &decryptedRefresh
+	}
+	return row, nil
 }

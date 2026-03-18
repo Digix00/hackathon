@@ -6,6 +6,7 @@ import (
 
 	"hackathon/config"
 	"hackathon/internal/handler"
+	"hackathon/internal/infra/crypto"
 	"hackathon/internal/infra/music"
 	"hackathon/internal/infra/rdb"
 	"hackathon/internal/usecase"
@@ -13,6 +14,11 @@ import (
 )
 
 func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config.Config) handler.Dependencies {
+	tokenEncrypter, err := crypto.NewTokenEncrypter(cfg.MusicTokenEncryptionKey)
+	if err != nil {
+		panic("music token encrypter init failed: " + err.Error())
+	}
+
 	userRepo := rdb.NewUserRepository(db)
 	userSettingsRepo := rdb.NewUserSettingsRepository(db)
 	userDeviceRepo := rdb.NewUserDeviceRepository(db)
@@ -20,7 +26,7 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config
 	encounterRepo := rdb.NewEncounterRepository(db)
 	trackRepo := rdb.NewUserCurrentTrackRepository(db)
 	trackCatalogRepo := rdb.NewTrackCatalogRepository(db)
-	musicConnectionRepo := rdb.NewMusicConnectionRepository(db)
+	musicConnectionRepo := rdb.NewMusicConnectionRepository(db, tokenEncrypter)
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
 	reportRepo := rdb.NewReportRepository(db)
 	notificationRepo := rdb.NewNotificationRepository(db)
