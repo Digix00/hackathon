@@ -50,7 +50,9 @@ actor BackendAPIClient {
     }
 
     func getUser(id: String) async throws -> BackendPublicUser {
-        let escapedId = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id
+        var allowed = CharacterSet.urlPathAllowed
+        allowed.remove(charactersIn: "/")
+        let escapedId = id.addingPercentEncoding(withAllowedCharacters: allowed) ?? id
         let result = try await send(path: "users/\(escapedId)", method: "GET")
         guard result.response.statusCode == 200 else {
             throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)

@@ -200,6 +200,7 @@ struct BackendReportResponse: Decodable {
 
 // MARK: - Encounters
 
+// Encounter user shares the public user shape; extra fields may be nil here.
 typealias BackendEncounterUser = BackendPublicUser
 
 typealias BackendEncounterTrack = BackendPublicTrack
