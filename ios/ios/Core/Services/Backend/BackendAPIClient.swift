@@ -120,11 +120,10 @@ actor BackendAPIClient {
 
     // MARK: - Notifications
 
-    func listNotifications(limit: Int? = nil, cursor: String? = nil, unreadOnly: Bool? = nil) async throws -> BackendNotificationListResponse {
+    func listNotifications(limit: Int? = nil, offset: Int? = nil) async throws -> BackendNotificationListResponse {
         var queryItems: [URLQueryItem] = []
         if let limit { queryItems.append(URLQueryItem(name: "limit", value: "\(limit)")) }
-        if let cursor { queryItems.append(URLQueryItem(name: "cursor", value: cursor)) }
-        if let unreadOnly { queryItems.append(URLQueryItem(name: "unread_only", value: unreadOnly ? "true" : "false")) }
+        if let offset { queryItems.append(URLQueryItem(name: "offset", value: "\(offset)")) }
 
         let result = try await send(path: "users/me/notifications", method: "GET", queryItems: queryItems)
         guard result.response.statusCode == 200 else {

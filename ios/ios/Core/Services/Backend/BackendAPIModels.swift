@@ -148,37 +148,30 @@ struct BackendDeviceResponse: Decodable {
 
 struct BackendNotificationItem: Decodable, Equatable {
     let id: String
-    let type: String
-    let title: String
-    let body: String
-    let target: [String: String]?
-    let isRead: Bool
+    let encounterId: String
+    let status: String
+    let readAt: String?
     let createdAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id
-        case type
-        case title
-        case body
-        case target
-        case isRead = "is_read"
+        case encounterId = "encounter_id"
+        case status
+        case readAt = "read_at"
         case createdAt = "created_at"
-    }
-}
-
-struct BackendPagination: Decodable, Equatable {
-    let nextCursor: String?
-    let hasMore: Bool
-
-    enum CodingKeys: String, CodingKey {
-        case nextCursor = "next_cursor"
-        case hasMore = "has_more"
     }
 }
 
 struct BackendNotificationListResponse: Decodable {
     let notifications: [BackendNotificationItem]
-    let pagination: BackendPagination
+    let unreadCount: Int64
+    let total: Int64
+
+    enum CodingKeys: String, CodingKey {
+        case notifications
+        case unreadCount = "unread_count"
+        case total
+    }
 }
 
 // MARK: - Reports
