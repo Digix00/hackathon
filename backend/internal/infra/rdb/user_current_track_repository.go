@@ -34,16 +34,5 @@ func (r *userCurrentTrackRepository) FindCurrentByUserID(ctx context.Context, us
 	if current.Track == nil {
 		return entity.TrackInfo{}, false, nil
 	}
-
-	trackID := current.Track.ID
-	if current.Track.Provider != "" && current.Track.ExternalID != "" {
-		trackID = current.Track.Provider + ":track:" + current.Track.ExternalID
-	}
-
-	return entity.TrackInfo{
-		ID:         trackID,
-		Title:      current.Track.Title,
-		ArtistName: current.Track.ArtistName,
-		ArtworkURL: current.Track.AlbumArtURL,
-	}, true, nil
+	return modelTrackToEntity(*current.Track), true, nil
 }

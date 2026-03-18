@@ -16,10 +16,16 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	"hackathon/internal/infra/crypto"
+	"hackathon/internal/infra/music"
 	"hackathon/internal/infra/rdb"
 	"hackathon/internal/infra/rdb/model"
 	"hackathon/internal/usecase"
+	usecaseport "hackathon/internal/usecase/port"
 )
+
+// testTokenEncryptionKey はテスト用の固定暗号鍵（32バイト = 64文字の16進数）
+const testTokenEncryptionKey = "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20"
 
 const testFirebaseProvider = "firebase"
 
@@ -135,6 +141,11 @@ func seedTestUser(t *testing.T, db *gorm.DB, providerUserID string) model.User {
 
 func newTestServer(t *testing.T, db *gorm.DB, authUID string) *echo.Echo {
 	t.Helper()
+	return newTestServerWithProviders(t, db, authUID, nil)
+}
+
+func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, providers []usecaseport.MusicProvider) *echo.Echo {
+	t.Helper()
 
 	userRepo := rdb.NewUserRepository(db)
 	userSettingsRepo := rdb.NewUserSettingsRepository(db)
@@ -142,10 +153,22 @@ func newTestServer(t *testing.T, db *gorm.DB, authUID string) *echo.Echo {
 	blockRepo := rdb.NewBlockRepository(db)
 	encounterRepo := rdb.NewEncounterRepository(db)
 	trackRepo := rdb.NewUserCurrentTrackRepository(db)
+	trackCatalogRepo := rdb.NewTrackCatalogRepository(db)
+	enc, err := crypto.NewTokenEncrypter(testTokenEncryptionKey)
+	if err != nil {
+		t.Fatalf("token encrypter init: %v", err)
+	}
+	musicConnectionRepo := rdb.NewMusicConnectionRepository(db, enc)
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
 	reportRepo := rdb.NewReportRepository(db)
 	muteRepo := rdb.NewMuteRepository(db)
 	notificationRepo := rdb.NewNotificationRepository(db)
+	if providers == nil {
+		providers = []usecaseport.MusicProvider{
+			music.NewSpotifyProvider(music.SpotifyConfig{}),
+			music.NewAppleMusicProvider(music.AppleMusicConfig{}),
+		}
+	}
 
 	e := echo.New()
 	RegisterRoutes(e, Dependencies{
@@ -158,6 +181,7 @@ func newTestServer(t *testing.T, db *gorm.DB, authUID string) *echo.Echo {
 		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
 		MuteUsecase:         usecase.NewMuteUsecase(userRepo, muteRepo),
 		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
+		MusicUsecase:        usecase.NewMusicUsecase(userRepo, musicConnectionRepo, trackCatalogRepo, providers, "test-state-secret", "digix"),
 		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
 	})
 	return e
@@ -873,6 +897,144 @@ func orderedEncounter(userA string, userB string, encounteredAt time.Time) model
 		UserID2:       user2,
 		EncounteredAt: encounteredAt,
 		EncounterType: "ble",
+	}
+}
+
+func TestMusicConnectionsAuthorizeCallbackListDeleteAndTrackEndpoints(t *testing.T) {
+	db := newTestDB(t)
+	user := seedTestUser(t, db, "firebase-uid-music")
+
+	providerServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/api/token":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"access_token":"spotify-access","refresh_token":"spotify-refresh","expires_in":3600}`))
+		case r.URL.Path == "/v1/me":
+			if got := r.Header.Get("Authorization"); got != "Bearer spotify-access" {
+				t.Fatalf("unexpected auth header for /me: %s", got)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"id":"spotify-user-1","display_name":"Spotify Tester"}`))
+		case r.URL.Path == "/v1/search":
+			if q := r.URL.Query().Get("q"); q != "hello" {
+				t.Fatalf("unexpected q: %s", q)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"tracks":{"items":[{"id":"track-1","name":"Song A","duration_ms":225000,"preview_url":"https://preview.example/song-a.mp3","album":{"name":"Album A","images":[{"url":"https://img.example/song-a.jpg"}]},"artists":[{"name":"Artist A"}]}],"offset":0,"limit":20,"total":1,"next":null}}`))
+		case r.URL.Path == "/v1/tracks/track-1":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"id":"track-1","name":"Song A","duration_ms":225000,"preview_url":"https://preview.example/song-a.mp3","album":{"name":"Album A","images":[{"url":"https://img.example/song-a.jpg"}]},"artists":[{"name":"Artist A"}]}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer providerServer.Close()
+
+	spotifyProvider := music.NewSpotifyProvider(music.SpotifyConfig{
+		ClientID:     "spotify-client",
+		ClientSecret: "spotify-secret",
+		RedirectURL:  "http://localhost:8000/api/v1/music-connections/spotify/callback",
+		AuthorizeURL: providerServer.URL + "/authorize",
+		TokenURL:     providerServer.URL + "/api/token",
+		APIBaseURL:   providerServer.URL + "/v1",
+	})
+	appleProvider := music.NewAppleMusicProvider(music.AppleMusicConfig{
+		ClientID:     "apple-client",
+		RedirectURL:  "http://localhost:8000/api/v1/music-connections/apple_music/callback",
+		AuthorizeURL: providerServer.URL + "/apple-authorize",
+	})
+
+	e := newTestServerWithProviders(t, db, "firebase-uid-music", []usecaseport.MusicProvider{spotifyProvider, appleProvider})
+
+	authorizeReq, _ := authRequest(http.MethodGet, "/api/v1/music-connections/spotify/authorize", nil)
+	authorizeRec := httptest.NewRecorder()
+	e.ServeHTTP(authorizeRec, authorizeReq)
+	if authorizeRec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", authorizeRec.Code, authorizeRec.Body.String())
+	}
+	var authorizeBody map[string]any
+	if err := json.Unmarshal(authorizeRec.Body.Bytes(), &authorizeBody); err != nil {
+		t.Fatalf("unmarshal authorize response: %v", err)
+	}
+	state := authorizeBody["state"].(string)
+	if state == "" {
+		t.Fatal("expected non-empty state")
+	}
+
+	callbackReq := httptest.NewRequest(http.MethodGet, "/api/v1/music-connections/spotify/callback?code=auth-code&state="+state, nil)
+	callbackRec := httptest.NewRecorder()
+	e.ServeHTTP(callbackRec, callbackReq)
+	if callbackRec.Code != http.StatusFound {
+		t.Fatalf("expected 302, got %d: %s", callbackRec.Code, callbackRec.Body.String())
+	}
+	if got := callbackRec.Header().Get("Location"); got != "digix://music-connections/spotify/callback?result=success" {
+		t.Fatalf("unexpected callback location: %s", got)
+	}
+
+	listReq, _ := authRequest(http.MethodGet, "/api/v1/users/me/music-connections", nil)
+	listRec := httptest.NewRecorder()
+	e.ServeHTTP(listRec, listReq)
+	if listRec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", listRec.Code, listRec.Body.String())
+	}
+	var listBody map[string]any
+	if err := json.Unmarshal(listRec.Body.Bytes(), &listBody); err != nil {
+		t.Fatalf("unmarshal list response: %v", err)
+	}
+	connections := listBody["music_connections"].([]any)
+	if len(connections) != 1 {
+		t.Fatalf("expected 1 connection, got %d", len(connections))
+	}
+	connection := connections[0].(map[string]any)
+	if connection["provider"].(string) != "spotify" {
+		t.Fatalf("expected spotify provider, got %v", connection["provider"])
+	}
+	if connection["provider_user_id"].(string) != "spotify-user-1" {
+		t.Fatalf("expected provider user id spotify-user-1, got %v", connection["provider_user_id"])
+	}
+
+	searchReq, _ := authRequest(http.MethodGet, "/api/v1/tracks/search?q=hello", nil)
+	searchRec := httptest.NewRecorder()
+	e.ServeHTTP(searchRec, searchReq)
+	if searchRec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", searchRec.Code, searchRec.Body.String())
+	}
+	var searchBody map[string]any
+	if err := json.Unmarshal(searchRec.Body.Bytes(), &searchBody); err != nil {
+		t.Fatalf("unmarshal search response: %v", err)
+	}
+	tracks := searchBody["tracks"].([]any)
+	if len(tracks) != 1 {
+		t.Fatalf("expected 1 track, got %d", len(tracks))
+	}
+	track := tracks[0].(map[string]any)
+	if track["id"].(string) != "spotify:track:track-1" {
+		t.Fatalf("unexpected track id: %v", track["id"])
+	}
+	if track["preview_url"].(string) != "https://preview.example/song-a.mp3" {
+		t.Fatalf("unexpected preview_url: %v", track["preview_url"])
+	}
+
+	getTrackReq, _ := authRequest(http.MethodGet, "/api/v1/tracks/spotify:track:track-1", nil)
+	getTrackRec := httptest.NewRecorder()
+	e.ServeHTTP(getTrackRec, getTrackReq)
+	if getTrackRec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", getTrackRec.Code, getTrackRec.Body.String())
+	}
+
+	deleteReq, _ := authRequest(http.MethodDelete, "/api/v1/users/me/music-connections/spotify", nil)
+	deleteRec := httptest.NewRecorder()
+	e.ServeHTTP(deleteRec, deleteReq)
+	if deleteRec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d: %s", deleteRec.Code, deleteRec.Body.String())
+	}
+
+	var count int64
+	if err := db.Model(&model.MusicConnection{}).Where("user_id = ?", user.ID).Count(&count).Error; err != nil {
+		t.Fatalf("count music connections: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected 0 connections after delete, got %d", count)
 	}
 }
 
