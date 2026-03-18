@@ -16,7 +16,7 @@ struct SearchView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "chevron.left")
-                        Text("home画面に戻る")
+                        Text("ホーム画面に戻る")
                     }
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(PrototypeTheme.textPrimary)
