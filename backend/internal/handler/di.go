@@ -10,12 +10,15 @@ import (
 // Dependencies はhandlerレイヤーが必要とする外部依存をまとめた構造体。
 // ルーティング登録前にmain側で構築して渡す。
 type Dependencies struct {
-	AuthTokenVerifier middleware.TokenVerifier
-	AuthUserManager   FirebaseUserManager
-	UserUsecase       usecase.UserUsecase
-	SettingsUsecase   usecase.SettingsUsecase
-	PushTokenUsecase  usecase.PushTokenUsecase
-	BleTokenUsecase   usecase.BleTokenUsecase
+	AuthTokenVerifier   middleware.TokenVerifier
+	AuthUserManager     FirebaseUserManager
+	UserUsecase         usecase.UserUsecase
+	SettingsUsecase     usecase.SettingsUsecase
+	PushTokenUsecase    usecase.PushTokenUsecase
+	BleTokenUsecase     usecase.BleTokenUsecase
+	ReportUsecase       usecase.ReportUsecase
+	NotificationUsecase usecase.NotificationUsecase
+	EncounterUsecase    usecase.EncounterUsecase
 }
 
 // FirebaseUserManager はFirebase Auth上のユーザー削除操作を抽象化する。

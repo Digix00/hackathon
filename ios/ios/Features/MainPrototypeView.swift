@@ -43,7 +43,7 @@ struct MainPrototypeView: View {
     @State private var selectedLibraryTab: LibraryTab = .insights
     @GestureState private var verticalDragOffset: CGFloat = 0
     let restartOnboarding: () -> Void
-    @Namespace private var heroNamespace
+    @Namespace private var homeNamespace
 
     var body: some View {
         GeometryReader { proxy in
@@ -75,7 +75,7 @@ struct MainPrototypeView: View {
                     }
             )
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: selectedSurface)
-            .environment(\.heroNamespace, heroNamespace)
+            .environment(\.homeNamespace, homeNamespace)
         }
         .background(PrototypeTheme.background)
         .ignoresSafeArea()
@@ -92,7 +92,7 @@ struct MainPrototypeView: View {
 
     private var trackSurface: some View {
         navigationContainer {
-            HomeHeroPage(
+            HomePage(
                 state: homeState,
                 isMotionActive: isShowingTrackSurface
             )

@@ -17,14 +17,19 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client) handler.Dep
 	encounterRepo := rdb.NewEncounterRepository(db)
 	trackRepo := rdb.NewUserCurrentTrackRepository(db)
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
-	_ = rdb.NewTransactor(db)
+	reportRepo := rdb.NewReportRepository(db)
+	notificationRepo := rdb.NewNotificationRepository(db)
+  _ = rdb.NewTransactor(db)
 
 	return handler.Dependencies{
-		AuthTokenVerifier: authClient,
-		AuthUserManager:   authClient,
-		UserUsecase:       usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
-		SettingsUsecase:   usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
-		PushTokenUsecase:  usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
-		BleTokenUsecase:   usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
+		AuthTokenVerifier:   authClient,
+		AuthUserManager:     authClient,
+		UserUsecase:         usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
+		SettingsUsecase:     usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
+		PushTokenUsecase:    usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
+		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
+		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
+		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
+		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
 	}
 }

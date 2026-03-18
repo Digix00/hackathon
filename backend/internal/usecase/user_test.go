@@ -34,6 +34,15 @@ func (r *stubUserRepo) FindByID(_ context.Context, id string) (entity.User, erro
 	}
 	return u, nil
 }
+func (r *stubUserRepo) FindByIDs(_ context.Context, ids []string) (map[string]entity.User, error) {
+	result := make(map[string]entity.User, len(ids))
+	for _, id := range ids {
+		if u, ok := r.byID[id]; ok {
+			result[id] = u
+		}
+	}
+	return result, nil
+}
 func (r *stubUserRepo) Create(_ context.Context, _ repository.CreateUserParams) (entity.User, error) {
 	return entity.User{}, nil
 }
@@ -63,6 +72,12 @@ type stubBlockRepo struct {
 func (r *stubBlockRepo) ExistsBetween(_ context.Context, _, _ string) (bool, error) {
 	return r.blocked, nil
 }
+func (r *stubBlockRepo) ListBlockedUserIDs(_ context.Context, _ string, _ []string) (map[string]bool, error) {
+	if r.blocked {
+		return map[string]bool{"blocked": true}, nil
+	}
+	return map[string]bool{}, nil
+}
 
 type stubEncounterRepo struct {
 	count int64
@@ -70,6 +85,50 @@ type stubEncounterRepo struct {
 
 func (r *stubEncounterRepo) CountByUserID(_ context.Context, _ string) (int64, error) {
 	return r.count, nil
+}
+
+func (r *stubEncounterRepo) FindRecentByUsersAndType(_ context.Context, _, _ string, _ vo.EncounterType, _ time.Time, _ time.Duration) (entity.Encounter, bool, error) {
+	return entity.Encounter{}, false, nil
+}
+
+func (r *stubEncounterRepo) Create(_ context.Context, encounter entity.Encounter) (entity.Encounter, error) {
+	return encounter, nil
+}
+
+func (r *stubEncounterRepo) CreateTracksFromCurrent(_ context.Context, _ string, _ []string) error {
+	return nil
+}
+
+func (r *stubEncounterRepo) ListByUserID(_ context.Context, _ string, _ int, _ *repository.EncounterCursor) ([]entity.Encounter, *repository.EncounterCursor, bool, error) {
+	return []entity.Encounter{}, nil, false, nil
+}
+
+func (r *stubEncounterRepo) ListByUserIDExcludingBlocked(_ context.Context, _ string, _ int, _ *repository.EncounterCursor) ([]entity.Encounter, *repository.EncounterCursor, bool, error) {
+	return []entity.Encounter{}, nil, false, nil
+}
+
+func (r *stubEncounterRepo) FindByID(_ context.Context, _ string) (entity.Encounter, error) {
+	return entity.Encounter{}, domainerrs.NotFound("not found")
+}
+
+func (r *stubEncounterRepo) ListTracksByEncounterIDs(_ context.Context, _ []string) (map[string][]entity.TrackInfo, error) {
+	return map[string][]entity.TrackInfo{}, nil
+}
+
+func (r *stubEncounterRepo) GetReadStatusByEncounterIDs(_ context.Context, _ string, _ []string) (map[string]bool, error) {
+	return map[string]bool{}, nil
+}
+
+func (r *stubEncounterRepo) ExistsByUsersAndTypeOnDate(_ context.Context, _, _ string, _ vo.EncounterType, _ time.Time) (bool, error) {
+	return false, nil
+}
+
+func (r *stubEncounterRepo) IncrementDailyCountWithLimit(_ context.Context, _ string, _ time.Time, _ int) (int, error) {
+	return 1, nil
+}
+
+func (r *stubEncounterRepo) CreateWithRateLimit(_ context.Context, encounter entity.Encounter, _ []string, _ string, _ time.Time, _ int, _ int) (entity.Encounter, error) {
+	return encounter, nil
 }
 
 type stubTrackRepo struct {
