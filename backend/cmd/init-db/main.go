@@ -64,6 +64,9 @@ func connectWithRetry(log *zap.Logger, dsn string, env string) (*gorm.DB, *sql.D
 
 		sqlDB, err := db.DB()
 		if err != nil {
+			if inner, innerErr := db.DB(); innerErr == nil {
+				inner.Close() //nolint:errcheck
+			}
 			lastErr = err
 			log.Info("db open failed, retrying", zap.Int("attempt", attempt), zap.Error(err))
 			time.Sleep(retryInterval)
