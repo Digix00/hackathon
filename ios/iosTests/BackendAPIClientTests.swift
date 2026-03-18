@@ -11,6 +11,7 @@ final class BackendAPIClientTests: XCTestCase {
     }
 
     override func tearDown() {
+        unsetenv("FIREBASE_ID_TOKEN")
         MockURLProtocol.requestHandler = nil
         MockURLProtocol.lastRequest = nil
         super.tearDown()
