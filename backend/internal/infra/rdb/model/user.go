@@ -89,7 +89,7 @@ type MusicConnection struct {
 	ProviderUserID   string `gorm:"not null"`
 	ProviderUsername *string
 	AccessToken      string  `gorm:"not null"` // AES-256-GCMで暗号化済み。base64(nonce||ciphertext)形式
-	RefreshToken     *string                   // AES-256-GCMで暗号化済み。base64(nonce||ciphertext)形式
+	RefreshToken     *string // AES-256-GCMで暗号化済み。base64(nonce||ciphertext)形式
 	ExpiresAt        *time.Time
 	CreatedAt        time.Time `gorm:"not null;autoCreateTime"`
 	UpdatedAt        time.Time `gorm:"not null;autoUpdateTime"`
