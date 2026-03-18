@@ -10,7 +10,7 @@ import (
 	"hackathon/internal/infra/rdb/model"
 )
 
-// Seed は必須マスタデータを冪等に投入する。
+// Seed は開発・テスト環境向けに、必須マスタデータおよびデモユーザー/encounter などのデモデータを冪等に投入する。
 // 既存レコードがある場合は上書きしない（OnConflict DoNothing）。
 func Seed(db *gorm.DB) error {
 	if err := seedPrefectures(db); err != nil {
