@@ -122,4 +122,3 @@ func rowToComment(row commentRow) entity.Comment {
 		CreatedAt: row.CreatedAt,
 	}
 }
-
