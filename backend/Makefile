@@ -45,20 +45,20 @@ db-shell:
 
 # Goパッケージの依存関係を整理
 tidy:
-	go mod tidy
+	docker compose exec server go mod tidy
 
 # Goコードのフォーマット
 fmt:
-	go fmt ./...
+	docker compose exec server go fmt ./...
 
 # ユニット/通常テストを実行
 test:
-	go test ./...
+	docker compose exec server go test ./...
 
 # PostgreSQL コンテナを使う統合テストを実行（Docker 起動後に実行）
 # 必要に応じて PG_TEST_DATABASE_URL を上書き可能
 test-integration:
-	go test -tags=integration ./internal/handler -run PostgresIntegration
+	docker compose exec server go test -tags=integration ./internal/handler -run PostgresIntegration
 
 # ==============================================================================
 # Code Generation (全て Docker で完結。ホストへのツールインストール不要)
@@ -77,8 +77,7 @@ IOS_OUT     := $(abspath ../ios/ios/Generated)
 # --parseDependency: internal/ 配下の別パッケージ（schema 等）も解析対象にする
 # --parseInternal:   internal パッケージのコメントも走査する
 generate-docs:
-	docker compose build server
-	docker compose run --rm --no-deps server \
+	docker compose exec server \
 		swag init \
 			--generalInfo cmd/server/main.go \
 			--output docs \
@@ -89,7 +88,6 @@ generate-docs:
 # swagger.json から Android (Kotlin + Retrofit2) クライアントだけを生成する内部ターゲット
 # generate-code から呼ぶ際に generate-docs の二重実行を避けるために使用する
 _generate-android-only:
-	@mkdir -p $(ANDROID_OUT)
 	docker run --rm \
 		-v $(CURDIR)/docs/swagger.json:/local/swagger.json \
 		-v $(ANDROID_OUT):/local/out \
@@ -105,7 +103,6 @@ _generate-android-only:
 
 # swagger.json から iOS (Swift 5 + async/await) クライアントだけを生成する内部ターゲット
 _generate-ios-only:
-	@mkdir -p $(IOS_OUT)
 	docker run --rm \
 		-v $(CURDIR)/docs/swagger.json:/local/swagger.json \
 		-v $(IOS_OUT):/local/out \
