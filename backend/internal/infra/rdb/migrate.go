@@ -49,6 +49,7 @@ func autoMigrate(db *gorm.DB) error {
 		// encounters に依存
 		&model.Encounter{},
 		&model.EncounterRead{},
+		&model.EncounterTrack{},
 		&model.DailyEncounterCount{},
 		&model.Comment{},
 		&model.Report{},

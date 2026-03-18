@@ -14,6 +14,7 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	pushTokenHandler := newPushTokenHandler(deps.PushTokenUsecase)
 	bleTokenHandler := newBleTokenHandler(deps.BleTokenUsecase)
 	playlistHandler := newPlaylistHandler(deps.PlaylistUsecase)
+	encounterHandler := newEncounterHandler(deps.EncounterUsecase)
 	reportHandler := newReportHandler(deps.ReportUsecase)
 	notificationHandler := newNotificationHandler(deps.NotificationUsecase)
 
@@ -48,6 +49,10 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 
 	api.POST("/playlists/:id/favorites", playlistHandler.addPlaylistFavorite)
 	api.DELETE("/playlists/:id/favorites", playlistHandler.removePlaylistFavorite)
+
+	api.POST("/encounters", encounterHandler.createEncounter)
+	api.GET("/encounters", encounterHandler.listEncounters)
+	api.GET("/encounters/:id", encounterHandler.getEncounterByID)
 
 	api.POST("/reports", reportHandler.createReport)
 

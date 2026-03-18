@@ -31,5 +31,6 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client) handler.Dep
 		PlaylistUsecase:     usecase.NewPlaylistUsecase(playlistRepo, userRepo),
 		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
 		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
+		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
 	}
 }

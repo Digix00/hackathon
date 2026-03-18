@@ -70,6 +70,7 @@ TRUNCATE TABLE
 	reports,
 	comments,
 	encounter_reads,
+	encounter_tracks,
 	daily_encounter_counts,
 	outbox_notifications,
 	music_connections,
@@ -113,6 +114,7 @@ func newPostgresIntegrationServer(t *testing.T, db *gorm.DB, authUID string) *ec
 		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
 		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
 		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
+		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
 	})
 	return e
 }

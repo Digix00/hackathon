@@ -29,6 +29,9 @@ Class | Method | HTTP request | Description
 *BleTokensAPI* | [**createBleToken**](docs/BleTokensAPI.md#createbletoken) | **POST** /api/v1/ble-tokens | BLE トークン発行
 *BleTokensAPI* | [**getCurrentBleToken**](docs/BleTokensAPI.md#getcurrentbletoken) | **GET** /api/v1/ble-tokens/current | 有効な BLE トークン取得
 *BleTokensAPI* | [**getUserByBleToken**](docs/BleTokensAPI.md#getuserbybletoken) | **GET** /api/v1/ble-tokens/{token}/user | BLE トークンからユーザー情報取得
+*EncountersAPI* | [**createEncounter**](docs/EncountersAPI.md#createencounter) | **POST** /api/v1/encounters | すれ違い登録
+*EncountersAPI* | [**getEncounterByID**](docs/EncountersAPI.md#getencounterbyid) | **GET** /api/v1/encounters/{id} | すれ違い詳細取得
+*EncountersAPI* | [**listEncounters**](docs/EncountersAPI.md#listencounters) | **GET** /api/v1/encounters | すれ違い履歴一覧取得
 *HealthAPI* | [**healthz**](docs/HealthAPI.md#healthz) | **GET** /healthz | ヘルスチェック
 *HealthAPI* | [**healthzPostgres**](docs/HealthAPI.md#healthzpostgres) | **GET** /healthz/postgres | PostgreSQL ヘルスチェック
 *NotificationsAPI* | [**deleteNotification**](docs/NotificationsAPI.md#deletenotification) | **DELETE** /api/v1/users/me/notifications/{id} | 通知削除
@@ -59,6 +62,7 @@ Class | Method | HTTP request | Description
 ## Documentation For Models
 
  - [HackathonInternalHandlerSchemaRequestAddPlaylistTrackRequest](docs/HackathonInternalHandlerSchemaRequestAddPlaylistTrackRequest.md)
+ - [HackathonInternalHandlerSchemaRequestCreateEncounterRequest](docs/HackathonInternalHandlerSchemaRequestCreateEncounterRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreatePlaylistRequest](docs/HackathonInternalHandlerSchemaRequestCreatePlaylistRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreatePushTokenRequest](docs/HackathonInternalHandlerSchemaRequestCreatePushTokenRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateReportRequest](docs/HackathonInternalHandlerSchemaRequestCreateReportRequest.md)
@@ -73,8 +77,17 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseBleTokenUserResponse](docs/HackathonInternalHandlerSchemaResponseBleTokenUserResponse.md)
  - [HackathonInternalHandlerSchemaResponseDevice](docs/HackathonInternalHandlerSchemaResponseDevice.md)
  - [HackathonInternalHandlerSchemaResponseDeviceResponse](docs/HackathonInternalHandlerSchemaResponseDeviceResponse.md)
+ - [HackathonInternalHandlerSchemaResponseEncounterDetail](docs/HackathonInternalHandlerSchemaResponseEncounterDetail.md)
+ - [HackathonInternalHandlerSchemaResponseEncounterDetailResponse](docs/HackathonInternalHandlerSchemaResponseEncounterDetailResponse.md)
+ - [HackathonInternalHandlerSchemaResponseEncounterListItem](docs/HackathonInternalHandlerSchemaResponseEncounterListItem.md)
+ - [HackathonInternalHandlerSchemaResponseEncounterListResponse](docs/HackathonInternalHandlerSchemaResponseEncounterListResponse.md)
+ - [HackathonInternalHandlerSchemaResponseEncounterResponse](docs/HackathonInternalHandlerSchemaResponseEncounterResponse.md)
+ - [HackathonInternalHandlerSchemaResponseEncounterSummary](docs/HackathonInternalHandlerSchemaResponseEncounterSummary.md)
+ - [HackathonInternalHandlerSchemaResponseEncounterTrack](docs/HackathonInternalHandlerSchemaResponseEncounterTrack.md)
+ - [HackathonInternalHandlerSchemaResponseEncounterUser](docs/HackathonInternalHandlerSchemaResponseEncounterUser.md)
  - [HackathonInternalHandlerSchemaResponseNotificationItem](docs/HackathonInternalHandlerSchemaResponseNotificationItem.md)
  - [HackathonInternalHandlerSchemaResponseNotificationListResponse](docs/HackathonInternalHandlerSchemaResponseNotificationListResponse.md)
+ - [HackathonInternalHandlerSchemaResponsePagination](docs/HackathonInternalHandlerSchemaResponsePagination.md)
  - [HackathonInternalHandlerSchemaResponsePlaylist](docs/HackathonInternalHandlerSchemaResponsePlaylist.md)
  - [HackathonInternalHandlerSchemaResponsePlaylistListResponse](docs/HackathonInternalHandlerSchemaResponsePlaylistListResponse.md)
  - [HackathonInternalHandlerSchemaResponsePlaylistResponse](docs/HackathonInternalHandlerSchemaResponsePlaylistResponse.md)
