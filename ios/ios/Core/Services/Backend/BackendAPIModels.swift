@@ -228,9 +228,14 @@ struct BackendEncounterTrack: Decodable, Equatable {
     }
 }
 
+enum BackendEncounterType: String, Decodable, Equatable {
+    case ble
+    case location
+}
+
 struct BackendEncounterSummary: Decodable, Equatable {
     let id: String
-    let type: String
+    let type: BackendEncounterType
     let user: BackendEncounterUser
     let occurredAt: Date?
 
@@ -244,7 +249,7 @@ struct BackendEncounterSummary: Decodable, Equatable {
 
 struct BackendEncounterListItem: Decodable, Equatable {
     let id: String
-    let type: String
+    let type: BackendEncounterType
     let user: BackendEncounterUser
     let isRead: Bool
     let tracks: [BackendEncounterTrack]
@@ -262,7 +267,7 @@ struct BackendEncounterListItem: Decodable, Equatable {
 
 struct BackendEncounterDetail: Decodable, Equatable {
     let id: String
-    let type: String
+    let type: BackendEncounterType
     let user: BackendEncounterUser
     let occurredAt: Date?
     let tracks: [BackendEncounterTrack]
