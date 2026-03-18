@@ -21,6 +21,12 @@ const (
 )
 
 func main() {
+	loc, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		panic("time location load failed: " + err.Error())
+	}
+	time.Local = loc
+
 	cfg, err := config.Load()
 	if err != nil {
 		panic("config load failed: " + err.Error())
