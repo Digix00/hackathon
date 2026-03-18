@@ -99,7 +99,7 @@ func (r *playlistRepository) Update(ctx context.Context, id string, params repos
 		return entity.Playlist{}, err
 	}
 
-	return r.FindByID(ctx, id)
+	return r.FindByIDWithTracks(ctx, id)
 }
 
 func (r *playlistRepository) Delete(ctx context.Context, id string) error {
