@@ -76,9 +76,12 @@ struct EncounterListView: View {
                                 ForEach(Array(encounters.enumerated()), id: \.offset) { index, encounter in
                                     let isSelected = selectedEncounter?.id == encounter.id
                                     let isCentered = (scrollTargetID ?? encounters.first?.id) == encounter.id
-                                    let isBefore = selectedEncounter.map { selected in
-                                        encounters.firstIndex(where: { $0.id == selected.id })! >
-                                        encounters.firstIndex(where: { $0.id == encounter.id })!
+                                    let isBefore = selectedEncounter.flatMap { selected -> Bool? in
+                                        guard let selectedIndex = encounters.firstIndex(where: { $0.id == selected.id }),
+                                              let encounterIndex = encounters.firstIndex(where: { $0.id == encounter.id }) else {
+                                            return nil
+                                        }
+                                        return selectedIndex > encounterIndex
                                     } ?? false
                                     
                                     GeometryReader { itemGeometry in
