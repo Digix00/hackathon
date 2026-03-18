@@ -1,8 +1,7 @@
 .PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean reset-db init-db \
 	test test-integration test-integration-ci \
 	generate-docs generate-docs-ci generate-android generate-ios generate-code generate-code-ci \
-
-        _generate-android-only _generate-ios-only
+  _generate-android-only _generate-ios-only
 
 # ==============================================================================
 # Docker Compose Commands
