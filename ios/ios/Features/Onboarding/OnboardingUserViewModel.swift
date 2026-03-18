@@ -4,11 +4,16 @@ import Foundation
 @MainActor
 final class OnboardingUserViewModel: ObservableObject {
     @Published var displayName = ""
-    @Published var bio = ""
+    @Published var bio = "" {
+        didSet {
+            bioEdited = true
+        }
+    }
     @Published private(set) var isSubmitting = false
     @Published private(set) var errorMessage: String?
 
     private let client: BackendAPIClient
+    private var bioEdited = false
 
     init(client: BackendAPIClient = BackendAPIClient()) {
         self.client = client
@@ -40,12 +45,7 @@ final class OnboardingUserViewModel: ObservableObject {
         do {
             let user = try await client.getMe()
             let currentBio = user.bio ?? ""
-            let effectiveBio: String
-            if bio.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                effectiveBio = currentBio
-            } else {
-                effectiveBio = bio
-            }
+            let effectiveBio = bioEdited ? bio : currentBio
             if user.displayName != displayName || currentBio != effectiveBio {
                 let request = UpdateUserRequest(
                     displayName: displayName,
@@ -104,6 +104,7 @@ final class OnboardingUserViewModel: ObservableObject {
             }
             if bio.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 bio = user.bio ?? ""
+                bioEdited = false
             }
         } catch {
             // Ignore prefill failures; onboarding can proceed manually.
