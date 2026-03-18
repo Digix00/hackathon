@@ -8,6 +8,8 @@ struct EncounterListView: View {
     }
 
     @Namespace private var encounterNamespace
+    @Environment(\.topSafeAreaInset) private var envTopSafeArea
+    @Environment(\.bottomSafeAreaInset) private var envBottomSafeArea
     @Binding private var isDetailPresented: Bool
     @State private var selectedEncounter: Encounter?
     @State private var showDetailContent = false
@@ -58,7 +60,7 @@ struct EncounterListView: View {
 
     private var listContent: some View {
         GeometryReader { geometry in
-            let topPadding = geometry.safeAreaInsets.top
+            let topPadding = envTopSafeArea > 0 ? envTopSafeArea : geometry.safeAreaInsets.top
 
             ZStack {
                 // Background
@@ -208,7 +210,11 @@ struct EncounterListView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
                     // Navigation Header
-                    EncounterDetailHeader(encounter: encounter, isVisible: showDetailContent) {
+                    EncounterDetailHeader(
+                        encounter: encounter,
+                        isVisible: showDetailContent,
+                        topInset: resolvedTopSafeArea
+                    ) {
                         withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
                             showDetailContent = false
                         }
@@ -283,7 +289,7 @@ struct EncounterListView: View {
                 EncounterPrimaryActions(encounter: encounter) {}
                     .padding(.horizontal, 32)
                     .padding(.top, DetailLayout.bottomActionsTopPadding)
-                    .padding(.bottom, DetailLayout.bottomActionsInset)
+                    .padding(.bottom, max(DetailLayout.bottomActionsInset, resolvedBottomSafeArea))
                     .transition(.opacity.combined(with: .offset(y: 20)))
             }
         }
@@ -329,6 +335,14 @@ struct EncounterListView: View {
 
     private func syncDetailPresentationState() {
         isDetailPresented = selectedEncounter != nil
+    }
+
+    private var resolvedTopSafeArea: CGFloat {
+        envTopSafeArea
+    }
+
+    private var resolvedBottomSafeArea: CGFloat {
+        envBottomSafeArea
     }
 }
 
