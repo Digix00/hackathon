@@ -38,7 +38,7 @@ reset-db:
 # ローカルDBをマイグレーションし、シードデータを投入する
 init-db:
 	docker compose up -d postgres
-	docker compose run --rm server go run ./cmd/init-db
+	docker compose run --rm --no-deps server go run ./cmd/init-db
 
 # ==============================================================================
 # Utility Commands
