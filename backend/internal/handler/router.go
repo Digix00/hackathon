@@ -14,6 +14,7 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	pushTokenHandler := newPushTokenHandler(deps.PushTokenUsecase)
 	bleTokenHandler := newBleTokenHandler(deps.BleTokenUsecase)
 	encounterHandler := newEncounterHandler(deps.EncounterUsecase)
+	reportHandler := newReportHandler(deps.ReportUsecase)
 	notificationHandler := newNotificationHandler(deps.NotificationUsecase)
 
 	api := e.Group("/api/v1")
@@ -39,6 +40,8 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	api.POST("/encounters", encounterHandler.createEncounter)
 	api.GET("/encounters", encounterHandler.listEncounters)
 	api.GET("/encounters/:id", encounterHandler.getEncounterByID)
+	
+	api.POST("/reports", reportHandler.createReport)
 
 	api.GET("/users/me/notifications", notificationHandler.listNotifications)
 	api.PATCH("/users/me/notifications/:id/read", notificationHandler.markNotificationAsRead)

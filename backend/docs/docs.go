@@ -162,6 +162,7 @@ const docTemplate = `{
                 }
             }
         },
+<<<<<<< HEAD
         "/api/v1/encounters": {
             "get": {
                 "security": [
@@ -219,13 +220,20 @@ const docTemplate = `{
                     }
                 }
             },
+=======
+        "/api/v1/reports": {
+>>>>>>> origin
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
+<<<<<<< HEAD
                 "description": "BLE 検出トークンからすれ違いを登録する（同一ペア・短時間内は冪等）",
+=======
+                "description": "ユーザーまたはコメントを通報する。同じ対象への重複通報はエラーになる。",
+>>>>>>> origin
                 "consumes": [
                     "application/json"
                 ],
@@ -233,6 +241,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
+<<<<<<< HEAD
                     "encounters"
                 ],
                 "summary": "すれ違い登録",
@@ -240,15 +249,29 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "すれ違い登録リクエスト",
+=======
+                    "reports"
+                ],
+                "summary": "通報作成",
+                "operationId": "createReport",
+                "parameters": [
+                    {
+                        "description": "通報リクエスト",
+>>>>>>> origin
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
+<<<<<<< HEAD
                             "$ref": "#/definitions/hackathon_internal_handler_schema_request.CreateEncounterRequest"
+=======
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.CreateReportRequest"
+>>>>>>> origin
                         }
                     }
                 ],
                 "responses": {
+<<<<<<< HEAD
                     "200": {
                         "description": "OK",
                         "schema": {
@@ -259,6 +282,12 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/hackathon_internal_handler_schema_response.EncounterResponse"
+=======
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.ReportResponse"
+>>>>>>> origin
                         }
                     },
                     "400": {
@@ -285,6 +314,7 @@ const docTemplate = `{
                             "$ref": "#/definitions/internal_handler.errorResponse"
                         }
                     },
+<<<<<<< HEAD
                     "429": {
                         "description": "Too Many Requests",
                         "schema": {
@@ -350,6 +380,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/internal_handler.errorResponse"
                         }
                     },
+=======
+>>>>>>> origin
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -1162,6 +1194,27 @@ const docTemplate = `{
                 }
             }
         },
+        "hackathon_internal_handler_schema_request.CreateReportRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string"
+                },
+                "report_type": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "comment"
+                    ]
+                },
+                "reported_user_id": {
+                    "type": "string"
+                },
+                "target_comment_id": {
+                    "type": "string"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_request.CreateUserRequest": {
             "type": "object",
             "properties": {
@@ -1647,6 +1700,41 @@ const docTemplate = `{
             "properties": {
                 "user": {
                     "$ref": "#/definitions/hackathon_internal_handler_schema_response.PublicUser"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.Report": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "report_type": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "comment"
+                    ]
+                },
+                "reported_user_id": {
+                    "type": "string"
+                },
+                "target_comment_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.ReportResponse": {
+            "type": "object",
+            "properties": {
+                "report": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.Report"
                 }
             }
         },
