@@ -36,6 +36,7 @@ func newEncounterHandler(u usecase.EncounterUsecase) *encounterHandler {
 // @Param        body  body      schemareq.CreateEncounterRequest  true  "すれ違い登録リクエスト"
 // @Success      201   {object}  schemares.EncounterResponse
 // @Success      200   {object}  schemares.EncounterResponse
+// @Success      204
 // @Failure      400   {object}  errorResponse
 // @Failure      401   {object}  errorResponse
 // @Failure      404   {object}  errorResponse
@@ -80,7 +81,7 @@ func (h *encounterHandler) createEncounter(c echo.Context) error {
 		return errBadRequest("occurred_at must be RFC3339")
 	}
 
-	dto, created, err := h.usecase.CreateEncounter(ctx, authUID, usecasedto.CreateEncounterInput{
+	dto, created, ignored, err := h.usecase.CreateEncounter(ctx, authUID, usecasedto.CreateEncounterInput{
 		TargetBleToken: req.TargetBleToken,
 		Type:           req.Type,
 		RSSI:           *req.RSSI,
@@ -88,6 +89,9 @@ func (h *encounterHandler) createEncounter(c echo.Context) error {
 	})
 	if err != nil {
 		return err
+	}
+	if ignored {
+		return c.NoContent(http.StatusNoContent)
 	}
 
 	status := http.StatusOK

@@ -14,7 +14,7 @@ import (
 )
 
 type EncounterUsecase interface {
-	CreateEncounter(ctx context.Context, authUID string, input usecasedto.CreateEncounterInput) (usecasedto.EncounterSummaryDTO, bool, error)
+	CreateEncounter(ctx context.Context, authUID string, input usecasedto.CreateEncounterInput) (usecasedto.EncounterSummaryDTO, bool, bool, error)
 	ListEncounters(ctx context.Context, authUID string, limit int, cursor string) ([]usecasedto.EncounterListItemDTO, *string, bool, error)
 	GetEncounterByID(ctx context.Context, authUID string, encounterID string) (usecasedto.EncounterDetailDTO, error)
 }
@@ -57,47 +57,50 @@ func NewEncounterUsecase(
 	return u
 }
 
-func (u *encounterUsecase) CreateEncounter(ctx context.Context, authUID string, input usecasedto.CreateEncounterInput) (usecasedto.EncounterSummaryDTO, bool, error) {
+func (u *encounterUsecase) CreateEncounter(ctx context.Context, authUID string, input usecasedto.CreateEncounterInput) (usecasedto.EncounterSummaryDTO, bool, bool, error) {
+	if input.RSSI < rssiFilterMin {
+		return usecasedto.EncounterSummaryDTO{}, false, true, nil
+	}
 	requester, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, firebaseProvider, authUID)
 	if err != nil {
-		return usecasedto.EncounterSummaryDTO{}, false, err
+		return usecasedto.EncounterSummaryDTO{}, false, false, err
 	}
 
 	encounterType, err := parseEncounterType(input.Type)
 	if err != nil {
-		return usecasedto.EncounterSummaryDTO{}, false, err
+		return usecasedto.EncounterSummaryDTO{}, false, false, err
 	}
 
 	now := u.clock.Now().UTC()
 	tokenEntity, err := u.resolveTargetBleToken(ctx, input.TargetBleToken, requester.ID, now)
 	if err != nil {
-		return usecasedto.EncounterSummaryDTO{}, false, err
+		return usecasedto.EncounterSummaryDTO{}, false, false, err
 	}
 
 	if err := u.ensureNotBlocked(ctx, requester.ID, tokenEntity.UserID); err != nil {
-		return usecasedto.EncounterSummaryDTO{}, false, err
+		return usecasedto.EncounterSummaryDTO{}, false, false, err
 	}
 
 	userID1, userID2 := normalizeUserPair(requester.ID, tokenEntity.UserID)
 
 	if existing, found, err := u.encounterRepo.FindRecentByUsersAndType(ctx, userID1, userID2, encounterType, input.OccurredAt, encounterDedupeWindow); err != nil {
-		return usecasedto.EncounterSummaryDTO{}, false, err
+		return usecasedto.EncounterSummaryDTO{}, false, false, err
 	} else if found {
 		summary, err := u.buildEncounterSummary(ctx, existing, requester.ID)
 		if err != nil {
-			return usecasedto.EncounterSummaryDTO{}, false, err
+			return usecasedto.EncounterSummaryDTO{}, false, false, err
 		}
-		return summary, false, nil
+		return summary, false, false, nil
 	}
 
 	// 1日1回制限（同一ユーザーペア・同一タイプ）
 	if dailyEncounterPairLimit > 0 {
 		exists, err := u.encounterRepo.ExistsByUsersAndTypeOnDate(ctx, userID1, userID2, encounterType, now)
 		if err != nil {
-			return usecasedto.EncounterSummaryDTO{}, false, err
+			return usecasedto.EncounterSummaryDTO{}, false, false, err
 		}
 		if exists {
-			return usecasedto.EncounterSummaryDTO{}, false, domainerrs.Conflict("daily encounter limit reached for this pair")
+			return usecasedto.EncounterSummaryDTO{}, false, false, domainerrs.Conflict("daily encounter limit reached for this pair")
 		}
 	}
 
@@ -109,14 +112,14 @@ func (u *encounterUsecase) CreateEncounter(ctx context.Context, authUID string, 
 		OccurredAt:    input.OccurredAt,
 	}, []string{requester.ID, tokenEntity.UserID}, requester.ID, now, dailyEncounterUserLimit)
 	if err != nil {
-		return usecasedto.EncounterSummaryDTO{}, false, err
+		return usecasedto.EncounterSummaryDTO{}, false, false, err
 	}
 
 	summary, err := u.buildEncounterSummary(ctx, created, requester.ID)
 	if err != nil {
-		return usecasedto.EncounterSummaryDTO{}, false, err
+		return usecasedto.EncounterSummaryDTO{}, false, false, err
 	}
-	return summary, true, nil
+	return summary, true, false, nil
 }
 
 func (u *encounterUsecase) ListEncounters(ctx context.Context, authUID string, limit int, cursor string) ([]usecasedto.EncounterListItemDTO, *string, bool, error) {

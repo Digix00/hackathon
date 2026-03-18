@@ -306,10 +306,11 @@ func (r *encounterRepository) IncrementDailyCountWithLimit(ctx context.Context, 
 func (r *encounterRepository) CreateWithRateLimit(ctx context.Context, encounter entity.Encounter, userIDsForTracks []string, dailyLimitUserID string, date time.Time, limit int) (entity.Encounter, error) {
 	var created model.Encounter
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		now := time.Now().UTC()
 		if limit > 0 {
 			var count int
 			var err error
-			count, err = incrementDailyCountTx(tx, dailyLimitUserID, date, date)
+			count, err = incrementDailyCountTx(tx, dailyLimitUserID, date, now)
 			if err != nil {
 				return err
 			}

@@ -10,4 +10,5 @@ const (
 	dailyEncounterPairLimit = 1
 	dailyEncounterUserLimit = 10
 	encounterDedupeWindow   = 5 * time.Minute
+	rssiFilterMin           = -85
 )
