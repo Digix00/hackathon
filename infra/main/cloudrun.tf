@@ -1,6 +1,10 @@
 locals {
-  image_server = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/server:latest"
-  image_worker = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/worker:latest"
+  # 初回 apply 時は実イメージが未 push のためプレースホルダーを使用。
+  # CI/CD（deploy.yml）が実イメージを push・デプロイするため、
+  # lifecycle.ignore_changes = [template] で Terraform による上書きを防ぐ。
+  image_placeholder = "us-docker.pkg.dev/cloudrun/container/hello:latest"
+  image_server      = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/server:latest"
+  image_worker      = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/worker:latest"
 }
 
 # Cloud Run Service（API サーバー）
@@ -26,7 +30,7 @@ resource "google_cloud_run_v2_service" "api" {
     }
 
     containers {
-      image = local.image_server
+      image = local.image_placeholder
 
       env {
         name  = "DB_USER"
@@ -130,6 +134,10 @@ resource "google_cloud_run_v2_service" "api" {
     }
   }
 
+  lifecycle {
+    ignore_changes = [template]
+  }
+
   depends_on = [
     google_project_service.apis,
     google_secret_manager_secret_version.db_password,
@@ -164,7 +172,7 @@ resource "google_cloud_run_v2_job" "worker" {
       }
 
       containers {
-        image = local.image_worker
+        image = local.image_placeholder
 
         resources {
           limits = {
@@ -204,6 +212,10 @@ resource "google_cloud_run_v2_job" "worker" {
         }
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [template]
   }
 
   depends_on = [
