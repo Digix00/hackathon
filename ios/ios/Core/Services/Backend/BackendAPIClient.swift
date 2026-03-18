@@ -308,7 +308,7 @@ actor BackendAPIClient {
             method: "POST",
             body: try encoder.encode(request)
         )
-        guard result.response.statusCode == 201 || result.response.statusCode == 200 else {
+        guard result.response.statusCode == 204 || result.response.statusCode == 200 else {
             throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
         }
     }
