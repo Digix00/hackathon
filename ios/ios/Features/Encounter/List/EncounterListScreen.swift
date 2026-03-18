@@ -62,23 +62,19 @@ struct EncounterListView: View {
         GeometryReader { geometry in
             let topPadding = envTopSafeArea > 0 ? envTopSafeArea : geometry.safeAreaInsets.top
 
-            ZStack {
-                // Background
                 ZStack {
-                    PrototypeTheme.background.ignoresSafeArea()
-                    DotGridBackground()
+                    // Background
+                    ZStack {
+                        PrototypeTheme.background.ignoresSafeArea()
+                        DotGridBackground()
                         .opacity(0.15)
                 }
-                .opacity(selectedEncounter == nil ? 1 : 0)
+                    .opacity(selectedEncounter == nil ? 1 : 0)
 
-                VStack(spacing: 0) {
-                    listHeader(topPadding: topPadding)
-                        .padding(.horizontal, 24)
-                        .opacity(selectedEncounter == nil ? 1 : 0)
-                    
-                    GeometryReader { wheelGeometry in
-                        ScrollView(.vertical, showsIndicators: false) {
-                            LazyVStack(spacing: wheelItemSpacing) {
+                    VStack(spacing: 0) {
+                        GeometryReader { wheelGeometry in
+                            ScrollView(.vertical, showsIndicators: false) {
+                                LazyVStack(spacing: wheelItemSpacing) {
                                 ForEach(Array(encounters.enumerated()), id: \.offset) { index, encounter in
                                     let isSelected = selectedEncounter?.id == encounter.id
                                     let isCentered = (scrollTargetID ?? encounters.first?.id) == encounter.id
@@ -133,40 +129,10 @@ struct EncounterListView: View {
                         .scrollTargetBehavior(.viewAligned)
                         .scrollClipDisabled()
                     }
-                    .padding(.top, 8)
+                    .padding(.top, topPadding + 8)
                 }
             }
         }
-    }
-    
-    private func listHeader(topPadding: CGFloat) -> some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("つながり")
-                    .font(PrototypeTheme.Typography.Product.screenTitle)
-                    .foregroundStyle(PrototypeTheme.textPrimary)
-                    .tracking(-0.5)
-                
-                Text("都市のノイズが生んだ、一期一会の旋律")
-                    .font(PrototypeTheme.Typography.Product.subtitle)
-                    .foregroundStyle(PrototypeTheme.textSecondary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(PrototypeTheme.surfaceMuted.opacity(0.6))
-                    .clipShape(Capsule())
-            }
-            Spacer()
-            Button(action: {}) {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(PrototypeTheme.textPrimary)
-                    .padding(12)
-                    .background(PrototypeTheme.surface)
-                    .clipShape(Circle())
-                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
-            }
-        }
-        .padding(.top, topPadding + 8)
     }
     
     private func wheelMetrics(itemGeometry: GeometryProxy, wheelGeometry: GeometryProxy) -> WheelMetrics {
