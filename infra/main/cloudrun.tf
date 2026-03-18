@@ -29,11 +29,6 @@ resource "google_cloud_run_v2_service" "api" {
       image = local.image_server
 
       env {
-        name  = "DB_HOST"
-        value = "/cloudsql/${google_sql_database_instance.main.connection_name}"
-      }
-
-      env {
         name  = "DB_USER"
         value = google_sql_user.app.name
       }
@@ -44,10 +39,40 @@ resource "google_cloud_run_v2_service" "api" {
       }
 
       env {
+        name  = "DB_CONNECTION_NAME"
+        value = google_sql_database_instance.main.connection_name
+      }
+
+      env {
         name = "DB_PASSWORD"
         value_source {
           secret_key_ref {
             secret  = google_secret_manager_secret.db_password.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name  = "FIREBASE_PROJECT_ID"
+        value = var.project_id
+      }
+
+      env {
+        name = "MUSIC_STATE_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.music_state_secret.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "MUSIC_TOKEN_ENCRYPTION_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.music_token_encryption_key.secret_id
             version = "latest"
           }
         }
@@ -144,11 +169,6 @@ resource "google_cloud_run_v2_job" "worker" {
         }
 
         env {
-          name  = "DB_HOST"
-          value = "/cloudsql/${google_sql_database_instance.main.connection_name}"
-        }
-
-        env {
           name  = "DB_USER"
           value = google_sql_user.app.name
         }
@@ -156,6 +176,11 @@ resource "google_cloud_run_v2_job" "worker" {
         env {
           name  = "DB_NAME"
           value = google_sql_database.app.name
+        }
+
+        env {
+          name  = "DB_CONNECTION_NAME"
+          value = google_sql_database_instance.main.connection_name
         }
 
         env {
