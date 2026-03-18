@@ -233,6 +233,10 @@ enum BackendEncounterType: String, Decodable, Equatable {
     case location
 }
 
+enum BackendEncounterCreateType: String, Encodable, Equatable {
+    case ble
+}
+
 struct BackendEncounterSummary: Decodable, Equatable {
     let id: String
     let type: BackendEncounterType
@@ -426,7 +430,7 @@ struct CreateReportRequest: Encodable {
 
 struct CreateEncounterRequest: Encodable {
     let targetBleToken: String
-    let type: String
+    let type: BackendEncounterCreateType
     let rssi: Int
     let occurredAt: Date
 

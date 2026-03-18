@@ -166,7 +166,7 @@ actor BackendAPIClient {
     func createEncounter(targetBleToken: String, rssi: Int, occurredAt: Date) async throws -> BackendEncounterSummary? {
         let request = CreateEncounterRequest(
             targetBleToken: targetBleToken,
-            type: "ble",
+            type: .ble,
             rssi: rssi,
             occurredAt: occurredAt
         )
