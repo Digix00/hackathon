@@ -47,13 +47,17 @@ iOS 側は `API_BASE_URL` を参照します。人によって値が変わるた
 アプリは API リクエスト時に **Bearer Token** を要求します。
 そのため、環境変数 `FIREBASE_ID_TOKEN` を設定しておく必要があります。
 
-### 推奨: Scheme の Environment Variables
+### 推奨: Firebase Auth エミュレータで ID トークンを発行
+
+ローカル運用ではエミュレータの利用が想定されています。
+手順は以下のドキュメントにまとめています。
+
+- `/Users/ryusuke/home/hackathon/docs/overview/firebase-auth-emulator-ops.md`
+
+### Scheme の Environment Variables
 
 - Key: `FIREBASE_ID_TOKEN`
-- Value: `<YOUR_ID_TOKEN>`
-
-※ トークンの取得方法はチームの認証運用に依存するため、
-チーム内の案内に従ってください。
+- Value: `<ID_TOKEN>`
 
 ---
 
@@ -123,4 +127,3 @@ iOS 側は `API_BASE_URL` を参照します。人によって値が変わるた
 - 画面上に `isAdvertising / isScanning / latestDetection` を表示
 - BLE 検知を `Console` に出力
 - 検知フィルタをテスト用に緩める
-
