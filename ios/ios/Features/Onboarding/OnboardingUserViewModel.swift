@@ -83,8 +83,12 @@ final class OnboardingUserViewModel: ObservableObject {
     private func loadCurrentUserIfAvailable() async {
         do {
             let user = try await client.getMe()
-            displayName = user.displayName
-            bio = user.bio ?? ""
+            if displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                displayName = user.displayName
+            }
+            if bio.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                bio = user.bio ?? ""
+            }
         } catch {
             // Ignore prefill failures; onboarding can proceed manually.
         }
