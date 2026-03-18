@@ -1262,6 +1262,44 @@ paths:
       summary: 自分の設定更新
       tags:
       - settings
+  /healthz:
+    get:
+      description: サーバーが起動しているか確認する
+      operationId: healthz
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: ヘルスチェック
+      tags:
+      - health
+  /healthz/postgres:
+    get:
+      description: PostgreSQL への接続を確認する（タイムアウト 5s）
+      operationId: healthzPostgres
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: PostgreSQL ヘルスチェック
+      tags:
+      - health
 securityDefinitions:
   BearerAuth:
     description: Firebase ID トークン。"Bearer <token>" の形式で渡す。
