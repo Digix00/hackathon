@@ -195,7 +195,7 @@ actor BackendAPIClient {
         return try decoder.decode(BackendEncounterListResponse.self, from: result.data)
     }
 
-    func getEncounterByID(id: String) async throws -> BackendEncounterDetail {
+    func getEncounter(id: String) async throws -> BackendEncounterDetail {
         let escapedId = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id
         let result = try await send(path: "encounters/\(escapedId)", method: "GET")
         guard result.response.statusCode == 200 else {
@@ -203,6 +203,11 @@ actor BackendAPIClient {
         }
 
         return try decoder.decode(BackendEncounterDetailResponse.self, from: result.data).encounter
+    }
+
+    @available(*, deprecated, message: "Use getEncounter(id:) instead.")
+    func getEncounterByID(id: String) async throws -> BackendEncounterDetail {
+        try await getEncounter(id: id)
     }
 
     // MARK: - Internal

@@ -200,33 +200,9 @@ struct BackendReportResponse: Decodable {
 
 // MARK: - Encounters
 
-struct BackendEncounterUser: Decodable, Equatable {
-    let id: String
-    let displayName: String
-    let avatarURL: String?
+typealias BackendEncounterUser = BackendPublicUser
 
-    enum CodingKeys: String, CodingKey {
-        case id
-        case displayName = "display_name"
-        case avatarURL = "avatar_url"
-    }
-}
-
-struct BackendEncounterTrack: Decodable, Equatable {
-    let id: String
-    let title: String
-    let artistName: String
-    let artworkURL: String?
-    let previewURL: String?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case title
-        case artistName = "artist_name"
-        case artworkURL = "artwork_url"
-        case previewURL = "preview_url"
-    }
-}
+typealias BackendEncounterTrack = BackendPublicTrack
 
 enum BackendEncounterType: String, Decodable, Equatable {
     case ble
