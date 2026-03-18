@@ -3,13 +3,13 @@
 ## 全体フロー
 
 ```
-PR 作成
+PR 作成（feature/* → develop）
   ↓
 [CI] lint / test / schema チェック / terraform plan
-  ↓ approve & merge to main
+  ↓ approve & merge to develop
 [CD] ビルド → dev 自動デプロイ → スキーマ生成・配布
-  ↓ 手動承認
-[CD] prod デプロイ
+  ↓ develop → main へ PR & merge
+[CD] prod 自動デプロイ
 ```
 
 ## PR 時（CI）
@@ -23,7 +23,7 @@ PR 作成
 | `codegen-check` | コード生成を実行し、リポジトリ内の生成コードと差分がないか確認 |
 | `terraform-plan` | `environments/dev` の `terraform plan` を実行し結果を PR コメントに投稿 |
 
-## main マージ時（CD）
+## develop マージ時（CD）
 
 ### 1. ビルド・dev デプロイ
 
@@ -46,15 +46,14 @@ swift-openapi-generator → iOS リポジトリに PR を自動作成
 openapi-generator       → Android リポジトリに PR を自動作成
 ```
 
-### 3. prod デプロイ（手動承認）
+## main マージ時（CD）
 
-GitHub Actions の `environment: production` を使い、
-指定したレビュアーの承認後に実行される。
+`develop` → `main` への PR がマージされると自動的に prod デプロイが実行される。
 
 ```
-手動承認
-    ↓
 terraform apply（environments/prod）
+    ↓
+docker build → Artifact Registry プッシュ
     ↓
 Cloud Run（prod）デプロイ
 ```
@@ -79,9 +78,9 @@ Terraform でプロバイダ・サービスアカウント・IAM バインディ
 
 | ブランチ | 役割 |
 |---|---|
-| `main` | dev 環境への自動デプロイトリガー |
-| `release/*` | prod デプロイ候補（手動承認後に prod 反映） |
-| `feature/*` | 機能開発。PR で main にマージ |
+| `develop` | デフォルトブランチ。dev 環境への自動デプロイトリガー |
+| `main` | prod 環境への自動デプロイトリガー。`develop` からのマージのみ受け付ける |
+| `feature/*` | 機能開発。PR で `develop` にマージ |
 
 ## シークレット管理
 
