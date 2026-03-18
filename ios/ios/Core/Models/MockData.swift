@@ -19,17 +19,17 @@ enum MockData {
     ]
 
     static let encounters: [Encounter] = [
-        Encounter(userName: "Airi", track: tracks[1], relativeTime: "3分前", lyric: "人波の向こうで光ったメロディ"),
-        Encounter(userName: "Kaito", track: tracks[2], relativeTime: "15分前", lyric: "信号待ちで揺れたイヤホン"),
-        Encounter(userName: "Mina", track: tracks[3], relativeTime: "1時間前", lyric: "街角に溶ける甘いノイズ"),
-        Encounter(userName: "Ren", track: tracks[4], relativeTime: "昨日", lyric: "足音と低音が重なった"),
-        Encounter(userName: "Suzu", track: tracks[5], relativeTime: "昨日", lyric: "夕焼けがドラムみたいに跳ねる")
+        Encounter(id: "encounter-mock-1", userName: "Airi", track: tracks[1], relativeTime: "3分前", lyric: "人波の向こうで光ったメロディ"),
+        Encounter(id: "encounter-mock-2", userName: "Kaito", track: tracks[2], relativeTime: "15分前", lyric: "信号待ちで揺れたイヤホン"),
+        Encounter(id: "encounter-mock-3", userName: "Mina", track: tracks[3], relativeTime: "1時間前", lyric: "街角に溶ける甘いノイズ"),
+        Encounter(id: "encounter-mock-4", userName: "Ren", track: tracks[4], relativeTime: "昨日", lyric: "足音と低音が重なった"),
+        Encounter(id: "encounter-mock-5", userName: "Suzu", track: tracks[5], relativeTime: "昨日", lyric: "夕焼けがドラムみたいに跳ねる")
     ]
 
     static let encountersWithoutLyrics: [Encounter] = [
-        Encounter(userName: "Hana", track: tracks[0], relativeTime: "たった今", lyric: ""),
-        Encounter(userName: "Toma", track: tracks[6], relativeTime: "28分前", lyric: ""),
-        Encounter(userName: "Yuna", track: tracks[2], relativeTime: "昨日", lyric: "")
+        Encounter(id: "encounter-mock-6", userName: "Hana", track: tracks[0], relativeTime: "たった今", lyric: ""),
+        Encounter(id: "encounter-mock-7", userName: "Toma", track: tracks[6], relativeTime: "28分前", lyric: ""),
+        Encounter(id: "encounter-mock-8", userName: "Yuna", track: tracks[2], relativeTime: "昨日", lyric: "")
     ]
 
     static let generatedSongs: [GeneratedSong] = [
