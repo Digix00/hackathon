@@ -78,7 +78,6 @@ struct EncounterMatchedTrackTitleView: View {
 struct EncounterDetailHeader: View {
     let encounter: Encounter
     let isVisible: Bool
-    let topInset: CGFloat
     let onBack: () -> Void
 
     var body: some View {
@@ -104,7 +103,7 @@ struct EncounterDetailHeader: View {
             }
         }
         .padding(.horizontal, 32)
-        .padding(.top, topInset + 24)
+        .padding(.top, 8)
         .opacity(isVisible ? 1 : 0)
     }
 }

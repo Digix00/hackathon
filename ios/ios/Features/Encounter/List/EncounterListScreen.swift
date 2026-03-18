@@ -8,8 +8,6 @@ struct EncounterListView: View {
     }
 
     @Namespace private var encounterNamespace
-    @Environment(\.topSafeAreaInset) private var envTopSafeArea
-    @Environment(\.bottomSafeAreaInset) private var envBottomSafeArea
     @Binding private var isDetailPresented: Bool
     @State private var selectedEncounter: Encounter?
     @State private var showDetailContent = false
@@ -60,7 +58,7 @@ struct EncounterListView: View {
 
     private var listContent: some View {
         GeometryReader { geometry in
-            let topPadding = envTopSafeArea > 0 ? envTopSafeArea : geometry.safeAreaInsets.top
+            let topPadding = geometry.safeAreaInsets.top
 
                 ZStack {
                     // Background
@@ -175,22 +173,6 @@ struct EncounterListView: View {
 
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
-                    // Navigation Header
-                    EncounterDetailHeader(
-                        encounter: encounter,
-                        isVisible: showDetailContent,
-                        topInset: resolvedTopSafeArea
-                    ) {
-                        withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
-                            showDetailContent = false
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                            withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
-                                selectedEncounter = nil
-                            }
-                        }
-                    }
-
                     // Hero composition
                     VStack(spacing: showDetailContent ? 60 : 32) {
                         EncounterMatchedArtworkView(
@@ -248,6 +230,21 @@ struct EncounterListView: View {
 
                     Spacer(minLength: DetailLayout.contentBottomSpacing)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 16)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            EncounterDetailHeader(encounter: encounter, isVisible: showDetailContent) {
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
+                    showDetailContent = false
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
+                        selectedEncounter = nil
+                    }
+                }
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -255,7 +252,7 @@ struct EncounterListView: View {
                 EncounterPrimaryActions(encounter: encounter) {}
                     .padding(.horizontal, 32)
                     .padding(.top, DetailLayout.bottomActionsTopPadding)
-                    .padding(.bottom, max(DetailLayout.bottomActionsInset, resolvedBottomSafeArea))
+                    .padding(.bottom, DetailLayout.bottomActionsInset)
                     .transition(.opacity.combined(with: .offset(y: 20)))
             }
         }
@@ -301,14 +298,6 @@ struct EncounterListView: View {
 
     private func syncDetailPresentationState() {
         isDetailPresented = selectedEncounter != nil
-    }
-
-    private var resolvedTopSafeArea: CGFloat {
-        envTopSafeArea
-    }
-
-    private var resolvedBottomSafeArea: CGFloat {
-        envBottomSafeArea
     }
 }
 
