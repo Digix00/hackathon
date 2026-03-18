@@ -27,6 +27,6 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client) handler.Dep
 		PushTokenUsecase:    usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
 		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
 		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
-		EncounterUsecase:  usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
+		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
 	}
 }

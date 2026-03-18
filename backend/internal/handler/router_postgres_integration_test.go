@@ -112,7 +112,7 @@ func newPostgresIntegrationServer(t *testing.T, db *gorm.DB, authUID string) *ec
 		PushTokenUsecase:    usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
 		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
 		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
-		EncounterUsecase:  usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
+		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
 	})
 	return e
 }
