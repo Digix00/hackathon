@@ -258,6 +258,11 @@ struct EncounterListView: View {
                         .transition(.opacity.combined(with: .offset(y: 20)))
                     }
 
+                    if showDetailContent {
+                        EncounterCommentsSection(encounter: encounter)
+                            .transition(.opacity.combined(with: .offset(y: 20)))
+                    }
+
                     Spacer(minLength: DetailLayout.contentBottomSpacing)
                 }
                 .frame(maxWidth: .infinity)

@@ -217,6 +217,45 @@ actor BackendAPIClient {
         try await getEncounter(id: id)
     }
 
+    // MARK: - Comments
+
+    func listComments(encounterId: String) async throws -> BackendCommentListResponse {
+        let escapedId = escapePathComponent(encounterId)
+        let result = try await send(path: "encounters/\(escapedId)/comments", method: "GET")
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+
+        return try decoder.decode(BackendCommentListResponse.self, from: result.data)
+    }
+
+    func createComment(encounterId: String, content: String) async throws -> BackendComment {
+        let escapedId = escapePathComponent(encounterId)
+        let request = CreateCommentRequest(content: content)
+        let result = try await send(
+            path: "encounters/\(escapedId)/comments",
+            method: "POST",
+            body: try encoder.encode(request)
+        )
+        guard result.response.statusCode == 200 || result.response.statusCode == 201 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+
+        let response = try decoder.decode(BackendCommentResponse.self, from: result.data)
+        guard let comment = response.comment else {
+            throw BackendError.invalidResponse
+        }
+        return comment
+    }
+
+    func deleteComment(id: String) async throws {
+        let escapedId = escapePathComponent(id)
+        let result = try await send(path: "comments/\(escapedId)", method: "DELETE")
+        guard result.response.statusCode == 204 || result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+    }
+
     // MARK: - Internal
 
     private func send(

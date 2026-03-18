@@ -299,6 +299,55 @@ struct BackendEncounterListResponse: Decodable {
     let pagination: BackendEncounterPagination
 }
 
+// MARK: - Comments
+
+struct BackendCommentUser: Decodable, Equatable {
+    let id: String?
+    let displayName: String?
+    let avatarURL: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case displayName = "display_name"
+        case avatarURL = "avatar_url"
+    }
+}
+
+struct BackendComment: Decodable, Equatable {
+    let id: String?
+    let encounterId: String?
+    let content: String?
+    let createdAt: Date?
+    let user: BackendCommentUser?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case encounterId = "encounter_id"
+        case content
+        case createdAt = "created_at"
+        case user
+    }
+}
+
+struct BackendCommentPagination: Decodable, Equatable {
+    let nextCursor: String?
+    let hasMore: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case nextCursor = "next_cursor"
+        case hasMore = "has_more"
+    }
+}
+
+struct BackendCommentResponse: Decodable {
+    let comment: BackendComment?
+}
+
+struct BackendCommentListResponse: Decodable {
+    let comments: [BackendComment]?
+    let pagination: BackendCommentPagination?
+}
+
 // MARK: - Requests
 
 struct CreateUserRequest: Encodable {
@@ -431,4 +480,8 @@ struct CreateEncounterRequest: Encodable {
         case rssi
         case occurredAt = "occurred_at"
     }
+}
+
+struct CreateCommentRequest: Encodable {
+    let content: String
 }
