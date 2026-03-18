@@ -53,8 +53,17 @@ struct EncounterListView: View {
             syncDetailPresentationState()
         }
         .onChange(of: viewModel.encounters) { _ in
-            if scrollTargetID == nil {
+            if let target = scrollTargetID {
+                if !encounters.contains(where: { $0.id == target }) {
+                    scrollTargetID = encounters.first?.id
+                }
+            } else {
                 scrollTargetID = encounters.first?.id
+            }
+
+            if let selected = selectedEncounterID,
+               !encounters.contains(where: { $0.id == selected }) {
+                selectedEncounterID = nil
             }
         }
     }
