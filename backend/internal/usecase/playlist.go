@@ -166,7 +166,13 @@ func (u *playlistUsecase) AddTrack(ctx context.Context, authUID string, playlist
 		return domainerrs.Forbidden("You do not have permission to modify this playlist")
 	}
 
-	sortOrder := len(playlist.Tracks) + 1
+	maxSort := 0
+	for _, t := range playlist.Tracks {
+		if t.SortOrder > maxSort {
+			maxSort = t.SortOrder
+		}
+	}
+	sortOrder := maxSort + 1
 	pt := entity.NewPlaylistTrack(playlistID, trackID, sortOrder)
 	return u.playlistRepo.AddTrack(ctx, pt)
 }

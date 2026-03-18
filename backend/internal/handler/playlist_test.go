@@ -301,6 +301,70 @@ func TestAddAndRemovePlaylistTrack(t *testing.T) {
 	}
 }
 
+func TestAddTrackSortOrderAfterDeletion(t *testing.T) {
+	db := newTestDB(t)
+	user := seedTestUser(t, db, "firebase-uid-sort-order")
+	e := newTestServer(t, db, "firebase-uid-sort-order")
+
+	// 1. Create playlist
+	playlist := model.Playlist{ID: uuid.NewString(), UserID: user.ID, Name: "Sort Test", IsPublic: true}
+	db.Create(&playlist)
+
+	// 2. Add track 1 (sort_order=1)
+	t1 := model.Track{ID: uuid.NewString(), ExternalID: "ext-1", Title: "S1", ArtistName: "A1"}
+	db.Create(&t1)
+	authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/tracks", map[string]any{"track_id": t1.ID})
+	addReq1, _ := authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/tracks", map[string]any{"track_id": t1.ID})
+	rec1 := httptest.NewRecorder()
+	e.ServeHTTP(rec1, addReq1)
+
+	// 3. Add track 2 (sort_order=2)
+	t2 := model.Track{ID: uuid.NewString(), ExternalID: "ext-2", Title: "S2", ArtistName: "A2"}
+	db.Create(&t2)
+	addReq2, _ := authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/tracks", map[string]any{"track_id": t2.ID})
+	rec2 := httptest.NewRecorder()
+	e.ServeHTTP(rec2, addReq2)
+
+	// 4. Remove track 1
+	remReq, _ := authRequest(http.MethodDelete, "/api/v1/playlists/"+playlist.ID+"/tracks/"+t1.ID, nil)
+	remRec := httptest.NewRecorder()
+	e.ServeHTTP(remRec, remReq)
+
+	// 5. Add track 3
+	t3 := model.Track{ID: uuid.NewString(), ExternalID: "ext-3", Title: "S3", ArtistName: "A3"}
+	db.Create(&t3)
+	addReq3, _ := authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/tracks", map[string]any{"track_id": t3.ID})
+	rec3 := httptest.NewRecorder()
+	e.ServeHTTP(rec3, addReq3)
+
+	// 6. Verify sort_order of track 3 is 3, not 2
+	getReq, _ := authRequest(http.MethodGet, "/api/v1/playlists/"+playlist.ID, nil)
+	getRec := httptest.NewRecorder()
+	e.ServeHTTP(getRec, getReq)
+	var getBody map[string]any
+	json.Unmarshal(getRec.Body.Bytes(), &getBody)
+	tracks := getBody["playlist"].(map[string]any)["tracks"].([]any)
+
+	// tracks should contain t2 (order=2) and t3 (order=3)
+	if len(tracks) != 2 {
+		t.Fatalf("expected 2 tracks, got %d", len(tracks))
+	}
+
+	foundT3 := false
+	for _, tr := range tracks {
+		m := tr.(map[string]any)
+		if m["track_id"].(string) == t3.ID {
+			foundT3 = true
+			if int(m["sort_order"].(float64)) != 3 {
+				t.Errorf("expected track 3 sort_order to be 3, got %v", m["sort_order"])
+			}
+		}
+	}
+	if !foundT3 {
+		t.Errorf("track 3 not found in playlist")
+	}
+}
+
 func TestAddAndRemovePlaylistFavorite(t *testing.T) {
 	db := newTestDB(t)
 	owner := seedTestUser(t, db, "firebase-uid-playlist-fav-owner")
