@@ -40,11 +40,17 @@ final class OnboardingUserViewModel: ObservableObject {
         do {
             let user = try await client.getMe()
             let currentBio = user.bio ?? ""
-            if user.displayName != displayName || currentBio != bio {
+            let effectiveBio: String
+            if bio.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                effectiveBio = currentBio
+            } else {
+                effectiveBio = bio
+            }
+            if user.displayName != displayName || currentBio != effectiveBio {
                 let request = UpdateUserRequest(
                     displayName: displayName,
                     avatarURL: nil,
-                    bio: bio,
+                    bio: effectiveBio,
                     birthdate: nil,
                     ageVisibility: nil,
                     prefectureId: nil,
