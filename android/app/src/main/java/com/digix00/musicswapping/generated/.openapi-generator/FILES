@@ -10,6 +10,8 @@ docs/HackathonInternalHandlerSchemaResponseBleTokenUser.md
 docs/HackathonInternalHandlerSchemaResponseBleTokenUserResponse.md
 docs/HackathonInternalHandlerSchemaResponseDevice.md
 docs/HackathonInternalHandlerSchemaResponseDeviceResponse.md
+docs/HackathonInternalHandlerSchemaResponseNotificationItem.md
+docs/HackathonInternalHandlerSchemaResponseNotificationListResponse.md
 docs/HackathonInternalHandlerSchemaResponsePublicTrack.md
 docs/HackathonInternalHandlerSchemaResponsePublicUser.md
 docs/HackathonInternalHandlerSchemaResponsePublicUserResponse.md
@@ -20,11 +22,13 @@ docs/HackathonInternalHandlerSchemaResponseUserResponse.md
 docs/HealthApi.md
 docs/InternalHandlerErrorBody.md
 docs/InternalHandlerErrorResponse.md
+docs/NotificationsApi.md
 docs/PushTokensApi.md
 docs/SettingsApi.md
 docs/UsersApi.md
 src/main/kotlin/com/digix00/musicswapping/generated/apis/BleTokensApi.kt
 src/main/kotlin/com/digix00/musicswapping/generated/apis/HealthApi.kt
+src/main/kotlin/com/digix00/musicswapping/generated/apis/NotificationsApi.kt
 src/main/kotlin/com/digix00/musicswapping/generated/apis/PushTokensApi.kt
 src/main/kotlin/com/digix00/musicswapping/generated/apis/SettingsApi.kt
 src/main/kotlin/com/digix00/musicswapping/generated/apis/UsersApi.kt
@@ -56,6 +60,8 @@ src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHand
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseBleTokenUserResponse.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseDevice.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseDeviceResponse.kt
+src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseNotificationItem.kt
+src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseNotificationListResponse.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponsePublicTrack.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponsePublicUser.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponsePublicUserResponse.kt

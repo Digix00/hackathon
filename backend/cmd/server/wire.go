@@ -17,13 +17,15 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client) handler.Dep
 	encounterRepo := rdb.NewEncounterRepository(db)
 	trackRepo := rdb.NewUserCurrentTrackRepository(db)
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
+	notificationRepo := rdb.NewNotificationRepository(db)
 
 	return handler.Dependencies{
-		AuthTokenVerifier: authClient,
-		AuthUserManager:   authClient,
-		UserUsecase:       usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
-		SettingsUsecase:   usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
-		PushTokenUsecase:  usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
-		BleTokenUsecase:   usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
+		AuthTokenVerifier:   authClient,
+		AuthUserManager:     authClient,
+		UserUsecase:         usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
+		SettingsUsecase:     usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
+		PushTokenUsecase:    usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
+		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
+		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
 	}
 }
