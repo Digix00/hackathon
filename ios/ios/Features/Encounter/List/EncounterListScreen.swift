@@ -4,6 +4,10 @@ struct EncounterListView: View {
     @Namespace private var encounterNamespace
     @State private var selectedEncounter: Encounter?
     @State private var showDetailContent = false
+    @SceneStorage("encounter.list.scrollTargetID") private var scrollTargetID: String?
+    
+    private let wheelItemHeight: CGFloat = 300
+    private let wheelItemSpacing: CGFloat = 10
 
     private var encounters: [Encounter] {
         let previewEncounters = MockData.encountersWithoutLyrics + MockData.encounters
@@ -45,81 +49,127 @@ struct EncounterListView: View {
                 }
                 .opacity(selectedEncounter == nil ? 1 : 0)
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 28) {
-                        // Header - fades out when detail appears
-                        HStack(alignment: .top) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("つながり")
-                                    .font(PrototypeTheme.Typography.Product.screenTitle)
-                                    .foregroundStyle(PrototypeTheme.textPrimary)
-                                    .tracking(-0.5)
-
-                                Text("都市のノイズが生んだ、一期一会の旋律")
-                                    .font(PrototypeTheme.Typography.Product.subtitle)
-                                    .foregroundStyle(PrototypeTheme.textSecondary)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 4)
-                                    .background(PrototypeTheme.surfaceMuted.opacity(0.6))
-                                    .clipShape(Capsule())
-                            }
-                            Spacer()
-                            Button(action: {}) {
-                                Image(systemName: "slider.horizontal.3")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(PrototypeTheme.textPrimary)
-                                    .padding(12)
-                                    .background(PrototypeTheme.surface)
-                                    .clipShape(Circle())
-                                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
-                            }
-                        }
-                        .padding(.top, topPadding + 8)
+                VStack(spacing: 0) {
+                    listHeader(topPadding: topPadding)
+                        .padding(.horizontal, 24)
                         .opacity(selectedEncounter == nil ? 1 : 0)
-
-                        // Encounter list
-                        VStack(alignment: .leading, spacing: 100) {
-                            LazyVStack(spacing: 80) {
+                    
+                    GeometryReader { wheelGeometry in
+                        ScrollView(.vertical, showsIndicators: false) {
+                            LazyVStack(spacing: wheelItemSpacing) {
                                 ForEach(Array(encounters.enumerated()), id: \.offset) { index, encounter in
                                     let isSelected = selectedEncounter?.id == encounter.id
                                     let isBefore = selectedEncounter.map { selected in
                                         encounters.firstIndex(where: { $0.id == selected.id })! >
                                         encounters.firstIndex(where: { $0.id == encounter.id })!
                                     } ?? false
-
-                                    Button {
-                                        withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
-                                            selectedEncounter = encounter
-                                        }
-                                        // Delay detail content appearance
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                            withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
-                                                showDetailContent = true
+                                    
+                                    GeometryReader { itemGeometry in
+                                        let metrics = wheelMetrics(itemGeometry: itemGeometry, wheelGeometry: wheelGeometry)
+                                        
+                                        Button {
+                                            withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
+                                                selectedEncounter = encounter
                                             }
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                                withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
+                                                    showDetailContent = true
+                                                }
+                                            }
+                                        } label: {
+                                            EncounterRow(
+                                                encounter: encounter,
+                                                isFixed: index == 0,
+                                                hideMatchedElements: isSelected && selectedEncounter != nil
+                                            )
+                                            .scaleEffect(metrics.scale)
+                                            .opacity(selectedEncounter != nil && !isSelected ? 0 : metrics.opacity)
+                                            .blur(radius: metrics.blur)
+                                            .saturation(metrics.saturation)
+                                            .offset(
+                                                y: selectedEncounter != nil && !isSelected
+                                                    ? (isBefore ? -200 : 200)
+                                                    : metrics.verticalOffset
+                                            )
+                                            .zIndex(metrics.zIndex)
                                         }
-                                    } label: {
-                                        EncounterRow(
-                                            encounter: encounter,
-                                            isFixed: index == 0,
-                                            hideMatchedElements: isSelected && selectedEncounter != nil
-                                        )
-                                        .opacity(selectedEncounter != nil && !isSelected ? 0 : 1)
-                                        .offset(y: selectedEncounter != nil && !isSelected
-                                            ? (isBefore ? -200 : 200)
-                                            : 0)
+                                        .buttonStyle(EncounterScaleButtonStyle())
+                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                                     }
-                                    .buttonStyle(EncounterScaleButtonStyle())
+                                    .frame(height: wheelItemHeight)
+                                    .id(encounter.id)
                                 }
                             }
+                            .scrollTargetLayout()
+                            .padding(.horizontal, 24)
+                            .safeAreaPadding(.vertical, max((wheelGeometry.size.height - wheelItemHeight) / 2, 0))
                         }
-                        .padding(.top, 40)
-                        .padding(.bottom, 160)
+                        .coordinateSpace(name: "encounterWheel")
+                        .scrollPosition(id: $scrollTargetID, anchor: .center)
+                        .scrollTargetBehavior(.viewAligned)
+                        .scrollClipDisabled()
                     }
-                    .padding(.horizontal, 24)
+                    .padding(.top, 8)
                 }
-                .scrollContentBackground(.hidden)
             }
         }
+    }
+    
+    private func listHeader(topPadding: CGFloat) -> some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("つながり")
+                    .font(PrototypeTheme.Typography.Product.screenTitle)
+                    .foregroundStyle(PrototypeTheme.textPrimary)
+                    .tracking(-0.5)
+                
+                Text("都市のノイズが生んだ、一期一会の旋律")
+                    .font(PrototypeTheme.Typography.Product.subtitle)
+                    .foregroundStyle(PrototypeTheme.textSecondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(PrototypeTheme.surfaceMuted.opacity(0.6))
+                    .clipShape(Capsule())
+            }
+            Spacer()
+            Button(action: {}) {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(PrototypeTheme.textPrimary)
+                    .padding(12)
+                    .background(PrototypeTheme.surface)
+                    .clipShape(Circle())
+                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
+            }
+        }
+        .padding(.top, topPadding + 8)
+    }
+    
+    private func wheelMetrics(itemGeometry: GeometryProxy, wheelGeometry: GeometryProxy) -> WheelMetrics {
+        let frame = itemGeometry.frame(in: .named("encounterWheel"))
+        let viewportCenter = wheelGeometry.size.height / 2
+        let itemCenter = frame.midY
+        let distance = abs(itemCenter - viewportCenter)
+        let normalizedDistance = min(distance / (wheelItemHeight * 0.8), 1)
+        let eased = 1 - pow(1 - normalizedDistance, 2.4)
+        
+        return WheelMetrics(
+            scale: 1.03 - (eased * 0.28),
+            opacity: 1.0 - (eased * 0.62),
+            blur: eased * 2.2,
+            saturation: 1.02 - (eased * 0.34),
+            verticalOffset: eased * 26,
+            zIndex: 1.0 - Double(normalizedDistance)
+        )
+    }
+    
+    private struct WheelMetrics {
+        let scale: CGFloat
+        let opacity: CGFloat
+        let blur: CGFloat
+        let saturation: CGFloat
+        let verticalOffset: CGFloat
+        let zIndex: Double
     }
 
     // MARK: - Detail Content
