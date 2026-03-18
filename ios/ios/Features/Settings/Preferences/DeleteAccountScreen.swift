@@ -43,8 +43,8 @@ struct DeleteAccountView: View {
                         .background(PrototypeTheme.error)
                         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
-                .disabled(viewModel.isDeleting)
-                .opacity(viewModel.isDeleting ? 0.6 : 1)
+                .disabled(viewModel.isDeleting || viewModel.didDelete)
+                .opacity(viewModel.isDeleting || viewModel.didDelete ? 0.6 : 1)
             }
         }
         .confirmationDialog(
