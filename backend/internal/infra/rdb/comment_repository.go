@@ -7,8 +7,8 @@ import (
 
 	"gorm.io/gorm"
 
-	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/entity"
+	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
 	"hackathon/internal/infra/rdb/model"
 )
