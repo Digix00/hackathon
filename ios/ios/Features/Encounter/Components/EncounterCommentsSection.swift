@@ -17,7 +17,7 @@ struct EncounterCommentsSection: View {
         .onAppear {
             viewModel.loadIfNeeded(encounterId: encounter.id)
         }
-        .onChange(of: encounter.id) { newValue in
+        .onChange(of: encounter.id) { _, newValue in
             viewModel.loadIfNeeded(encounterId: newValue)
         }
     }
