@@ -3,7 +3,9 @@ import SwiftUI
 struct EncounterRow: View {
     let encounter: Encounter
     let isFixed: Bool
+    var hideMatchedElements: Bool = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.encounterNamespace) private var namespace
     
     private var seed: Int {
         let magnitude = encounter.id.hashValue.magnitude
@@ -163,21 +165,45 @@ struct EncounterRow: View {
                     
                     // ジャケット（アクセント・マス）
                     // 名前が右なら左、名前が左なら右へ自動配置
-                    jacketView(size: 80)
-                        .offset(x: artworkOffset.x, y: artworkOffset.y)
-                        .rotationEffect(.degrees(Double(horizontalShift) / 2))
+                    Group {
+                        if let namespace = namespace, !hideMatchedElements {
+                            jacketView(size: 80)
+                                .matchedGeometryEffect(id: "artwork-\(encounter.id)", in: namespace)
+                        } else {
+                            jacketView(size: 80)
+                                .opacity(hideMatchedElements ? 0 : 1)
+                        }
+                    }
+                    .offset(x: artworkOffset.x, y: artworkOffset.y)
+                    .rotationEffect(.degrees(Double(horizontalShift) / 2))
                     
                     // ユーザー名（メイン・マス）
                     VStack(alignment: horizontalShift > 0 ? .leading : .trailing, spacing: 4) {
-                        Text(encounter.userName)
-                            .font(PrototypeTheme.Typography.font(size: 40 * nameLengthWeight, weight: .black, role: .primary))
-                            .foregroundStyle(PrototypeTheme.textPrimary)
-                            .tracking(-1.5)
-                        
-                        Text(encounter.track.title)
-                            .font(PrototypeTheme.Typography.font(size: 14, weight: .bold, role: .accent))
-                            .italic()
-                            .foregroundStyle(encounter.track.color)
+                        Group {
+                            if let namespace = namespace, !hideMatchedElements {
+                                Text(encounter.userName)
+                                    .matchedGeometryEffect(id: "userName-\(encounter.id)", in: namespace)
+                            } else {
+                                Text(encounter.userName)
+                                    .opacity(hideMatchedElements ? 0 : 1)
+                            }
+                        }
+                        .font(PrototypeTheme.Typography.font(size: 40 * nameLengthWeight, weight: .black, role: .primary))
+                        .foregroundStyle(PrototypeTheme.textPrimary)
+                        .tracking(-1.5)
+
+                        Group {
+                            if let namespace = namespace, !hideMatchedElements {
+                                Text(encounter.track.title)
+                                    .matchedGeometryEffect(id: "trackTitle-\(encounter.id)", in: namespace)
+                            } else {
+                                Text(encounter.track.title)
+                                    .opacity(hideMatchedElements ? 0 : 1)
+                            }
+                        }
+                        .font(PrototypeTheme.Typography.font(size: 14, weight: .bold, role: .accent))
+                        .italic()
+                        .foregroundStyle(encounter.track.color)
                     }
                     .frame(width: 200, alignment: horizontalShift > 0 ? .leading : .trailing)
                     .offset(x: horizontalShift)
