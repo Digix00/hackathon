@@ -8,6 +8,7 @@ Sources/OpenAPIClient/APIs.swift
 Sources/OpenAPIClient/APIs/BleTokensAPI.swift
 Sources/OpenAPIClient/APIs/EncountersAPI.swift
 Sources/OpenAPIClient/APIs/HealthAPI.swift
+Sources/OpenAPIClient/APIs/MutesAPI.swift
 Sources/OpenAPIClient/APIs/NotificationsAPI.swift
 Sources/OpenAPIClient/APIs/PushTokensAPI.swift
 Sources/OpenAPIClient/APIs/ReportsAPI.swift
@@ -20,6 +21,7 @@ Sources/OpenAPIClient/JSONDataEncoding.swift
 Sources/OpenAPIClient/JSONEncodingHelper.swift
 Sources/OpenAPIClient/Models.swift
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaRequestCreateEncounterRequest.swift
+Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaRequestCreateMuteRequest.swift
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaRequestCreatePushTokenRequest.swift
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaRequestCreateReportRequest.swift
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaRequestCreateUserRequest.swift
@@ -40,6 +42,8 @@ Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponseEncounterResp
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponseEncounterSummary.swift
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponseEncounterTrack.swift
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponseEncounterUser.swift
+Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponseMute.swift
+Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponseMuteResponse.swift
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponseNotificationItem.swift
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponseNotificationListResponse.swift
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponsePagination.swift
@@ -61,6 +65,7 @@ Sources/OpenAPIClient/Validation.swift
 docs/BleTokensAPI.md
 docs/EncountersAPI.md
 docs/HackathonInternalHandlerSchemaRequestCreateEncounterRequest.md
+docs/HackathonInternalHandlerSchemaRequestCreateMuteRequest.md
 docs/HackathonInternalHandlerSchemaRequestCreatePushTokenRequest.md
 docs/HackathonInternalHandlerSchemaRequestCreateReportRequest.md
 docs/HackathonInternalHandlerSchemaRequestCreateUserRequest.md
@@ -81,6 +86,8 @@ docs/HackathonInternalHandlerSchemaResponseEncounterResponse.md
 docs/HackathonInternalHandlerSchemaResponseEncounterSummary.md
 docs/HackathonInternalHandlerSchemaResponseEncounterTrack.md
 docs/HackathonInternalHandlerSchemaResponseEncounterUser.md
+docs/HackathonInternalHandlerSchemaResponseMute.md
+docs/HackathonInternalHandlerSchemaResponseMuteResponse.md
 docs/HackathonInternalHandlerSchemaResponseNotificationItem.md
 docs/HackathonInternalHandlerSchemaResponseNotificationListResponse.md
 docs/HackathonInternalHandlerSchemaResponsePagination.md
@@ -96,6 +103,7 @@ docs/HackathonInternalHandlerSchemaResponseUserResponse.md
 docs/HealthAPI.md
 docs/InternalHandlerErrorBody.md
 docs/InternalHandlerErrorResponse.md
+docs/MutesAPI.md
 docs/NotificationsAPI.md
 docs/PushTokensAPI.md
 docs/ReportsAPI.md

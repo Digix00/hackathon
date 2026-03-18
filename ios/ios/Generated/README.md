@@ -34,6 +34,8 @@ Class | Method | HTTP request | Description
 *EncountersAPI* | [**listEncounters**](docs/EncountersAPI.md#listencounters) | **GET** /api/v1/encounters | すれ違い履歴一覧取得
 *HealthAPI* | [**healthz**](docs/HealthAPI.md#healthz) | **GET** /healthz | ヘルスチェック
 *HealthAPI* | [**healthzPostgres**](docs/HealthAPI.md#healthzpostgres) | **GET** /healthz/postgres | PostgreSQL ヘルスチェック
+*MutesAPI* | [**createMute**](docs/MutesAPI.md#createmute) | **POST** /api/v1/users/me/mutes | ミュート作成
+*MutesAPI* | [**deleteMute**](docs/MutesAPI.md#deletemute) | **DELETE** /api/v1/users/me/mutes/{target_user_id} | ミュート解除
 *NotificationsAPI* | [**deleteNotification**](docs/NotificationsAPI.md#deletenotification) | **DELETE** /api/v1/users/me/notifications/{id} | 通知削除
 *NotificationsAPI* | [**listNotifications**](docs/NotificationsAPI.md#listnotifications) | **GET** /api/v1/users/me/notifications | 通知一覧取得
 *NotificationsAPI* | [**markNotificationAsRead**](docs/NotificationsAPI.md#marknotificationasread) | **PATCH** /api/v1/users/me/notifications/{id}/read | 通知を既読にする
@@ -53,6 +55,7 @@ Class | Method | HTTP request | Description
 ## Documentation For Models
 
  - [HackathonInternalHandlerSchemaRequestCreateEncounterRequest](docs/HackathonInternalHandlerSchemaRequestCreateEncounterRequest.md)
+ - [HackathonInternalHandlerSchemaRequestCreateMuteRequest](docs/HackathonInternalHandlerSchemaRequestCreateMuteRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreatePushTokenRequest](docs/HackathonInternalHandlerSchemaRequestCreatePushTokenRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateReportRequest](docs/HackathonInternalHandlerSchemaRequestCreateReportRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateUserRequest](docs/HackathonInternalHandlerSchemaRequestCreateUserRequest.md)
@@ -73,6 +76,8 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseEncounterSummary](docs/HackathonInternalHandlerSchemaResponseEncounterSummary.md)
  - [HackathonInternalHandlerSchemaResponseEncounterTrack](docs/HackathonInternalHandlerSchemaResponseEncounterTrack.md)
  - [HackathonInternalHandlerSchemaResponseEncounterUser](docs/HackathonInternalHandlerSchemaResponseEncounterUser.md)
+ - [HackathonInternalHandlerSchemaResponseMute](docs/HackathonInternalHandlerSchemaResponseMute.md)
+ - [HackathonInternalHandlerSchemaResponseMuteResponse](docs/HackathonInternalHandlerSchemaResponseMuteResponse.md)
  - [HackathonInternalHandlerSchemaResponseNotificationItem](docs/HackathonInternalHandlerSchemaResponseNotificationItem.md)
  - [HackathonInternalHandlerSchemaResponseNotificationListResponse](docs/HackathonInternalHandlerSchemaResponseNotificationListResponse.md)
  - [HackathonInternalHandlerSchemaResponsePagination](docs/HackathonInternalHandlerSchemaResponsePagination.md)
