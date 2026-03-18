@@ -19,7 +19,7 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client) handler.Dep
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
 	reportRepo := rdb.NewReportRepository(db)
 	notificationRepo := rdb.NewNotificationRepository(db)
-    _ = rdb.NewTransactor(db)
+	_ = rdb.NewTransactor(db)
 
 	return handler.Dependencies{
 		AuthTokenVerifier:   authClient,
