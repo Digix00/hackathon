@@ -72,7 +72,12 @@ final class EncounterCommentsViewModel: ObservableObject {
             }
             let mapped = (response.comments ?? []).map { Self.mapComment($0, currentUserID: currentUserID) }
             guard requestedEncounterID == encounterId else { return }
-            comments = Self.sortComments(mapped)
+            let serverIDs = Set(mapped.compactMap { $0.backendID })
+            let localOnly = comments.filter { comment in
+                guard let backendID = comment.backendID else { return true }
+                return !serverIDs.contains(backendID)
+            }
+            comments = Self.sortComments(mapped + localOnly)
             loadedEncounterID = encounterId
         } catch {
             guard requestedEncounterID == encounterId else { return }
