@@ -18,6 +18,7 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client) handler.Dep
 	trackRepo := rdb.NewUserCurrentTrackRepository(db)
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
 	reportRepo := rdb.NewReportRepository(db)
+	muteRepo := rdb.NewMuteRepository(db)
 	notificationRepo := rdb.NewNotificationRepository(db)
 
 	return handler.Dependencies{
@@ -28,6 +29,7 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client) handler.Dep
 		PushTokenUsecase:    usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
 		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
 		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
+		MuteUsecase:         usecase.NewMuteUsecase(userRepo, muteRepo),
 		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
 	}
 }
