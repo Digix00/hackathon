@@ -28,6 +28,17 @@ type EncounterRead struct {
 	ReadAt      time.Time `gorm:"not null;autoCreateTime"`
 }
 
+type EncounterTrack struct {
+	ID           string         `gorm:"primaryKey"`
+	EncounterID  string         `gorm:"not null;index;uniqueIndex:uq_encounter_tracks,where:deleted_at IS NULL"`
+	TrackID      string         `gorm:"not null;index;uniqueIndex:uq_encounter_tracks,where:deleted_at IS NULL"`
+	SourceUserID string         `gorm:"not null;index;uniqueIndex:uq_encounter_tracks,where:deleted_at IS NULL"`
+	CreatedAt    time.Time      `gorm:"not null;autoCreateTime"`
+	DeletedAt    gorm.DeletedAt `gorm:"index"`
+
+	Track *Track `gorm:"foreignKey:TrackID"`
+}
+
 type DailyEncounterCount struct {
 	ID        string    `gorm:"primaryKey"`
 	UserID    string    `gorm:"not null;uniqueIndex:uq_daily_encounter_counts"`

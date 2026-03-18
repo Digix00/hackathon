@@ -13,6 +13,7 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	settingsHandler := newSettingsHandler(deps.SettingsUsecase)
 	pushTokenHandler := newPushTokenHandler(deps.PushTokenUsecase)
 	bleTokenHandler := newBleTokenHandler(deps.BleTokenUsecase)
+	encounterHandler := newEncounterHandler(deps.EncounterUsecase)
 	reportHandler := newReportHandler(deps.ReportUsecase)
 	notificationHandler := newNotificationHandler(deps.NotificationUsecase)
 
@@ -35,6 +36,10 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	api.POST("/ble-tokens", bleTokenHandler.createBleToken)
 	api.GET("/ble-tokens/current", bleTokenHandler.getCurrentBleToken)
 	api.GET("/ble-tokens/:token/user", bleTokenHandler.getUserByBleToken)
+
+	api.POST("/encounters", encounterHandler.createEncounter)
+	api.GET("/encounters", encounterHandler.listEncounters)
+	api.GET("/encounters/:id", encounterHandler.getEncounterByID)
 
 	api.POST("/reports", reportHandler.createReport)
 

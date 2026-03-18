@@ -39,6 +39,7 @@ type UpdateUserParams struct {
 type UserRepository interface {
 	FindByAuthProviderAndProviderUserID(ctx context.Context, authProvider, providerUserID string) (entity.User, error)
 	FindByID(ctx context.Context, id string) (entity.User, error)
+	FindByIDs(ctx context.Context, ids []string) (map[string]entity.User, error)
 	Create(ctx context.Context, params CreateUserParams) (entity.User, error)
 	Update(ctx context.Context, userID string, params UpdateUserParams) (entity.User, error)
 	DeleteWithCleanup(ctx context.Context, userID string) error
