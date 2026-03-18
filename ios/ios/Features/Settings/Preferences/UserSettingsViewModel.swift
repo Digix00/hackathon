@@ -52,6 +52,7 @@ final class UserSettingsViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     private let client: BackendAPIClient
+    private var confirmedDetectionDistance: Double = 50
     private var notificationEnabled = true
     private var loadTask: Task<Void, Never>?
     private var saveTasks: [SaveField: Task<Void, Never>] = [:]
@@ -75,7 +76,7 @@ final class UserSettingsViewModel: ObservableObject {
     func commitDetectionDistance() {
         let rounded = Int(detectionDistance.rounded())
         let clamped = min(max(rounded, 10), 100)
-        let previous = detectionDistance
+        let previous = confirmedDetectionDistance
         detectionDistance = Double(clamped)
 
         submitUpdate(
@@ -199,6 +200,7 @@ final class UserSettingsViewModel: ObservableObject {
 
     private func applySettings(_ settings: BackendUserSettings) {
         detectionDistance = Double(settings.detectionDistance)
+        confirmedDetectionDistance = detectionDistance
         isProfileVisible = settings.profileVisible
         encounterNotificationEnabled = settings.encounterNotificationEnabled
         generatedNotificationEnabled = settings.batchNotificationEnabled
@@ -210,6 +212,7 @@ final class UserSettingsViewModel: ObservableObject {
     private func applySettings(_ settings: BackendUserSettings, updating request: UpdateUserSettingsRequest) {
         if request.detectionDistance != nil {
             detectionDistance = Double(settings.detectionDistance)
+            confirmedDetectionDistance = detectionDistance
         }
         if request.profileVisible != nil {
             isProfileVisible = settings.profileVisible
