@@ -1,6 +1,7 @@
-.PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean reset-db \
+.PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean reset-db init-db \
 	test test-integration test-integration-ci \
 	generate-docs generate-docs-ci generate-android generate-ios generate-code generate-code-ci \
+
         _generate-android-only _generate-ios-only
 
 # ==============================================================================
@@ -34,6 +35,11 @@ clean:
 reset-db:
 	docker compose down -v
 	docker compose up --build -d
+
+# ローカルDBをマイグレーションし、シードデータを投入する
+init-db:
+	docker compose up -d postgres
+	docker compose run --rm --no-deps server go run ./cmd/init-db
 
 # ==============================================================================
 # Utility Commands
