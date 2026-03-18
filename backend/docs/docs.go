@@ -467,6 +467,537 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/playlists": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証済みユーザーの新規プレイリストを作成する",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "playlists"
+                ],
+                "summary": "プレイリスト作成",
+                "operationId": "createPlaylist",
+                "parameters": [
+                    {
+                        "description": "プレイリスト作成リクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.CreatePlaylistRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.PlaylistResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/playlists/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証済みユーザー自身のプレイリスト一覧を取得する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "playlists"
+                ],
+                "summary": "自分のプレイリスト一覧取得",
+                "operationId": "getMyPlaylists",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.PlaylistListResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/playlists/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したプレイリストをトラック情報付きで取得する（公開プレイリストは誰でも取得可能、非公開は所有者のみ）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "playlists"
+                ],
+                "summary": "プレイリスト取得",
+                "operationId": "getPlaylist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "プレイリストID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.PlaylistResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "プレイリストを削除する（所有者のみ）",
+                "tags": [
+                    "playlists"
+                ],
+                "summary": "プレイリスト削除",
+                "operationId": "deletePlaylist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "プレイリストID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "プレイリストの名前・説明・公開設定を更新する（所有者のみ）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "playlists"
+                ],
+                "summary": "プレイリスト更新",
+                "operationId": "updatePlaylist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "プレイリストID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "プレイリスト更新リクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.UpdatePlaylistRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.PlaylistResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/playlists/{id}/favorites": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したプレイリストをお気に入りに追加する（公開プレイリストのみ、または所有者）",
+                "tags": [
+                    "playlists"
+                ],
+                "summary": "プレイリストをお気に入り登録",
+                "operationId": "addPlaylistFavorite",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "プレイリストID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したプレイリストをお気に入りから削除する",
+                "tags": [
+                    "playlists"
+                ],
+                "summary": "プレイリストのお気に入り解除",
+                "operationId": "removePlaylistFavorite",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "プレイリストID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/playlists/{id}/tracks": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "プレイリストにトラックを追加する（所有者のみ）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "playlists"
+                ],
+                "summary": "プレイリストにトラック追加",
+                "operationId": "addPlaylistTrack",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "プレイリストID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "トラック追加リクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.AddPlaylistTrackRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/playlists/{id}/tracks/{trackId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "プレイリストからトラックを削除する（所有者のみ）",
+                "tags": [
+                    "playlists"
+                ],
+                "summary": "プレイリストからトラック削除",
+                "operationId": "removePlaylistTrack",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "プレイリストID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "トラックID",
+                        "name": "trackId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/reports": {
             "post": {
                 "security": [
@@ -1653,6 +2184,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "hackathon_internal_handler_schema_request.AddPlaylistTrackRequest": {
+            "type": "object",
+            "required": [
+                "track_id"
+            ],
+            "properties": {
+                "track_id": {
+                    "type": "string"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_request.CreateEncounterRequest": {
             "type": "object",
             "properties": {
@@ -1674,6 +2216,23 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "target_user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_request.CreatePlaylistRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -1754,6 +2313,20 @@ const docTemplate = `{
                         "other",
                         "no-answer"
                     ]
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_request.UpdatePlaylistRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -2212,6 +2785,140 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "next_cursor": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.Playlist": {
+            "type": "object",
+            "required": [
+                "created_at",
+                "id",
+                "is_public",
+                "name",
+                "tracks",
+                "updated_at",
+                "user_id"
+            ],
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tracks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.PlaylistTrack"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.PlaylistListResponse": {
+            "type": "object",
+            "required": [
+                "playlists"
+            ],
+            "properties": {
+                "playlists": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.PlaylistSummary"
+                    }
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.PlaylistResponse": {
+            "type": "object",
+            "required": [
+                "playlist"
+            ],
+            "properties": {
+                "playlist": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.Playlist"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.PlaylistSummary": {
+            "type": "object",
+            "required": [
+                "created_at",
+                "id",
+                "is_public",
+                "name",
+                "updated_at",
+                "user_id"
+            ],
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.PlaylistTrack": {
+            "type": "object",
+            "required": [
+                "artist_name",
+                "created_at",
+                "id",
+                "sort_order",
+                "title",
+                "track_id"
+            ],
+            "properties": {
+                "artist_name": {
+                    "type": "string"
+                },
+                "artwork_url": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "track_id": {
                     "type": "string"
                 }
             }

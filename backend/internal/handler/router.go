@@ -13,6 +13,7 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	settingsHandler := newSettingsHandler(deps.SettingsUsecase)
 	pushTokenHandler := newPushTokenHandler(deps.PushTokenUsecase)
 	bleTokenHandler := newBleTokenHandler(deps.BleTokenUsecase)
+	playlistHandler := newPlaylistHandler(deps.PlaylistUsecase)
 	encounterHandler := newEncounterHandler(deps.EncounterUsecase)
 	reportHandler := newReportHandler(deps.ReportUsecase)
 	muteHandler := newMuteHandler(deps.MuteUsecase)
@@ -41,6 +42,18 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	protected.POST("/ble-tokens", bleTokenHandler.createBleToken)
 	protected.GET("/ble-tokens/current", bleTokenHandler.getCurrentBleToken)
 	protected.GET("/ble-tokens/:token/user", bleTokenHandler.getUserByBleToken)
+
+	protected.POST("/playlists", playlistHandler.createPlaylist)
+	protected.GET("/playlists/me", playlistHandler.getMyPlaylists)
+	protected.GET("/playlists/:id", playlistHandler.getPlaylist)
+	protected.PATCH("/playlists/:id", playlistHandler.updatePlaylist)
+	protected.DELETE("/playlists/:id", playlistHandler.deletePlaylist)
+
+	protected.POST("/playlists/:id/tracks", playlistHandler.addPlaylistTrack)
+	protected.DELETE("/playlists/:id/tracks/:trackId", playlistHandler.removePlaylistTrack)
+
+	protected.POST("/playlists/:id/favorites", playlistHandler.addPlaylistFavorite)
+	protected.DELETE("/playlists/:id/favorites", playlistHandler.removePlaylistFavorite)
 
 	protected.POST("/encounters", encounterHandler.createEncounter)
 	protected.GET("/encounters", encounterHandler.listEncounters)

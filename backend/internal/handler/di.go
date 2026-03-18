@@ -16,6 +16,7 @@ type Dependencies struct {
 	SettingsUsecase     usecase.SettingsUsecase
 	PushTokenUsecase    usecase.PushTokenUsecase
 	BleTokenUsecase     usecase.BleTokenUsecase
+	PlaylistUsecase     usecase.PlaylistUsecase
 	ReportUsecase       usecase.ReportUsecase
 	MuteUsecase         usecase.MuteUsecase
 	NotificationUsecase usecase.NotificationUsecase

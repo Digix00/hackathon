@@ -160,6 +160,7 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 	}
 	musicConnectionRepo := rdb.NewMusicConnectionRepository(db, enc)
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
+	playlistRepo := rdb.NewPlaylistRepository(db)
 	reportRepo := rdb.NewReportRepository(db)
 	muteRepo := rdb.NewMuteRepository(db)
 	notificationRepo := rdb.NewNotificationRepository(db)
@@ -178,6 +179,7 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 		SettingsUsecase:     usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
 		PushTokenUsecase:    usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
 		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
+		PlaylistUsecase:     usecase.NewPlaylistUsecase(playlistRepo, userRepo),
 		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
 		MuteUsecase:         usecase.NewMuteUsecase(userRepo, muteRepo),
 		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
