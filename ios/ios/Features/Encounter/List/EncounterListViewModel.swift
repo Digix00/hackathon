@@ -125,6 +125,16 @@ private extension EncounterListViewModel {
             return "昨日"
         }
         if !calendar.isDateInToday(occurredAt) {
+            let now = Date()
+            let startOfOccurred = calendar.startOfDay(for: occurredAt)
+            let startOfNow = calendar.startOfDay(for: now)
+            let dayDelta = calendar.dateComponents([.day], from: startOfOccurred, to: startOfNow).day ?? 0
+            if dayDelta > 1 {
+                return "\(dayDelta)日前"
+            }
+            if dayDelta < 0 {
+                return "近日"
+            }
             return "昨日"
         }
 
