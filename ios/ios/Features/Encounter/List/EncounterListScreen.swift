@@ -32,6 +32,11 @@ struct EncounterListView: View {
         }
         .background(PrototypeTheme.background.ignoresSafeArea())
         .environment(\.encounterNamespace, encounterNamespace)
+        .onAppear {
+            if scrollTargetID == nil {
+                scrollTargetID = encounters.first?.id
+            }
+        }
     }
 
     // MARK: - List Content
@@ -59,6 +64,7 @@ struct EncounterListView: View {
                             LazyVStack(spacing: wheelItemSpacing) {
                                 ForEach(Array(encounters.enumerated()), id: \.offset) { index, encounter in
                                     let isSelected = selectedEncounter?.id == encounter.id
+                                    let isCentered = (scrollTargetID ?? encounters.first?.id) == encounter.id
                                     let isBefore = selectedEncounter.map { selected in
                                         encounters.firstIndex(where: { $0.id == selected.id })! >
                                         encounters.firstIndex(where: { $0.id == encounter.id })!
@@ -94,6 +100,7 @@ struct EncounterListView: View {
                                             .zIndex(metrics.zIndex)
                                         }
                                         .buttonStyle(EncounterScaleButtonStyle())
+                                        .disabled(!isCentered || selectedEncounter != nil)
                                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                                     }
                                     .frame(height: wheelItemHeight)
