@@ -58,4 +58,3 @@ type EncounterTrack struct {
 	ArtworkURL *string `json:"artwork_url"`
 	PreviewURL *string `json:"preview_url"`
 }
-
