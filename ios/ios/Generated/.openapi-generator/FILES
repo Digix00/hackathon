@@ -8,6 +8,7 @@ Sources/OpenAPIClient/APIs.swift
 Sources/OpenAPIClient/APIs/BleTokensAPI.swift
 Sources/OpenAPIClient/APIs/EncountersAPI.swift
 Sources/OpenAPIClient/APIs/HealthAPI.swift
+Sources/OpenAPIClient/APIs/NotificationsAPI.swift
 Sources/OpenAPIClient/APIs/PushTokensAPI.swift
 Sources/OpenAPIClient/APIs/SettingsAPI.swift
 Sources/OpenAPIClient/APIs/UsersAPI.swift
@@ -38,6 +39,8 @@ Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponseEncounterSumm
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponseEncounterTrack.swift
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponseEncounterUser.swift
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponsePagination.swift
+Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponseNotificationItem.swift
+Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponseNotificationListResponse.swift
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponsePublicTrack.swift
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponsePublicUser.swift
 Sources/OpenAPIClient/Models/HackathonInternalHandlerSchemaResponsePublicUserResponse.swift
@@ -74,6 +77,8 @@ docs/HackathonInternalHandlerSchemaResponseEncounterSummary.md
 docs/HackathonInternalHandlerSchemaResponseEncounterTrack.md
 docs/HackathonInternalHandlerSchemaResponseEncounterUser.md
 docs/HackathonInternalHandlerSchemaResponsePagination.md
+docs/HackathonInternalHandlerSchemaResponseNotificationItem.md
+docs/HackathonInternalHandlerSchemaResponseNotificationListResponse.md
 docs/HackathonInternalHandlerSchemaResponsePublicTrack.md
 docs/HackathonInternalHandlerSchemaResponsePublicUser.md
 docs/HackathonInternalHandlerSchemaResponsePublicUserResponse.md
@@ -84,6 +89,7 @@ docs/HackathonInternalHandlerSchemaResponseUserResponse.md
 docs/HealthAPI.md
 docs/InternalHandlerErrorBody.md
 docs/InternalHandlerErrorResponse.md
+docs/NotificationsAPI.md
 docs/PushTokensAPI.md
 docs/SettingsAPI.md
 docs/UsersAPI.md

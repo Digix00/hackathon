@@ -92,4 +92,5 @@ type OutboxNotification struct {
 	RetryCount  int       `gorm:"not null;default:0"`
 	CreatedAt   time.Time `gorm:"not null;autoCreateTime;index"`
 	ProcessedAt *time.Time
+	ReadAt      *time.Time
 }

@@ -101,15 +101,17 @@ func newPostgresIntegrationServer(t *testing.T, db *gorm.DB, authUID string) *ec
 	encounterRepo := rdb.NewEncounterRepository(db)
 	trackRepo := rdb.NewUserCurrentTrackRepository(db)
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
+	notificationRepo := rdb.NewNotificationRepository(db)
 
 	e := echo.New()
 	RegisterRoutes(e, Dependencies{
-		AuthTokenVerifier: testTokenVerifier{uid: authUID},
-		AuthUserManager:   testAuthUserManager{},
-		UserUsecase:       usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
-		SettingsUsecase:   usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
-		PushTokenUsecase:  usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
-		BleTokenUsecase:   usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
+		AuthTokenVerifier:   testTokenVerifier{uid: authUID},
+		AuthUserManager:     testAuthUserManager{},
+		UserUsecase:         usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
+		SettingsUsecase:     usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
+		PushTokenUsecase:    usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
+		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
+		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
 		EncounterUsecase:  usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
 	})
 	return e
