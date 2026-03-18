@@ -44,7 +44,7 @@ final class OnboardingUserViewModel: ObservableObject {
                 let request = UpdateUserRequest(
                     displayName: displayName,
                     avatarURL: nil,
-                    bio: bio.isEmpty ? nil : bio,
+                    bio: bio,
                     birthdate: nil,
                     ageVisibility: nil,
                     prefectureId: nil,
