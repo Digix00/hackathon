@@ -76,7 +76,7 @@ PR#1 マージ → apply 自動実行
 | `google_service_account.worker` | Worker SA 作成 |
 | `worker_secret_accessor` | `roles/secretmanager.secretAccessor` |
 | `worker_aiplatform_user` | `roles/aiplatform.user` |
-| `worker_storage_object_admin` | `roles/storage.objectAdmin`（PR #3 でバケットレベルに移動） |
+| ~~`worker_storage_object_admin`~~ | ~~`roles/storage.objectAdmin`~~ → PR #3 でバケットレベル付与に変更（プロジェクトレベル付与はセキュリティリスクのため削除） |
 | `worker_log_writer` | `roles/logging.logWriter` |
 | `worker_cloudsql_client` | `roles/cloudsql.client` |
 
