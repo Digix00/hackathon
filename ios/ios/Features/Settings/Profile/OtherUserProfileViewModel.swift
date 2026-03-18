@@ -37,6 +37,7 @@ final class OtherUserProfileViewModel: ObservableObject {
     private func fetch(userID: String) async {
         isLoading = true
         errorMessage = nil
+        user = nil
         do {
             user = try await client.getUser(id: userID)
         } catch {
