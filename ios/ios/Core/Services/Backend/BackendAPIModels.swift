@@ -306,16 +306,14 @@ struct UpdatePushTokenRequest: Encodable {
 
 struct CreateReportRequest: Encodable {
     let reportType: String
-    let targetUserId: String?
+    let reportedUserId: String
     let targetCommentId: String?
     let reason: String
-    let detail: String?
 
     enum CodingKeys: String, CodingKey {
         case reportType = "report_type"
-        case targetUserId = "target_user_id"
+        case reportedUserId = "reported_user_id"
         case targetCommentId = "target_comment_id"
         case reason
-        case detail
     }
 }
