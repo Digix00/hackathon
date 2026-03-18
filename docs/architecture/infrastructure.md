@@ -39,7 +39,8 @@ infra/
     ├── cloudrun.tf            # Cloud Run service（API）+ Cloud Run Jobs（worker）
     ├── cloudsql.tf            # Cloud SQL インスタンス・DB・ユーザー
     ├── scheduler.tf           # Cloud Scheduler ジョブ
-    └── secret_manager.tf      # Secret Manager シークレット
+    ├── secret_manager.tf      # Secret Manager シークレット
+    └── storage.tf             # Cloud Storage バケット（生成楽曲保存）
 ```
 
 ### 環境方針
