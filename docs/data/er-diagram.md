@@ -803,7 +803,7 @@ erDiagram
 | schedule_end_time | time | スケジュール終了時刻 |
 | profile_visible | boolean | プロフィールを公開（デフォルト: true） |
 | track_visible | boolean | 曲情報を公開（デフォルト: true） |
-| notification_enabled | boolean | プッシュ通知の有効/無効（デフォルト: true） |
+| notification_enabled | boolean | プッシュ通知の有効/無効（デフォルト: true、マスタースイッチではない独立フラグ） |
 | encounter_notification_enabled | boolean | すれ違い通知（デフォルト: true） |
 | batch_notification_enabled | boolean | まとめて通知（デフォルト: true） |
 | notification_frequency | string | "immediate", "hourly", "daily"（デフォルト: "hourly"） |
