@@ -158,6 +158,7 @@ final class UserSettingsViewModel: ObservableObject {
             let settings = try await client.getMySettings()
             applySettings(settings)
         } catch {
+            if Task.isCancelled { return }
             errorMessage = "設定の取得に失敗しました"
             hasLoaded = false
         }
