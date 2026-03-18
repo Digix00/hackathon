@@ -28,7 +28,7 @@ struct HomePage: View {
                         .offset(x: -160)
                         .allowsHitTesting(false)
                 }
-                .frame(width: geometry.size.width, height: geometry.size.height)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
                 .ignoresSafeArea()
                 .offset(x: CGFloat(motion.roll * -15), y: CGFloat(motion.pitch * -15))
