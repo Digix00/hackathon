@@ -662,10 +662,10 @@ func TestCreateEncounterReturns429WhenDailyUserLimitExceeded(t *testing.T) {
 
 	limitDate := startOfUTCDate(now)
 	if err := db.Create(&model.DailyEncounterCount{
-		ID:    uuid.NewString(),
+		ID:     uuid.NewString(),
 		UserID: requester.ID,
-		Date:  limitDate,
-		Count: 10,
+		Date:   limitDate,
+		Count:  10,
 	}).Error; err != nil {
 		t.Fatalf("create daily encounter count: %v", err)
 	}
