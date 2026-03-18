@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SearchView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.heroNamespace) var heroNamespace
+    @Environment(\.homeNamespace) var homeNamespace
     @State private var query = "夜に駆ける"
 
     var body: some View {
@@ -16,7 +16,7 @@ struct SearchView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "chevron.left")
-                        Text("曲画面に戻る")
+                        Text("home画面に戻る")
                     }
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(PrototypeTheme.textPrimary)
@@ -69,17 +69,17 @@ struct SearchView: View {
                         HStack(spacing: 16) {
                             MockArtworkView(color: MockData.featuredTrack.color, symbol: "music.note", size: 52, artwork: MockData.featuredTrack.artwork)
                                 .shadow(color: MockData.featuredTrack.color.opacity(0.15), radius: 8, x: 0, y: 4)
-                                .matchedGeometryEffect(id: "hero_artwork_\(MockData.featuredTrack.id)", in: heroNamespace)
+                                .matchedGeometryEffect(id: "home_artwork_\(MockData.featuredTrack.id)", in: homeNamespace)
                             
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(MockData.featuredTrack.title)
                                     .font(.system(size: 16, weight: .bold))
                                     .foregroundStyle(PrototypeTheme.textPrimary)
-                                    .matchedGeometryEffect(id: "hero_title_\(MockData.featuredTrack.id)", in: heroNamespace)
+                                    .matchedGeometryEffect(id: "home_title_\(MockData.featuredTrack.id)", in: homeNamespace)
                                 Text(MockData.featuredTrack.artist)
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundStyle(PrototypeTheme.textSecondary)
-                                    .matchedGeometryEffect(id: "hero_artist_\(MockData.featuredTrack.id)", in: heroNamespace)
+                                    .matchedGeometryEffect(id: "home_artist_\(MockData.featuredTrack.id)", in: homeNamespace)
                             }
                             
                             Spacer()
@@ -108,4 +108,3 @@ struct SearchView: View {
         )
     }
 }
-

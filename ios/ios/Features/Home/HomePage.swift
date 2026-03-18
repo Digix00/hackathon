@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct HomeHeroPage: View {
+struct HomePage: View {
     let state: HomeScreenState
     let isMotionActive: Bool
 
@@ -8,7 +8,7 @@ struct HomeHeroPage: View {
     @Environment(\.bottomSafeAreaInset) private var bottomSafeArea
     @StateObject private var motion = MotionManager()
 
-    private var heroColor: Color {
+    private var homeColor: Color {
         state.featuredTrack?.color ?? PrototypeTheme.surfaceElevated
     }
 
@@ -18,7 +18,7 @@ struct HomeHeroPage: View {
                 // Background Layer
                 ZStack {
                     PrototypeTheme.background
-                    HomeHeroBackground(baseColor: heroColor)
+                    HomeBackground(baseColor: homeColor)
 
                     // Extremely subtle background text, fixed to avoid clipping
                     Text("TOKYO")
@@ -73,7 +73,7 @@ struct HomeHeroPage: View {
                 NavigationLink {
                     SearchView()
                 } label: {
-                    FeaturedTrackHeroCard(
+                    HomeFeaturedTrackCard(
                         track: state.featuredTrack,
                         motionX: CGFloat(motion.roll * 12),
                         motionY: CGFloat(motion.pitch * 12)

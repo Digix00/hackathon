@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct HomeHeroBackground: View {
+struct HomeBackground: View {
     let baseColor: Color
     @State private var animate = false
 
