@@ -207,7 +207,7 @@ actor BLEBackendClient {
         let candidates = [
             ProcessInfo.processInfo.environment["API_BASE_URL"],
             Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String,
-            "http://localhost:8080"
+            "http://localhost:8000"
         ]
 
         for raw in candidates {

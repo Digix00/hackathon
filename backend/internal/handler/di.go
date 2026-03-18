@@ -19,6 +19,7 @@ type Dependencies struct {
 	ReportUsecase       usecase.ReportUsecase
 	MuteUsecase         usecase.MuteUsecase
 	NotificationUsecase usecase.NotificationUsecase
+	EncounterUsecase    usecase.EncounterUsecase
 }
 
 // FirebaseUserManager はFirebase Auth上のユーザー削除操作を抽象化する。
