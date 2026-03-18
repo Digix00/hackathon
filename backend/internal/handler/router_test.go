@@ -164,6 +164,7 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 	reportRepo := rdb.NewReportRepository(db)
 	muteRepo := rdb.NewMuteRepository(db)
 	notificationRepo := rdb.NewNotificationRepository(db)
+	commentRepo := rdb.NewCommentRepository(db)
 	if providers == nil {
 		providers = []usecaseport.MusicProvider{
 			music.NewSpotifyProvider(music.SpotifyConfig{}),
@@ -185,6 +186,7 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
 		MusicUsecase:        usecase.NewMusicUsecase(userRepo, musicConnectionRepo, trackCatalogRepo, providers, "test-state-secret", "digix"),
 		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
+		CommentUsecase:      usecase.NewCommentUsecase(userRepo, commentRepo, encounterRepo),
 	})
 	return e
 }

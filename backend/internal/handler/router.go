@@ -19,6 +19,7 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	muteHandler := newMuteHandler(deps.MuteUsecase)
 	notificationHandler := newNotificationHandler(deps.NotificationUsecase)
 	musicHandler := newMusicHandler(deps.MusicUsecase)
+	commentHandler := newCommentHandler(deps.CommentUsecase)
 
 	api := e.Group("/api/v1")
 	api.GET("/music-connections/:provider/callback", musicHandler.callback)
@@ -73,4 +74,8 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	protected.DELETE("/users/me/music-connections/:provider", musicHandler.deleteConnection)
 	protected.GET("/tracks/search", musicHandler.searchTracks)
 	protected.GET("/tracks/:id", musicHandler.getTrack)
+
+	protected.POST("/encounters/:id/comments", commentHandler.createComment)
+	protected.GET("/encounters/:id/comments", commentHandler.listComments)
+	protected.DELETE("/comments/:id", commentHandler.deleteComment)
 }
