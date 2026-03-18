@@ -163,7 +163,13 @@ actor BackendAPIClient {
 
     // MARK: - Encounters
 
-    func createEncounter(_ request: CreateEncounterRequest) async throws -> BackendEncounterSummary? {
+    func createEncounter(targetBleToken: String, rssi: Int, occurredAt: Date) async throws -> BackendEncounterSummary? {
+        let request = CreateEncounterRequest(
+            targetBleToken: targetBleToken,
+            type: "ble",
+            rssi: rssi,
+            occurredAt: occurredAt
+        )
         let result = try await send(path: "encounters", method: "POST", body: try encoder.encode(request))
 
         if result.response.statusCode == 204 {
