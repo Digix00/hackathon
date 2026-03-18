@@ -38,12 +38,9 @@ final class BackendAPIClientTests: XCTestCase {
         }
 
         let result = try await client.createEncounter(
-            CreateEncounterRequest(
-                targetBleToken: "b2f2f0fa3c1d9e77",
-                type: "ble",
-                rssi: -42,
-                occurredAt: occurredAt
-            )
+            targetBleToken: "b2f2f0fa3c1d9e77",
+            rssi: -42,
+            occurredAt: occurredAt
         )
 
         let request = try XCTUnwrap(MockURLProtocol.lastRequest)
