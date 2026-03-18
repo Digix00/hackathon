@@ -37,7 +37,6 @@ func (r *encounterRepository) CountByUserID(ctx context.Context, userID string) 
 	return count, nil
 }
 
-<<<<<<< HEAD
 func (r *encounterRepository) FindRecentByUsersAndType(
 	ctx context.Context,
 	userID1 string,
