@@ -12,6 +12,9 @@ import (
 type Dependencies struct {
 	AuthTokenVerifier   middleware.TokenVerifier
 	AuthUserManager     FirebaseUserManager
+	GoEnv               string
+	DevAuthToken        string
+	DevAuthUID          string
 	UserUsecase         usecase.UserUsecase
 	SettingsUsecase     usecase.SettingsUsecase
 	PushTokenUsecase    usecase.PushTokenUsecase
