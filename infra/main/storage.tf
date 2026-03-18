@@ -14,6 +14,8 @@ resource "google_storage_bucket" "generated_songs" {
       type = "Delete"
     }
   }
+
+  depends_on = [google_project_service.apis]
 }
 
 # Worker SA → 生成楽曲バケットへの書き込み権限（バケットレベル）
