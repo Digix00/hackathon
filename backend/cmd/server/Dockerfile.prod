@@ -1,0 +1,14 @@
+# ---- builder ----
+FROM golang:1.25-bookworm AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /server ./cmd/server
+
+# ---- production ----
+# CGO_ENABLED=0 で完全静的バイナリ。distroless/static は CA 証明書内包・非 root(UID=65532)。
+# Cloud Run は $PORT を注入し、config.go の PORT env var 経由でバインドする。
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=builder /server /server
+CMD ["/server"]
