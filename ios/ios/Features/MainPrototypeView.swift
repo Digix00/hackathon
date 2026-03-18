@@ -89,7 +89,7 @@ struct MainPrototypeView: View {
     private var isShowingTrackSurface: Bool {
         selectedSurface == .track
     }
-
+    
     private var trackSurface: some View {
         navigationContainer {
             HomePage(

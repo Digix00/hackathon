@@ -5,32 +5,32 @@ struct SettingsHubView: View {
 
     private var appSettings: [SettingsDestination] {
         [
-            SettingsDestination(id: "share-track", icon: "music.note", title: "シェアする曲", destination: AnyView(SearchView())),
-            SettingsDestination(id: "encounter-settings", icon: "location.fill", title: "すれ違い設定", destination: AnyView(EncounterSettingsView())),
-            SettingsDestination(id: "notification-settings", icon: "bell.fill", title: "通知設定", destination: AnyView(NotificationSettingsView())),
-            SettingsDestination(id: "appearance-settings", icon: "paintbrush.fill", title: "外観", destination: AnyView(AppearanceSettingsView()))
+            SettingsDestination(id: "share-track", icon: "music.note", title: "シェアする曲", destination: { AnyView(SearchView()) }),
+            SettingsDestination(id: "encounter-settings", icon: "location.fill", title: "すれ違い設定", destination: { AnyView(EncounterSettingsView()) }),
+            SettingsDestination(id: "notification-settings", icon: "bell.fill", title: "通知設定", destination: { AnyView(NotificationSettingsView()) }),
+            SettingsDestination(id: "appearance-settings", icon: "paintbrush.fill", title: "外観", destination: { AnyView(AppearanceSettingsView()) })
         ]
     }
 
     private var privacySettings: [SettingsDestination] {
         [
-            SettingsDestination(id: "block-mute", icon: "hand.raised.fill", title: "ブロック / ミュート", destination: AnyView(BlockMuteListView())),
-            SettingsDestination(id: "other-user-profile", icon: "person.wave.2.fill", title: "他ユーザープロフィール例", destination: AnyView(OtherUserProfileStandaloneView()))
+            SettingsDestination(id: "block-mute", icon: "hand.raised.fill", title: "ブロック / ミュート", destination: { AnyView(BlockMuteListView()) }),
+            SettingsDestination(id: "other-user-profile", icon: "person.wave.2.fill", title: "他ユーザープロフィール例", destination: { AnyView(OtherUserProfileStandaloneView()) })
         ]
     }
 
     private var linkedServices: [SettingsDestination] {
         [
-            SettingsDestination(id: "music-services", icon: "music.quarternote.3", title: "音楽サービス連携", destination: AnyView(MusicServicesView()))
+            SettingsDestination(id: "music-services", icon: "music.quarternote.3", title: "音楽サービス連携", destination: { AnyView(MusicServicesView()) })
         ]
     }
 
     private var prototypeEntries: [SettingsDestination] {
         [
-            SettingsDestination(id: "empty-states", icon: "rectangle.stack.fill", title: "空状態・エラー状態", destination: AnyView(EmptyStatesGalleryView())),
-            SettingsDestination(id: "realtime-demo", icon: "dot.radiowaves.left.and.right", title: "リアルタイム演出", destination: AnyView(RealtimeDemoView())),
-            SettingsDestination(id: "restart-onboarding", icon: "sparkles", title: "オンボーディングをやり直す", destination: AnyView(RestartOnboardingView(restartOnboarding: restartOnboarding))),
-            SettingsDestination(id: "delete-account", icon: "trash.fill", title: "アカウント削除", destination: AnyView(DeleteAccountView()))
+            SettingsDestination(id: "empty-states", icon: "rectangle.stack.fill", title: "空状態・エラー状態", destination: { AnyView(EmptyStatesGalleryView()) }),
+            SettingsDestination(id: "realtime-demo", icon: "dot.radiowaves.left.and.right", title: "リアルタイム演出", destination: { AnyView(RealtimeDemoView()) }),
+            SettingsDestination(id: "restart-onboarding", icon: "sparkles", title: "オンボーディングをやり直す", destination: { AnyView(RestartOnboardingView(restartOnboarding: restartOnboarding)) }),
+            SettingsDestination(id: "delete-account", icon: "trash.fill", title: "アカウント削除", destination: { AnyView(DeleteAccountView()) })
         ]
     }
 
@@ -157,7 +157,7 @@ struct SettingsHubView: View {
             VStack(spacing: 0) {
                 ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                     NavigationLink {
-                        item.destination
+                        item.destination()
                     } label: {
                         VStack(spacing: 0) {
                             SettingRow(icon: item.icon, title: item.title)
