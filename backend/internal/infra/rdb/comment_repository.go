@@ -3,6 +3,7 @@ package rdb
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"time"
 
 	"gorm.io/gorm"
@@ -12,6 +13,11 @@ import (
 	"hackathon/internal/domain/repository"
 	"hackathon/internal/infra/rdb/model"
 )
+
+type commentCursor struct {
+	CreatedAt time.Time `json:"created_at"`
+	ID        string    `json:"id"`
+}
 
 type commentRepository struct {
 	db *gorm.DB
@@ -67,11 +73,11 @@ func (r *commentRepository) ListByEncounterID(ctx context.Context, encounterID s
 		Joins("LEFT JOIN users ON users.id = comments.commenter_user_id AND users.deleted_at IS NULL").
 		Joins("LEFT JOIN files ON files.id = users.avatar_file_id AND files.deleted_at IS NULL").
 		Where("comments.encounter_id = ? AND comments.deleted_at IS NULL", encounterID).
-		Order("comments.created_at DESC")
+		Order("comments.created_at DESC, comments.id DESC")
 
 	if cursor != "" {
-		if t, err := decodeCursor(cursor); err == nil {
-			q = q.Where("comments.created_at < ?", t)
+		if c, err := decodeCursor(cursor); err == nil {
+			q = q.Where("(comments.created_at < ?) OR (comments.created_at = ? AND comments.id < ?)", c.CreatedAt, c.CreatedAt, c.ID)
 		}
 	}
 
@@ -92,7 +98,8 @@ func (r *commentRepository) ListByEncounterID(ctx context.Context, encounterID s
 
 	var nextCursor string
 	if hasMore && len(comments) > 0 {
-		nextCursor = encodeCursor(comments[len(comments)-1].CreatedAt)
+		last := comments[len(comments)-1]
+		nextCursor = encodeCursor(last.CreatedAt, last.ID)
 	}
 
 	return comments, nextCursor, hasMore, nil
@@ -122,14 +129,19 @@ func rowToComment(row commentRow) entity.Comment {
 	}
 }
 
-func encodeCursor(t time.Time) string {
-	return base64.StdEncoding.EncodeToString([]byte(t.UTC().Format(time.RFC3339Nano)))
+func encodeCursor(t time.Time, id string) string {
+	b, _ := json.Marshal(commentCursor{CreatedAt: t.UTC(), ID: id})
+	return base64.RawURLEncoding.EncodeToString(b)
 }
 
-func decodeCursor(cursor string) (time.Time, error) {
-	b, err := base64.StdEncoding.DecodeString(cursor)
+func decodeCursor(cursor string) (commentCursor, error) {
+	b, err := base64.RawURLEncoding.DecodeString(cursor)
 	if err != nil {
-		return time.Time{}, err
+		return commentCursor{}, err
 	}
-	return time.Parse(time.RFC3339Nano, string(b))
+	var c commentCursor
+	if err := json.Unmarshal(b, &c); err != nil {
+		return commentCursor{}, err
+	}
+	return c, nil
 }
