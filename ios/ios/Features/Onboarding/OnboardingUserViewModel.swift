@@ -6,6 +6,9 @@ final class OnboardingUserViewModel: ObservableObject {
     @Published var displayName = ""
     @Published var bio = "" {
         didSet {
+            if isPrefillingBio {
+                return
+            }
             bioEdited = true
         }
     }
@@ -14,6 +17,7 @@ final class OnboardingUserViewModel: ObservableObject {
 
     private let client: BackendAPIClient
     private var bioEdited = false
+    private var isPrefillingBio = false
 
     init(client: BackendAPIClient = BackendAPIClient()) {
         self.client = client
@@ -102,8 +106,10 @@ final class OnboardingUserViewModel: ObservableObject {
             if displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 displayName = user.displayName
             }
-            if bio.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if !bioEdited, bio.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                isPrefillingBio = true
                 bio = user.bio ?? ""
+                isPrefillingBio = false
                 bioEdited = false
             }
         } catch {
