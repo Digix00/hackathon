@@ -23,7 +23,7 @@ jobs:
   # ── 静的解析 ──────────────────────────────────────────────────────
   lint:
     name: ktlint + Detekt
-    if: false
+    if: false # Android 開発一時中断のため無効化
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -60,7 +60,7 @@ jobs:
   # ── ユニットテスト ──────────────────────────────────────────────
   test:
     name: Unit Tests
-    if: false
+    if: false # Android 開発一時中断のため無効化
     runs-on: ubuntu-latest
     needs: lint
     steps:
@@ -102,7 +102,7 @@ jobs:
   # ── ビルド確認（APK） ─────────────────────────────────────────
   build:
     name: Build devDebug APK
-    if: false
+    if: false # Android 開発一時中断のため無効化
     runs-on: ubuntu-latest
     needs: test
     steps:
