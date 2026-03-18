@@ -72,8 +72,6 @@ ANDROID_OUT := $(abspath ../android/app/src/main/java/com/digix00/musicswapping/
 IOS_OUT     := $(abspath ../ios/ios/Generated)
 
 # Go アノテーションから swagger.json / docs パッケージを生成する
-# server コンテナ内の swag を使うため、コンテナが起動していなくても動作するよう
-# --no-deps で依存サービス（postgres / firebase-emulator）を起動しない
 # --parseDependency: internal/ 配下の別パッケージ（schema 等）も解析対象にする
 # --parseInternal:   internal パッケージのコメントも走査する
 generate-docs:
