@@ -42,6 +42,7 @@ struct AppearanceSettingsView: View {
                     )
                 }
             }
+            .disabled(settingsViewModel.isSaving)
             .onAppear { settingsViewModel.loadIfNeeded() }
         }
     }

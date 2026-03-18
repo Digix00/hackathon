@@ -52,6 +52,7 @@ struct EncounterSettingsView: View {
                     )
                 }
             }
+            .disabled(settingsViewModel.isSaving)
             .onAppear { settingsViewModel.loadIfNeeded() }
         }
     }

@@ -37,6 +37,7 @@ struct NotificationSettingsView: View {
                     )
                 }
             }
+            .disabled(settingsViewModel.isSaving)
             .onAppear { settingsViewModel.loadIfNeeded() }
         }
     }

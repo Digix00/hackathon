@@ -3,6 +3,13 @@ import SwiftUI
 
 @MainActor
 final class UserSettingsViewModel: ObservableObject {
+    private enum SaveField: Hashable {
+        case detectionDistance
+        case profileVisible
+        case notifications
+        case themeMode
+    }
+
     enum ThemeMode: String, CaseIterable, Identifiable {
         case system
         case light
@@ -47,7 +54,7 @@ final class UserSettingsViewModel: ObservableObject {
     private let client: BackendAPIClient
     private var notificationEnabled = true
     private var loadTask: Task<Void, Never>?
-    private var saveTask: Task<Void, Never>?
+    private var saveTasks: [SaveField: Task<Void, Never>] = [:]
     private var activeSaveCount = 0
 
     init(client: BackendAPIClient = BackendAPIClient()) {
@@ -73,6 +80,7 @@ final class UserSettingsViewModel: ObservableObject {
 
         submitUpdate(
             UpdateUserSettingsRequest(detectionDistance: clamped),
+            field: .detectionDistance,
             revert: { self.detectionDistance = previous }
         )
     }
@@ -83,6 +91,7 @@ final class UserSettingsViewModel: ObservableObject {
 
         submitUpdate(
             UpdateUserSettingsRequest(profileVisible: isVisible),
+            field: .profileVisible,
             revert: { self.isProfileVisible = previous }
         )
     }
@@ -100,6 +109,7 @@ final class UserSettingsViewModel: ObservableObject {
                 notificationEnabled: newGlobal,
                 encounterNotificationEnabled: isEnabled
             ),
+            field: .notifications,
             revert: {
                 self.encounterNotificationEnabled = previousEncounter
                 self.notificationEnabled = previousGlobal
@@ -120,6 +130,7 @@ final class UserSettingsViewModel: ObservableObject {
                 notificationEnabled: newGlobal,
                 batchNotificationEnabled: isEnabled
             ),
+            field: .notifications,
             revert: {
                 self.generatedNotificationEnabled = previousBatch
                 self.notificationEnabled = previousGlobal
@@ -133,6 +144,7 @@ final class UserSettingsViewModel: ObservableObject {
 
         submitUpdate(
             UpdateUserSettingsRequest(themeMode: mode.rawValue),
+            field: .themeMode,
             revert: { self.themeMode = previous }
         )
     }
@@ -151,12 +163,20 @@ final class UserSettingsViewModel: ObservableObject {
         }
     }
 
-    private func submitUpdate(_ request: UpdateUserSettingsRequest, revert: @escaping () -> Void) {
-        saveTask?.cancel()
-        saveTask = Task { await performUpdate(request, revert: revert) }
+    private func submitUpdate(
+        _ request: UpdateUserSettingsRequest,
+        field: SaveField,
+        revert: @escaping () -> Void
+    ) {
+        saveTasks[field]?.cancel()
+        saveTasks[field] = Task { await performUpdate(request, field: field, revert: revert) }
     }
 
-    private func performUpdate(_ request: UpdateUserSettingsRequest, revert: @escaping () -> Void) async {
+    private func performUpdate(
+        _ request: UpdateUserSettingsRequest,
+        field: SaveField,
+        revert: @escaping () -> Void
+    ) async {
         activeSaveCount += 1
         isSaving = true
         errorMessage = nil
@@ -167,7 +187,8 @@ final class UserSettingsViewModel: ObservableObject {
 
         do {
             let settings = try await client.patchMySettings(request)
-            applySettings(settings)
+            if Task.isCancelled { return }
+            applySettings(settings, updating: request)
         } catch {
             if Task.isCancelled { return }
             errorMessage = "設定の更新に失敗しました"
@@ -182,6 +203,28 @@ final class UserSettingsViewModel: ObservableObject {
         generatedNotificationEnabled = settings.batchNotificationEnabled
         notificationEnabled = settings.notificationEnabled
         themeMode = ThemeMode(rawValue: settings.themeMode) ?? .system
+        hasLoaded = true
+    }
+
+    private func applySettings(_ settings: BackendUserSettings, updating request: UpdateUserSettingsRequest) {
+        if request.detectionDistance != nil {
+            detectionDistance = Double(settings.detectionDistance)
+        }
+        if request.profileVisible != nil {
+            isProfileVisible = settings.profileVisible
+        }
+        if request.encounterNotificationEnabled != nil {
+            encounterNotificationEnabled = settings.encounterNotificationEnabled
+        }
+        if request.batchNotificationEnabled != nil {
+            generatedNotificationEnabled = settings.batchNotificationEnabled
+        }
+        if request.notificationEnabled != nil {
+            notificationEnabled = settings.notificationEnabled
+        }
+        if request.themeMode != nil {
+            themeMode = ThemeMode(rawValue: settings.themeMode) ?? .system
+        }
         hasLoaded = true
     }
 }
