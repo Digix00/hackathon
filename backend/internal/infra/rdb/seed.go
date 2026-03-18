@@ -188,6 +188,7 @@ func seedDemoData(db *gorm.DB) error {
 		ValidFrom: validFrom,
 		ValidTo:   validTo,
 	}).Error; err != nil {
+		return err
 	}
 
 	return nil
