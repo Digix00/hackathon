@@ -123,7 +123,7 @@ struct MainPrototypeView: View {
             .tag(LibraryTab.history)
 
             navigationContainer {
-                GeneratedSongsView()
+                PlaylistsView()
             }
             .tag(LibraryTab.songs)
 

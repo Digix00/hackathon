@@ -348,6 +348,78 @@ struct BackendCommentListResponse: Decodable {
     let pagination: BackendCommentPagination?
 }
 
+// MARK: - Playlists
+
+nonisolated struct BackendPlaylistSummary: Decodable, Equatable {
+    let id: String
+    let name: String
+    let description: String?
+    let isPublic: Bool
+    let userId: String
+    let createdAt: Date?
+    let updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case description
+        case isPublic = "is_public"
+        case userId = "user_id"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
+nonisolated struct BackendPlaylistTrack: Decodable, Equatable {
+    let id: String
+    let trackId: String
+    let title: String
+    let artistName: String
+    let artworkURL: String?
+    let sortOrder: Int
+    let createdAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case trackId = "track_id"
+        case title
+        case artistName = "artist_name"
+        case artworkURL = "artwork_url"
+        case sortOrder = "sort_order"
+        case createdAt = "created_at"
+    }
+}
+
+nonisolated struct BackendPlaylist: Decodable, Equatable {
+    let id: String
+    let name: String
+    let description: String?
+    let isPublic: Bool
+    let userId: String
+    let tracks: [BackendPlaylistTrack]
+    let createdAt: Date?
+    let updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case description
+        case isPublic = "is_public"
+        case userId = "user_id"
+        case tracks
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
+nonisolated struct BackendPlaylistListResponse: Decodable {
+    let playlists: [BackendPlaylistSummary]
+}
+
+nonisolated struct BackendPlaylistResponse: Decodable {
+    let playlist: BackendPlaylist
+}
+
 // MARK: - Requests
 
 nonisolated struct CreateUserRequest: Encodable {
@@ -520,4 +592,36 @@ nonisolated struct CreateEncounterRequest: Encodable {
 
 struct CreateCommentRequest: Encodable {
     let content: String
+}
+
+nonisolated struct CreatePlaylistRequest: Encodable {
+    let name: String
+    let description: String?
+    let isPublic: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case description
+        case isPublic = "is_public"
+    }
+}
+
+nonisolated struct UpdatePlaylistRequest: Encodable {
+    let name: String?
+    let description: String?
+    let isPublic: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case description
+        case isPublic = "is_public"
+    }
+}
+
+nonisolated struct AddPlaylistTrackRequest: Encodable {
+    let trackId: String
+
+    enum CodingKeys: String, CodingKey {
+        case trackId = "track_id"
+    }
 }
