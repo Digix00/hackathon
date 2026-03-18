@@ -328,7 +328,7 @@ actor BackendAPIClient {
     func addPlaylistFavorite(id: String) async throws {
         let escapedId = escapePathComponent(id)
         let result = try await send(path: "playlists/\(escapedId)/favorites", method: "POST")
-        guard result.response.statusCode == 201 || result.response.statusCode == 200 else {
+        guard result.response.statusCode == 204 || result.response.statusCode == 200 else {
             throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
         }
     }
