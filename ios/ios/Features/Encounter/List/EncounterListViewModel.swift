@@ -16,8 +16,7 @@ final class EncounterListViewModel: ObservableObject {
     }
 
     func loadIfNeeded() {
-        guard !hasLoaded else { return }
-        hasLoaded = true
+        guard !hasLoaded, !isLoading else { return }
         Task { await loadEncounters() }
     }
 
@@ -48,8 +47,10 @@ final class EncounterListViewModel: ObservableObject {
             }
             let mapped = sorted.map(Self.mapListItem)
             encounters = Self.orderedBySection(mapped)
+            hasLoaded = true
         } catch {
             errorMessage = "すれ違い履歴の取得に失敗しました"
+            hasLoaded = false
         }
         isLoading = false
     }
