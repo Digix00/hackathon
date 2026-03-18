@@ -105,6 +105,7 @@ struct EncounterDetailHeader: View {
         .padding(.horizontal, 32)
         .padding(.top, 8)
         .opacity(isVisible ? 1 : 0)
+        .allowsHitTesting(isVisible)
     }
 }
 
