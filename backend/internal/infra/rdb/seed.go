@@ -115,7 +115,8 @@ func seedDemoData(db *gorm.DB) error {
 				return model.User{}, result.Error
 			}
 			if result.RowsAffected == 0 {
-				if err := tx.Where("auth_provider = ? AND provider_user_id = ?", authProvider, providerUserID).
+				if err := tx.Unscoped().
+					Where("auth_provider = ? AND provider_user_id = ?", authProvider, providerUserID).
 					First(&user).Error; err != nil {
 					return model.User{}, err
 				}
