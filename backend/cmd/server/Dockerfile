@@ -5,7 +5,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 RUN go install github.com/air-verse/air@v1.64.5
 RUN go install github.com/swaggo/swag/cmd/swag
-RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.5
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/v1.64.5/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.5
 
 COPY . .
 
