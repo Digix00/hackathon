@@ -161,6 +161,44 @@ actor BackendAPIClient {
         return try decoder.decode(BackendReportResponse.self, from: result.data).report
     }
 
+    // MARK: - Encounters
+
+    func createEncounter(_ request: CreateEncounterRequest) async throws -> BackendEncounterSummary? {
+        let result = try await send(path: "encounters", method: "POST", body: try encoder.encode(request))
+
+        if result.response.statusCode == 204 {
+            return nil
+        }
+        guard result.response.statusCode == 200 || result.response.statusCode == 201 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+
+        return try decoder.decode(BackendEncounterResponse.self, from: result.data).encounter
+    }
+
+    func listEncounters(limit: Int? = nil, cursor: String? = nil) async throws -> BackendEncounterListResponse {
+        var queryItems: [URLQueryItem] = []
+        if let limit { queryItems.append(URLQueryItem(name: "limit", value: "\(limit)")) }
+        if let cursor { queryItems.append(URLQueryItem(name: "cursor", value: cursor)) }
+
+        let result = try await send(path: "encounters", method: "GET", queryItems: queryItems)
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+
+        return try decoder.decode(BackendEncounterListResponse.self, from: result.data)
+    }
+
+    func getEncounterByID(id: String) async throws -> BackendEncounterDetail {
+        let escapedId = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id
+        let result = try await send(path: "encounters/\(escapedId)", method: "GET")
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+
+        return try decoder.decode(BackendEncounterDetailResponse.self, from: result.data).encounter
+    }
+
     // MARK: - Internal
 
     private func send(
