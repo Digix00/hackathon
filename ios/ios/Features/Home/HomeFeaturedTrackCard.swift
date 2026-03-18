@@ -1,12 +1,12 @@
 import SwiftUI
 
-struct FeaturedTrackHeroCard: View {
+struct HomeFeaturedTrackCard: View {
     let track: Track?
     let motionX: CGFloat
     let motionY: CGFloat
 
     @State private var isAnimating = false
-    @Environment(\.heroNamespace) private var heroNamespace
+    @Environment(\.homeNamespace) private var homeNamespace
 
     var body: some View {
         VStack(spacing: 64) {
@@ -28,10 +28,18 @@ struct FeaturedTrackHeroCard: View {
                                 )
                         }
 
-                        MockArtworkView(color: track.color, symbol: "music.note", size: 240, artwork: track.artwork)
-                            .shadow(color: track.color.opacity(0.15), radius: 40, x: 0, y: 20)
-                            .offset(x: motionX, y: motionY)
-                            .matchedGeometryEffect(id: "hero_artwork_\(track.id)", in: heroNamespace)
+                        MockArtworkView(
+                            color: track.color,
+                            symbol: "music.note",
+                            size: 240,
+                            artwork: track.artwork,
+                            shadowColor: track.color.opacity(0.15),
+                            shadowRadius: 40,
+                            shadowX: 0,
+                            shadowY: 20
+                        )
+                        .offset(x: motionX, y: motionY)
+                        .matchedGeometryEffect(id: "home_artwork_\(track.id)", in: homeNamespace)
                     }
                     .onAppear {
                         isAnimating = true
@@ -50,13 +58,13 @@ struct FeaturedTrackHeroCard: View {
                             .lineLimit(2)
                             .truncationMode(.tail)
                             .tracking(-1.2)
-                            .matchedGeometryEffect(id: "hero_title_\(track.id)", in: heroNamespace)
+                            .matchedGeometryEffect(id: "home_title_\(track.id)", in: homeNamespace)
 
                         Text(track.artist)
                             .font(.system(size: 20, weight: .medium))
                             .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.8))
                             .multilineTextAlignment(.center)
-                            .matchedGeometryEffect(id: "hero_artist_\(track.id)", in: heroNamespace)
+                            .matchedGeometryEffect(id: "home_artist_\(track.id)", in: homeNamespace)
                             .lineLimit(1)
                             .truncationMode(.tail)
                             .tracking(0.5)

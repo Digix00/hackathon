@@ -35,6 +35,7 @@ type TrackInfoDTO struct {
 	Title      string
 	ArtistName string
 	ArtworkURL *string
+	PreviewURL *string
 }
 
 // CreateUserInput はユーザー作成時の入力データを保持する。
