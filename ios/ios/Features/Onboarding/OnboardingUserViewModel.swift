@@ -73,7 +73,7 @@ final class OnboardingUserViewModel: ObservableObject {
                     let request = CreateUserRequest(
                         displayName: displayName,
                         avatarURL: nil,
-                        bio: bio.isEmpty ? nil : bio,
+                        bio: bio.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : bio,
                         birthdate: nil,
                         ageVisibility: nil,
                         prefectureId: nil,
