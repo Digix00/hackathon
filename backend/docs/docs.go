@@ -1505,6 +1505,126 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/me/mutes": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したユーザーをミュートする。自分自身や存在しないユーザーへのミュート、重複ミュートはエラーになる。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mutes"
+                ],
+                "summary": "ミュート作成",
+                "operationId": "createMute",
+                "parameters": [
+                    {
+                        "description": "ミュートリクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.CreateMuteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.MuteResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/mutes/{target_user_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したユーザーのミュートを解除する。ミュートが存在しない場合はエラーになる。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mutes"
+                ],
+                "summary": "ミュート解除",
+                "operationId": "deleteMute",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ミュート解除対象のユーザーID",
+                        "name": "target_user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/me/notifications": {
             "get": {
                 "security": [
@@ -2089,6 +2209,14 @@ const docTemplate = `{
                 }
             }
         },
+        "hackathon_internal_handler_schema_request.CreateMuteRequest": {
+            "type": "object",
+            "properties": {
+                "target_user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_request.CreatePlaylistRequest": {
             "type": "object",
             "properties": {
@@ -2582,6 +2710,28 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/hackathon_internal_handler_schema_response.MusicConnection"
                     }
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.Mute": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "target_user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.MuteResponse": {
+            "type": "object",
+            "properties": {
+                "mute": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.Mute"
                 }
             }
         },

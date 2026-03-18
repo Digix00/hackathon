@@ -30,6 +30,7 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
 	playlistRepo := rdb.NewPlaylistRepository(db)
 	reportRepo := rdb.NewReportRepository(db)
+	muteRepo := rdb.NewMuteRepository(db)
 	notificationRepo := rdb.NewNotificationRepository(db)
 	_ = rdb.NewTransactor(db)
 	spotifyProvider := music.NewSpotifyProvider(music.SpotifyConfig{
@@ -58,6 +59,7 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config
 		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
 		PlaylistUsecase:     usecase.NewPlaylistUsecase(playlistRepo, userRepo),
 		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
+		MuteUsecase:         usecase.NewMuteUsecase(userRepo, muteRepo),
 		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
 		MusicUsecase:        usecase.NewMusicUsecase(userRepo, musicConnectionRepo, trackCatalogRepo, []usecaseport.MusicProvider{spotifyProvider, appleMusicProvider}, cfg.MusicStateSecret, cfg.AppDeepLinkScheme),
 		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
