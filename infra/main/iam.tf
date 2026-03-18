@@ -126,6 +126,21 @@ resource "google_service_account_iam_member" "terraform_ci_wif" {
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_repo}"
 }
 
+# Terraform CI SA → cloudrun-sa / worker-sa の actAs 権限
+# Cloud Run Service/Job 作成時に service_account を指定するには
+# デプロイ主体が対象 SA に対して iam.serviceaccounts.actAs を持つ必要がある
+resource "google_service_account_iam_member" "terraform_ci_actas_cloudrun" {
+  service_account_id = google_service_account.cloudrun.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.terraform_ci.email}"
+}
+
+resource "google_service_account_iam_member" "terraform_ci_actas_worker" {
+  service_account_id = google_service_account.worker.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.terraform_ci.email}"
+}
+
 # GitHub Actions Secrets に登録する値の出力
 output "wif_provider" {
   value       = google_iam_workload_identity_pool_provider.github.name
