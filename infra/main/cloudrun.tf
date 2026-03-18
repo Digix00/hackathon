@@ -54,6 +54,11 @@ resource "google_cloud_run_v2_service" "api" {
       }
 
       env {
+        name  = "GO_ENV"
+        value = "production"
+      }
+
+      env {
         name  = "FIREBASE_PROJECT_ID"
         value = var.project_id
       }

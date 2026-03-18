@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/kelseyhightower/envconfig"
 )
@@ -53,8 +54,10 @@ func Load() (*Config, error) {
 			return nil, fmt.Errorf("DATABASE_URL または DB_USER/DB_PASSWORD/DB_NAME/DB_CONNECTION_NAME を設定してください")
 		}
 		cfg.DatabaseURL = fmt.Sprintf(
-			"postgres://%s:%s@/%s?host=/cloudsql/%s",
-			cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBConnectionName,
+			"postgres://%s@/%s?host=/cloudsql/%s",
+			url.UserPassword(cfg.DBUser, cfg.DBPassword).String(),
+			url.PathEscape(cfg.DBName),
+			cfg.DBConnectionName,
 		)
 	}
 	if len(cfg.MusicTokenEncryptionKey) != 64 {
