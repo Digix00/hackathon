@@ -36,76 +36,150 @@ struct SettingsHubView: View {
 
     var body: some View {
         AppScaffold(
-            title: "設定",
-            subtitle: "アプリの使い方を調整"
+            title: "Settings",
+            subtitle: "PREFERENCES & SYSTEM"
         ) {
-            VStack(alignment: .leading, spacing: 32) {
-                // Profile Header
-                SectionCard {
-                    VStack(spacing: 20) {
+            VStack(alignment: .leading, spacing: 44) {
+                // --- PROFILE SECTION ---
+                VStack(spacing: 24) {
+                    HStack(spacing: 20) {
+                        // Elevated Avatar with Ring
                         ZStack {
                             Circle()
-                                .fill(PrototypeTheme.surfaceElevated)
-                                .frame(width: 80, height: 80)
+                                .fill(PrototypeTheme.surface)
+                                .frame(width: 84, height: 84)
+                                .shadow(color: Color.black.opacity(0.06), radius: 12, x: 0, y: 6)
+                            
                             Image(systemName: "person.fill")
-                                .font(.system(size: 36))
-                                .foregroundStyle(PrototypeTheme.textTertiary)
+                                .font(.system(size: 38))
+                                .foregroundStyle(PrototypeTheme.textTertiary.opacity(0.8))
+                            
+                            // Accent Ring (Minimal Decoration)
+                            Circle()
+                                .stroke(PrototypeTheme.accent.opacity(0.15), lineWidth: 1)
+                                .frame(width: 94, height: 94)
                         }
                         
-                        VStack(spacing: 6) {
-                            Text("Miyu")
-                                .font(.system(size: 24, weight: .bold))
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                Text("Miyu")
+                                    .font(.system(size: 28, weight: .bold))
+                                    .tracking(-0.8)
+                                
+                                Text("ID: 0x82A1")
+                                    .prototypeFont(size: 8, weight: .black, role: .data)
+                                    .foregroundStyle(PrototypeTheme.textTertiary)
+                                    .kerning(1.2)
+                            }
+                            
                             Text("音楽で街の空気を集めたい")
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundStyle(PrototypeTheme.textSecondary)
                         }
                         
-                        NavigationLink {
-                            ProfileEditView()
-                        } label: {
-                            Text("プロフィールを編集")
-                                .font(.system(size: 12, weight: .black))
-                                .foregroundStyle(PrototypeTheme.accent)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(PrototypeTheme.surfaceMuted)
-                                .clipShape(Capsule())
-                        }
+                        Spacer()
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, 4)
+
+                    NavigationLink {
+                        ProfileEditView()
+                    } label: {
+                        HStack {
+                            Text("EDIT PROFILE")
+                                .prototypeFont(size: 10, weight: .black, role: .data)
+                                .kerning(2.0)
+                            Spacer()
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 10, weight: .bold))
+                        }
+                        .foregroundStyle(PrototypeTheme.accent)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(PrototypeTheme.surface)
+                                .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 4)
+                        )
+                    }
+                    .buttonStyle(ScaleButtonStyle())
                 }
 
-                settingsGroup(title: "アプリ設定", items: appSettings)
-                settingsGroup(title: "プライバシー", items: privacySettings)
-                settingsGroup(title: "連携", items: linkedServices)
-                settingsGroup(title: "プロトタイプ", items: prototypeEntries)
-                
-                VStack(spacing: 8) {
-                    Text("VERSION 0.1.0")
-                        .prototypeFont(size: 10, weight: .bold, role: .data)
-                    Text("© 2026 すれ違い趣味交換")
-                        .font(.system(size: 10, weight: .medium))
+                // --- SETTINGS GROUPS ---
+                Group {
+                    settingsSection(title: "APPLICATION", items: appSettings)
+                    settingsSection(title: "PRIVACY", items: privacySettings)
+                    settingsSection(title: "SERVICES", items: linkedServices)
+                    settingsSection(title: "EXPERIMENTAL", items: prototypeEntries)
                 }
-                .foregroundStyle(PrototypeTheme.textTertiary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
+
+                // --- FOOTER ---
+                VStack(spacing: 8) {
+                    HStack(spacing: 12) {
+                        Rectangle()
+                            .fill(PrototypeTheme.border)
+                            .frame(height: 0.5)
+                        
+                        Text("SYSTEM STATUS: OPTIMAL")
+                            .prototypeFont(size: 8.5, weight: .black, role: .data)
+                            .kerning(1.5)
+                            .foregroundStyle(PrototypeTheme.textTertiary.opacity(0.6))
+                        
+                        Rectangle()
+                            .fill(PrototypeTheme.border)
+                            .frame(height: 0.5)
+                    }
+                    
+                    VStack(spacing: 4) {
+                        Text("VERSION 0.1.0-RC")
+                            .prototypeFont(size: 9, weight: .black, role: .data)
+                        Text("© 2026 URBAN SERENDIPITY PROJECT")
+                            .font(.system(size: 9, weight: .bold))
+                            .kerning(0.5)
+                    }
+                    .foregroundStyle(PrototypeTheme.textTertiary.opacity(0.8))
+                }
+                .padding(.top, 20)
+                .padding(.bottom, 40)
             }
+            .padding(.horizontal, 4) // Additional inner padding for breathing room
         }
     }
 
-    private func settingsGroup(title: String, items: [SettingsDestination]) -> some View {
-        SectionCard(title: title) {
-            VStack(spacing: 18) {
-                ForEach(items) { item in
+    private func settingsSection(title: String, items: [SettingsDestination]) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Eyebrow Header
+            Text(title)
+                .prototypeFont(size: 10, weight: .black, role: .data)
+                .kerning(2.5)
+                .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.5))
+                .padding(.leading, 4)
+
+            VStack(spacing: 0) {
+                ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                     NavigationLink {
                         item.destination
                     } label: {
-                        SettingRow(icon: item.icon, title: item.title)
+                        VStack(spacing: 0) {
+                            SettingRow(icon: item.icon, title: item.title)
+                                .padding(.vertical, 16)
+                                .padding(.horizontal, 20)
+                            
+                            if index < items.count - 1 {
+                                Divider()
+                                    .background(PrototypeTheme.border.opacity(0.5))
+                                    .padding(.horizontal, 20)
+                            }
+                        }
+                        .background(PrototypeTheme.surface)
                     }
                     .buttonStyle(.plain)
+                    
+                    // Subtle hover/press effect is handled by ButtonStyle if needed, 
+                    // but here we keep it clean.
                 }
             }
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .shadow(color: Color.black.opacity(0.02), radius: 20, x: 0, y: 10)
         }
     }
 }
