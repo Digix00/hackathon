@@ -29,9 +29,9 @@ Class | Method | HTTP request | Description
 *BleTokensAPI* | [**createBleToken**](docs/BleTokensAPI.md#createbletoken) | **POST** /api/v1/ble-tokens | BLE トークン発行
 *BleTokensAPI* | [**getCurrentBleToken**](docs/BleTokensAPI.md#getcurrentbletoken) | **GET** /api/v1/ble-tokens/current | 有効な BLE トークン取得
 *BleTokensAPI* | [**getUserByBleToken**](docs/BleTokensAPI.md#getuserbybletoken) | **GET** /api/v1/ble-tokens/{token}/user | BLE トークンからユーザー情報取得
-*CommentsAPI* | [**listComments**](docs/CommentsAPI.md#listcomments) | **GET** /api/v1/encounters/{id}/comments | コメント一覧取得
-*CommentsAPI* | [**deleteComment**](docs/CommentsAPI.md#deletecomment) | **DELETE** /api/v1/comments/{id} | コメント削除
 *CommentsAPI* | [**createComment**](docs/CommentsAPI.md#createcomment) | **POST** /api/v1/encounters/{id}/comments | コメント作成
+*CommentsAPI* | [**deleteComment**](docs/CommentsAPI.md#deletecomment) | **DELETE** /api/v1/comments/{id} | コメント削除
+*CommentsAPI* | [**listComments**](docs/CommentsAPI.md#listcomments) | **GET** /api/v1/encounters/{id}/comments | コメント一覧取得
 *EncountersAPI* | [**createEncounter**](docs/EncountersAPI.md#createencounter) | **POST** /api/v1/encounters | すれ違い登録
 *EncountersAPI* | [**getEncounterByID**](docs/EncountersAPI.md#getencounterbyid) | **GET** /api/v1/encounters/{id} | すれ違い詳細取得
 *EncountersAPI* | [**listEncounters**](docs/EncountersAPI.md#listencounters) | **GET** /api/v1/encounters | すれ違い履歴一覧取得
@@ -88,10 +88,10 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseBleTokenResponse](docs/HackathonInternalHandlerSchemaResponseBleTokenResponse.md)
  - [HackathonInternalHandlerSchemaResponseBleTokenUser](docs/HackathonInternalHandlerSchemaResponseBleTokenUser.md)
  - [HackathonInternalHandlerSchemaResponseBleTokenUserResponse](docs/HackathonInternalHandlerSchemaResponseBleTokenUserResponse.md)
- - [HackathonInternalHandlerSchemaResponseCommentUser](docs/HackathonInternalHandlerSchemaResponseCommentUser.md)
- - [HackathonInternalHandlerSchemaResponseCommentResponse](docs/HackathonInternalHandlerSchemaResponseCommentResponse.md)
- - [HackathonInternalHandlerSchemaResponseCommentListResponse](docs/HackathonInternalHandlerSchemaResponseCommentListResponse.md)
  - [HackathonInternalHandlerSchemaResponseComment](docs/HackathonInternalHandlerSchemaResponseComment.md)
+ - [HackathonInternalHandlerSchemaResponseCommentListResponse](docs/HackathonInternalHandlerSchemaResponseCommentListResponse.md)
+ - [HackathonInternalHandlerSchemaResponseCommentResponse](docs/HackathonInternalHandlerSchemaResponseCommentResponse.md)
+ - [HackathonInternalHandlerSchemaResponseCommentUser](docs/HackathonInternalHandlerSchemaResponseCommentUser.md)
  - [HackathonInternalHandlerSchemaResponseDevice](docs/HackathonInternalHandlerSchemaResponseDevice.md)
  - [HackathonInternalHandlerSchemaResponseDeviceResponse](docs/HackathonInternalHandlerSchemaResponseDeviceResponse.md)
  - [HackathonInternalHandlerSchemaResponseEncounterDetail](docs/HackathonInternalHandlerSchemaResponseEncounterDetail.md)
