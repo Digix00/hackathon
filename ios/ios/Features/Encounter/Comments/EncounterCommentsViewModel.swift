@@ -61,6 +61,9 @@ final class EncounterCommentsViewModel: ObservableObject {
     }
 
     private func loadComments(encounterId: String) async {
+        if loadedEncounterID != encounterId {
+            comments = []
+        }
         requestedEncounterID = encounterId
         isLoading = true
         errorMessage = nil
