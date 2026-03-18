@@ -61,6 +61,8 @@ func main() {
 	}
 	log.Info("db migration completed")
 
+	// Seed は development / test 環境のみ実行する（allowlist 方式）。
+	// staging など未知の環境でも誤って実行されないようにするため != "production" ではなく明示的に指定。
 	if cfg.GoEnv == "development" || cfg.GoEnv == "test" {
 		if err := rdb.Seed(db); err != nil {
 			log.Fatal("db seed failed", zap.Error(err))
@@ -73,6 +75,7 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
 
+	// Swagger UI は development / test 環境のみ公開する（Seed と同じ allowlist 方式）
 	if cfg.GoEnv == "development" || cfg.GoEnv == "test" {
 		e.GET("/swagger/*", echoSwagger.WrapHandler)
 		log.Info("swagger UI enabled", zap.String("url", "http://localhost:"+cfg.Port+"/swagger/index.html"))
@@ -90,10 +93,27 @@ func main() {
 	}
 }
 
+// healthzHandler godoc
+// @ID           healthz
+// @Summary      ヘルスチェック
+// @Description  サーバーが起動しているか確認する
+// @Tags         health
+// @Produce      json
+// @Success      200  {object}  map[string]string
+// @Router       /healthz [get]
 func healthzHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 }
 
+// healthzPostgresHandler godoc
+// @ID           healthzPostgres
+// @Summary      PostgreSQL ヘルスチェック
+// @Description  PostgreSQL への接続を確認する（タイムアウト 5s）
+// @Tags         health
+// @Produce      json
+// @Success      200  {object}  map[string]string
+// @Failure      503  {object}  map[string]string
+// @Router       /healthz/postgres [get]
 func healthzPostgresHandler(sqlDB interface{ PingContext(context.Context) error }) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)

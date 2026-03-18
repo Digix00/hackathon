@@ -60,6 +60,9 @@ func (h *musicHandler) authorize(c echo.Context) error {
 // @Router       /api/v1/music-connections/{provider}/callback [get]
 func (h *musicHandler) callback(c echo.Context) error {
 	provider := c.Param("provider")
+	if provider != "spotify" && provider != "apple_music" {
+		provider = "unknown"
+	}
 	code := c.QueryParam("code")
 	state := c.QueryParam("state")
 	result := "success"
