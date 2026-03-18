@@ -20,10 +20,10 @@ struct NotificationSettingsView: View {
                         }
 
                         Toggle(isOn: Binding(
-                            get: { settingsViewModel.generatedNotificationEnabled },
-                            set: { settingsViewModel.setGeneratedNotifications($0) }
+                            get: { settingsViewModel.batchNotificationEnabled },
+                            set: { settingsViewModel.setBatchNotifications($0) }
                         )) {
-                            Text("生成曲の通知")
+                            Text("まとめて通知")
                                 .font(.system(size: 16, weight: .bold))
                         }
                     }

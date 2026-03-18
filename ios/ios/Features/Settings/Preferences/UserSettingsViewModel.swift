@@ -7,7 +7,7 @@ final class UserSettingsViewModel: ObservableObject {
         case detectionDistance
         case profileVisible
         case encounterNotification
-        case generatedNotification
+        case batchNotification
         case themeMode
     }
 
@@ -44,7 +44,7 @@ final class UserSettingsViewModel: ObservableObject {
     @Published var detectionDistance: Double = 50
     @Published var isProfileVisible = true
     @Published var encounterNotificationEnabled = true
-    @Published var generatedNotificationEnabled = true
+    @Published var batchNotificationEnabled = true
     @Published var themeMode: ThemeMode = .system
 
     @Published private(set) var isLoading = false
@@ -114,18 +114,18 @@ final class UserSettingsViewModel: ObservableObject {
         )
     }
 
-    func setGeneratedNotifications(_ isEnabled: Bool) {
-        let previousBatch = generatedNotificationEnabled
+    func setBatchNotifications(_ isEnabled: Bool) {
+        let previousBatch = batchNotificationEnabled
 
-        generatedNotificationEnabled = isEnabled
+        batchNotificationEnabled = isEnabled
 
         submitUpdate(
             UpdateUserSettingsRequest(
                 batchNotificationEnabled: isEnabled
             ),
-            field: .generatedNotification,
+            field: .batchNotification,
             revert: {
-                self.generatedNotificationEnabled = previousBatch
+                self.batchNotificationEnabled = previousBatch
             }
         )
     }
@@ -194,7 +194,7 @@ final class UserSettingsViewModel: ObservableObject {
         confirmedDetectionDistance = detectionDistance
         isProfileVisible = settings.profileVisible
         encounterNotificationEnabled = settings.encounterNotificationEnabled
-        generatedNotificationEnabled = settings.batchNotificationEnabled
+        batchNotificationEnabled = settings.batchNotificationEnabled
         notificationEnabled = settings.notificationEnabled
         themeMode = ThemeMode(rawValue: settings.themeMode) ?? .system
         hasLoaded = true
@@ -212,7 +212,7 @@ final class UserSettingsViewModel: ObservableObject {
             encounterNotificationEnabled = settings.encounterNotificationEnabled
         }
         if request.batchNotificationEnabled != nil {
-            generatedNotificationEnabled = settings.batchNotificationEnabled
+            batchNotificationEnabled = settings.batchNotificationEnabled
         }
         if request.notificationEnabled != nil {
             notificationEnabled = settings.notificationEnabled
