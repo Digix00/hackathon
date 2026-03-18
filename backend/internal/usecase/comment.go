@@ -69,7 +69,17 @@ func (u *commentUsecase) ListComments(ctx context.Context, authUID string, encou
 		return usecasedto.ListCommentsOutput{}, domainerrs.NotFound("encounter not found")
 	}
 
-	comments, nextCursor, hasMore, err := u.commentRepo.ListByEncounterID(ctx, encounterID, limit, cursor)
+	parsedCursor, err := parseCommentCursor(cursor)
+	if err != nil {
+		return usecasedto.ListCommentsOutput{}, err
+	}
+
+	comments, nextCursorVal, hasMore, err := u.commentRepo.ListByEncounterID(ctx, encounterID, limit, parsedCursor)
+	if err != nil {
+		return usecasedto.ListCommentsOutput{}, err
+	}
+
+	nextCursor, err := encodeCommentCursor(nextCursorVal)
 	if err != nil {
 		return usecasedto.ListCommentsOutput{}, err
 	}

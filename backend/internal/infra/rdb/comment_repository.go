@@ -2,8 +2,6 @@ package rdb
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"time"
 
 	"gorm.io/gorm"
@@ -13,11 +11,6 @@ import (
 	"hackathon/internal/domain/repository"
 	"hackathon/internal/infra/rdb/model"
 )
-
-type commentCursor struct {
-	CreatedAt time.Time `json:"created_at"`
-	ID        string    `json:"id"`
-}
 
 type commentRepository struct {
 	db *gorm.DB
@@ -66,7 +59,7 @@ func (r *commentRepository) FindByID(ctx context.Context, id string) (entity.Com
 	return rowToComment(row), nil
 }
 
-func (r *commentRepository) ListByEncounterID(ctx context.Context, encounterID string, limit int, cursor string) ([]entity.Comment, string, bool, error) {
+func (r *commentRepository) ListByEncounterID(ctx context.Context, encounterID string, limit int, cursor *repository.CommentCursor) ([]entity.Comment, *repository.CommentCursor, bool, error) {
 	q := r.db.WithContext(ctx).
 		Table("comments").
 		Select("comments.id, comments.encounter_id, comments.commenter_user_id, comments.content, comments.created_at, users.name as user_name, files.file_path as user_avatar_path").
@@ -75,15 +68,13 @@ func (r *commentRepository) ListByEncounterID(ctx context.Context, encounterID s
 		Where("comments.encounter_id = ? AND comments.deleted_at IS NULL", encounterID).
 		Order("comments.created_at DESC, comments.id DESC")
 
-	if cursor != "" {
-		if c, err := decodeCursor(cursor); err == nil {
-			q = q.Where("(comments.created_at < ?) OR (comments.created_at = ? AND comments.id < ?)", c.CreatedAt, c.CreatedAt, c.ID)
-		}
+	if cursor != nil {
+		q = q.Where("(comments.created_at < ?) OR (comments.created_at = ? AND comments.id < ?)", cursor.CreatedAt, cursor.CreatedAt, cursor.ID)
 	}
 
 	var rows []commentRow
 	if err := q.Limit(limit + 1).Scan(&rows).Error; err != nil {
-		return nil, "", false, err
+		return nil, nil, false, err
 	}
 
 	hasMore := len(rows) > limit
@@ -96,10 +87,13 @@ func (r *commentRepository) ListByEncounterID(ctx context.Context, encounterID s
 		comments[i] = rowToComment(row)
 	}
 
-	var nextCursor string
+	var nextCursor *repository.CommentCursor
 	if hasMore && len(comments) > 0 {
 		last := comments[len(comments)-1]
-		nextCursor = encodeCursor(last.CreatedAt, last.ID)
+		nextCursor = &repository.CommentCursor{
+			CreatedAt: last.CreatedAt,
+			ID:        last.ID,
+		}
 	}
 
 	return comments, nextCursor, hasMore, nil
@@ -129,19 +123,3 @@ func rowToComment(row commentRow) entity.Comment {
 	}
 }
 
-func encodeCursor(t time.Time, id string) string {
-	b, _ := json.Marshal(commentCursor{CreatedAt: t.UTC(), ID: id})
-	return base64.RawURLEncoding.EncodeToString(b)
-}
-
-func decodeCursor(cursor string) (commentCursor, error) {
-	b, err := base64.RawURLEncoding.DecodeString(cursor)
-	if err != nil {
-		return commentCursor{}, err
-	}
-	var c commentCursor
-	if err := json.Unmarshal(b, &c); err != nil {
-		return commentCursor{}, err
-	}
-	return c, nil
-}

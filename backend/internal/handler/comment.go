@@ -98,9 +98,14 @@ func (h *commentHandler) listComments(c echo.Context) error {
 
 	limit := 20
 	if v := c.QueryParam("limit"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 50 {
-			limit = n
+		n, err := strconv.Atoi(v)
+		if err != nil || n <= 0 {
+			return errBadRequest("limit must be a positive integer")
 		}
+		if n > 50 {
+			n = 50
+		}
+		limit = n
 	}
 
 	cursor := c.QueryParam("cursor")
