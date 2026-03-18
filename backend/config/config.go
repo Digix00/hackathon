@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/kelseyhightower/envconfig"
 )
@@ -9,7 +10,14 @@ import (
 type Config struct {
 	Port        string `envconfig:"PORT" default:"8000"`
 	GoEnv       string `envconfig:"GO_ENV" default:"development"`
-	DatabaseURL string `envconfig:"DATABASE_URL" required:"true"`
+	DatabaseURL string `envconfig:"DATABASE_URL"`
+
+	// Cloud Run 環境では DATABASE_URL の代わりに以下の個別変数から DSN を組み立てる。
+	// DB_PASSWORD は Secret Manager から注入されるため DATABASE_URL に直接埋め込めない。
+	DBUser           string `envconfig:"DB_USER"`
+	DBPassword       string `envconfig:"DB_PASSWORD"`
+	DBName           string `envconfig:"DB_NAME"`
+	DBConnectionName string `envconfig:"DB_CONNECTION_NAME"` // 例: project:region:instance
 
 	FirebaseProjectID        string `envconfig:"FIREBASE_PROJECT_ID" required:"true"`
 	FirebaseAuthEmulatorHost string `envconfig:"FIREBASE_AUTH_EMULATOR_HOST"`
@@ -40,6 +48,17 @@ func Load() (*Config, error) {
 	var cfg Config
 	if err := envconfig.Process("", &cfg); err != nil {
 		return nil, err
+	}
+	if cfg.DatabaseURL == "" {
+		if cfg.DBUser == "" || cfg.DBPassword == "" || cfg.DBName == "" || cfg.DBConnectionName == "" {
+			return nil, fmt.Errorf("DATABASE_URL または DB_USER/DB_PASSWORD/DB_NAME/DB_CONNECTION_NAME を設定してください")
+		}
+		cfg.DatabaseURL = fmt.Sprintf(
+			"postgres://%s@/%s?host=/cloudsql/%s",
+			url.UserPassword(cfg.DBUser, cfg.DBPassword).String(),
+			url.PathEscape(cfg.DBName),
+			cfg.DBConnectionName,
+		)
 	}
 	if len(cfg.MusicTokenEncryptionKey) != 64 {
 		return nil, fmt.Errorf("MUSIC_TOKEN_ENCRYPTION_KEY は64文字の16進数文字列(32バイト)である必要があります")
