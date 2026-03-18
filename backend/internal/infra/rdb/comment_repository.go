@@ -37,6 +37,7 @@ func (r *commentRepository) Create(ctx context.Context, comment entity.Comment) 
 		EncounterID:     comment.EncounterID,
 		CommenterUserID: comment.User.ID,
 		Content:         comment.Content,
+		CreatedAt:       comment.CreatedAt,
 	}
 	return r.db.WithContext(ctx).Create(&m).Error
 }
