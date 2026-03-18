@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"hackathon/internal/usecase/port"
+	"hackathon/internal/domain/repository"
 )
 
 type txKey struct{}
@@ -28,7 +28,7 @@ type txKey struct{}
 type gormTransactor struct{ db *gorm.DB }
 
 // NewTransactor は Transactor を生成する。
-func NewTransactor(db *gorm.DB) port.Transactor {
+func NewTransactor(db *gorm.DB) repository.Transactor {
 	return &gormTransactor{db: db}
 }
 
