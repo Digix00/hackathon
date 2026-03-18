@@ -100,31 +100,41 @@ func seedDemoData(db *gorm.DB) error {
 		nameA := "Aoi"
 		nameB := "Ren"
 
-		users := []model.User{
-			{
-				ID:             userIDA,
+		ensureDemoUser := func(userID, providerUserID, name string) (model.User, error) {
+			user := model.User{
+				ID:             userID,
 				AuthProvider:   authProvider,
-				ProviderUserID: providerUserIDA,
-				Name:           &nameA,
-			},
-			{
-				ID:             userIDB,
-				AuthProvider:   authProvider,
-				ProviderUserID: providerUserIDB,
-				Name:           &nameB,
-			},
+				ProviderUserID: providerUserID,
+				Name:           &name,
+			}
+			result := tx.Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "auth_provider"}, {Name: "provider_user_id"}},
+				DoNothing: true,
+			}).Create(&user)
+			if result.Error != nil {
+				return model.User{}, result.Error
+			}
+			if result.RowsAffected == 0 {
+				if err := tx.Where("auth_provider = ? AND provider_user_id = ?", authProvider, providerUserID).
+					First(&user).Error; err != nil {
+					return model.User{}, err
+				}
+			}
+			return user, nil
 		}
 
-		if err := tx.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "auth_provider"}, {Name: "provider_user_id"}},
-			DoNothing: true,
-		}).Create(&users).Error; err != nil {
+		userA, err := ensureDemoUser(userIDA, providerUserIDA, nameA)
+		if err != nil {
+			return err
+		}
+		userB, err := ensureDemoUser(userIDB, providerUserIDB, nameB)
+		if err != nil {
 			return err
 		}
 
 		settings := []model.UserSettings{
-			{ID: settingsIDA, UserID: userIDA},
-			{ID: settingsIDB, UserID: userIDB},
+			{ID: settingsIDA, UserID: userA.ID},
+			{ID: settingsIDB, UserID: userB.ID},
 		}
 		if err := tx.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "user_id"}},
@@ -152,8 +162,8 @@ func seedDemoData(db *gorm.DB) error {
 		encounteredAt := time.Now().UTC().Add(-2 * time.Hour)
 		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&model.Encounter{
 			ID:            encounterID,
-			UserID1:       userIDA,
-			UserID2:       userIDB,
+			UserID1:       userA.ID,
+			UserID2:       userB.ID,
 			EncounteredAt: encounteredAt,
 			EncounterType: "ble",
 		}).Error; err != nil {
@@ -171,7 +181,7 @@ func seedDemoData(db *gorm.DB) error {
 			ID:           encounterTrackID,
 			EncounterID:  encounterID,
 			TrackID:      trackID,
-			SourceUserID: userIDB,
+			SourceUserID: userB.ID,
 		}).Error; err != nil {
 			return err
 		}
@@ -184,7 +194,7 @@ func seedDemoData(db *gorm.DB) error {
 			DoNothing: true,
 		}).Create(&model.BleToken{
 			ID:        "seed-ble-token-01",
-			UserID:    userIDB,
+			UserID:    userB.ID,
 			Token:     "0123456789abcdef",
 			ValidFrom: validFrom,
 			ValidTo:   validTo,
