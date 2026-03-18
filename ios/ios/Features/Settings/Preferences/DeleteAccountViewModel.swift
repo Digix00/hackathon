@@ -14,7 +14,7 @@ final class DeleteAccountViewModel: ObservableObject {
     }
 
     func deleteAccount() {
-        guard !isDeleting else { return }
+        guard !isDeleting, !didDelete else { return }
         Task { await performDelete() }
     }
 
