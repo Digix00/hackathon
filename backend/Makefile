@@ -125,9 +125,7 @@ generate-ios: generate-docs _generate-ios-only
 
 # swagger.json・Android クライアント・iOS クライアントをまとめて生成する
 # generate-docs を1回だけ実行してから両クライアントを生成する
-# (Android 開発中断のため、一時的に Android 生成をコメントアウト)
 generate-code:
 	$(MAKE) generate-docs
-	# $(MAKE) _generate-android-only
-	$(MAKE) _generate-ios-only
+	$(MAKE) _generate-android-only _generate-ios-only
 	@echo "==> 全コード生成が完了しました"
