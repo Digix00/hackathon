@@ -2,8 +2,6 @@ package usecase
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,6 +24,17 @@ type encounterUsecase struct {
 	bleTokenRepo  repository.BleTokenRepository
 	encounterRepo repository.EncounterRepository
 	blockRepo     repository.BlockRepository
+	clock         Clock
+}
+
+type EncounterUsecaseOption func(*encounterUsecase)
+
+func WithEncounterClock(clock Clock) EncounterUsecaseOption {
+	return func(u *encounterUsecase) {
+		if clock != nil {
+			u.clock = clock
+		}
+	}
 }
 
 func NewEncounterUsecase(
@@ -33,13 +42,19 @@ func NewEncounterUsecase(
 	bleTokenRepo repository.BleTokenRepository,
 	encounterRepo repository.EncounterRepository,
 	blockRepo repository.BlockRepository,
+	opts ...EncounterUsecaseOption,
 ) EncounterUsecase {
-	return &encounterUsecase{
+	u := &encounterUsecase{
 		userRepo:      userRepo,
 		bleTokenRepo:  bleTokenRepo,
 		encounterRepo: encounterRepo,
 		blockRepo:     blockRepo,
+		clock:         realClock{},
 	}
+	for _, opt := range opts {
+		opt(u)
+	}
+	return u
 }
 
 func (u *encounterUsecase) CreateEncounter(ctx context.Context, authUID string, input usecasedto.CreateEncounterInput) (usecasedto.EncounterSummaryDTO, bool, error) {
@@ -48,60 +63,36 @@ func (u *encounterUsecase) CreateEncounter(ctx context.Context, authUID string, 
 		return usecasedto.EncounterSummaryDTO{}, false, err
 	}
 
-	encounterType, err := vo.ParseEncounterType(input.Type)
+	encounterType, err := parseEncounterType(input.Type)
 	if err != nil {
 		return usecasedto.EncounterSummaryDTO{}, false, err
 	}
-	if encounterType != vo.EncounterTypeBLE {
-		return usecasedto.EncounterSummaryDTO{}, false, domainerrs.BadRequest("type must be ble")
-	}
 
-	tokenEntity, err := u.bleTokenRepo.FindByToken(ctx, input.TargetBleToken)
+	now := u.clock.Now().UTC()
+	tokenEntity, err := u.resolveTargetBleToken(ctx, input.TargetBleToken, requester.ID, now)
 	if err != nil {
 		return usecasedto.EncounterSummaryDTO{}, false, err
 	}
-	now := time.Now().UTC()
-	if !tokenEntity.IsValid(now) {
-		return usecasedto.EncounterSummaryDTO{}, false, domainerrs.NotFound("BLE token has expired")
-	}
-	if tokenEntity.UserID == requester.ID {
-		return usecasedto.EncounterSummaryDTO{}, false, domainerrs.BadRequest("target_ble_token must be another user")
-	}
 
-	blocked, err := u.blockRepo.ExistsBetween(ctx, requester.ID, tokenEntity.UserID)
-	if err != nil {
+	if err := u.ensureNotBlocked(ctx, requester.ID, tokenEntity.UserID); err != nil {
 		return usecasedto.EncounterSummaryDTO{}, false, err
 	}
-	if blocked {
-		return usecasedto.EncounterSummaryDTO{}, false, domainerrs.NotFound("User was not found")
-	}
 
-	userID1 := requester.ID
-	userID2 := tokenEntity.UserID
-	if userID2 < userID1 {
-		userID1, userID2 = userID2, userID1
-	}
+	userID1, userID2 := normalizeUserPair(requester.ID, tokenEntity.UserID)
 
-	const dedupeWindow = 5 * time.Minute
-	serverNow := time.Now().UTC()
-	if existing, found, err := u.encounterRepo.FindRecentByUsersAndType(ctx, userID1, userID2, encounterType, input.OccurredAt, dedupeWindow); err != nil {
+	if existing, found, err := u.encounterRepo.FindRecentByUsersAndType(ctx, userID1, userID2, encounterType, input.OccurredAt, encounterDedupeWindow); err != nil {
 		return usecasedto.EncounterSummaryDTO{}, false, err
 	} else if found {
-		otherUser, err := u.userRepo.FindByID(ctx, otherUserID(existing, requester.ID))
+		summary, err := u.buildEncounterSummary(ctx, existing, requester.ID)
 		if err != nil {
 			return usecasedto.EncounterSummaryDTO{}, false, err
 		}
-		return usecasedto.EncounterSummaryDTO{
-			ID:         existing.ID,
-			Type:       string(existing.EncounterType),
-			User:       buildEncounterUserDTO(otherUser),
-			OccurredAt: existing.OccurredAt,
-		}, false, nil
+		return summary, false, nil
 	}
 
 	// 1日1回制限（同一ユーザーペア・同一タイプ）
 	if dailyEncounterPairLimit > 0 {
-		exists, err := u.encounterRepo.ExistsByUsersAndTypeOnDate(ctx, userID1, userID2, encounterType, serverNow)
+		exists, err := u.encounterRepo.ExistsByUsersAndTypeOnDate(ctx, userID1, userID2, encounterType, now)
 		if err != nil {
 			return usecasedto.EncounterSummaryDTO{}, false, err
 		}
@@ -116,22 +107,16 @@ func (u *encounterUsecase) CreateEncounter(ctx context.Context, authUID string, 
 		UserID2:       userID2,
 		EncounterType: encounterType,
 		OccurredAt:    input.OccurredAt,
-	}, []string{requester.ID, tokenEntity.UserID}, requester.ID, serverNow, dailyEncounterUserLimit)
+	}, []string{requester.ID, tokenEntity.UserID}, requester.ID, now, dailyEncounterUserLimit)
 	if err != nil {
 		return usecasedto.EncounterSummaryDTO{}, false, err
 	}
 
-	otherUser, err := u.userRepo.FindByID(ctx, otherUserID(created, requester.ID))
+	summary, err := u.buildEncounterSummary(ctx, created, requester.ID)
 	if err != nil {
 		return usecasedto.EncounterSummaryDTO{}, false, err
 	}
-
-	return usecasedto.EncounterSummaryDTO{
-		ID:         created.ID,
-		Type:       string(created.EncounterType),
-		User:       buildEncounterUserDTO(otherUser),
-		OccurredAt: created.OccurredAt,
-	}, true, nil
+	return summary, true, nil
 }
 
 func (u *encounterUsecase) ListEncounters(ctx context.Context, authUID string, limit int, cursor string) ([]usecasedto.EncounterListItemDTO, *string, bool, error) {
@@ -247,6 +232,62 @@ func (u *encounterUsecase) GetEncounterByID(ctx context.Context, authUID string,
 	}, nil
 }
 
+func parseEncounterType(raw string) (vo.EncounterType, error) {
+	encounterType, err := vo.ParseEncounterType(raw)
+	if err != nil {
+		return "", err
+	}
+	if encounterType != vo.EncounterTypeBLE {
+		return "", domainerrs.BadRequest("type must be ble")
+	}
+	return encounterType, nil
+}
+
+func (u *encounterUsecase) resolveTargetBleToken(ctx context.Context, token string, requesterID string, now time.Time) (entity.BleToken, error) {
+	tokenEntity, err := u.bleTokenRepo.FindByToken(ctx, token)
+	if err != nil {
+		return entity.BleToken{}, err
+	}
+	if !tokenEntity.IsValid(now) {
+		return entity.BleToken{}, domainerrs.NotFound("BLE token has expired")
+	}
+	if tokenEntity.UserID == requesterID {
+		return entity.BleToken{}, domainerrs.BadRequest("target_ble_token must be another user")
+	}
+	return tokenEntity, nil
+}
+
+func (u *encounterUsecase) ensureNotBlocked(ctx context.Context, requesterID string, otherID string) error {
+	blocked, err := u.blockRepo.ExistsBetween(ctx, requesterID, otherID)
+	if err != nil {
+		return err
+	}
+	if blocked {
+		return domainerrs.NotFound("User was not found")
+	}
+	return nil
+}
+
+func normalizeUserPair(userID1 string, userID2 string) (string, string) {
+	if userID2 < userID1 {
+		return userID2, userID1
+	}
+	return userID1, userID2
+}
+
+func (u *encounterUsecase) buildEncounterSummary(ctx context.Context, encounter entity.Encounter, requesterID string) (usecasedto.EncounterSummaryDTO, error) {
+	otherUser, err := u.userRepo.FindByID(ctx, otherUserID(encounter, requesterID))
+	if err != nil {
+		return usecasedto.EncounterSummaryDTO{}, err
+	}
+	return usecasedto.EncounterSummaryDTO{
+		ID:         encounter.ID,
+		Type:       string(encounter.EncounterType),
+		User:       buildEncounterUserDTO(otherUser),
+		OccurredAt: encounter.OccurredAt,
+	}, nil
+}
+
 func otherUserID(encounter entity.Encounter, requesterID string) string {
 	if encounter.UserID1 == requesterID {
 		return encounter.UserID2
@@ -281,36 +322,4 @@ func buildEncounterTrackDTOs(tracks []entity.TrackInfo) []usecasedto.EncounterTr
 		})
 	}
 	return result
-}
-
-func parseEncounterCursor(raw string) (*repository.EncounterCursor, error) {
-	if raw == "" {
-		return nil, nil
-	}
-
-	decoded, err := base64.RawURLEncoding.DecodeString(raw)
-	if err != nil {
-		return nil, domainerrs.BadRequest("cursor is invalid")
-	}
-
-	var cursor repository.EncounterCursor
-	if err := json.Unmarshal(decoded, &cursor); err != nil {
-		return nil, domainerrs.BadRequest("cursor is invalid")
-	}
-	if cursor.ID == "" || cursor.OccurredAt.IsZero() {
-		return nil, domainerrs.BadRequest("cursor is invalid")
-	}
-
-	return &cursor, nil
-}
-
-func encodeEncounterCursor(cursor *repository.EncounterCursor) (string, error) {
-	if cursor == nil {
-		return "", nil
-	}
-	payload, err := json.Marshal(cursor)
-	if err != nil {
-		return "", err
-	}
-	return base64.RawURLEncoding.EncodeToString(payload), nil
 }

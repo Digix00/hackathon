@@ -159,20 +159,21 @@ func (r *encounterRepository) ListByUserIDExcludingBlocked(ctx context.Context, 
 		return []entity.Encounter{}, nil, false, nil
 	}
 
+	const excludeBlockedCondition = `
+		NOT EXISTS (
+			SELECT 1 FROM blocks b
+			WHERE
+				b.deleted_at IS NULL
+				AND (
+					(b.blocker_user_id = ? AND b.blocked_user_id = CASE WHEN encounters.user_id1 = ? THEN encounters.user_id2 ELSE encounters.user_id1 END)
+					OR
+					(b.blocked_user_id = ? AND b.blocker_user_id = CASE WHEN encounters.user_id1 = ? THEN encounters.user_id2 ELSE encounters.user_id1 END)
+				)
+		)
+	`
 	query := r.db.WithContext(ctx).Model(&model.Encounter{}).
 		Where("user_id1 = ? OR user_id2 = ?", requesterID, requesterID).
-		Where(`
-			NOT EXISTS (
-				SELECT 1 FROM blocks b
-				WHERE
-					b.deleted_at IS NULL
-					AND (
-						(b.blocker_user_id = ? AND b.blocked_user_id = CASE WHEN encounters.user_id1 = ? THEN encounters.user_id2 ELSE encounters.user_id1 END)
-						OR
-						(b.blocked_user_id = ? AND b.blocker_user_id = CASE WHEN encounters.user_id1 = ? THEN encounters.user_id2 ELSE encounters.user_id1 END)
-					)
-			)
-		`, requesterID, requesterID, requesterID, requesterID)
+		Where(excludeBlockedCondition, requesterID, requesterID, requesterID, requesterID)
 
 	if cursor != nil {
 		query = query.Where(
@@ -267,7 +268,7 @@ func (r *encounterRepository) GetReadStatusByEncounterIDs(ctx context.Context, u
 }
 
 func (r *encounterRepository) ExistsByUsersAndTypeOnDate(ctx context.Context, userID1, userID2 string, encounterType vo.EncounterType, date time.Time) (bool, error) {
-	start := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
+	start := startOfUTCDate(date)
 	end := start.Add(24 * time.Hour)
 
 	var count int64
@@ -283,18 +284,12 @@ func (r *encounterRepository) ExistsByUsersAndTypeOnDate(ctx context.Context, us
 }
 
 func (r *encounterRepository) IncrementDailyCountWithLimit(ctx context.Context, userID string, date time.Time, limit int) (int, error) {
-	start := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
-
 	var count int
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		stmt := `
-			INSERT INTO daily_encounter_counts (id, user_id, date, count, created_at, updated_at)
-			VALUES (?, ?, ?, 1, NOW(), NOW())
-			ON CONFLICT (user_id, date)
-			DO UPDATE SET count = daily_encounter_counts.count + 1, updated_at = NOW()
-			RETURNING count
-		`
-		if err := tx.Raw(stmt, uuid.NewString(), userID, start).Scan(&count).Error; err != nil {
+		now := time.Now().UTC()
+		var err error
+		count, err = incrementDailyCountTx(tx, userID, date, now)
+		if err != nil {
 			return err
 		}
 		if limit > 0 && count > limit {
@@ -309,20 +304,13 @@ func (r *encounterRepository) IncrementDailyCountWithLimit(ctx context.Context, 
 }
 
 func (r *encounterRepository) CreateWithRateLimit(ctx context.Context, encounter entity.Encounter, userIDsForTracks []string, dailyLimitUserID string, date time.Time, limit int) (entity.Encounter, error) {
-	start := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
-
 	var created model.Encounter
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if limit > 0 {
 			var count int
-			stmt := `
-				INSERT INTO daily_encounter_counts (id, user_id, date, count, created_at, updated_at)
-				VALUES (?, ?, ?, 1, NOW(), NOW())
-				ON CONFLICT (user_id, date)
-				DO UPDATE SET count = daily_encounter_counts.count + 1, updated_at = NOW()
-				RETURNING count
-			`
-			if err := tx.Raw(stmt, uuid.NewString(), dailyLimitUserID, start).Scan(&count).Error; err != nil {
+			var err error
+			count, err = incrementDailyCountTx(tx, dailyLimitUserID, date, date)
+			if err != nil {
 				return err
 			}
 			if count > limit {
@@ -378,6 +366,26 @@ func (r *encounterRepository) CreateWithRateLimit(ctx context.Context, encounter
 	}
 
 	return modelToEntityEncounter(created), nil
+}
+
+func startOfUTCDate(date time.Time) time.Time {
+	return time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
+}
+
+func incrementDailyCountTx(tx *gorm.DB, userID string, date time.Time, now time.Time) (int, error) {
+	start := startOfUTCDate(date)
+	stmt := `
+		INSERT INTO daily_encounter_counts (id, user_id, date, count, created_at, updated_at)
+		VALUES (?, ?, ?, 1, ?, ?)
+		ON CONFLICT (user_id, date)
+		DO UPDATE SET count = daily_encounter_counts.count + 1, updated_at = EXCLUDED.updated_at
+		RETURNING count
+	`
+	var count int
+	if err := tx.Raw(stmt, uuid.NewString(), userID, start, now, now).Scan(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 func modelToEntityEncounter(encounter model.Encounter) entity.Encounter {

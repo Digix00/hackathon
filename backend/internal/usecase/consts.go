@@ -1,5 +1,7 @@
 package usecase
 
+import "time"
+
 // firebaseProvider はusecaseレイヤー全体で使うFirebase認証プロバイダー名。
 const firebaseProvider = "firebase"
 
@@ -7,4 +9,5 @@ const firebaseProvider = "firebase"
 const (
 	dailyEncounterPairLimit = 1
 	dailyEncounterUserLimit = 10
+	encounterDedupeWindow   = 5 * time.Minute
 )
