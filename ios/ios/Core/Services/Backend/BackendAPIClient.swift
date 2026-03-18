@@ -104,7 +104,9 @@ actor BackendAPIClient {
     }
 
     func patchPushToken(id: String, request: UpdatePushTokenRequest) async throws -> BackendDevice {
-        let escapedId = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id
+        var allowed = CharacterSet.urlPathAllowed
+        allowed.remove(charactersIn: "/")
+        let escapedId = id.addingPercentEncoding(withAllowedCharacters: allowed) ?? id
         let result = try await send(path: "users/me/push-tokens/\(escapedId)", method: "PATCH", body: try encoder.encode(request))
         guard result.response.statusCode == 200 else {
             throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
