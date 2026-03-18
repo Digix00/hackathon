@@ -37,6 +37,7 @@ func (r *encounterRepository) CountByUserID(ctx context.Context, userID string) 
 	return count, nil
 }
 
+<<<<<<< HEAD
 func (r *encounterRepository) FindRecentByUsersAndType(
 	ctx context.Context,
 	userID1 string,
@@ -277,6 +278,18 @@ func (r *encounterRepository) ExistsByUsersAndTypeOnDate(ctx context.Context, us
 		Model(&model.Encounter{}).
 		Where("user_id1 = ? AND user_id2 = ? AND encounter_type = ? AND created_at >= ? AND created_at < ?",
 			userID1, userID2, string(encounterType), start, end).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (r *encounterRepository) ExistsByIDAndParticipant(ctx context.Context, encounterID, userID string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).
+		Model(&model.Encounter{}).
+		Where("id = ? AND (user_id1 = ? OR user_id2 = ?)", encounterID, userID, userID).
 		Count(&count).Error
 	if err != nil {
 		return false, err
