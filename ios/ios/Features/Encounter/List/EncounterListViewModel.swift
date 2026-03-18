@@ -118,7 +118,7 @@ private extension EncounterListViewModel {
 
     static func relativeTime(from occurredAt: Date?) -> String {
         guard let occurredAt else {
-            return "たった今"
+            return "時刻不明"
         }
 
         let calendar = Calendar.current
