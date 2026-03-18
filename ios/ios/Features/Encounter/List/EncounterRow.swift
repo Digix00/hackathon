@@ -3,7 +3,7 @@ import SwiftUI
 struct EncounterRow: View {
     let encounter: Encounter
     let isFixed: Bool
-    var hideMatchedElements: Bool = false
+    let hideMatchedElements: Bool = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.encounterNamespace) private var namespace
     
