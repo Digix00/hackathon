@@ -21,10 +21,6 @@ struct PlaylistsView: View {
                         if viewModel.isLoading && viewModel.playlists.isEmpty {
                             ProgressView()
                                 .frame(maxWidth: .infinity)
-                        } else if let errorMessage = viewModel.errorMessage, viewModel.playlists.isEmpty {
-                            Text(errorMessage)
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(PrototypeTheme.error)
                         } else if viewModel.playlists.isEmpty {
                             Text("まだプレイリストがありません")
                                 .font(.system(size: 13, weight: .medium))
@@ -39,6 +35,12 @@ struct PlaylistsView: View {
                                 .buttonStyle(.plain)
                             }
                         }
+
+                        if let errorMessage = viewModel.errorMessage {
+                            Text(errorMessage)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.error)
+                        }
                     }
                 }
 
@@ -48,7 +50,7 @@ struct PlaylistsView: View {
             }
         }
         .onAppear {
-            viewModel.loadIfNeeded()
+            viewModel.refresh()
         }
         .sheet(isPresented: $isCreatePresented) {
             PlaylistEditorSheet(
