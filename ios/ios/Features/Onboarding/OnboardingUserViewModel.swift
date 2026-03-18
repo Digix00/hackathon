@@ -66,24 +66,33 @@ final class OnboardingUserViewModel: ObservableObject {
             }
             isSubmitting = false
             onSuccess()
-        } catch {
-            do {
-                let request = CreateUserRequest(
-                    displayName: displayName,
-                    avatarURL: nil,
-                    bio: bio.isEmpty ? nil : bio,
-                    birthdate: nil,
-                    ageVisibility: nil,
-                    prefectureId: nil,
-                    sex: nil
-                )
-                _ = try await client.createUser(request)
-                isSubmitting = false
-                onSuccess()
-            } catch {
-                errorMessage = "ユーザー作成に失敗しました"
+        } catch let error as BackendAPIClient.BackendError {
+            switch error {
+            case .unexpectedStatus(let code, _) where code == 404:
+                do {
+                    let request = CreateUserRequest(
+                        displayName: displayName,
+                        avatarURL: nil,
+                        bio: bio.isEmpty ? nil : bio,
+                        birthdate: nil,
+                        ageVisibility: nil,
+                        prefectureId: nil,
+                        sex: nil
+                    )
+                    _ = try await client.createUser(request)
+                    isSubmitting = false
+                    onSuccess()
+                } catch {
+                    errorMessage = "ユーザー作成に失敗しました"
+                    isSubmitting = false
+                }
+            default:
+                errorMessage = "接続に失敗しました。もう一度お試しください"
                 isSubmitting = false
             }
+        } catch {
+            errorMessage = "接続に失敗しました。もう一度お試しください"
+            isSubmitting = false
         }
     }
 
