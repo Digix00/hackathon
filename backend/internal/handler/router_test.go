@@ -183,6 +183,7 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 		PlaylistUsecase:     usecase.NewPlaylistUsecase(playlistRepo, userRepo),
 		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
 		MuteUsecase:         usecase.NewMuteUsecase(userRepo, muteRepo),
+		BlockUsecase:        usecase.NewBlockUsecase(userRepo, blockRepo),
 		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
 		MusicUsecase:        usecase.NewMusicUsecase(userRepo, musicConnectionRepo, trackCatalogRepo, providers, "test-state-secret", "digix"),
 		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),

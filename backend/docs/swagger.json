@@ -1588,6 +1588,126 @@
                 }
             }
         },
+        "/api/v1/users/me/blocks": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したユーザーをブロックする。自分自身や存在しないユーザーへのブロック、重複ブロックはエラーになる。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blocks"
+                ],
+                "summary": "ブロック作成",
+                "operationId": "createBlock",
+                "parameters": [
+                    {
+                        "description": "ブロックリクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.CreateBlockRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.BlockResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/blocks/{blocked_user_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したユーザーのブロックを解除する。ブロックが存在しない場合はエラーになる。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blocks"
+                ],
+                "summary": "ブロック解除",
+                "operationId": "deleteBlock",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ブロック解除対象のユーザーID",
+                        "name": "blocked_user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/me/music-connections": {
             "get": {
                 "security": [
@@ -2379,6 +2499,14 @@
                 }
             }
         },
+        "hackathon_internal_handler_schema_request.CreateBlockRequest": {
+            "type": "object",
+            "properties": {
+                "blocked_user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_request.CreateCommentRequest": {
             "type": "object",
             "properties": {
@@ -2688,6 +2816,28 @@
             "properties": {
                 "user": {
                     "$ref": "#/definitions/hackathon_internal_handler_schema_response.BleTokenUser"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.Block": {
+            "type": "object",
+            "properties": {
+                "blocked_user_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.BlockResponse": {
+            "type": "object",
+            "properties": {
+                "block": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.Block"
                 }
             }
         },

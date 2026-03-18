@@ -29,6 +29,8 @@ Class | Method | HTTP request | Description
 *BleTokensAPI* | [**createBleToken**](docs/BleTokensAPI.md#createbletoken) | **POST** /api/v1/ble-tokens | BLE トークン発行
 *BleTokensAPI* | [**getCurrentBleToken**](docs/BleTokensAPI.md#getcurrentbletoken) | **GET** /api/v1/ble-tokens/current | 有効な BLE トークン取得
 *BleTokensAPI* | [**getUserByBleToken**](docs/BleTokensAPI.md#getuserbybletoken) | **GET** /api/v1/ble-tokens/{token}/user | BLE トークンからユーザー情報取得
+*BlocksAPI* | [**createBlock**](docs/BlocksAPI.md#createblock) | **POST** /api/v1/users/me/blocks | ブロック作成
+*BlocksAPI* | [**deleteBlock**](docs/BlocksAPI.md#deleteblock) | **DELETE** /api/v1/users/me/blocks/{blocked_user_id} | ブロック解除
 *CommentsAPI* | [**createComment**](docs/CommentsAPI.md#createcomment) | **POST** /api/v1/encounters/{id}/comments | コメント作成
 *CommentsAPI* | [**deleteComment**](docs/CommentsAPI.md#deletecomment) | **DELETE** /api/v1/comments/{id} | コメント削除
 *CommentsAPI* | [**listComments**](docs/CommentsAPI.md#listcomments) | **GET** /api/v1/encounters/{id}/comments | コメント一覧取得
@@ -73,6 +75,7 @@ Class | Method | HTTP request | Description
 ## Documentation For Models
 
  - [HackathonInternalHandlerSchemaRequestAddPlaylistTrackRequest](docs/HackathonInternalHandlerSchemaRequestAddPlaylistTrackRequest.md)
+ - [HackathonInternalHandlerSchemaRequestCreateBlockRequest](docs/HackathonInternalHandlerSchemaRequestCreateBlockRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateCommentRequest](docs/HackathonInternalHandlerSchemaRequestCreateCommentRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateEncounterRequest](docs/HackathonInternalHandlerSchemaRequestCreateEncounterRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateMuteRequest](docs/HackathonInternalHandlerSchemaRequestCreateMuteRequest.md)
@@ -88,6 +91,8 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseBleTokenResponse](docs/HackathonInternalHandlerSchemaResponseBleTokenResponse.md)
  - [HackathonInternalHandlerSchemaResponseBleTokenUser](docs/HackathonInternalHandlerSchemaResponseBleTokenUser.md)
  - [HackathonInternalHandlerSchemaResponseBleTokenUserResponse](docs/HackathonInternalHandlerSchemaResponseBleTokenUserResponse.md)
+ - [HackathonInternalHandlerSchemaResponseBlock](docs/HackathonInternalHandlerSchemaResponseBlock.md)
+ - [HackathonInternalHandlerSchemaResponseBlockResponse](docs/HackathonInternalHandlerSchemaResponseBlockResponse.md)
  - [HackathonInternalHandlerSchemaResponseComment](docs/HackathonInternalHandlerSchemaResponseComment.md)
  - [HackathonInternalHandlerSchemaResponseCommentListResponse](docs/HackathonInternalHandlerSchemaResponseCommentListResponse.md)
  - [HackathonInternalHandlerSchemaResponseCommentResponse](docs/HackathonInternalHandlerSchemaResponseCommentResponse.md)
