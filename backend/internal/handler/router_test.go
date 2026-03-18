@@ -143,16 +143,20 @@ func newTestServer(t *testing.T, db *gorm.DB, authUID string) *echo.Echo {
 	trackRepo := rdb.NewUserCurrentTrackRepository(db)
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
 	playlistRepo := rdb.NewPlaylistRepository(db)
+	reportRepo := rdb.NewReportRepository(db)
+	notificationRepo := rdb.NewNotificationRepository(db)
 
 	e := echo.New()
 	RegisterRoutes(e, Dependencies{
-		AuthTokenVerifier: testTokenVerifier{uid: authUID},
-		AuthUserManager:   testAuthUserManager{},
-		UserUsecase:       usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
-		SettingsUsecase:   usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
-		PushTokenUsecase:  usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
-		BleTokenUsecase:   usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
-		PlaylistUsecase:   usecase.NewPlaylistUsecase(playlistRepo, userRepo),
+		AuthTokenVerifier:   testTokenVerifier{uid: authUID},
+		AuthUserManager:     testAuthUserManager{},
+		UserUsecase:         usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
+		SettingsUsecase:     usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
+		PushTokenUsecase:    usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
+		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
+		PlaylistUsecase:     usecase.NewPlaylistUsecase(playlistRepo, userRepo),
+		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
+		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
 	})
 	return e
 }

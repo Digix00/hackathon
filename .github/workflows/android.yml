@@ -1,16 +1,7 @@
 name: Android CI
 
 on:
-  push:
-    branches: [ "main", "develop" ]
-    paths:
-      - "android/**"
-      - ".github/workflows/android.yml"
-  pull_request:
-    branches: [ "main", "develop" ]
-    paths:
-      - "android/**"
-      - ".github/workflows/android.yml"
+  workflow_dispatch: # Android 開発一時中断のため、手動実行のみに変更
 
 defaults:
   run:

@@ -18,14 +18,18 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client) handler.Dep
 	trackRepo := rdb.NewUserCurrentTrackRepository(db)
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
 	playlistRepo := rdb.NewPlaylistRepository(db)
+	reportRepo := rdb.NewReportRepository(db)
+	notificationRepo := rdb.NewNotificationRepository(db)
 
 	return handler.Dependencies{
-		AuthTokenVerifier: authClient,
-		AuthUserManager:   authClient,
-		UserUsecase:       usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
-		SettingsUsecase:   usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
-		PushTokenUsecase:  usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
-		BleTokenUsecase:   usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
-		PlaylistUsecase:   usecase.NewPlaylistUsecase(playlistRepo, userRepo),
+		AuthTokenVerifier:   authClient,
+		AuthUserManager:     authClient,
+		UserUsecase:         usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
+		SettingsUsecase:     usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
+		PushTokenUsecase:    usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
+		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
+		PlaylistUsecase:     usecase.NewPlaylistUsecase(playlistRepo, userRepo),
+		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
+		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
 	}
 }

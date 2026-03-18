@@ -31,6 +31,9 @@ Class | Method | HTTP request | Description
 *BleTokensAPI* | [**getUserByBleToken**](docs/BleTokensAPI.md#getuserbybletoken) | **GET** /api/v1/ble-tokens/{token}/user | BLE トークンからユーザー情報取得
 *HealthAPI* | [**healthz**](docs/HealthAPI.md#healthz) | **GET** /healthz | ヘルスチェック
 *HealthAPI* | [**healthzPostgres**](docs/HealthAPI.md#healthzpostgres) | **GET** /healthz/postgres | PostgreSQL ヘルスチェック
+*NotificationsAPI* | [**deleteNotification**](docs/NotificationsAPI.md#deletenotification) | **DELETE** /api/v1/users/me/notifications/{id} | 通知削除
+*NotificationsAPI* | [**listNotifications**](docs/NotificationsAPI.md#listnotifications) | **GET** /api/v1/users/me/notifications | 通知一覧取得
+*NotificationsAPI* | [**markNotificationAsRead**](docs/NotificationsAPI.md#marknotificationasread) | **PATCH** /api/v1/users/me/notifications/{id}/read | 通知を既読にする
 *PlaylistsAPI* | [**addPlaylistFavorite**](docs/PlaylistsAPI.md#addplaylistfavorite) | **POST** /api/v1/playlists/{id}/favorites | プレイリストをお気に入り登録
 *PlaylistsAPI* | [**addPlaylistTrack**](docs/PlaylistsAPI.md#addplaylisttrack) | **POST** /api/v1/playlists/{id}/tracks | プレイリストにトラック追加
 *PlaylistsAPI* | [**createPlaylist**](docs/PlaylistsAPI.md#createplaylist) | **POST** /api/v1/playlists | プレイリスト作成
@@ -43,6 +46,7 @@ Class | Method | HTTP request | Description
 *PushTokensAPI* | [**createPushToken**](docs/PushTokensAPI.md#createpushtoken) | **POST** /api/v1/users/me/push-tokens | プッシュトークン登録（upsert）
 *PushTokensAPI* | [**deletePushToken**](docs/PushTokensAPI.md#deletepushtoken) | **DELETE** /api/v1/users/me/push-tokens/{id} | プッシュトークン削除
 *PushTokensAPI* | [**patchPushToken**](docs/PushTokensAPI.md#patchpushtoken) | **PATCH** /api/v1/users/me/push-tokens/{id} | プッシュトークン更新
+*ReportsAPI* | [**createReport**](docs/ReportsAPI.md#createreport) | **POST** /api/v1/reports | 通報作成
 *SettingsAPI* | [**getMySettings**](docs/SettingsAPI.md#getmysettings) | **GET** /api/v1/users/me/settings | 自分の設定取得
 *SettingsAPI* | [**patchMySettings**](docs/SettingsAPI.md#patchmysettings) | **PATCH** /api/v1/users/me/settings | 自分の設定更新
 *UsersAPI* | [**createUser**](docs/UsersAPI.md#createuser) | **POST** /api/v1/users | ユーザー作成
@@ -57,6 +61,7 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaRequestAddPlaylistTrackRequest](docs/HackathonInternalHandlerSchemaRequestAddPlaylistTrackRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreatePlaylistRequest](docs/HackathonInternalHandlerSchemaRequestCreatePlaylistRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreatePushTokenRequest](docs/HackathonInternalHandlerSchemaRequestCreatePushTokenRequest.md)
+ - [HackathonInternalHandlerSchemaRequestCreateReportRequest](docs/HackathonInternalHandlerSchemaRequestCreateReportRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateUserRequest](docs/HackathonInternalHandlerSchemaRequestCreateUserRequest.md)
  - [HackathonInternalHandlerSchemaRequestUpdatePlaylistRequest](docs/HackathonInternalHandlerSchemaRequestUpdatePlaylistRequest.md)
  - [HackathonInternalHandlerSchemaRequestUpdatePushTokenRequest](docs/HackathonInternalHandlerSchemaRequestUpdatePushTokenRequest.md)
@@ -68,6 +73,8 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseBleTokenUserResponse](docs/HackathonInternalHandlerSchemaResponseBleTokenUserResponse.md)
  - [HackathonInternalHandlerSchemaResponseDevice](docs/HackathonInternalHandlerSchemaResponseDevice.md)
  - [HackathonInternalHandlerSchemaResponseDeviceResponse](docs/HackathonInternalHandlerSchemaResponseDeviceResponse.md)
+ - [HackathonInternalHandlerSchemaResponseNotificationItem](docs/HackathonInternalHandlerSchemaResponseNotificationItem.md)
+ - [HackathonInternalHandlerSchemaResponseNotificationListResponse](docs/HackathonInternalHandlerSchemaResponseNotificationListResponse.md)
  - [HackathonInternalHandlerSchemaResponsePlaylist](docs/HackathonInternalHandlerSchemaResponsePlaylist.md)
  - [HackathonInternalHandlerSchemaResponsePlaylistListResponse](docs/HackathonInternalHandlerSchemaResponsePlaylistListResponse.md)
  - [HackathonInternalHandlerSchemaResponsePlaylistResponse](docs/HackathonInternalHandlerSchemaResponsePlaylistResponse.md)
@@ -75,6 +82,8 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponsePublicTrack](docs/HackathonInternalHandlerSchemaResponsePublicTrack.md)
  - [HackathonInternalHandlerSchemaResponsePublicUser](docs/HackathonInternalHandlerSchemaResponsePublicUser.md)
  - [HackathonInternalHandlerSchemaResponsePublicUserResponse](docs/HackathonInternalHandlerSchemaResponsePublicUserResponse.md)
+ - [HackathonInternalHandlerSchemaResponseReport](docs/HackathonInternalHandlerSchemaResponseReport.md)
+ - [HackathonInternalHandlerSchemaResponseReportResponse](docs/HackathonInternalHandlerSchemaResponseReportResponse.md)
  - [HackathonInternalHandlerSchemaResponseSettings](docs/HackathonInternalHandlerSchemaResponseSettings.md)
  - [HackathonInternalHandlerSchemaResponseSettingsResponse](docs/HackathonInternalHandlerSchemaResponseSettingsResponse.md)
  - [HackathonInternalHandlerSchemaResponseUser](docs/HackathonInternalHandlerSchemaResponseUser.md)
