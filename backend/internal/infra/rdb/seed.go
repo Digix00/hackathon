@@ -2,6 +2,7 @@ package rdb
 
 import (
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -14,6 +15,9 @@ import (
 func Seed(db *gorm.DB) error {
 	if err := seedPrefectures(db); err != nil {
 		return fmt.Errorf("rdb.Seed prefectures: %w", err)
+	}
+	if err := seedDemoData(db); err != nil {
+		return fmt.Errorf("rdb.Seed demo data: %w", err)
 	}
 	return nil
 }
@@ -71,4 +75,121 @@ func seedPrefectures(db *gorm.DB) error {
 
 	return db.Clauses(clause.OnConflict{DoNothing: true}).
 		Create(&prefectures).Error
+}
+
+func seedDemoData(db *gorm.DB) error {
+	const (
+		authProvider = "firebase"
+
+		userIDA = "seed-user-01"
+		userIDB = "seed-user-02"
+
+		providerUserIDA = "demo-user-1"
+		providerUserIDB = "demo-user-2"
+
+		settingsIDA = "seed-user-settings-01"
+		settingsIDB = "seed-user-settings-02"
+
+		trackID = "seed-track-01"
+
+		encounterID      = "seed-encounter-01"
+		encounterTrackID = "seed-encounter-track-01"
+	)
+
+	nameA := "Aoi"
+	nameB := "Ren"
+
+	users := []model.User{
+		{
+			ID:             userIDA,
+			AuthProvider:   authProvider,
+			ProviderUserID: providerUserIDA,
+			Name:           &nameA,
+		},
+		{
+			ID:             userIDB,
+			AuthProvider:   authProvider,
+			ProviderUserID: providerUserIDB,
+			Name:           &nameB,
+		},
+	}
+
+	if err := db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "auth_provider"}, {Name: "provider_user_id"}},
+		DoNothing: true,
+	}).Create(&users).Error; err != nil {
+		return err
+	}
+
+	settings := []model.UserSettings{
+		{ID: settingsIDA, UserID: userIDA},
+		{ID: settingsIDB, UserID: userIDB},
+	}
+	if err := db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}},
+		DoNothing: true,
+	}).Create(&settings).Error; err != nil {
+		return err
+	}
+
+	tracks := []model.Track{
+		{
+			ID:         trackID,
+			ExternalID: "demo-track-1",
+			Provider:   "spotify",
+			Title:      "City Lights",
+			ArtistName: "Night Echoes",
+		},
+	}
+	if err := db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "external_id"}, {Name: "provider"}},
+		DoNothing: true,
+	}).Create(&tracks).Error; err != nil {
+		return err
+	}
+
+	encounteredAt := time.Now().UTC().Add(-2 * time.Hour)
+	if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&model.Encounter{
+		ID:            encounterID,
+		UserID1:       userIDA,
+		UserID2:       userIDB,
+		EncounteredAt: encounteredAt,
+		EncounterType: "ble",
+	}).Error; err != nil {
+		return err
+	}
+
+	if err := db.Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "encounter_id"},
+			{Name: "track_id"},
+			{Name: "source_user_id"},
+		},
+		DoNothing: true,
+	}).Create(&model.EncounterTrack{
+		ID:           encounterTrackID,
+		EncounterID:  encounterID,
+		TrackID:      trackID,
+		SourceUserID: userIDB,
+	}).Error; err != nil {
+		return err
+	}
+
+	// Keep demo data resilient to resets by ensuring a BLE token exists for the demo user.
+	validFrom := time.Now().UTC().Add(-10 * time.Minute)
+	validTo := time.Now().UTC().Add(24 * time.Hour)
+	if err := db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "token"}},
+		DoNothing: true,
+	}).Create(&model.BleToken{
+		ID:        "seed-ble-token-01",
+		UserID:    userIDB,
+		Token:     "0123456789abcdef",
+		ValidFrom: validFrom,
+		ValidTo:   validTo,
+	}).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
