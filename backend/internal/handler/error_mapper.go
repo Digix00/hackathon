@@ -72,6 +72,8 @@ func domainErrorToHTTP(err *domainerrs.DomainError) (int, errorBody) {
 		status = http.StatusConflict
 	case domainerrs.CodeInternal:
 		status = http.StatusInternalServerError
+	case domainerrs.CodeTooMany:
+		status = http.StatusTooManyRequests
 	}
 
 	message := err.Message

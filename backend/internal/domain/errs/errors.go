@@ -10,6 +10,7 @@ const (
 	CodeForbidden    Code = "FORBIDDEN"
 	CodeConflict     Code = "CONFLICT"
 	CodeBadRequest   Code = "BAD_REQUEST"
+	CodeTooMany      Code = "TOO_MANY_REQUESTS"
 	CodeInternal     Code = "INTERNAL"
 )
 
@@ -21,6 +22,7 @@ var (
 	ErrForbidden    = &DomainError{Code: CodeForbidden}
 	ErrConflict     = &DomainError{Code: CodeConflict}
 	ErrBadRequest   = &DomainError{Code: CodeBadRequest}
+	ErrTooMany      = &DomainError{Code: CodeTooMany}
 	ErrInternal     = &DomainError{Code: CodeInternal}
 )
 
@@ -69,6 +71,10 @@ func Conflict(msg string) *DomainError {
 
 func BadRequest(msg string) *DomainError {
 	return &DomainError{Code: CodeBadRequest, Message: msg}
+}
+
+func TooManyRequests(msg string) *DomainError {
+	return &DomainError{Code: CodeTooMany, Message: msg}
 }
 
 func Internal(msg string) *DomainError {
