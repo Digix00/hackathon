@@ -1,4 +1,5 @@
 .PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean reset-db \
+        vet lint \
         generate-docs generate-android generate-ios generate-code
 
 # ==============================================================================
@@ -35,6 +36,12 @@ tidy:
 
 fmt:
 	$(MAKE) -C backend fmt
+
+vet:
+	$(MAKE) -C backend vet
+
+lint:
+	$(MAKE) -C backend lint
 
 # ==============================================================================
 # Code Generation

@@ -1,5 +1,6 @@
 .PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean reset-db \
 	test test-integration \
+	vet lint \
 	generate-docs generate-android generate-ios generate-code \
         _generate-android-only _generate-ios-only
 
@@ -50,6 +51,14 @@ tidy:
 # Goコードのフォーマット
 fmt:
 	go fmt ./...
+
+# go vet で静的解析を実行
+vet:
+	docker compose exec server go vet ./...
+
+# golangci-lint でリントを実行（ワークフローと同じ設定）
+lint:
+	docker compose exec server golangci-lint run --timeout=5m
 
 # ユニット/通常テストを実行
 test:
