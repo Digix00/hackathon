@@ -1,8 +1,14 @@
 import SwiftUI
 
 struct DeleteAccountView: View {
-    @StateObject private var viewModel = DeleteAccountViewModel()
+    let onAccountDeleted: () -> Void
+    @StateObject private var viewModel: DeleteAccountViewModel
     @State private var showsConfirmation = false
+
+    init(onAccountDeleted: @escaping () -> Void = {}) {
+        self.onAccountDeleted = onAccountDeleted
+        _viewModel = StateObject(wrappedValue: DeleteAccountViewModel(onAccountDeleted: onAccountDeleted))
+    }
 
     var body: some View {
         AppScaffold(

@@ -8,9 +8,14 @@ final class DeleteAccountViewModel: ObservableObject {
     @Published private(set) var didDelete = false
 
     private let client: BackendAPIClient
+    private let onAccountDeleted: () -> Void
 
-    init(client: BackendAPIClient = BackendAPIClient()) {
+    init(
+        client: BackendAPIClient = BackendAPIClient(),
+        onAccountDeleted: @escaping () -> Void = {}
+    ) {
         self.client = client
+        self.onAccountDeleted = onAccountDeleted
     }
 
     func deleteAccount() {
@@ -25,6 +30,7 @@ final class DeleteAccountViewModel: ObservableObject {
         do {
             try await client.deleteMe()
             didDelete = true
+            onAccountDeleted()
         } catch {
             errorMessage = "アカウント削除に失敗しました"
         }
