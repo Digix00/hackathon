@@ -84,7 +84,7 @@ func main() {
 	e.GET("/healthz", healthzHandler)
 	e.GET("/healthz/postgres", healthzPostgresHandler(sqlDB))
 
-	handler.RegisterRoutes(e, buildDependencies(db, authClient))
+	handler.RegisterRoutes(e, buildDependencies(db, authClient, cfg))
 
 	log.Info("server starting", zap.String("port", cfg.Port))
 
@@ -114,20 +114,13 @@ func healthzHandler(c echo.Context) error {
 // @Success      200  {object}  map[string]string
 // @Failure      503  {object}  map[string]string
 // @Router       /healthz/postgres [get]
-func healthzPostgresHandler(sqlDB interface {
-	PingContext(context.Context) error
-}) echo.HandlerFunc {
+func healthzPostgresHandler(sqlDB interface{ PingContext(context.Context) error }) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 		defer cancel()
-
 		if err := sqlDB.PingContext(ctx); err != nil {
-			return c.JSON(http.StatusServiceUnavailable, map[string]string{
-				"status": "error",
-				"error":  err.Error(),
-			})
+			return c.JSON(http.StatusServiceUnavailable, map[string]string{"status": "error", "error": err.Error()})
 		}
-
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok", "db": "postgres"})
 	}
 }

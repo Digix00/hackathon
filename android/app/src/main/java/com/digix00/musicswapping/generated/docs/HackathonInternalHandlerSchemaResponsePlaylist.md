@@ -1,0 +1,17 @@
+
+# HackathonInternalHandlerSchemaResponsePlaylist
+
+## Properties
+| Name | Type | Description | Notes |
+| ------------ | ------------- | ------------- | ------------- |
+| **createdAt** | **kotlin.String** |  |  |
+| **id** | **kotlin.String** |  |  |
+| **isPublic** | **kotlin.Boolean** |  |  |
+| **name** | **kotlin.String** |  |  |
+| **tracks** | [**kotlin.collections.List&lt;HackathonInternalHandlerSchemaResponsePlaylistTrack&gt;**](HackathonInternalHandlerSchemaResponsePlaylistTrack.md) |  |  |
+| **updatedAt** | **kotlin.String** |  |  |
+| **userId** | **kotlin.String** |  |  |
+| **description** | **kotlin.String** |  |  [optional] |
+
+
+

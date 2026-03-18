@@ -12,6 +12,10 @@
 | 通知 | APNs (UserNotifications) | |
 | 音楽連携 | Spotify iOS SDK / MusicKit | MusicKit は Apple Music 専用 |
 
+### iOS 実装メモ（ハッカソン判断）
+
+ハッカソン期間中は実装速度を優先しつつ、`BackendAPIClient` のパスエンコードは共通ヘルパーに集約済み。`BackendEncounterUser` の専用モデル化は見送り（現状の `typealias` + 意図コメントで運用）。安定化フェーズで型の厳密化の再検討を行う。
+
 ### iOS BLE 制約（最優先技術検証事項）
 
 - バックグラウンドでの Peripheral アドバタイズは制限あり（フォアグラウンド遷移で復帰する挙動）

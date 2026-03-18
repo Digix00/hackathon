@@ -200,37 +200,28 @@ struct BackendReportResponse: Decodable {
 
 // MARK: - Encounters
 
-struct BackendEncounterUser: Decodable, Equatable {
-    let id: String
-    let displayName: String
-    let avatarURL: String?
+// Encounter user shares the public user shape; extra fields may be nil here.
+typealias BackendEncounterUser = BackendPublicUser
 
-    enum CodingKeys: String, CodingKey {
-        case id
-        case displayName = "display_name"
-        case avatarURL = "avatar_url"
-    }
-}
+typealias BackendEncounterTrack = BackendPublicTrack
 
-struct BackendEncounterTrack: Decodable, Equatable {
-    let id: String
-    let title: String
-    let artistName: String
-    let artworkURL: String?
-    let previewURL: String?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case title
-        case artistName = "artist_name"
-        case artworkURL = "artwork_url"
-        case previewURL = "preview_url"
-    }
-}
-
-enum BackendEncounterType: String, Decodable, Equatable {
+enum BackendEncounterType: Decodable, Equatable {
     case ble
     case location
+    case unknown(String)
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        switch rawValue {
+        case "ble":
+            self = .ble
+        case "location":
+            self = .location
+        default:
+            self = .unknown(rawValue)
+        }
+    }
 }
 
 enum BackendEncounterCreateType: String, Encodable, Equatable {

@@ -29,20 +29,42 @@ Class | Method | HTTP request | Description
 *BleTokensAPI* | [**createBleToken**](docs/BleTokensAPI.md#createbletoken) | **POST** /api/v1/ble-tokens | BLE トークン発行
 *BleTokensAPI* | [**getCurrentBleToken**](docs/BleTokensAPI.md#getcurrentbletoken) | **GET** /api/v1/ble-tokens/current | 有効な BLE トークン取得
 *BleTokensAPI* | [**getUserByBleToken**](docs/BleTokensAPI.md#getuserbybletoken) | **GET** /api/v1/ble-tokens/{token}/user | BLE トークンからユーザー情報取得
+*BlocksAPI* | [**createBlock**](docs/BlocksAPI.md#createblock) | **POST** /api/v1/users/me/blocks | ブロック作成
+*BlocksAPI* | [**deleteBlock**](docs/BlocksAPI.md#deleteblock) | **DELETE** /api/v1/users/me/blocks/{blocked_user_id} | ブロック解除
+*CommentsAPI* | [**createComment**](docs/CommentsAPI.md#createcomment) | **POST** /api/v1/encounters/{id}/comments | コメント作成
+*CommentsAPI* | [**deleteComment**](docs/CommentsAPI.md#deletecomment) | **DELETE** /api/v1/comments/{id} | コメント削除
+*CommentsAPI* | [**listComments**](docs/CommentsAPI.md#listcomments) | **GET** /api/v1/encounters/{id}/comments | コメント一覧取得
 *EncountersAPI* | [**createEncounter**](docs/EncountersAPI.md#createencounter) | **POST** /api/v1/encounters | すれ違い登録
 *EncountersAPI* | [**getEncounterByID**](docs/EncountersAPI.md#getencounterbyid) | **GET** /api/v1/encounters/{id} | すれ違い詳細取得
 *EncountersAPI* | [**listEncounters**](docs/EncountersAPI.md#listencounters) | **GET** /api/v1/encounters | すれ違い履歴一覧取得
 *HealthAPI* | [**healthz**](docs/HealthAPI.md#healthz) | **GET** /healthz | ヘルスチェック
 *HealthAPI* | [**healthzPostgres**](docs/HealthAPI.md#healthzpostgres) | **GET** /healthz/postgres | PostgreSQL ヘルスチェック
+*MusicConnectionsAPI* | [**deleteMusicConnection**](docs/MusicConnectionsAPI.md#deletemusicconnection) | **DELETE** /api/v1/users/me/music-connections/{provider} | 音楽連携を解除
+*MusicConnectionsAPI* | [**getMusicAuthorizeURL**](docs/MusicConnectionsAPI.md#getmusicauthorizeurl) | **GET** /api/v1/music-connections/{provider}/authorize | 音楽サービス連携の認可 URL を取得
+*MusicConnectionsAPI* | [**handleMusicCallback**](docs/MusicConnectionsAPI.md#handlemusiccallback) | **GET** /api/v1/music-connections/{provider}/callback | 音楽サービス連携のコールバック
+*MusicConnectionsAPI* | [**listMusicConnections**](docs/MusicConnectionsAPI.md#listmusicconnections) | **GET** /api/v1/users/me/music-connections | 自分の音楽連携一覧を取得
+*MutesAPI* | [**createMute**](docs/MutesAPI.md#createmute) | **POST** /api/v1/users/me/mutes | ミュート作成
+*MutesAPI* | [**deleteMute**](docs/MutesAPI.md#deletemute) | **DELETE** /api/v1/users/me/mutes/{target_user_id} | ミュート解除
 *NotificationsAPI* | [**deleteNotification**](docs/NotificationsAPI.md#deletenotification) | **DELETE** /api/v1/users/me/notifications/{id} | 通知削除
 *NotificationsAPI* | [**listNotifications**](docs/NotificationsAPI.md#listnotifications) | **GET** /api/v1/users/me/notifications | 通知一覧取得
 *NotificationsAPI* | [**markNotificationAsRead**](docs/NotificationsAPI.md#marknotificationasread) | **PATCH** /api/v1/users/me/notifications/{id}/read | 通知を既読にする
+*PlaylistsAPI* | [**addPlaylistFavorite**](docs/PlaylistsAPI.md#addplaylistfavorite) | **POST** /api/v1/playlists/{id}/favorites | プレイリストをお気に入り登録
+*PlaylistsAPI* | [**addPlaylistTrack**](docs/PlaylistsAPI.md#addplaylisttrack) | **POST** /api/v1/playlists/{id}/tracks | プレイリストにトラック追加
+*PlaylistsAPI* | [**createPlaylist**](docs/PlaylistsAPI.md#createplaylist) | **POST** /api/v1/playlists | プレイリスト作成
+*PlaylistsAPI* | [**deletePlaylist**](docs/PlaylistsAPI.md#deleteplaylist) | **DELETE** /api/v1/playlists/{id} | プレイリスト削除
+*PlaylistsAPI* | [**getMyPlaylists**](docs/PlaylistsAPI.md#getmyplaylists) | **GET** /api/v1/playlists/me | 自分のプレイリスト一覧取得
+*PlaylistsAPI* | [**getPlaylist**](docs/PlaylistsAPI.md#getplaylist) | **GET** /api/v1/playlists/{id} | プレイリスト取得
+*PlaylistsAPI* | [**removePlaylistFavorite**](docs/PlaylistsAPI.md#removeplaylistfavorite) | **DELETE** /api/v1/playlists/{id}/favorites | プレイリストのお気に入り解除
+*PlaylistsAPI* | [**removePlaylistTrack**](docs/PlaylistsAPI.md#removeplaylisttrack) | **DELETE** /api/v1/playlists/{id}/tracks/{trackId} | プレイリストからトラック削除
+*PlaylistsAPI* | [**updatePlaylist**](docs/PlaylistsAPI.md#updateplaylist) | **PATCH** /api/v1/playlists/{id} | プレイリスト更新
 *PushTokensAPI* | [**createPushToken**](docs/PushTokensAPI.md#createpushtoken) | **POST** /api/v1/users/me/push-tokens | プッシュトークン登録（upsert）
 *PushTokensAPI* | [**deletePushToken**](docs/PushTokensAPI.md#deletepushtoken) | **DELETE** /api/v1/users/me/push-tokens/{id} | プッシュトークン削除
 *PushTokensAPI* | [**patchPushToken**](docs/PushTokensAPI.md#patchpushtoken) | **PATCH** /api/v1/users/me/push-tokens/{id} | プッシュトークン更新
 *ReportsAPI* | [**createReport**](docs/ReportsAPI.md#createreport) | **POST** /api/v1/reports | 通報作成
 *SettingsAPI* | [**getMySettings**](docs/SettingsAPI.md#getmysettings) | **GET** /api/v1/users/me/settings | 自分の設定取得
 *SettingsAPI* | [**patchMySettings**](docs/SettingsAPI.md#patchmysettings) | **PATCH** /api/v1/users/me/settings | 自分の設定更新
+*TracksAPI* | [**getTrack**](docs/TracksAPI.md#gettrack) | **GET** /api/v1/tracks/{id} | 楽曲詳細取得
+*TracksAPI* | [**searchTracks**](docs/TracksAPI.md#searchtracks) | **GET** /api/v1/tracks/search | 楽曲検索
 *UsersAPI* | [**createUser**](docs/UsersAPI.md#createuser) | **POST** /api/v1/users | ユーザー作成
 *UsersAPI* | [**deleteMe**](docs/UsersAPI.md#deleteme) | **DELETE** /api/v1/users/me | 自分のアカウント削除
 *UsersAPI* | [**getMe**](docs/UsersAPI.md#getme) | **GET** /api/v1/users/me | 自分のユーザー情報取得
@@ -52,10 +74,16 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [HackathonInternalHandlerSchemaRequestAddPlaylistTrackRequest](docs/HackathonInternalHandlerSchemaRequestAddPlaylistTrackRequest.md)
+ - [HackathonInternalHandlerSchemaRequestCreateBlockRequest](docs/HackathonInternalHandlerSchemaRequestCreateBlockRequest.md)
+ - [HackathonInternalHandlerSchemaRequestCreateCommentRequest](docs/HackathonInternalHandlerSchemaRequestCreateCommentRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateEncounterRequest](docs/HackathonInternalHandlerSchemaRequestCreateEncounterRequest.md)
+ - [HackathonInternalHandlerSchemaRequestCreateMuteRequest](docs/HackathonInternalHandlerSchemaRequestCreateMuteRequest.md)
+ - [HackathonInternalHandlerSchemaRequestCreatePlaylistRequest](docs/HackathonInternalHandlerSchemaRequestCreatePlaylistRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreatePushTokenRequest](docs/HackathonInternalHandlerSchemaRequestCreatePushTokenRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateReportRequest](docs/HackathonInternalHandlerSchemaRequestCreateReportRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateUserRequest](docs/HackathonInternalHandlerSchemaRequestCreateUserRequest.md)
+ - [HackathonInternalHandlerSchemaRequestUpdatePlaylistRequest](docs/HackathonInternalHandlerSchemaRequestUpdatePlaylistRequest.md)
  - [HackathonInternalHandlerSchemaRequestUpdatePushTokenRequest](docs/HackathonInternalHandlerSchemaRequestUpdatePushTokenRequest.md)
  - [HackathonInternalHandlerSchemaRequestUpdateSettingsRequest](docs/HackathonInternalHandlerSchemaRequestUpdateSettingsRequest.md)
  - [HackathonInternalHandlerSchemaRequestUpdateUserRequest](docs/HackathonInternalHandlerSchemaRequestUpdateUserRequest.md)
@@ -63,6 +91,12 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseBleTokenResponse](docs/HackathonInternalHandlerSchemaResponseBleTokenResponse.md)
  - [HackathonInternalHandlerSchemaResponseBleTokenUser](docs/HackathonInternalHandlerSchemaResponseBleTokenUser.md)
  - [HackathonInternalHandlerSchemaResponseBleTokenUserResponse](docs/HackathonInternalHandlerSchemaResponseBleTokenUserResponse.md)
+ - [HackathonInternalHandlerSchemaResponseBlock](docs/HackathonInternalHandlerSchemaResponseBlock.md)
+ - [HackathonInternalHandlerSchemaResponseBlockResponse](docs/HackathonInternalHandlerSchemaResponseBlockResponse.md)
+ - [HackathonInternalHandlerSchemaResponseComment](docs/HackathonInternalHandlerSchemaResponseComment.md)
+ - [HackathonInternalHandlerSchemaResponseCommentListResponse](docs/HackathonInternalHandlerSchemaResponseCommentListResponse.md)
+ - [HackathonInternalHandlerSchemaResponseCommentResponse](docs/HackathonInternalHandlerSchemaResponseCommentResponse.md)
+ - [HackathonInternalHandlerSchemaResponseCommentUser](docs/HackathonInternalHandlerSchemaResponseCommentUser.md)
  - [HackathonInternalHandlerSchemaResponseDevice](docs/HackathonInternalHandlerSchemaResponseDevice.md)
  - [HackathonInternalHandlerSchemaResponseDeviceResponse](docs/HackathonInternalHandlerSchemaResponseDeviceResponse.md)
  - [HackathonInternalHandlerSchemaResponseEncounterDetail](docs/HackathonInternalHandlerSchemaResponseEncounterDetail.md)
@@ -73,9 +107,19 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseEncounterSummary](docs/HackathonInternalHandlerSchemaResponseEncounterSummary.md)
  - [HackathonInternalHandlerSchemaResponseEncounterTrack](docs/HackathonInternalHandlerSchemaResponseEncounterTrack.md)
  - [HackathonInternalHandlerSchemaResponseEncounterUser](docs/HackathonInternalHandlerSchemaResponseEncounterUser.md)
+ - [HackathonInternalHandlerSchemaResponseMusicAuthorizeResponse](docs/HackathonInternalHandlerSchemaResponseMusicAuthorizeResponse.md)
+ - [HackathonInternalHandlerSchemaResponseMusicConnection](docs/HackathonInternalHandlerSchemaResponseMusicConnection.md)
+ - [HackathonInternalHandlerSchemaResponseMusicConnectionsResponse](docs/HackathonInternalHandlerSchemaResponseMusicConnectionsResponse.md)
+ - [HackathonInternalHandlerSchemaResponseMute](docs/HackathonInternalHandlerSchemaResponseMute.md)
+ - [HackathonInternalHandlerSchemaResponseMuteResponse](docs/HackathonInternalHandlerSchemaResponseMuteResponse.md)
  - [HackathonInternalHandlerSchemaResponseNotificationItem](docs/HackathonInternalHandlerSchemaResponseNotificationItem.md)
  - [HackathonInternalHandlerSchemaResponseNotificationListResponse](docs/HackathonInternalHandlerSchemaResponseNotificationListResponse.md)
  - [HackathonInternalHandlerSchemaResponsePagination](docs/HackathonInternalHandlerSchemaResponsePagination.md)
+ - [HackathonInternalHandlerSchemaResponsePlaylist](docs/HackathonInternalHandlerSchemaResponsePlaylist.md)
+ - [HackathonInternalHandlerSchemaResponsePlaylistListResponse](docs/HackathonInternalHandlerSchemaResponsePlaylistListResponse.md)
+ - [HackathonInternalHandlerSchemaResponsePlaylistResponse](docs/HackathonInternalHandlerSchemaResponsePlaylistResponse.md)
+ - [HackathonInternalHandlerSchemaResponsePlaylistSummary](docs/HackathonInternalHandlerSchemaResponsePlaylistSummary.md)
+ - [HackathonInternalHandlerSchemaResponsePlaylistTrack](docs/HackathonInternalHandlerSchemaResponsePlaylistTrack.md)
  - [HackathonInternalHandlerSchemaResponsePublicTrack](docs/HackathonInternalHandlerSchemaResponsePublicTrack.md)
  - [HackathonInternalHandlerSchemaResponsePublicUser](docs/HackathonInternalHandlerSchemaResponsePublicUser.md)
  - [HackathonInternalHandlerSchemaResponsePublicUserResponse](docs/HackathonInternalHandlerSchemaResponsePublicUserResponse.md)
@@ -83,6 +127,10 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseReportResponse](docs/HackathonInternalHandlerSchemaResponseReportResponse.md)
  - [HackathonInternalHandlerSchemaResponseSettings](docs/HackathonInternalHandlerSchemaResponseSettings.md)
  - [HackathonInternalHandlerSchemaResponseSettingsResponse](docs/HackathonInternalHandlerSchemaResponseSettingsResponse.md)
+ - [HackathonInternalHandlerSchemaResponseTrack](docs/HackathonInternalHandlerSchemaResponseTrack.md)
+ - [HackathonInternalHandlerSchemaResponseTrackResponse](docs/HackathonInternalHandlerSchemaResponseTrackResponse.md)
+ - [HackathonInternalHandlerSchemaResponseTrackSearchPagination](docs/HackathonInternalHandlerSchemaResponseTrackSearchPagination.md)
+ - [HackathonInternalHandlerSchemaResponseTrackSearchResponse](docs/HackathonInternalHandlerSchemaResponseTrackSearchResponse.md)
  - [HackathonInternalHandlerSchemaResponseUser](docs/HackathonInternalHandlerSchemaResponseUser.md)
  - [HackathonInternalHandlerSchemaResponseUserResponse](docs/HackathonInternalHandlerSchemaResponseUserResponse.md)
  - [InternalHandlerErrorBody](docs/InternalHandlerErrorBody.md)

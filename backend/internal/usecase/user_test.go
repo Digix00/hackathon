@@ -69,6 +69,11 @@ type stubBlockRepo struct {
 	blocked bool
 }
 
+func (r *stubBlockRepo) Create(_ context.Context, _ entity.Block) error { return nil }
+func (r *stubBlockRepo) Delete(_ context.Context, _, _ string) error    { return nil }
+func (r *stubBlockRepo) ExistsByBlockerAndBlocked(_ context.Context, _, _ string) (bool, error) {
+	return r.blocked, nil
+}
 func (r *stubBlockRepo) ExistsBetween(_ context.Context, _, _ string) (bool, error) {
 	return r.blocked, nil
 }
@@ -129,6 +134,10 @@ func (r *stubEncounterRepo) IncrementDailyCountWithLimit(_ context.Context, _ st
 
 func (r *stubEncounterRepo) CreateWithRateLimit(_ context.Context, encounter entity.Encounter, _ []string, _ string, _ time.Time, _ int, _ int) (entity.Encounter, error) {
 	return encounter, nil
+}
+
+func (r *stubEncounterRepo) ExistsByIDAndParticipant(_ context.Context, _, _ string) (bool, error) {
+	return false, nil
 }
 
 type stubTrackRepo struct {
