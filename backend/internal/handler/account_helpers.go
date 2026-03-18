@@ -62,7 +62,7 @@ func publicUserDTOToResponse(user usecasedto.PublicUserDTO) schemares.PublicUser
 			Title:      user.SharedTrack.Title,
 			ArtistName: user.SharedTrack.ArtistName,
 			ArtworkURL: user.SharedTrack.ArtworkURL,
-			PreviewURL: nil,
+			PreviewURL: user.SharedTrack.PreviewURL,
 		}
 	}
 
@@ -76,5 +76,36 @@ func publicUserDTOToResponse(user usecasedto.PublicUserDTO) schemares.PublicUser
 		EncounterCount: user.EncounterCount,
 		SharedTrack:    sharedTrack,
 		UpdatedAt:      user.UpdatedAt.UTC().Format(time.RFC3339),
+	}
+}
+
+func musicConnectionsToResponse(connections []usecasedto.MusicConnectionDTO) schemares.MusicConnectionsResponse {
+	items := make([]schemares.MusicConnection, 0, len(connections))
+	for _, connection := range connections {
+		var expiresAt *string
+		if connection.ExpiresAt != nil {
+			value := connection.ExpiresAt.UTC().Format(time.RFC3339)
+			expiresAt = &value
+		}
+		items = append(items, schemares.MusicConnection{
+			Provider:         connection.Provider,
+			ProviderUserID:   connection.ProviderUserID,
+			ProviderUsername: connection.ProviderUsername,
+			ExpiresAt:        expiresAt,
+			UpdatedAt:        connection.UpdatedAt.UTC().Format(time.RFC3339),
+		})
+	}
+	return schemares.MusicConnectionsResponse{MusicConnections: items}
+}
+
+func trackDTOToResponse(track usecasedto.TrackDTO) schemares.Track {
+	return schemares.Track{
+		ID:         track.ID,
+		Title:      track.Title,
+		ArtistName: track.ArtistName,
+		ArtworkURL: track.ArtworkURL,
+		PreviewURL: track.PreviewURL,
+		AlbumName:  track.AlbumName,
+		DurationMs: track.DurationMs,
 	}
 }

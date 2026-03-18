@@ -356,6 +356,111 @@
                 }
             }
         },
+        "/api/v1/music-connections/{provider}/authorize": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Spotify / Apple Music の OAuth 認可開始 URL と state を返す",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "music-connections"
+                ],
+                "summary": "音楽サービス連携の認可 URL を取得",
+                "operationId": "getMusicAuthorizeURL",
+                "parameters": [
+                    {
+                        "enum": [
+                            "spotify",
+                            "apple_music"
+                        ],
+                        "type": "string",
+                        "description": "provider",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.MusicAuthorizeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/music-connections/{provider}/callback": {
+            "get": {
+                "description": "OAuth コールバックを処理し、アプリ deep link へリダイレクトする",
+                "tags": [
+                    "music-connections"
+                ],
+                "summary": "音楽サービス連携のコールバック",
+                "operationId": "handleMusicCallback",
+                "parameters": [
+                    {
+                        "enum": [
+                            "spotify",
+                            "apple_music"
+                        ],
+                        "type": "string",
+                        "description": "provider",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "authorization code",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "signed state",
+                        "name": "state",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Found"
+                    }
+                }
+            }
+        },
         "/api/v1/reports": {
             "post": {
                 "security": [
@@ -413,6 +518,136 @@
                     },
                     "409": {
                         "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tracks/search": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "連携済み Spotify アカウントを使ってトラック検索する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tracks"
+                ],
+                "summary": "楽曲検索",
+                "operationId": "searchTracks",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "query",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit (max 50)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "opaque cursor",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.TrackSearchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tracks/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "連携済み音楽アカウント経由でトラック詳細を取得する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tracks"
+                ],
+                "summary": "楽曲詳細取得",
+                "operationId": "getTrack",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "track id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.TrackResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/internal_handler.errorResponse"
                         }
@@ -604,6 +839,107 @@
                         "schema": {
                             "$ref": "#/definitions/hackathon_internal_handler_schema_response.UserResponse"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/music-connections": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "連携済み Spotify / Apple Music アカウント一覧を返す",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "music-connections"
+                ],
+                "summary": "自分の音楽連携一覧を取得",
+                "operationId": "listMusicConnections",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.MusicConnectionsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/music-connections/{provider}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定 provider の音楽連携を解除する",
+                "tags": [
+                    "music-connections"
+                ],
+                "summary": "音楽連携を解除",
+                "operationId": "deleteMusicConnection",
+                "parameters": [
+                    {
+                        "enum": [
+                            "spotify",
+                            "apple_music"
+                        ],
+                        "type": "string",
+                        "description": "provider",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -1630,6 +1966,52 @@
                 }
             }
         },
+        "hackathon_internal_handler_schema_response.MusicAuthorizeResponse": {
+            "type": "object",
+            "properties": {
+                "authorize_url": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.MusicConnection": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string",
+                    "enum": [
+                        "spotify",
+                        "apple_music"
+                    ]
+                },
+                "provider_user_id": {
+                    "type": "string"
+                },
+                "provider_username": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.MusicConnectionsResponse": {
+            "type": "object",
+            "properties": {
+                "music_connections": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.MusicConnection"
+                    }
+                }
+            }
+        },
         "hackathon_internal_handler_schema_response.NotificationItem": {
             "type": "object",
             "properties": {
@@ -1844,6 +2226,65 @@
             "properties": {
                 "settings": {
                     "$ref": "#/definitions/hackathon_internal_handler_schema_response.Settings"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.Track": {
+            "type": "object",
+            "properties": {
+                "album_name": {
+                    "type": "string"
+                },
+                "artist_name": {
+                    "type": "string"
+                },
+                "artwork_url": {
+                    "type": "string"
+                },
+                "duration_ms": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "preview_url": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.TrackResponse": {
+            "type": "object",
+            "properties": {
+                "track": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.Track"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.TrackSearchPagination": {
+            "type": "object",
+            "properties": {
+                "has_more": {
+                    "type": "boolean"
+                },
+                "next_cursor": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.TrackSearchResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.TrackSearchPagination"
+                },
+                "tracks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.Track"
+                    }
                 }
             }
         },
