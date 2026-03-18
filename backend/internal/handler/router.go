@@ -40,7 +40,7 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	api.POST("/encounters", encounterHandler.createEncounter)
 	api.GET("/encounters", encounterHandler.listEncounters)
 	api.GET("/encounters/:id", encounterHandler.getEncounterByID)
-	
+
 	api.POST("/reports", reportHandler.createReport)
 
 	api.GET("/users/me/notifications", notificationHandler.listNotifications)
