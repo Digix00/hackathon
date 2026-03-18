@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 
 	"hackathon/internal/domain/entity"
@@ -121,6 +120,9 @@ func (r *playlistRepository) AddTrack(ctx context.Context, pt entity.PlaylistTra
 		if isUniqueConstraintViolation(err) {
 			return domainerrs.Conflict("Track already exists in playlist")
 		}
+		if isForeignKeyViolation(err) {
+			return domainerrs.BadRequest("Invalid track ID")
+		}
 		return err
 	}
 	return nil
@@ -202,12 +204,4 @@ func modelToEntityPlaylistWithTracks(m model.Playlist) entity.Playlist {
 		tracks[i] = pt
 	}
 	return modelToEntityPlaylist(m, tracks)
-}
-
-func isUniqueConstraintViolation(err error) bool {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		return pgErr.Code == "23505"
-	}
-	return false
 }

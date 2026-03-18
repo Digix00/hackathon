@@ -453,3 +453,28 @@ func TestDuplicatePlaylistTrack(t *testing.T) {
 		t.Fatalf("expected 409 Conflict for duplicate track, got %d: %s", addRec2.Code, addRec2.Body.String())
 	}
 }
+
+func TestAddPlaylistTrackWithInvalidTrackID(t *testing.T) {
+	db := newTestDB(t)
+	user := seedTestUser(t, db, "firebase-uid-invalid-track")
+	e := newTestServer(t, db, "firebase-uid-invalid-track")
+
+	playlist := model.Playlist{ID: uuid.NewString(), UserID: user.ID, Name: "My Tracks", IsPublic: true}
+	if err := db.Create(&playlist).Error; err != nil {
+		t.Fatalf("create playlist: %v", err)
+	}
+
+	// Add non-existent track
+	addReq, err := authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/tracks", map[string]any{
+		"track_id": "non-existent-track-id",
+	})
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	addRec := httptest.NewRecorder()
+	e.ServeHTTP(addRec, addReq)
+
+	if addRec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 Bad Request for invalid track ID, got %d: %s", addRec.Code, addRec.Body.String())
+	}
+}
