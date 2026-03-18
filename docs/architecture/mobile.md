@@ -16,6 +16,13 @@
 
 ハッカソン期間中は実装速度を優先しつつ、`BackendAPIClient` のパスエンコードは共通ヘルパーに集約済み。`BackendEncounterUser` の専用モデル化は見送り（現状の `typealias` + 意図コメントで運用）。安定化フェーズで型の厳密化の再検討を行う。
 
+### iOS 並行性設計（Swift 6 対応）
+
+- iOS ターゲットは `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` を採用している。
+- UI 以外の DTO / API モデルは MainActor に隔離しないこと。
+- `BackendAPIModels.swift` のような API DTO は `nonisolated` を付与し、`BackendAPIClient` など非 MainActor コンテキストから安全に利用できるようにする。
+- 新規モデル追加時に `@MainActor` が推論されていないかを確認し、警告が出たら `nonisolated` を優先する。
+
 ### iOS BLE 制約（最優先技術検証事項）
 
 - バックグラウンドでの Peripheral アドバタイズは制限あり（フォアグラウンド遷移で復帰する挙動）
