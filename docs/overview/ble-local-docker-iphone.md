@@ -52,7 +52,7 @@ iOS 側は `API_BASE_URL` を参照します。人によって値が変わるた
 ローカル運用ではエミュレータの利用が想定されています。
 手順は以下のドキュメントにまとめています。
 
-- `/Users/ryusuke/home/hackathon/docs/overview/firebase-auth-emulator-ops.md`
+- [firebase-auth-emulator-ops.md](./firebase-auth-emulator-ops.md)
 
 ### Scheme の Environment Variables
 
