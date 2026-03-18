@@ -39,9 +39,12 @@ struct MockArtworkView: View {
     var body: some View {
         content
             .if(shadowRadius > 0 && shadowColor != nil) { view in
-                view
+                guard let shadowColor else {
+                    return view
+                }
+                return view
                     .shadow(
-                        color: shadowColor ?? .clear,
+                        color: shadowColor,
                         radius: shadowRadius,
                         x: shadowOffset.x,
                         y: shadowOffset.y

@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - Hero Namespace Key
+// MARK: - Home Namespace Key
 
 struct HomeNamespaceKey: EnvironmentKey {
     static let defaultValue: Namespace.ID = Namespace().wrappedValue
