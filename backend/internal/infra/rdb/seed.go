@@ -149,10 +149,18 @@ func seedDemoData(db *gorm.DB) error {
 	}
 
 	encounteredAt := time.Now().UTC().Add(-2 * time.Hour)
+
+	// Ensure user_id1 < user_id2 to satisfy chk_encounters_user_order.
+	userID1 := userIDA
+	userID2 := userIDB
+	if userID1 > userID2 {
+		userID1, userID2 = userID2, userID1
+	}
+
 	if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&model.Encounter{
 		ID:            encounterID,
-		UserID1:       userIDA,
-		UserID2:       userIDB,
+		UserID1:       userID1,
+		UserID2:       userID2,
 		EncounteredAt: encounteredAt,
 		EncounterType: "ble",
 	}).Error; err != nil {
