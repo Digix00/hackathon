@@ -1,5 +1,7 @@
 docs/BleTokensApi.md
+docs/BlocksApi.md
 docs/EncountersApi.md
+docs/HackathonInternalHandlerSchemaRequestCreateBlockRequest.md
 docs/HackathonInternalHandlerSchemaRequestCreateEncounterRequest.md
 docs/HackathonInternalHandlerSchemaRequestCreateMuteRequest.md
 docs/HackathonInternalHandlerSchemaRequestCreatePushTokenRequest.md
@@ -12,6 +14,8 @@ docs/HackathonInternalHandlerSchemaResponseBleToken.md
 docs/HackathonInternalHandlerSchemaResponseBleTokenResponse.md
 docs/HackathonInternalHandlerSchemaResponseBleTokenUser.md
 docs/HackathonInternalHandlerSchemaResponseBleTokenUserResponse.md
+docs/HackathonInternalHandlerSchemaResponseBlock.md
+docs/HackathonInternalHandlerSchemaResponseBlockResponse.md
 docs/HackathonInternalHandlerSchemaResponseDevice.md
 docs/HackathonInternalHandlerSchemaResponseDeviceResponse.md
 docs/HackathonInternalHandlerSchemaResponseEncounterDetail.md
@@ -55,6 +59,7 @@ docs/SettingsApi.md
 docs/TracksApi.md
 docs/UsersApi.md
 src/main/kotlin/com/digix00/musicswapping/generated/apis/BleTokensApi.kt
+src/main/kotlin/com/digix00/musicswapping/generated/apis/BlocksApi.kt
 src/main/kotlin/com/digix00/musicswapping/generated/apis/EncountersApi.kt
 src/main/kotlin/com/digix00/musicswapping/generated/apis/HealthApi.kt
 src/main/kotlin/com/digix00/musicswapping/generated/apis/MusicConnectionsApi.kt
@@ -82,6 +87,7 @@ src/main/kotlin/com/digix00/musicswapping/generated/infrastructure/StringBuilder
 src/main/kotlin/com/digix00/musicswapping/generated/infrastructure/URIAdapter.kt
 src/main/kotlin/com/digix00/musicswapping/generated/infrastructure/URLAdapter.kt
 src/main/kotlin/com/digix00/musicswapping/generated/infrastructure/UUIDAdapter.kt
+src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaRequestCreateBlockRequest.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaRequestCreateEncounterRequest.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaRequestCreateMuteRequest.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaRequestCreatePushTokenRequest.kt
@@ -94,6 +100,8 @@ src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHand
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseBleTokenResponse.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseBleTokenUser.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseBleTokenUserResponse.kt
+src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseBlock.kt
+src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseBlockResponse.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseDevice.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseDeviceResponse.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseEncounterDetail.kt

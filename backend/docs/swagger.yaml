@@ -1,5 +1,10 @@
 basePath: /
 definitions:
+  hackathon_internal_handler_schema_request.CreateBlockRequest:
+    properties:
+      blocked_user_id:
+        type: string
+    type: object
   hackathon_internal_handler_schema_request.CreateEncounterRequest:
     properties:
       occurred_at:
@@ -183,6 +188,20 @@ definitions:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.BleTokenUser'
     required:
     - user
+    type: object
+  hackathon_internal_handler_schema_response.Block:
+    properties:
+      blocked_user_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.BlockResponse:
+    properties:
+      block:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.Block'
     type: object
   hackathon_internal_handler_schema_response.Device:
     properties:
@@ -1177,6 +1196,83 @@ paths:
       summary: 自分のプロフィール更新
       tags:
       - users
+  /api/v1/users/me/blocks:
+    post:
+      consumes:
+      - application/json
+      description: 指定したユーザーをブロックする。自分自身や存在しないユーザーへのブロック、重複ブロックはエラーになる。
+      operationId: createBlock
+      parameters:
+      - description: ブロックリクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.CreateBlockRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.BlockResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: ブロック作成
+      tags:
+      - blocks
+  /api/v1/users/me/blocks/{blocked_user_id}:
+    delete:
+      description: 指定したユーザーのブロックを解除する。ブロックが存在しない場合はエラーになる。
+      operationId: deleteBlock
+      parameters:
+      - description: ブロック解除対象のユーザーID
+        in: path
+        name: blocked_user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: ブロック解除
+      tags:
+      - blocks
   /api/v1/users/me/music-connections:
     get:
       description: 連携済み Spotify / Apple Music アカウント一覧を返す
