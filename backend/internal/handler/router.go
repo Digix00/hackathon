@@ -15,30 +15,40 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	bleTokenHandler := newBleTokenHandler(deps.BleTokenUsecase)
 	reportHandler := newReportHandler(deps.ReportUsecase)
 	notificationHandler := newNotificationHandler(deps.NotificationUsecase)
+	musicHandler := newMusicHandler(deps.MusicUsecase)
 
 	api := e.Group("/api/v1")
-	api.Use(middleware.FirebaseAuth(deps.AuthTokenVerifier))
+	api.GET("/music-connections/:provider/callback", musicHandler.callback)
 
-	api.POST("/users", userHandler.createUser)
-	api.GET("/users/me", userHandler.getMe)
-	api.GET("/users/:id", userHandler.getUserByID)
-	api.PATCH("/users/me", userHandler.patchMe)
-	api.DELETE("/users/me", userHandler.deleteMe)
+	protected := api.Group("")
+	protected.Use(middleware.FirebaseAuth(deps.AuthTokenVerifier))
 
-	api.GET("/users/me/settings", settingsHandler.getMySettings)
-	api.PATCH("/users/me/settings", settingsHandler.patchMySettings)
+	protected.POST("/users", userHandler.createUser)
+	protected.GET("/users/me", userHandler.getMe)
+	protected.GET("/users/:id", userHandler.getUserByID)
+	protected.PATCH("/users/me", userHandler.patchMe)
+	protected.DELETE("/users/me", userHandler.deleteMe)
 
-	api.POST("/users/me/push-tokens", pushTokenHandler.createPushToken)
-	api.PATCH("/users/me/push-tokens/:id", pushTokenHandler.patchPushToken)
-	api.DELETE("/users/me/push-tokens/:id", pushTokenHandler.deletePushToken)
+	protected.GET("/users/me/settings", settingsHandler.getMySettings)
+	protected.PATCH("/users/me/settings", settingsHandler.patchMySettings)
 
-	api.POST("/ble-tokens", bleTokenHandler.createBleToken)
-	api.GET("/ble-tokens/current", bleTokenHandler.getCurrentBleToken)
-	api.GET("/ble-tokens/:token/user", bleTokenHandler.getUserByBleToken)
+	protected.POST("/users/me/push-tokens", pushTokenHandler.createPushToken)
+	protected.PATCH("/users/me/push-tokens/:id", pushTokenHandler.patchPushToken)
+	protected.DELETE("/users/me/push-tokens/:id", pushTokenHandler.deletePushToken)
 
-	api.POST("/reports", reportHandler.createReport)
+	protected.POST("/ble-tokens", bleTokenHandler.createBleToken)
+	protected.GET("/ble-tokens/current", bleTokenHandler.getCurrentBleToken)
+	protected.GET("/ble-tokens/:token/user", bleTokenHandler.getUserByBleToken)
 
-	api.GET("/users/me/notifications", notificationHandler.listNotifications)
-	api.PATCH("/users/me/notifications/:id/read", notificationHandler.markNotificationAsRead)
-	api.DELETE("/users/me/notifications/:id", notificationHandler.deleteNotification)
+	protected.POST("/reports", reportHandler.createReport)
+
+	protected.GET("/users/me/notifications", notificationHandler.listNotifications)
+	protected.PATCH("/users/me/notifications/:id/read", notificationHandler.markNotificationAsRead)
+	protected.DELETE("/users/me/notifications/:id", notificationHandler.deleteNotification)
+
+	protected.GET("/music-connections/:provider/authorize", musicHandler.authorize)
+	protected.GET("/users/me/music-connections", musicHandler.listConnections)
+	protected.DELETE("/users/me/music-connections/:provider", musicHandler.deleteConnection)
+	protected.GET("/tracks/search", musicHandler.searchTracks)
+	protected.GET("/tracks/:id", musicHandler.getTrack)
 }

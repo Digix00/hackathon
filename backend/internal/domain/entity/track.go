@@ -5,4 +5,7 @@ type TrackInfo struct {
 	Title      string
 	ArtistName string
 	ArtworkURL *string
+	PreviewURL *string
+	AlbumName  *string
+	DurationMs *int
 }
