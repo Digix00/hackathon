@@ -127,5 +127,5 @@ generate-ios: generate-docs _generate-ios-only
 # generate-docs を1回だけ実行してから両クライアントを生成する
 generate-code:
 	$(MAKE) generate-docs
-	$(MAKE) _generate-android-only _generate-ios-only
+	$(MAKE) _generate-ios-only
 	@echo "==> 全コード生成が完了しました"
