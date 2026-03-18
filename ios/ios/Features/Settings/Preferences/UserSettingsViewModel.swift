@@ -148,6 +148,7 @@ final class UserSettingsViewModel: ObservableObject {
 
         do {
             let settings = try await client.getMySettings()
+            if Task.isCancelled { return }
             applySettings(settings)
         } catch {
             if Task.isCancelled { return }
@@ -161,6 +162,7 @@ final class UserSettingsViewModel: ObservableObject {
         field: SaveField,
         revert: @escaping () -> Void
     ) {
+        loadTask?.cancel()
         saveTasks[field]?.cancel()
         saveTasks[field] = Task { await performUpdate(request, field: field, revert: revert) }
     }
