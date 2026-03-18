@@ -24,7 +24,11 @@ struct Encounter: Identifiable, Hashable {
     }
 
     var happenedEarlier: Bool {
-        relativeTime == "以前"
+        relativeTime == "以前" ||
+        relativeTime.hasSuffix("日前") ||
+        relativeTime.hasSuffix("週間前") ||
+        relativeTime.hasSuffix("か月前") ||
+        relativeTime.hasSuffix("年前")
     }
 }
 
