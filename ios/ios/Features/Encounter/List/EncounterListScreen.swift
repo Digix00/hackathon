@@ -9,7 +9,7 @@ struct EncounterListView: View {
 
     @Namespace private var encounterNamespace
     @Binding private var isDetailPresented: Bool
-    @State private var selectedEncounter: Encounter?
+    @State private var selectedEncounterID: String?
     @State private var showDetailContent = false
     @SceneStorage("encounter.list.scrollTargetID") private var scrollTargetID: String?
     @EnvironmentObject private var bleCoordinator: BLEAppCoordinator
@@ -19,6 +19,11 @@ struct EncounterListView: View {
 
     private var encounters: [Encounter] {
         bleCoordinator.encounters
+    }
+
+    private var selectedEncounter: Encounter? {
+        guard let selectedEncounterID else { return nil }
+        return encounters.first(where: { $0.id == selectedEncounterID })
     }
 
     init(isDetailPresented: Binding<Bool> = .constant(false)) {
@@ -47,12 +52,12 @@ struct EncounterListView: View {
             }
             syncDetailPresentationState()
         }
-        .onChange(of: selectedEncounter?.id) { _ in
+        .onChange(of: selectedEncounterID) { _ in
             syncDetailPresentationState()
         }
         .onChange(of: bleCoordinator.encounters.map(\.id)) { _, ids in
-            guard let selectedEncounter, !ids.contains(selectedEncounter.id) else { return }
-            self.selectedEncounter = nil
+            guard let selectedEncounterID, !ids.contains(selectedEncounterID) else { return }
+            self.selectedEncounterID = nil
         }
     }
 
@@ -85,7 +90,7 @@ struct EncounterListView: View {
                         DotGridBackground()
                         .opacity(0.15)
                 }
-                    .opacity(selectedEncounter == nil ? 1 : 0)
+                    .opacity(selectedEncounterID == nil ? 1 : 0)
 
                     VStack(spacing: 0) {
                         GeometryReader { wheelGeometry in
@@ -101,7 +106,7 @@ struct EncounterListView: View {
 
                                             Button {
                                                 withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
-                                                    selectedEncounter = encounter
+                                                    selectedEncounterID = encounter.id
                                                 }
                                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                                                     withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
@@ -259,6 +264,11 @@ struct EncounterListView: View {
                         .transition(.opacity.combined(with: .offset(y: 20)))
                     }
 
+                    if showDetailContent {
+                        EncounterCommentsSection(encounter: encounter)
+                            .transition(.opacity.combined(with: .offset(y: 20)))
+                    }
+
                     Spacer(minLength: DetailLayout.contentBottomSpacing)
                 }
                 .frame(maxWidth: .infinity)
@@ -273,7 +283,7 @@ struct EncounterListView: View {
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                     withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
-                        selectedEncounter = nil
+                        selectedEncounterID = nil
                     }
                 }
             }
@@ -328,7 +338,7 @@ struct EncounterListView: View {
     }
 
     private func syncDetailPresentationState() {
-        isDetailPresented = selectedEncounter != nil
+        isDetailPresented = selectedEncounterID != nil
     }
 }
 

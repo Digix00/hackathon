@@ -18,20 +18,31 @@ struct Encounter: Identifiable, Hashable {
     var happenedYesterday: Bool {
         relativeTime == "昨日"
     }
+
+    var happenedToday: Bool {
+        !happenedYesterday && !happenedEarlier
+    }
+
+    var happenedEarlier: Bool {
+        relativeTime == "以前"
+    }
 }
 
 enum EncounterSection: String, CaseIterable, Identifiable {
     case today = "今日"
     case yesterday = "昨日"
+    case earlier = "以前"
 
     var id: String { rawValue }
 
     func includes(_ encounter: Encounter) -> Bool {
         switch self {
         case .today:
-            return !encounter.happenedYesterday
+            return encounter.happenedToday
         case .yesterday:
             return encounter.happenedYesterday
+        case .earlier:
+            return encounter.happenedEarlier
         }
     }
 }

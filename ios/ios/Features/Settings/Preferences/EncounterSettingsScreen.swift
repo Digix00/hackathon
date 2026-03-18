@@ -66,7 +66,7 @@ struct EncounterSettingsView: View {
                             .tint(PrototypeTheme.accent)
                     }
                 }
-                
+
                 SectionCard {
                     Toggle(isOn: $profileVisible) {
                         Text("相手から見つけやすくする")

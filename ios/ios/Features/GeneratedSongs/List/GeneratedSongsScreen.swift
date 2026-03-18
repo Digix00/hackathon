@@ -46,7 +46,7 @@ struct GeneratedSongsView: View {
 
                 VStack(spacing: 16) {
                     NavigationLink {
-                        GeneratedSongNotificationView()
+                        NotificationListView()
                     } label: {
                         SecondaryButtonLabel(title: "生成完了通知を見る", systemImage: "bell.badge")
                     }
@@ -64,4 +64,3 @@ struct GeneratedSongsView: View {
         }
     }
 }
-

@@ -1,0 +1,68 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_TERRAFORM_SA }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker asia-northeast1-docker.pkg.dev --quiet
+
+      - name: Build and push server image
+        env:
+          IMAGE: asia-northeast1-docker.pkg.dev/${{ vars.TF_PROJECT_ID }}/app/server
+        run: |
+          docker build \
+            -f backend/cmd/server/Dockerfile.prod \
+            -t $IMAGE:${{ github.sha }} \
+            -t $IMAGE:latest \
+            ./backend
+          docker push $IMAGE:${{ github.sha }}
+          docker push $IMAGE:latest
+
+      - name: Build and push worker image
+        env:
+          IMAGE: asia-northeast1-docker.pkg.dev/${{ vars.TF_PROJECT_ID }}/app/worker
+        run: |
+          docker build \
+            -f backend/cmd/worker/Dockerfile.prod \
+            -t $IMAGE:${{ github.sha }} \
+            -t $IMAGE:latest \
+            ./backend
+          docker push $IMAGE:${{ github.sha }}
+          docker push $IMAGE:latest
+
+      - name: Deploy Cloud Run Service (api)
+        run: |
+          gcloud run deploy api \
+            --image asia-northeast1-docker.pkg.dev/${{ vars.TF_PROJECT_ID }}/app/server:${{ github.sha }} \
+            --region asia-northeast1 \
+            --project ${{ vars.TF_PROJECT_ID }}
+
+      - name: Deploy Cloud Run Job (worker)
+        run: |
+          gcloud run jobs update worker \
+            --image asia-northeast1-docker.pkg.dev/${{ vars.TF_PROJECT_ID }}/app/worker:${{ github.sha }} \
+            --region asia-northeast1 \
+            --project ${{ vars.TF_PROJECT_ID }}
