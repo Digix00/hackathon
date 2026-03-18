@@ -70,7 +70,7 @@ ios/
 API_BASE_URL = http:/$()/127.0.0.1:8000
 ```
 
-※ `$()/` は Xcode の設定ファイルで `//` をエスケープするための記法です。
+※ `$()/` は Xcode の設定ファイルで `//` をエスケープするための記法です。Run Scheme の環境変数では不要です。
 
 ### Firebase Auth Emulator のトークンを使う
 
@@ -93,7 +93,7 @@ curl -s "http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signUp
 
 2. Xcode の Run Scheme で環境変数を設定
 
-- `API_BASE_URL` = `http://localhost:8000`
+- `API_BASE_URL` = `http://127.0.0.1:8000`
 - `FIREBASE_ID_TOKEN` = `<emulatorで発行したtoken>`
 
 `FIREBASE_ID_TOKEN` は `BackendAPIClient` が優先して使用します。
