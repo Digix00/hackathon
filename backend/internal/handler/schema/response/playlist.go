@@ -11,7 +11,7 @@ type PlaylistTrack struct {
 	CreatedAt  string  `json:"created_at"  validate:"required"`
 }
 
-// Playlist はプレイリスト情報。
+// Playlist はプレイリスト情報（トラック一覧付き）。
 type Playlist struct {
 	ID          string          `json:"id"          validate:"required"`
 	UserID      string          `json:"user_id"     validate:"required"`
@@ -23,6 +23,17 @@ type Playlist struct {
 	UpdatedAt   string          `json:"updated_at"  validate:"required"`
 }
 
+// PlaylistSummary はプレイリスト一覧用のサマリー情報（トラック情報を含まない）。
+type PlaylistSummary struct {
+	ID          string  `json:"id"          validate:"required"`
+	UserID      string  `json:"user_id"     validate:"required"`
+	Name        string  `json:"name"        validate:"required"`
+	Description *string `json:"description"`
+	IsPublic    bool    `json:"is_public"   validate:"required"`
+	CreatedAt   string  `json:"created_at"  validate:"required"`
+	UpdatedAt   string  `json:"updated_at"  validate:"required"`
+}
+
 // PlaylistResponse はプレイリスト単体のレスポンス。
 // @name PlaylistResponse
 type PlaylistResponse struct {
@@ -32,5 +43,5 @@ type PlaylistResponse struct {
 // PlaylistListResponse はプレイリスト一覧のレスポンス。
 // @name PlaylistListResponse
 type PlaylistListResponse struct {
-	Playlists []Playlist `json:"playlists" validate:"required"`
+	Playlists []PlaylistSummary `json:"playlists" validate:"required"`
 }

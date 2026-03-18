@@ -89,9 +89,9 @@ func (h *playlistHandler) getMyPlaylists(c echo.Context) error {
 		return err
 	}
 
-	res := make([]schemares.Playlist, len(dtos))
+	res := make([]schemares.PlaylistSummary, len(dtos))
 	for i, dto := range dtos {
-		res[i] = playlistDTOToResponse(dto)
+		res[i] = playlistDTOToSummaryResponse(dto)
 	}
 
 	return c.JSON(http.StatusOK, schemares.PlaylistListResponse{Playlists: res})
@@ -357,6 +357,18 @@ func (h *playlistHandler) removePlaylistFavorite(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusNoContent)
+}
+
+func playlistDTOToSummaryResponse(dto usecasedto.PlaylistDTO) schemares.PlaylistSummary {
+	return schemares.PlaylistSummary{
+		ID:          dto.ID,
+		UserID:      dto.UserID,
+		Name:        dto.Name,
+		Description: dto.Description,
+		IsPublic:    dto.IsPublic,
+		CreatedAt:   dto.CreatedAt.UTC().Format(time.RFC3339),
+		UpdatedAt:   dto.UpdatedAt.UTC().Format(time.RFC3339),
+	}
 }
 
 func playlistDTOToResponse(dto usecasedto.PlaylistDTO) schemares.Playlist {
