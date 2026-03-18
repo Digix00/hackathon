@@ -279,12 +279,6 @@ definitions:
       id:
         type: string
     type: object
-  hackathon_internal_handler_schema_response.Pagination:
-    properties:
-      has_more:
-        type: boolean
-      next_cursor:
-        type: string
   hackathon_internal_handler_schema_response.NotificationItem:
     properties:
       created_at:
@@ -308,6 +302,13 @@ definitions:
         type: integer
       unread_count:
         type: integer
+    type: object
+  hackathon_internal_handler_schema_response.Pagination:
+    properties:
+      has_more:
+        type: boolean
+      next_cursor:
+        type: string
     type: object
   hackathon_internal_handler_schema_response.PublicTrack:
     properties:

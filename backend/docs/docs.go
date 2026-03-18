@@ -1542,14 +1542,6 @@ const docTemplate = `{
                 }
             }
         },
-        "hackathon_internal_handler_schema_response.Pagination": {
-            "type": "object",
-            "properties": {
-                "has_more": {
-                    "type": "boolean"
-                },
-                "next_cursor": {
-                    "type": "string"
         "hackathon_internal_handler_schema_response.NotificationItem": {
             "type": "object",
             "properties": {
@@ -1584,6 +1576,17 @@ const docTemplate = `{
                 },
                 "unread_count": {
                     "type": "integer"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.Pagination": {
+            "type": "object",
+            "properties": {
+                "has_more": {
+                    "type": "boolean"
+                },
+                "next_cursor": {
+                    "type": "string"
                 }
             }
         },
