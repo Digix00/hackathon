@@ -13,6 +13,19 @@ extension EnvironmentValues {
     }
 }
 
+// MARK: - Encounter Namespace Key
+
+struct EncounterNamespaceKey: EnvironmentKey {
+    static let defaultValue: Namespace.ID? = nil
+}
+
+extension EnvironmentValues {
+    var encounterNamespace: Namespace.ID? {
+        get { self[EncounterNamespaceKey.self] }
+        set { self[EncounterNamespaceKey.self] = newValue }
+    }
+}
+
 // MARK: - Safe Area Inset Keys
 
 struct TopSafeAreaInsetKey: EnvironmentKey {
