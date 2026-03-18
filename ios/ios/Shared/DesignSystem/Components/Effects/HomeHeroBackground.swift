@@ -11,14 +11,14 @@ struct HomeHeroBackground: View {
             Group {
                 Circle()
                     .fill(baseColor.opacity(0.3))
-                    .frame(width: 500, height: 500)
-                    .offset(x: animate ? 100 : -100, y: animate ? -180 : -80)
+                    .frame(width: 350, height: 350)
+                    .offset(x: animate ? 60 : -60, y: animate ? -120 : -40)
                     .blur(radius: 100)
 
                 Circle()
                     .fill(PrototypeTheme.accent.opacity(0.12))
-                    .frame(width: 420, height: 420)
-                    .offset(x: animate ? -120 : 120, y: animate ? 220 : 120)
+                    .frame(width: 300, height: 300)
+                    .offset(x: animate ? -80 : 80, y: animate ? 150 : 80)
                     .blur(radius: 110)
             }
         }

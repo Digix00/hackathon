@@ -13,25 +13,28 @@ struct HomeHeroPage: View {
     }
 
     var body: some View {
-        ZStack {
-            // Background Layer
+        GeometryReader { geometry in
             ZStack {
-                PrototypeTheme.background.ignoresSafeArea()
-                HomeHeroBackground(baseColor: heroColor)
-                    .ignoresSafeArea()
+                // Background Layer
+                ZStack {
+                    PrototypeTheme.background
+                    HomeHeroBackground(baseColor: heroColor)
 
-                // Extremely subtle background text, fixed to avoid clipping
-                Text("TOKYO")
-                    .font(.system(size: 140, weight: .black))
-                    .foregroundStyle(Color.white.opacity(0.012))
-                    .rotationEffect(.degrees(-90))
-                    .offset(x: -160)
-                    .allowsHitTesting(false)
-            }
-            .offset(x: CGFloat(motion.roll * -15), y: CGFloat(motion.pitch * -15))
+                    // Extremely subtle background text, fixed to avoid clipping
+                    Text("TOKYO")
+                        .font(.system(size: 140, weight: .black))
+                        .foregroundStyle(Color.white.opacity(0.012))
+                        .rotationEffect(.degrees(-90))
+                        .offset(x: -160)
+                        .allowsHitTesting(false)
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .clipped()
+                .ignoresSafeArea()
+                .offset(x: CGFloat(motion.roll * -15), y: CGFloat(motion.pitch * -15))
 
-            // Content Layer
-            VStack {
+                // Content Layer
+                VStack {
                 // Top Info Bar - adjusted padding and spacing to prevent overflow
                 HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -94,9 +97,8 @@ struct HomeHeroPage: View {
                 .padding(.bottom, max(24, bottomSafeArea + 8))
             }
             .padding(.horizontal, 28) // Balanced padding for safety and breathing room
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(PrototypeTheme.background)
         .onAppear {
             if isMotionActive {
                 motion.startUpdates()
