@@ -2,11 +2,8 @@ import SwiftUI
 
 struct SettingsHubView: View {
     let restartOnboarding: () -> Void
-<<<<<<< HEAD
     @StateObject private var settingsViewModel = UserSettingsViewModel()
-=======
     @StateObject private var profileViewModel = CurrentUserProfileViewModel()
->>>>>>> develop
 
     private var appSettings: [SettingsDestination] {
         [
@@ -123,13 +120,10 @@ struct SettingsHubView: View {
                 .padding(.vertical, 20)
             }
         }
-<<<<<<< HEAD
-        .onAppear { settingsViewModel.loadIfNeeded() }
-=======
         .onAppear {
+            settingsViewModel.loadIfNeeded()
             profileViewModel.refresh()
         }
->>>>>>> develop
     }
 
     private func settingsGroup(title: String, items: [SettingsDestination]) -> some View {
