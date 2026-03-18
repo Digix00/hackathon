@@ -65,7 +65,7 @@ func autoMigrate(db *gorm.DB) error {
 	)
 }
 
-// applyManualConstraints は循環 FK（users ↔ files）を冪等に追加する。
+// applyManualConstraints は循環 FK（users ↔ files）および AutoMigrate で作成されない FK を冪等に追加する。
 // ADD CONSTRAINT IF NOT EXISTS は PostgreSQL 17+ でのみ有効なため、
 // PG16 対応として DO $$ BEGIN ... END $$ ブロックで pg_constraint を参照し冪等性を確保する。
 // CHECK 制約・部分 UNIQUE インデックスは各 model の struct タグ（check / uniqueIndex）で定義し、
@@ -83,6 +83,15 @@ func applyManualConstraints(db *gorm.DB) error {
 			IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_users_avatar_file') THEN
 				ALTER TABLE users ADD CONSTRAINT fk_users_avatar_file
 					FOREIGN KEY (avatar_file_id) REFERENCES files(id);
+			END IF;
+		END $$`,
+		// ---- FK（playlist_tracks.track_id → tracks.id） ----
+		// DisableForeignKeyConstraintWhenMigrating: true のため AutoMigrate では作成されない。
+		// AddTrack で isForeignKeyViolation による無効 track_id 検出を有効にするために手動追加する。
+		`DO $$ BEGIN
+			IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_playlist_tracks_track') THEN
+				ALTER TABLE playlist_tracks ADD CONSTRAINT fk_playlist_tracks_track
+					FOREIGN KEY (track_id) REFERENCES tracks(id);
 			END IF;
 		END $$`,
 	}

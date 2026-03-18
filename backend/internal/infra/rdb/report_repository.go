@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 
 	"hackathon/internal/domain/entity"
+	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
 	"hackathon/internal/infra/rdb/model"
 )
@@ -27,7 +28,13 @@ func (r *reportRepository) Create(ctx context.Context, report entity.Report) err
 		TargetCommentID: report.TargetCommentID,
 		Reason:          report.Reason,
 	}
-	return r.db.WithContext(ctx).Create(&m).Error
+	if err := r.db.WithContext(ctx).Create(&m).Error; err != nil {
+		if isUniqueConstraintViolation(err) {
+			return domainerrs.Conflict("Report already exists")
+		}
+		return err
+	}
+	return nil
 }
 
 func (r *reportRepository) ExistsByReporterAndTarget(ctx context.Context, reporterUserID, reportedUserID, reportType string, targetCommentID *string) (bool, error) {

@@ -1,8 +1,20 @@
 basePath: /
 definitions:
+  hackathon_internal_handler_schema_request.AddPlaylistTrackRequest:
+    properties:
+      track_id:
+        type: string
+    required:
+    - track_id
+    type: object
   hackathon_internal_handler_schema_request.CreateBlockRequest:
     properties:
       blocked_user_id:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_request.CreateCommentRequest:
+    properties:
+      content:
         type: string
     type: object
   hackathon_internal_handler_schema_request.CreateEncounterRequest:
@@ -20,6 +32,17 @@ definitions:
     properties:
       target_user_id:
         type: string
+    type: object
+  hackathon_internal_handler_schema_request.CreatePlaylistRequest:
+    properties:
+      description:
+        type: string
+      is_public:
+        type: boolean
+      name:
+        type: string
+    required:
+    - name
     type: object
   hackathon_internal_handler_schema_request.CreatePushTokenRequest:
     properties:
@@ -73,6 +96,15 @@ definitions:
         - female
         - other
         - no-answer
+        type: string
+    type: object
+  hackathon_internal_handler_schema_request.UpdatePlaylistRequest:
+    properties:
+      description:
+        type: string
+      is_public:
+        type: boolean
+      name:
         type: string
     type: object
   hackathon_internal_handler_schema_request.UpdatePushTokenRequest:
@@ -202,6 +234,42 @@ definitions:
     properties:
       block:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.Block'
+    type: object
+  hackathon_internal_handler_schema_response.Comment:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      encounter_id:
+        type: string
+      id:
+        type: string
+      user:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.CommentUser'
+    type: object
+  hackathon_internal_handler_schema_response.CommentListResponse:
+    properties:
+      comments:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.Comment'
+        type: array
+      pagination:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.Pagination'
+    type: object
+  hackathon_internal_handler_schema_response.CommentResponse:
+    properties:
+      comment:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.Comment'
+    type: object
+  hackathon_internal_handler_schema_response.CommentUser:
+    properties:
+      avatar_url:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: string
     type: object
   hackathon_internal_handler_schema_response.Device:
     properties:
@@ -391,6 +459,99 @@ definitions:
         type: boolean
       next_cursor:
         type: string
+    type: object
+  hackathon_internal_handler_schema_response.Playlist:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_public:
+        type: boolean
+      name:
+        type: string
+      tracks:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.PlaylistTrack'
+        type: array
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    required:
+    - created_at
+    - id
+    - is_public
+    - name
+    - tracks
+    - updated_at
+    - user_id
+    type: object
+  hackathon_internal_handler_schema_response.PlaylistListResponse:
+    properties:
+      playlists:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.PlaylistSummary'
+        type: array
+    required:
+    - playlists
+    type: object
+  hackathon_internal_handler_schema_response.PlaylistResponse:
+    properties:
+      playlist:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.Playlist'
+    required:
+    - playlist
+    type: object
+  hackathon_internal_handler_schema_response.PlaylistSummary:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_public:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    required:
+    - created_at
+    - id
+    - is_public
+    - name
+    - updated_at
+    - user_id
+    type: object
+  hackathon_internal_handler_schema_response.PlaylistTrack:
+    properties:
+      artist_name:
+        type: string
+      artwork_url:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      sort_order:
+        type: integer
+      title:
+        type: string
+      track_id:
+        type: string
+    required:
+    - artist_name
+    - created_at
+    - id
+    - sort_order
+    - title
+    - track_id
     type: object
   hackathon_internal_handler_schema_response.PublicTrack:
     properties:
@@ -694,6 +855,42 @@ paths:
       summary: 有効な BLE トークン取得
       tags:
       - ble-tokens
+  /api/v1/comments/{id}:
+    delete:
+      description: 自分のコメントを削除する
+      operationId: deleteComment
+      parameters:
+      - description: コメント ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: コメント削除
+      tags:
+      - comments
   /api/v1/encounters:
     get:
       description: 認証ユーザーのすれ違い履歴を取得する
@@ -823,6 +1020,93 @@ paths:
       summary: すれ違い詳細取得
       tags:
       - encounters
+  /api/v1/encounters/{id}/comments:
+    get:
+      description: エンカウントのコメント一覧を取得する
+      operationId: listComments
+      parameters:
+      - description: エンカウント ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: '取得件数（デフォルト: 20, 最大: 50）'
+        in: query
+        name: limit
+        type: integer
+      - description: ページングカーソル
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.CommentListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: コメント一覧取得
+      tags:
+      - comments
+    post:
+      consumes:
+      - application/json
+      description: エンカウントにコメントを投稿する
+      operationId: createComment
+      parameters:
+      - description: エンカウント ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: コメントリクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.CreateCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.CommentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: コメント作成
+      tags:
+      - comments
   /api/v1/music-connections/{provider}/authorize:
     get:
       description: Spotify / Apple Music の OAuth 認可開始 URL と state を返す
@@ -893,6 +1177,349 @@ paths:
       summary: 音楽サービス連携のコールバック
       tags:
       - music-connections
+  /api/v1/playlists:
+    post:
+      consumes:
+      - application/json
+      description: 認証済みユーザーの新規プレイリストを作成する
+      operationId: createPlaylist
+      parameters:
+      - description: プレイリスト作成リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.CreatePlaylistRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.PlaylistResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: プレイリスト作成
+      tags:
+      - playlists
+  /api/v1/playlists/{id}:
+    delete:
+      description: プレイリストを削除する（所有者のみ）
+      operationId: deletePlaylist
+      parameters:
+      - description: プレイリストID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: プレイリスト削除
+      tags:
+      - playlists
+    get:
+      description: 指定したプレイリストをトラック情報付きで取得する（公開プレイリストは誰でも取得可能、非公開は所有者のみ）
+      operationId: getPlaylist
+      parameters:
+      - description: プレイリストID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.PlaylistResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: プレイリスト取得
+      tags:
+      - playlists
+    patch:
+      consumes:
+      - application/json
+      description: プレイリストの名前・説明・公開設定を更新する（所有者のみ）
+      operationId: updatePlaylist
+      parameters:
+      - description: プレイリストID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: プレイリスト更新リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.UpdatePlaylistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.PlaylistResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: プレイリスト更新
+      tags:
+      - playlists
+  /api/v1/playlists/{id}/favorites:
+    delete:
+      description: 指定したプレイリストをお気に入りから削除する
+      operationId: removePlaylistFavorite
+      parameters:
+      - description: プレイリストID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: プレイリストのお気に入り解除
+      tags:
+      - playlists
+    post:
+      description: 指定したプレイリストをお気に入りに追加する（公開プレイリストのみ、または所有者）
+      operationId: addPlaylistFavorite
+      parameters:
+      - description: プレイリストID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: プレイリストをお気に入り登録
+      tags:
+      - playlists
+  /api/v1/playlists/{id}/tracks:
+    post:
+      consumes:
+      - application/json
+      description: プレイリストにトラックを追加する（所有者のみ）
+      operationId: addPlaylistTrack
+      parameters:
+      - description: プレイリストID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: トラック追加リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.AddPlaylistTrackRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: プレイリストにトラック追加
+      tags:
+      - playlists
+  /api/v1/playlists/{id}/tracks/{trackId}:
+    delete:
+      description: プレイリストからトラックを削除する（所有者のみ）
+      operationId: removePlaylistTrack
+      parameters:
+      - description: プレイリストID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: トラックID
+        in: path
+        name: trackId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: プレイリストからトラック削除
+      tags:
+      - playlists
+  /api/v1/playlists/me:
+    get:
+      description: 認証済みユーザー自身のプレイリスト一覧を取得する
+      operationId: getMyPlaylists
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.PlaylistListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分のプレイリスト一覧取得
+      tags:
+      - playlists
   /api/v1/reports:
     post:
       consumes:

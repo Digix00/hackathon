@@ -136,6 +136,10 @@ func (r *stubEncounterRepo) CreateWithRateLimit(_ context.Context, encounter ent
 	return encounter, nil
 }
 
+func (r *stubEncounterRepo) ExistsByIDAndParticipant(_ context.Context, _, _ string) (bool, error) {
+	return false, nil
+}
+
 type stubTrackRepo struct {
 	track entity.TrackInfo
 	found bool

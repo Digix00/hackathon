@@ -58,9 +58,3 @@ type EncounterTrack struct {
 	ArtworkURL *string `json:"artwork_url"`
 	PreviewURL *string `json:"preview_url"`
 }
-
-// @name EncounterPagination
-type Pagination struct {
-	NextCursor *string `json:"next_cursor"`
-	HasMore    bool    `json:"has_more"`
-}
