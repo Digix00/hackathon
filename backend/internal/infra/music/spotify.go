@@ -54,6 +54,9 @@ func (p *spotifyProvider) BuildAuthorizeURL(input port.OAuthAuthorizeInput) (str
 }
 
 func (p *spotifyProvider) ExchangeCode(ctx context.Context, code string) (port.OAuthToken, error) {
+	if p.cfg.ClientID == "" || p.cfg.ClientSecret == "" || p.cfg.TokenURL == "" || p.cfg.RedirectURL == "" {
+		return port.OAuthToken{}, domainerrs.Internal("spotify oauth is not configured")
+	}
 	form := url.Values{}
 	form.Set("grant_type", "authorization_code")
 	form.Set("code", code)
@@ -88,6 +91,9 @@ func (p *spotifyProvider) ExchangeCode(ctx context.Context, code string) (port.O
 }
 
 func (p *spotifyProvider) GetProfile(ctx context.Context, accessToken string) (port.AccountProfile, error) {
+	if p.cfg.APIBaseURL == "" {
+		return port.AccountProfile{}, domainerrs.Internal("spotify oauth is not configured")
+	}
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(p.cfg.APIBaseURL, "/")+"/me", nil)
 	if err != nil {
 		return port.AccountProfile{}, err
@@ -206,13 +212,18 @@ func (p *spotifyProvider) doJSON(request *http.Request, dest any) error {
 		return err
 	}
 	if response.StatusCode >= 400 {
-		if response.StatusCode == http.StatusUnauthorized {
+		switch response.StatusCode {
+		case http.StatusUnauthorized:
 			return domainerrs.Unauthorized("music provider unauthorized")
-		}
-		if response.StatusCode == http.StatusNotFound {
+		case http.StatusNotFound:
 			return domainerrs.NotFound("track was not found")
+		case http.StatusBadRequest:
+			return domainerrs.BadRequest(fmt.Sprintf("music provider rejected the request: %s", string(body)))
+		case http.StatusTooManyRequests:
+			return domainerrs.Internal("music provider rate limit exceeded; please retry later")
+		default:
+			return domainerrs.Internal(fmt.Sprintf("music provider request failed: status=%d body=%s", response.StatusCode, string(body)))
 		}
-		return domainerrs.Internal(fmt.Sprintf("music provider request failed: status=%d body=%s", response.StatusCode, string(body)))
 	}
 	if err := json.Unmarshal(body, dest); err != nil {
 		return err

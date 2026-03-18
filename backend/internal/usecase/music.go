@@ -26,6 +26,7 @@ const (
 type MusicUsecase interface {
 	GetAuthorizeURL(ctx context.Context, authUID, provider string) (usecasedto.MusicAuthorizeResult, error)
 	HandleCallback(ctx context.Context, provider, code, state string) error
+	CallbackRedirectURL(provider, result, errorCode string) string
 	ListConnections(ctx context.Context, authUID string) ([]usecasedto.MusicConnectionDTO, error)
 	DeleteConnection(ctx context.Context, authUID, provider string) error
 	SearchTracks(ctx context.Context, authUID, query string, limit int, cursor *string) (usecasedto.TrackSearchResultDTO, error)

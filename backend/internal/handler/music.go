@@ -71,13 +71,7 @@ func (h *musicHandler) callback(c echo.Context) error {
 		result = "error"
 		errorCode = domainErrorCode(err)
 	}
-	redirector, ok := h.musicUsecase.(interface {
-		CallbackRedirectURL(provider, result, errorCode string) string
-	})
-	if !ok {
-		return echo.NewHTTPError(http.StatusInternalServerError, "music callback redirect is not configured")
-	}
-	return c.Redirect(http.StatusFound, redirector.CallbackRedirectURL(provider, result, errorCode))
+	return c.Redirect(http.StatusFound, h.musicUsecase.CallbackRedirectURL(provider, result, errorCode))
 }
 
 // listConnections godoc

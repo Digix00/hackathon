@@ -20,12 +20,16 @@ type userCurrentTrackRepository struct {
 	db *gorm.DB
 }
 
+type trackCatalogRepository struct {
+	db *gorm.DB
+}
+
 func NewUserCurrentTrackRepository(db *gorm.DB) repository.UserCurrentTrackRepository {
 	return &userCurrentTrackRepository{db: db}
 }
 
 func NewTrackCatalogRepository(db *gorm.DB) repository.TrackCatalogRepository {
-	return &userCurrentTrackRepository{db: db}
+	return &trackCatalogRepository{db: db}
 }
 
 func (r *userCurrentTrackRepository) FindCurrentByUserID(ctx context.Context, userID string) (entity.TrackInfo, bool, error) {
@@ -46,7 +50,7 @@ func (r *userCurrentTrackRepository) FindCurrentByUserID(ctx context.Context, us
 	return modelTrackToEntity(*current.Track), true, nil
 }
 
-func (r *userCurrentTrackRepository) Upsert(ctx context.Context, track entity.TrackInfo) (entity.TrackInfo, error) {
+func (r *trackCatalogRepository) Upsert(ctx context.Context, track entity.TrackInfo) (entity.TrackInfo, error) {
 	provider, externalID, err := splitTrackID(track.ID)
 	if err != nil {
 		return entity.TrackInfo{}, err
@@ -72,7 +76,7 @@ func (r *userCurrentTrackRepository) Upsert(ctx context.Context, track entity.Tr
 	return r.FindByProviderAndExternalID(ctx, provider, externalID)
 }
 
-func (r *userCurrentTrackRepository) FindByProviderAndExternalID(ctx context.Context, provider, externalID string) (entity.TrackInfo, error) {
+func (r *trackCatalogRepository) FindByProviderAndExternalID(ctx context.Context, provider, externalID string) (entity.TrackInfo, error) {
 	var row model.Track
 	if err := r.db.WithContext(ctx).Where("provider = ? AND external_id = ?", provider, externalID).First(&row).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -97,7 +101,7 @@ func modelTrackToEntity(track model.Track) entity.TrackInfo {
 
 func splitTrackID(trackID string) (string, string, error) {
 	parts := strings.Split(trackID, ":")
-	if len(parts) != 3 || parts[1] != "track" {
+	if len(parts) != 3 || parts[1] != "track" || parts[0] == "" || parts[2] == "" {
 		return "", "", domainerrs.BadRequest("track id must be <provider>:track:<external_id>")
 	}
 	return parts[0], parts[2], nil
