@@ -14,6 +14,7 @@ locals {
     "monitoring.googleapis.com",
     "firebase.googleapis.com",
     "identitytoolkit.googleapis.com",
+    "aiplatform.googleapis.com",
   ]
 }
 

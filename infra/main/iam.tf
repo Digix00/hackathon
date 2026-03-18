@@ -22,6 +22,36 @@ resource "google_project_iam_member" "cloudrun_cloudsql_client" {
   member  = "serviceAccount:${google_service_account.cloudrun.email}"
 }
 
+# Worker 用サービスアカウント
+resource "google_service_account" "worker" {
+  account_id   = "worker-sa"
+  display_name = "Worker Service Account"
+}
+
+resource "google_project_iam_member" "worker_secret_accessor" {
+  project = var.project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.worker.email}"
+}
+
+resource "google_project_iam_member" "worker_aiplatform_user" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.worker.email}"
+}
+
+resource "google_project_iam_member" "worker_log_writer" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.worker.email}"
+}
+
+resource "google_project_iam_member" "worker_cloudsql_client" {
+  project = var.project_id
+  role    = "roles/cloudsql.client"
+  member  = "serviceAccount:${google_service_account.worker.email}"
+}
+
 # Cloud Scheduler 用サービスアカウント
 resource "google_service_account" "scheduler" {
   account_id   = "scheduler-sa"
