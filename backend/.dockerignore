@@ -9,7 +9,6 @@ tmp/
 docker/
 
 # Documentation
-docs/
 *.md
 
 # Firebase local cache
