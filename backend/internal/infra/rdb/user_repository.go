@@ -244,6 +244,9 @@ func userCleanupRelatedData(tx *gorm.DB, userID string) error {
 		if err := tx.Where("encounter_id IN ?", encounterIDs).Delete(&model.Comment{}).Error; err != nil {
 			return err
 		}
+		if err := tx.Where("encounter_id IN ?", encounterIDs).Delete(&model.EncounterTrack{}).Error; err != nil {
+			return err
+		}
 		if err := tx.Where("encounter_id IN ?", encounterIDs).Delete(&model.OutboxNotification{}).Error; err != nil {
 			return err
 		}

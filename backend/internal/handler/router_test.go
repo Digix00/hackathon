@@ -420,6 +420,13 @@ func TestDeleteMeCleansUpRelatedData(t *testing.T) {
 	if err := db.Create(&model.EncounterRead{ID: uuid.NewString(), UserID: user.ID, EncounterID: encounter.ID}).Error; err != nil {
 		t.Fatalf("create encounter read: %v", err)
 	}
+	track := model.Track{ID: uuid.NewString(), ExternalID: "ext-del-1", Provider: "spotify", Title: "song", ArtistName: "artist"}
+	if err := db.Create(&track).Error; err != nil {
+		t.Fatalf("create track: %v", err)
+	}
+	if err := db.Create(&model.EncounterTrack{ID: uuid.NewString(), EncounterID: encounter.ID, TrackID: track.ID, SourceUserID: user.ID}).Error; err != nil {
+		t.Fatalf("create encounter track: %v", err)
+	}
 	if err := db.Create(&model.Comment{ID: uuid.NewString(), EncounterID: encounter.ID, CommenterUserID: user.ID, Content: "hello"}).Error; err != nil {
 		t.Fatalf("create comment: %v", err)
 	}
@@ -439,10 +446,6 @@ func TestDeleteMeCleansUpRelatedData(t *testing.T) {
 		t.Fatalf("create mute: %v", err)
 	}
 
-	track := model.Track{ID: uuid.NewString(), ExternalID: "ext-del-1", Provider: "spotify", Title: "song", ArtistName: "artist"}
-	if err := db.Create(&track).Error; err != nil {
-		t.Fatalf("create track: %v", err)
-	}
 	if err := db.Create(&model.UserTrack{ID: uuid.NewString(), UserID: user.ID, TrackID: track.ID}).Error; err != nil {
 		t.Fatalf("create user track: %v", err)
 	}
@@ -501,6 +504,7 @@ func TestDeleteMeCleansUpRelatedData(t *testing.T) {
 	assertZero("user_settings", &model.UserSettings{}, "user_id = ?", user.ID)
 	assertZero("encounters", &model.Encounter{}, "user_id1 = ? OR user_id2 = ?", user.ID, user.ID)
 	assertZero("comments", &model.Comment{}, "commenter_user_id = ?", user.ID)
+	assertZero("encounter_tracks", &model.EncounterTrack{}, "source_user_id = ? OR encounter_id = ?", user.ID, encounter.ID)
 	assertZero("daily_encounter_counts", &model.DailyEncounterCount{}, "user_id = ?", user.ID)
 	assertZero("outbox_notifications", &model.OutboxNotification{}, "user_id = ?", user.ID)
 	assertZero("reports", &model.Report{}, "reporter_user_id = ? OR reported_user_id = ?", user.ID, user.ID)
