@@ -62,7 +62,12 @@ func (u *playlistUsecase) CreatePlaylist(ctx context.Context, authUID string, in
 		return usecasedto.PlaylistDTO{}, err
 	}
 
-	playlist := entity.NewPlaylist(user.ID, input.Name, input.Description, input.IsPublic)
+	isPublic := true
+	if input.IsPublic != nil {
+		isPublic = *input.IsPublic
+	}
+
+	playlist := entity.NewPlaylist(user.ID, input.Name, input.Description, isPublic)
 	if err := u.playlistRepo.Create(ctx, playlist); err != nil {
 		return usecasedto.PlaylistDTO{}, err
 	}
@@ -157,7 +162,7 @@ func (u *playlistUsecase) AddTrack(ctx context.Context, authUID string, playlist
 		return err
 	}
 
-	playlist, err := u.playlistRepo.FindByIDWithTracks(ctx, playlistID)
+	playlist, err := u.playlistRepo.FindByID(ctx, playlistID)
 	if err != nil {
 		return err
 	}
@@ -166,14 +171,7 @@ func (u *playlistUsecase) AddTrack(ctx context.Context, authUID string, playlist
 		return domainerrs.Forbidden("You do not have permission to modify this playlist")
 	}
 
-	maxSort := 0
-	for _, t := range playlist.Tracks {
-		if t.SortOrder > maxSort {
-			maxSort = t.SortOrder
-		}
-	}
-	sortOrder := maxSort + 1
-	pt := entity.NewPlaylistTrack(playlistID, trackID, sortOrder)
+	pt := entity.NewPlaylistTrack(playlistID, trackID, 0)
 	return u.playlistRepo.AddTrack(ctx, pt)
 }
 

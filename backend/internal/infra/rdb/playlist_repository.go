@@ -109,23 +109,32 @@ func (r *playlistRepository) Delete(ctx context.Context, id string) error {
 }
 
 func (r *playlistRepository) AddTrack(ctx context.Context, pt entity.PlaylistTrack) error {
-	m := model.PlaylistTrack{
-		ID:         pt.ID,
-		PlaylistID: pt.PlaylistID,
-		TrackID:    pt.TrackID,
-		SortOrder:  pt.SortOrder,
-	}
-	err := r.db.WithContext(ctx).Create(&m).Error
-	if err != nil {
-		if isUniqueConstraintViolation(err) {
-			return domainerrs.Conflict("Track already exists in playlist")
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var maxSort int
+		if err := tx.Model(&model.PlaylistTrack{}).
+			Where("playlist_id = ? AND deleted_at IS NULL", pt.PlaylistID).
+			Select("COALESCE(MAX(sort_order), 0)").
+			Scan(&maxSort).Error; err != nil {
+			return err
 		}
-		if isForeignKeyViolation(err) {
-			return domainerrs.BadRequest("Invalid track ID")
+
+		m := model.PlaylistTrack{
+			ID:         pt.ID,
+			PlaylistID: pt.PlaylistID,
+			TrackID:    pt.TrackID,
+			SortOrder:  maxSort + 1,
 		}
-		return err
-	}
-	return nil
+		if err := tx.Create(&m).Error; err != nil {
+			if isUniqueConstraintViolation(err) {
+				return domainerrs.Conflict("Track already exists in playlist")
+			}
+			if isForeignKeyViolation(err) {
+				return domainerrs.BadRequest("Invalid track ID")
+			}
+			return err
+		}
+		return nil
+	})
 }
 
 func (r *playlistRepository) RemoveTrack(ctx context.Context, playlistID, trackID string) error {
