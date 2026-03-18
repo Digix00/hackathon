@@ -517,6 +517,245 @@ func TestDeleteMeCleansUpRelatedData(t *testing.T) {
 	assertZero("files", &model.File{}, "uploaded_by_user_id = ?", user.ID)
 }
 
+func TestCreateEncounterRejectsInvalidRSSI(t *testing.T) {
+	db := newTestDB(t)
+	seedTestUser(t, db, "firebase-uid-enc-rssi-invalid")
+	e := newTestServer(t, db, "firebase-uid-enc-rssi-invalid")
+
+	req, err := authRequest(http.MethodPost, "/api/v1/encounters", map[string]any{
+		"target_ble_token": "b2f2f0fa3c1d9e77",
+		"type":             "ble",
+		"rssi":             10,
+		"occurred_at":      time.Now().UTC().Format(time.RFC3339),
+	})
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	rec := httptest.NewRecorder()
+
+	e.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestCreateEncounterReturns204WhenRSSIFiltered(t *testing.T) {
+	db := newTestDB(t)
+	seedTestUser(t, db, "firebase-uid-enc-rssi-filtered")
+	e := newTestServer(t, db, "firebase-uid-enc-rssi-filtered")
+
+	req, err := authRequest(http.MethodPost, "/api/v1/encounters", map[string]any{
+		"target_ble_token": "b2f2f0fa3c1d9e77",
+		"type":             "ble",
+		"rssi":             -90,
+		"occurred_at":      time.Now().UTC().Format(time.RFC3339),
+	})
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	rec := httptest.NewRecorder()
+
+	e.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var count int64
+	if err := db.Model(&model.Encounter{}).Count(&count).Error; err != nil {
+		t.Fatalf("count encounters: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected no encounters, got %d", count)
+	}
+}
+
+func TestCreateEncounterReturns201Then200ForDuplicate(t *testing.T) {
+	db := newTestDB(t)
+	_ = seedTestUser(t, db, "firebase-uid-enc-dedupe-req")
+	target := seedTestUser(t, db, "firebase-uid-enc-dedupe-target")
+	now := time.Now().UTC()
+	seedBleToken(t, db, target.ID, "b2f2f0fa3c1d9e77", now)
+	e := newTestServer(t, db, "firebase-uid-enc-dedupe-req")
+
+	payload := map[string]any{
+		"target_ble_token": "b2f2f0fa3c1d9e77",
+		"type":             "ble",
+		"rssi":             -50,
+		"occurred_at":      now.Format(time.RFC3339),
+	}
+
+	firstReq, _ := authRequest(http.MethodPost, "/api/v1/encounters", payload)
+	firstRec := httptest.NewRecorder()
+	e.ServeHTTP(firstRec, firstReq)
+	if firstRec.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", firstRec.Code, firstRec.Body.String())
+	}
+
+	var firstBody map[string]any
+	if err := json.Unmarshal(firstRec.Body.Bytes(), &firstBody); err != nil {
+		t.Fatalf("unmarshal first response: %v", err)
+	}
+	firstEncounter := firstBody["encounter"].(map[string]any)
+	firstID := firstEncounter["id"].(string)
+
+	secondReq, _ := authRequest(http.MethodPost, "/api/v1/encounters", payload)
+	secondRec := httptest.NewRecorder()
+	e.ServeHTTP(secondRec, secondReq)
+	if secondRec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", secondRec.Code, secondRec.Body.String())
+	}
+
+	var secondBody map[string]any
+	if err := json.Unmarshal(secondRec.Body.Bytes(), &secondBody); err != nil {
+		t.Fatalf("unmarshal second response: %v", err)
+	}
+	secondEncounter := secondBody["encounter"].(map[string]any)
+	secondID := secondEncounter["id"].(string)
+	if secondID != firstID {
+		t.Fatalf("expected duplicate encounter id %s, got %s", firstID, secondID)
+	}
+}
+
+func TestCreateEncounterReturns409WhenDailyPairLimitExceeded(t *testing.T) {
+	db := newTestDB(t)
+	_ = seedTestUser(t, db, "firebase-uid-enc-pair-limit-req")
+	target := seedTestUser(t, db, "firebase-uid-enc-pair-limit-target")
+	now := time.Now().UTC()
+	seedBleToken(t, db, target.ID, "c2f2f0fa3c1d9e88", now)
+	e := newTestServer(t, db, "firebase-uid-enc-pair-limit-req")
+
+	firstPayload := map[string]any{
+		"target_ble_token": "c2f2f0fa3c1d9e88",
+		"type":             "ble",
+		"rssi":             -50,
+		"occurred_at":      now.Add(-10 * time.Minute).Format(time.RFC3339),
+	}
+	firstReq, _ := authRequest(http.MethodPost, "/api/v1/encounters", firstPayload)
+	firstRec := httptest.NewRecorder()
+	e.ServeHTTP(firstRec, firstReq)
+	if firstRec.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", firstRec.Code, firstRec.Body.String())
+	}
+
+	secondPayload := map[string]any{
+		"target_ble_token": "c2f2f0fa3c1d9e88",
+		"type":             "ble",
+		"rssi":             -50,
+		"occurred_at":      now.Format(time.RFC3339),
+	}
+	secondReq, _ := authRequest(http.MethodPost, "/api/v1/encounters", secondPayload)
+	secondRec := httptest.NewRecorder()
+	e.ServeHTTP(secondRec, secondReq)
+	if secondRec.Code != http.StatusConflict {
+		t.Fatalf("expected 409, got %d: %s", secondRec.Code, secondRec.Body.String())
+	}
+}
+
+func TestCreateEncounterReturns429WhenDailyUserLimitExceeded(t *testing.T) {
+	db := newTestDB(t)
+	requester := seedTestUser(t, db, "firebase-uid-enc-user-limit-req")
+	target := seedTestUser(t, db, "firebase-uid-enc-user-limit-target")
+	now := time.Now().UTC()
+	seedBleToken(t, db, target.ID, "d2f2f0fa3c1d9e99", now)
+
+	limitDate := startOfUTCDate(now)
+	if err := db.Create(&model.DailyEncounterCount{
+		ID:    uuid.NewString(),
+		UserID: requester.ID,
+		Date:  limitDate,
+		Count: 10,
+	}).Error; err != nil {
+		t.Fatalf("create daily encounter count: %v", err)
+	}
+
+	e := newTestServer(t, db, "firebase-uid-enc-user-limit-req")
+	req, _ := authRequest(http.MethodPost, "/api/v1/encounters", map[string]any{
+		"target_ble_token": "d2f2f0fa3c1d9e99",
+		"type":             "ble",
+		"rssi":             -50,
+		"occurred_at":      now.Format(time.RFC3339),
+	})
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+	if rec.Code != http.StatusTooManyRequests {
+		t.Fatalf("expected 429, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestListEncountersPaginationCursor(t *testing.T) {
+	db := newTestDB(t)
+	requester := seedTestUser(t, db, "firebase-uid-enc-list-req")
+	other1 := seedTestUser(t, db, "firebase-uid-enc-list-1")
+	other2 := seedTestUser(t, db, "firebase-uid-enc-list-2")
+
+	older := orderedEncounter(requester.ID, other1.ID, jsonDate(t, "2026-03-16").Add(9*time.Hour))
+	newer := orderedEncounter(requester.ID, other2.ID, jsonDate(t, "2026-03-16").Add(10*time.Hour))
+	if err := db.Create(&older).Error; err != nil {
+		t.Fatalf("create older encounter: %v", err)
+	}
+	if err := db.Create(&newer).Error; err != nil {
+		t.Fatalf("create newer encounter: %v", err)
+	}
+
+	e := newTestServer(t, db, "firebase-uid-enc-list-req")
+	firstReq, _ := authRequest(http.MethodGet, "/api/v1/encounters?limit=1", nil)
+	firstRec := httptest.NewRecorder()
+	e.ServeHTTP(firstRec, firstReq)
+	if firstRec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", firstRec.Code, firstRec.Body.String())
+	}
+
+	var firstBody map[string]any
+	if err := json.Unmarshal(firstRec.Body.Bytes(), &firstBody); err != nil {
+		t.Fatalf("unmarshal first response: %v", err)
+	}
+	firstEncounters := firstBody["encounters"].([]any)
+	if len(firstEncounters) != 1 {
+		t.Fatalf("expected 1 encounter, got %d", len(firstEncounters))
+	}
+	firstEncounter := firstEncounters[0].(map[string]any)
+	if firstEncounter["id"].(string) != newer.ID {
+		t.Fatalf("expected newest encounter %s, got %s", newer.ID, firstEncounter["id"].(string))
+	}
+	firstPagination := firstBody["pagination"].(map[string]any)
+	if firstPagination["has_more"].(bool) != true {
+		t.Fatalf("expected has_more true")
+	}
+	nextCursor := firstPagination["next_cursor"].(string)
+	if nextCursor == "" {
+		t.Fatalf("expected next_cursor")
+	}
+
+	secondReq, _ := authRequest(http.MethodGet, "/api/v1/encounters?limit=1&cursor="+nextCursor, nil)
+	secondRec := httptest.NewRecorder()
+	e.ServeHTTP(secondRec, secondReq)
+	if secondRec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", secondRec.Code, secondRec.Body.String())
+	}
+
+	var secondBody map[string]any
+	if err := json.Unmarshal(secondRec.Body.Bytes(), &secondBody); err != nil {
+		t.Fatalf("unmarshal second response: %v", err)
+	}
+	secondEncounters := secondBody["encounters"].([]any)
+	if len(secondEncounters) != 1 {
+		t.Fatalf("expected 1 encounter, got %d", len(secondEncounters))
+	}
+	secondEncounter := secondEncounters[0].(map[string]any)
+	if secondEncounter["id"].(string) != older.ID {
+		t.Fatalf("expected older encounter %s, got %s", older.ID, secondEncounter["id"].(string))
+	}
+	secondPagination := secondBody["pagination"].(map[string]any)
+	if secondPagination["has_more"].(bool) != false {
+		t.Fatalf("expected has_more false")
+	}
+	if secondPagination["next_cursor"] != nil {
+		t.Fatalf("expected next_cursor nil, got %v", secondPagination["next_cursor"])
+	}
+}
+
 func TestGetUserByIDMasksProfileAndTrack(t *testing.T) {
 	db := newTestDB(t)
 	requester := seedTestUser(t, db, "firebase-uid-requester")
@@ -612,6 +851,10 @@ func jsonDate(t *testing.T, raw string) time.Time {
 	return parsed.UTC()
 }
 
+func startOfUTCDate(date time.Time) time.Time {
+	return time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
+}
+
 func orderedEncounter(userA string, userB string, encounteredAt time.Time) model.Encounter {
 	user1 := userA
 	user2 := userB
@@ -625,4 +868,19 @@ func orderedEncounter(userA string, userB string, encounteredAt time.Time) model
 		EncounteredAt: encounteredAt,
 		EncounterType: "ble",
 	}
+}
+
+func seedBleToken(t *testing.T, db *gorm.DB, userID string, token string, now time.Time) model.BleToken {
+	t.Helper()
+	bleToken := model.BleToken{
+		ID:        uuid.NewString(),
+		UserID:    userID,
+		Token:     token,
+		ValidFrom: now.Add(-time.Hour),
+		ValidTo:   now.Add(time.Hour),
+	}
+	if err := db.Create(&bleToken).Error; err != nil {
+		t.Fatalf("create ble token: %v", err)
+	}
+	return bleToken
 }
