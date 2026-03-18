@@ -198,6 +198,107 @@ struct BackendReportResponse: Decodable {
     let report: BackendReport
 }
 
+// MARK: - Encounters
+
+// Encounter user shares the public user shape; extra fields may be nil here.
+typealias BackendEncounterUser = BackendPublicUser
+
+typealias BackendEncounterTrack = BackendPublicTrack
+
+enum BackendEncounterType: Decodable, Equatable {
+    case ble
+    case location
+    case unknown(String)
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        switch rawValue {
+        case "ble":
+            self = .ble
+        case "location":
+            self = .location
+        default:
+            self = .unknown(rawValue)
+        }
+    }
+}
+
+enum BackendEncounterCreateType: String, Encodable, Equatable {
+    case ble
+}
+
+struct BackendEncounterSummary: Decodable, Equatable {
+    let id: String
+    let type: BackendEncounterType
+    let user: BackendEncounterUser
+    let occurredAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case type
+        case user
+        case occurredAt = "occurred_at"
+    }
+}
+
+struct BackendEncounterListItem: Decodable, Equatable {
+    let id: String
+    let type: BackendEncounterType
+    let user: BackendEncounterUser
+    let isRead: Bool
+    let tracks: [BackendEncounterTrack]
+    let occurredAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case type
+        case user
+        case isRead = "is_read"
+        case tracks
+        case occurredAt = "occurred_at"
+    }
+}
+
+struct BackendEncounterDetail: Decodable, Equatable {
+    let id: String
+    let type: BackendEncounterType
+    let user: BackendEncounterUser
+    let occurredAt: Date?
+    let tracks: [BackendEncounterTrack]
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case type
+        case user
+        case occurredAt = "occurred_at"
+        case tracks
+    }
+}
+
+struct BackendEncounterResponse: Decodable {
+    let encounter: BackendEncounterSummary
+}
+
+struct BackendEncounterDetailResponse: Decodable {
+    let encounter: BackendEncounterDetail
+}
+
+struct BackendEncounterPagination: Decodable, Equatable {
+    let nextCursor: String?
+    let hasMore: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case nextCursor = "next_cursor"
+        case hasMore = "has_more"
+    }
+}
+
+struct BackendEncounterListResponse: Decodable {
+    let encounters: [BackendEncounterListItem]
+    let pagination: BackendEncounterPagination
+}
+
 // MARK: - Requests
 
 struct CreateUserRequest: Encodable {
@@ -315,5 +416,19 @@ struct CreateReportRequest: Encodable {
         case reportedUserId = "reported_user_id"
         case targetCommentId = "target_comment_id"
         case reason
+    }
+}
+
+struct CreateEncounterRequest: Encodable {
+    let targetBleToken: String
+    let type: BackendEncounterCreateType
+    let rssi: Int
+    let occurredAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case targetBleToken = "target_ble_token"
+        case type
+        case rssi
+        case occurredAt = "occurred_at"
     }
 }
