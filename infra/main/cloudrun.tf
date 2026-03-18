@@ -118,6 +118,13 @@ resource "google_cloud_run_v2_job" "worker" {
     template {
       service_account = google_service_account.worker.email
 
+      volumes {
+        name = "cloudsql"
+        cloud_sql_instance {
+          instances = [google_sql_database_instance.main.connection_name]
+        }
+      }
+
       containers {
         image = local.image_worker
 
@@ -151,6 +158,11 @@ resource "google_cloud_run_v2_job" "worker" {
               version = "latest"
             }
           }
+        }
+
+        volume_mounts {
+          name       = "cloudsql"
+          mount_path = "/cloudsql"
         }
       }
     }
