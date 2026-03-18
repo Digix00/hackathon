@@ -180,7 +180,7 @@ func seedDemoData(db *gorm.DB) error {
 	validTo := time.Now().UTC().Add(24 * time.Hour)
 	if err := db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "token"}},
-		DoNothing: true,
+		DoUpdates: clause.AssignmentColumns([]string{"valid_from", "valid_to"}),
 	}).Create(&model.BleToken{
 		ID:        "seed-ble-token-01",
 		UserID:    userIDB,
@@ -188,7 +188,6 @@ func seedDemoData(db *gorm.DB) error {
 		ValidFrom: validFrom,
 		ValidTo:   validTo,
 	}).Error; err != nil {
-		return err
 	}
 
 	return nil
