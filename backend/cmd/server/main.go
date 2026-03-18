@@ -29,6 +29,12 @@ import (
 )
 
 func main() {
+	loc, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		panic("time location load failed: " + err.Error())
+	}
+	time.Local = loc
+
 	cfg, err := config.Load()
 	if err != nil {
 		panic("config load failed: " + err.Error())
@@ -74,6 +80,7 @@ func main() {
 	e.HideBanner = true
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
+	e.Use(middleware.Logger())
 
 	// Swagger UI は development / test 環境のみ公開する（Seed と同じ allowlist 方式）
 	if cfg.GoEnv == "development" || cfg.GoEnv == "test" {

@@ -153,7 +153,7 @@ annotations = {
 
 | リソース | 設定 |
 |---|---|
-| `google_cloud_scheduler_job.worker_kick` | cron `*/15 * * * *`、Cloud Run Job の run エンドポイントを HTTP POST |
+| `google_cloud_scheduler_job.worker_kick` | cron `*/10 * * * *`、Cloud Run Job の run エンドポイントを HTTP POST |
 
 **依存：** PR #4 の apply 完了後にマージすること
 
@@ -165,10 +165,38 @@ annotations = {
 |---|---|
 | Cloud SQL `db-f1-micro` | ~$10 |
 | Cloud Run（min=0、低トラフィック） | ~$1 以下 |
-| Cloud Run Jobs（15分間隔、短時間実行） | ~$1 以下 |
+| Cloud Run Jobs（10分間隔、短時間実行） | ~$1 以下 |
 | Cloud Storage（生成楽曲、少量） | ~$1 以下 |
 | Artifact Registry | ~$1 以下 |
 | Cloud Scheduler | 無料枠内 |
 | **合計** | **~$15 以下** |
 
 Vertex AI (Lyria) はハッカソン期間中は `USE_MOCK_LYRIA=true` で制御し、実コストはほぼ発生しない想定。
+
+---
+
+## 環境変数・シークレットの設定状況
+
+### Secret Manager（手動投入が必要なもの）
+
+apply 後に GCP Console または `gcloud secrets versions add` で値を投入する。
+
+| シークレット ID | 現在の状態 | 投入内容 |
+|---|---|---|
+| `spotify-client-id` | ⚠️ 未投入（ダミー or 空） | Spotify Developer Dashboard の Client ID |
+| `spotify-client-secret` | ⚠️ 未投入（ダミー or 空） | Spotify Developer Dashboard の Client Secret |
+| `apple-music-key` | ⚠️ 未投入（ダミー or 空） | Apple Music Key（.p8 ファイル内容） |
+| `apns-key` | ⚠️ 未投入（ダミー or 空） | APNs Key（.p8 ファイル内容） |
+| `music-state-secret` | ⚠️ 未投入 | 任意のランダム文字列（`openssl rand -base64 32`）|
+| `music-token-encryption-key` | ⚠️ 未投入 | **64文字の16進数文字列**（`openssl rand -hex 32`）|
+| `db-password` | ✅ Terraform 管理（自動投入済み） | — |
+
+### Cloud Run 環境変数（Terraform 管理・今後修正が必要なもの）
+
+| 環境変数 | 現在の状態 | 修正内容 |
+|---|---|---|
+| `SPOTIFY_REDIRECT_URL` | デフォルト値（localhost） | Cloud Run の URL に変更 |
+| `APPLE_MUSIC_REDIRECT_URL` | デフォルト値（localhost） | Cloud Run の URL に変更 |
+| `SPOTIFY_AUTHORIZE_URL` 等 | デフォルト値 | 本番 URL に問題なければそのまま |
+
+`api_url` は `terraform output api_url` で取得できる。
