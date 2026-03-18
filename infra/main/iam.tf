@@ -40,12 +40,6 @@ resource "google_project_iam_member" "worker_aiplatform_user" {
   member  = "serviceAccount:${google_service_account.worker.email}"
 }
 
-resource "google_project_iam_member" "worker_storage_object_admin" {
-  project = var.project_id
-  role    = "roles/storage.objectAdmin"
-  member  = "serviceAccount:${google_service_account.worker.email}"
-}
-
 resource "google_project_iam_member" "worker_log_writer" {
   project = var.project_id
   role    = "roles/logging.logWriter"
