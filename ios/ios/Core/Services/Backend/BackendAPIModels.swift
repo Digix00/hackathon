@@ -198,6 +198,40 @@ nonisolated struct BackendReportResponse: Decodable {
     let report: BackendReport
 }
 
+// MARK: - Blocks & Mutes
+
+nonisolated struct BackendBlock: Decodable, Equatable {
+    let id: String?
+    let blockedUserId: String?
+    let createdAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case blockedUserId = "blocked_user_id"
+        case createdAt = "created_at"
+    }
+}
+
+nonisolated struct BackendBlockResponse: Decodable {
+    let block: BackendBlock?
+}
+
+nonisolated struct BackendMute: Decodable, Equatable {
+    let id: String?
+    let targetUserId: String?
+    let createdAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case targetUserId = "target_user_id"
+        case createdAt = "created_at"
+    }
+}
+
+nonisolated struct BackendMuteResponse: Decodable {
+    let mute: BackendMute?
+}
+
 // MARK: - Encounters
 
 // Encounter user shares the public user shape; extra fields may be nil here.
@@ -501,6 +535,22 @@ nonisolated struct CreateReportRequest: Encodable {
         case reportedUserId = "reported_user_id"
         case targetCommentId = "target_comment_id"
         case reason
+    }
+}
+
+nonisolated struct CreateBlockRequest: Encodable {
+    let blockedUserId: String
+
+    enum CodingKeys: String, CodingKey {
+        case blockedUserId = "blocked_user_id"
+    }
+}
+
+nonisolated struct CreateMuteRequest: Encodable {
+    let targetUserId: String
+
+    enum CodingKeys: String, CodingKey {
+        case targetUserId = "target_user_id"
     }
 }
 

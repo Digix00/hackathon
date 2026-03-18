@@ -41,8 +41,28 @@ struct OtherUserProfileView: View {
                         displayName: user.displayName,
                         bio: user.bio ?? "ひとこと未設定",
                         avatarURL: user.avatarURL,
-                        sharedTrack: viewModel.sharedTrack
+                        sharedTrack: viewModel.sharedTrack,
+                        onMute: {
+                            viewModel.mute()
+                        },
+                        onBlock: {
+                            viewModel.block()
+                        },
+                        isMuteDisabled: viewModel.isMuting,
+                        isBlockDisabled: viewModel.isBlocking
                     )
+
+                    if let actionMessage = viewModel.actionMessage {
+                        Text(actionMessage)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(PrototypeTheme.success)
+                    }
+
+                    if let actionErrorMessage = viewModel.actionErrorMessage {
+                        Text(actionErrorMessage)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(PrototypeTheme.error)
+                    }
                 } else if viewModel.isLoading {
                     ProgressView()
                         .progressViewStyle(.circular)

@@ -168,6 +168,50 @@ actor BackendAPIClient {
         return try decoder.decode(BackendReportResponse.self, from: result.data).report
     }
 
+    // MARK: - Blocks & Mutes
+
+    func createBlock(blockedUserId: String) async throws -> BackendBlock {
+        let request = CreateBlockRequest(blockedUserId: blockedUserId)
+        let result = try await send(path: "users/me/blocks", method: "POST", body: try encoder.encode(request))
+        guard result.response.statusCode == 201 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        let response = try decoder.decode(BackendBlockResponse.self, from: result.data)
+        guard let block = response.block else {
+            throw BackendError.invalidResponse
+        }
+        return block
+    }
+
+    func deleteBlock(blockedUserId: String) async throws {
+        let escapedId = escapePathComponent(blockedUserId)
+        let result = try await send(path: "users/me/blocks/\(escapedId)", method: "DELETE")
+        guard result.response.statusCode == 204 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+    }
+
+    func createMute(targetUserId: String) async throws -> BackendMute {
+        let request = CreateMuteRequest(targetUserId: targetUserId)
+        let result = try await send(path: "users/me/mutes", method: "POST", body: try encoder.encode(request))
+        guard result.response.statusCode == 201 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        let response = try decoder.decode(BackendMuteResponse.self, from: result.data)
+        guard let mute = response.mute else {
+            throw BackendError.invalidResponse
+        }
+        return mute
+    }
+
+    func deleteMute(targetUserId: String) async throws {
+        let escapedId = escapePathComponent(targetUserId)
+        let result = try await send(path: "users/me/mutes/\(escapedId)", method: "DELETE")
+        guard result.response.statusCode == 204 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+    }
+
     // MARK: - Encounters
 
     func createEncounter(targetBleToken: String, rssi: Int, occurredAt: Date) async throws -> BackendEncounterSummary? {
