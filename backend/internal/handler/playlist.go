@@ -228,6 +228,7 @@ func (h *playlistHandler) deletePlaylist(c echo.Context) error {
 // @Failure      401  {object}  errorResponse
 // @Failure      403  {object}  errorResponse
 // @Failure      404  {object}  errorResponse
+// @Failure      409  {object}  errorResponse
 // @Failure      500  {object}  errorResponse
 // @Router       /api/v1/playlists/{id}/tracks [post]
 func (h *playlistHandler) addPlaylistTrack(c echo.Context) error {

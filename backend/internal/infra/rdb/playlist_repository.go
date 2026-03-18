@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 
 	"hackathon/internal/domain/entity"
@@ -115,7 +116,14 @@ func (r *playlistRepository) AddTrack(ctx context.Context, pt entity.PlaylistTra
 		TrackID:    pt.TrackID,
 		SortOrder:  pt.SortOrder,
 	}
-	return r.db.WithContext(ctx).Create(&m).Error
+	err := r.db.WithContext(ctx).Create(&m).Error
+	if err != nil {
+		if isUniqueConstraintViolation(err) {
+			return domainerrs.Conflict("Track already exists in playlist")
+		}
+		return err
+	}
+	return nil
 }
 
 func (r *playlistRepository) RemoveTrack(ctx context.Context, playlistID, trackID string) error {
@@ -137,7 +145,14 @@ func (r *playlistRepository) AddFavorite(ctx context.Context, id, userID, playli
 		UserID:     userID,
 		PlaylistID: playlistID,
 	}
-	return r.db.WithContext(ctx).Create(&m).Error
+	err := r.db.WithContext(ctx).Create(&m).Error
+	if err != nil {
+		if isUniqueConstraintViolation(err) {
+			return domainerrs.Conflict("Already favorited")
+		}
+		return err
+	}
+	return nil
 }
 
 func (r *playlistRepository) RemoveFavorite(ctx context.Context, userID, playlistID string) error {
@@ -187,4 +202,12 @@ func modelToEntityPlaylistWithTracks(m model.Playlist) entity.Playlist {
 		tracks[i] = pt
 	}
 	return modelToEntityPlaylist(m, tracks)
+}
+
+func isUniqueConstraintViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == "23505"
+	}
+	return false
 }

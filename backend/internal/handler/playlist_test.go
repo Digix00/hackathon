@@ -374,3 +374,82 @@ func TestFavoritePrivatePlaylistForbiddenForOtherUser(t *testing.T) {
 		t.Fatalf("expected 404, got %d: %s", rec.Code, rec.Body.String())
 	}
 }
+
+func TestDuplicatePlaylistFavorite(t *testing.T) {
+	db := newTestDB(t)
+	owner := seedTestUser(t, db, "firebase-uid-dup-fav-owner")
+	seedTestUser(t, db, "firebase-uid-dup-fav-user")
+
+	playlist := model.Playlist{ID: uuid.NewString(), UserID: owner.ID, Name: "Fav Playlist", IsPublic: true}
+	if err := db.Create(&playlist).Error; err != nil {
+		t.Fatalf("create playlist: %v", err)
+	}
+
+	e := newTestServer(t, db, "firebase-uid-dup-fav-user")
+
+	// Add favorite first time
+	addReq1, err := authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/favorites", nil)
+	if err != nil {
+		t.Fatalf("new request 1: %v", err)
+	}
+	addRec1 := httptest.NewRecorder()
+	e.ServeHTTP(addRec1, addReq1)
+	if addRec1.Code != http.StatusNoContent {
+		t.Fatalf("expected 204 first time, got %d: %s", addRec1.Code, addRec1.Body.String())
+	}
+
+	// Add favorite second time (duplicate)
+	addReq2, err := authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/favorites", nil)
+	if err != nil {
+		t.Fatalf("new request 2: %v", err)
+	}
+	addRec2 := httptest.NewRecorder()
+	e.ServeHTTP(addRec2, addReq2)
+
+	if addRec2.Code != http.StatusConflict {
+		t.Fatalf("expected 409 Conflict for duplicate favorite, got %d: %s", addRec2.Code, addRec2.Body.String())
+	}
+}
+
+func TestDuplicatePlaylistTrack(t *testing.T) {
+	db := newTestDB(t)
+	user := seedTestUser(t, db, "firebase-uid-dup-track")
+	e := newTestServer(t, db, "firebase-uid-dup-track")
+
+	track := model.Track{ID: uuid.NewString(), ExternalID: "ext-pl-dup", Provider: "spotify", Title: "Song", ArtistName: "Artist"}
+	if err := db.Create(&track).Error; err != nil {
+		t.Fatalf("create track: %v", err)
+	}
+
+	playlist := model.Playlist{ID: uuid.NewString(), UserID: user.ID, Name: "My Tracks", IsPublic: true}
+	if err := db.Create(&playlist).Error; err != nil {
+		t.Fatalf("create playlist: %v", err)
+	}
+
+	// Add track first time
+	addReq1, err := authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/tracks", map[string]any{
+		"track_id": track.ID,
+	})
+	if err != nil {
+		t.Fatalf("new request 1: %v", err)
+	}
+	addRec1 := httptest.NewRecorder()
+	e.ServeHTTP(addRec1, addReq1)
+	if addRec1.Code != http.StatusNoContent {
+		t.Fatalf("expected 204 first time, got %d: %s", addRec1.Code, addRec1.Body.String())
+	}
+
+	// Add track second time (duplicate)
+	addReq2, err := authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/tracks", map[string]any{
+		"track_id": track.ID,
+	})
+	if err != nil {
+		t.Fatalf("new request 2: %v", err)
+	}
+	addRec2 := httptest.NewRecorder()
+	e.ServeHTTP(addRec2, addReq2)
+
+	if addRec2.Code != http.StatusConflict {
+		t.Fatalf("expected 409 Conflict for duplicate track, got %d: %s", addRec2.Code, addRec2.Body.String())
+	}
+}
