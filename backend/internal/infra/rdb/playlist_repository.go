@@ -31,7 +31,7 @@ func (r *playlistRepository) Create(ctx context.Context, p entity.Playlist) erro
 		IsPublic:    p.IsPublic,
 	}
 	// Explicitly select all columns to ensure zero-value bools (e.g. is_public=false) are saved.
-	return r.db.WithContext(ctx).Select("id", "user_id", "name", "description", "is_public").Create(&m).Error
+	return r.db.WithContext(ctx).Select("id", "user_id", "name", "description", "is_public", "created_at", "updated_at").Create(&m).Error
 }
 
 func (r *playlistRepository) FindByID(ctx context.Context, id string) (entity.Playlist, error) {
