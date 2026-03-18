@@ -3,9 +3,15 @@ import SwiftUI
 struct EncounterRow: View {
     let encounter: Encounter
     let isFixed: Bool
-    let hideMatchedElements: Bool = false
+    let hideMatchedElements: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.encounterNamespace) private var namespace
+
+    init(encounter: Encounter, isFixed: Bool, hideMatchedElements: Bool = false) {
+        self.encounter = encounter
+        self.isFixed = isFixed
+        self.hideMatchedElements = hideMatchedElements
+    }
     
     private var seed: Int {
         let magnitude = encounter.id.hashValue.magnitude
