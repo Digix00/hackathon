@@ -162,7 +162,6 @@ const docTemplate = `{
                 }
             }
         },
-<<<<<<< HEAD
         "/api/v1/encounters": {
             "get": {
                 "security": [
@@ -220,20 +219,13 @@ const docTemplate = `{
                     }
                 }
             },
-=======
-        "/api/v1/reports": {
->>>>>>> origin
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-<<<<<<< HEAD
                 "description": "BLE 検出トークンからすれ違いを登録する（同一ペア・短時間内は冪等）",
-=======
-                "description": "ユーザーまたはコメントを通報する。同じ対象への重複通報はエラーになる。",
->>>>>>> origin
                 "consumes": [
                     "application/json"
                 ],
@@ -241,7 +233,6 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-<<<<<<< HEAD
                     "encounters"
                 ],
                 "summary": "すれ違い登録",
@@ -249,29 +240,15 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "すれ違い登録リクエスト",
-=======
-                    "reports"
-                ],
-                "summary": "通報作成",
-                "operationId": "createReport",
-                "parameters": [
-                    {
-                        "description": "通報リクエスト",
->>>>>>> origin
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-<<<<<<< HEAD
                             "$ref": "#/definitions/hackathon_internal_handler_schema_request.CreateEncounterRequest"
-=======
-                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.CreateReportRequest"
->>>>>>> origin
                         }
                     }
                 ],
                 "responses": {
-<<<<<<< HEAD
                     "200": {
                         "description": "OK",
                         "schema": {
@@ -282,12 +259,6 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/hackathon_internal_handler_schema_response.EncounterResponse"
-=======
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.ReportResponse"
->>>>>>> origin
                         }
                     },
                     "400": {
@@ -314,7 +285,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/internal_handler.errorResponse"
                         }
                     },
-<<<<<<< HEAD
                     "429": {
                         "description": "Too Many Requests",
                         "schema": {
@@ -380,8 +350,76 @@ const docTemplate = `{
                             "$ref": "#/definitions/internal_handler.errorResponse"
                         }
                     },
-=======
->>>>>>> origin
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reports": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "ユーザーまたはコメントを通報する。同じ対象への重複通報はエラーになる。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "通報作成",
+                "operationId": "createReport",
+                "parameters": [
+                    {
+                        "description": "通報リクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.CreateReportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.ReportResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
