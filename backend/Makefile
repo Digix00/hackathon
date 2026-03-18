@@ -1,5 +1,5 @@
 .PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean reset-db \
-	test test-integration \
+	test test-integration test-integration-ci \
 	generate-docs generate-docs-ci generate-android generate-ios generate-code generate-code-ci \
         _generate-android-only _generate-ios-only
 
@@ -58,6 +58,10 @@ test:
 # PostgreSQL コンテナを使う統合テストを実行（Docker 起動後に実行）
 # 必要に応じて PG_TEST_DATABASE_URL を上書き可能
 test-integration:
+	docker compose exec server go test -tags=integration ./internal/handler -run PostgresIntegration
+
+# CI 向け: ホストの Go を直接使用（GitHub Actions サービスコンテナの PostgreSQL を利用）
+test-integration-ci:
 	go test -tags=integration ./internal/handler -run PostgresIntegration
 
 # ==============================================================================
