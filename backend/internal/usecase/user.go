@@ -265,6 +265,7 @@ func buildPublicUserDTO(
 				Title:      track.Title,
 				ArtistName: track.ArtistName,
 				ArtworkURL: track.ArtworkURL,
+				PreviewURL: track.PreviewURL,
 			}
 		}
 	}
