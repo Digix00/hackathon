@@ -313,36 +313,52 @@ func TestAddTrackSortOrderAfterDeletion(t *testing.T) {
 	// 2. Add track 1 (sort_order=1)
 	t1 := model.Track{ID: uuid.NewString(), ExternalID: "ext-1", Title: "S1", ArtistName: "A1"}
 	db.Create(&t1)
-	authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/tracks", map[string]any{"track_id": t1.ID})
-	addReq1, _ := authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/tracks", map[string]any{"track_id": t1.ID})
+	addReq1, err := authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/tracks", map[string]any{"track_id": t1.ID})
+	if err != nil {
+		t.Fatalf("new request 1: %v", err)
+	}
 	rec1 := httptest.NewRecorder()
 	e.ServeHTTP(rec1, addReq1)
 
 	// 3. Add track 2 (sort_order=2)
 	t2 := model.Track{ID: uuid.NewString(), ExternalID: "ext-2", Title: "S2", ArtistName: "A2"}
 	db.Create(&t2)
-	addReq2, _ := authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/tracks", map[string]any{"track_id": t2.ID})
+	addReq2, err := authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/tracks", map[string]any{"track_id": t2.ID})
+	if err != nil {
+		t.Fatalf("new request 2: %v", err)
+	}
 	rec2 := httptest.NewRecorder()
 	e.ServeHTTP(rec2, addReq2)
 
 	// 4. Remove track 1
-	remReq, _ := authRequest(http.MethodDelete, "/api/v1/playlists/"+playlist.ID+"/tracks/"+t1.ID, nil)
+	remReq, err := authRequest(http.MethodDelete, "/api/v1/playlists/"+playlist.ID+"/tracks/"+t1.ID, nil)
+	if err != nil {
+		t.Fatalf("new request remove: %v", err)
+	}
 	remRec := httptest.NewRecorder()
 	e.ServeHTTP(remRec, remReq)
 
 	// 5. Add track 3
 	t3 := model.Track{ID: uuid.NewString(), ExternalID: "ext-3", Title: "S3", ArtistName: "A3"}
 	db.Create(&t3)
-	addReq3, _ := authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/tracks", map[string]any{"track_id": t3.ID})
+	addReq3, err := authRequest(http.MethodPost, "/api/v1/playlists/"+playlist.ID+"/tracks", map[string]any{"track_id": t3.ID})
+	if err != nil {
+		t.Fatalf("new request 3: %v", err)
+	}
 	rec3 := httptest.NewRecorder()
 	e.ServeHTTP(rec3, addReq3)
 
 	// 6. Verify sort_order of track 3 is 3, not 2
-	getReq, _ := authRequest(http.MethodGet, "/api/v1/playlists/"+playlist.ID, nil)
+	getReq, err := authRequest(http.MethodGet, "/api/v1/playlists/"+playlist.ID, nil)
+	if err != nil {
+		t.Fatalf("new request get: %v", err)
+	}
 	getRec := httptest.NewRecorder()
 	e.ServeHTTP(getRec, getReq)
 	var getBody map[string]any
-	json.Unmarshal(getRec.Body.Bytes(), &getBody)
+	if err := json.Unmarshal(getRec.Body.Bytes(), &getBody); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
 	tracks := getBody["playlist"].(map[string]any)["tracks"].([]any)
 
 	// tracks should contain t2 (order=2) and t3 (order=3)
