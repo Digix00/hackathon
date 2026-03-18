@@ -43,6 +43,7 @@ struct MainPrototypeView: View {
 
     @State private var selectedSurface: Surface = .track
     @State private var selectedLibraryTab: LibraryTab = .insights
+    @State private var isEncounterDetailPresented = false
     @GestureState private var verticalDragOffset: CGFloat = 0
     let restartOnboarding: () -> Void
     @Namespace private var homeNamespace
@@ -59,7 +60,10 @@ struct MainPrototypeView: View {
 
                 librarySurface(bottomSafeArea: proxy.safeAreaInsets.bottom)
                     .environment(\.topSafeAreaInset, proxy.safeAreaInsets.top)
-                    .environment(\.bottomSafeAreaInset, proxy.safeAreaInsets.bottom + Layout.libraryFooterReserve)
+                    .environment(
+                        \.bottomSafeAreaInset,
+                        libraryBottomInset(bottomSafeArea: proxy.safeAreaInsets.bottom)
+                    )
                     .offset(y: librarySurfaceOffset(screenHeight: screenHeight))
                     .opacity(isShowingTrackSurface ? Layout.inactiveOpacity : 1.0)
             }
@@ -114,7 +118,7 @@ struct MainPrototypeView: View {
             .tag(LibraryTab.insights)
 
             navigationContainer {
-                EncounterListView()
+                EncounterListView(isDetailPresented: $isEncounterDetailPresented)
             }
             .tag(LibraryTab.history)
 
@@ -138,7 +142,7 @@ struct MainPrototypeView: View {
                 }
         )
         .overlay(alignment: .bottom) {
-            if selectedSurface == .library {
+            if shouldShowLibraryFooter {
                 LibraryFooter(
                     selectedTab: $selectedLibraryTab,
                     tabs: LibraryTab.allCases
@@ -147,6 +151,14 @@ struct MainPrototypeView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+    }
+
+    private var shouldShowLibraryFooter: Bool {
+        selectedSurface == .library && !(selectedLibraryTab == .history && isEncounterDetailPresented)
+    }
+
+    private func libraryBottomInset(bottomSafeArea: CGFloat) -> CGFloat {
+        shouldShowLibraryFooter ? bottomSafeArea + Layout.libraryFooterReserve : bottomSafeArea
     }
 
     private var dragOffset: CGFloat {

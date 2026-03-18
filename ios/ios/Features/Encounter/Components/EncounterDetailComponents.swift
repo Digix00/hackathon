@@ -145,42 +145,37 @@ struct EncounterPrimaryActions: View {
     let onWriteLyric: () -> Void
 
     var body: some View {
-        VStack {
-            Spacer()
-            HStack(spacing: 16) {
-                Button(action: {
-                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                }) {
-                    Image(systemName: "heart.fill")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 72, height: 72)
-                        .background(
-                            Circle()
-                                .fill(encounter.track.color)
-                                .shadow(color: encounter.track.color.opacity(0.3), radius: 20, x: 0, y: 10)
-                        )
-                }
-
-                Button(action: onWriteLyric) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 18, weight: .bold))
-                        Text("想いを刻む")
-                            .font(PrototypeTheme.Typography.font(size: 16, weight: .bold))
-                    }
-                    .foregroundStyle(PrototypeTheme.textPrimary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 72)
+        HStack(spacing: 16) {
+            Button(action: {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            }) {
+                Image(systemName: "heart.fill")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 72, height: 72)
                     .background(
-                        Capsule()
-                            .fill(PrototypeTheme.surfaceElevated)
-                            .shadow(color: Color.black.opacity(0.08), radius: 20, x: 0, y: 10)
+                        Circle()
+                            .fill(encounter.track.color)
+                            .shadow(color: encounter.track.color.opacity(0.3), radius: 20, x: 0, y: 10)
                     )
-                }
             }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 40)
+
+            Button(action: onWriteLyric) {
+                HStack(spacing: 12) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 18, weight: .bold))
+                    Text("想いを刻む")
+                        .font(PrototypeTheme.Typography.font(size: 16, weight: .bold))
+                }
+                .foregroundStyle(PrototypeTheme.textPrimary)
+                .frame(maxWidth: .infinity)
+                .frame(height: 72)
+                .background(
+                    Capsule()
+                        .fill(PrototypeTheme.surfaceElevated)
+                        .shadow(color: Color.black.opacity(0.08), radius: 20, x: 0, y: 10)
+                )
+            }
         }
     }
 }

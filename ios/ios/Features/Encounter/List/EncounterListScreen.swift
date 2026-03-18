@@ -1,7 +1,14 @@
 import SwiftUI
 
 struct EncounterListView: View {
+    private enum DetailLayout {
+        static let bottomActionsInset: CGFloat = 24
+        static let bottomActionsTopPadding: CGFloat = 16
+        static let contentBottomSpacing: CGFloat = 148
+    }
+
     @Namespace private var encounterNamespace
+    @Binding private var isDetailPresented: Bool
     @State private var selectedEncounter: Encounter?
     @State private var showDetailContent = false
     @SceneStorage("encounter.list.scrollTargetID") private var scrollTargetID: String?
@@ -14,6 +21,10 @@ struct EncounterListView: View {
         return EncounterSection.allCases.flatMap { section in
             previewEncounters.filter(section.includes)
         }
+    }
+
+    init(isDetailPresented: Binding<Bool> = .constant(false)) {
+        _isDetailPresented = isDetailPresented
     }
 
     var body: some View {
@@ -36,6 +47,10 @@ struct EncounterListView: View {
             if scrollTargetID == nil {
                 scrollTargetID = encounters.first?.id
             }
+            syncDetailPresentationState()
+        }
+        .onChange(of: selectedEncounter?.id) { _ in
+            syncDetailPresentationState()
         }
     }
 
@@ -259,14 +274,17 @@ struct EncounterListView: View {
                         .transition(.opacity.combined(with: .offset(y: 20)))
                     }
 
-                    Spacer(minLength: 200)
+                    Spacer(minLength: DetailLayout.contentBottomSpacing)
                 }
             }
-
-            // Floating actions
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             if showDetailContent {
                 EncounterPrimaryActions(encounter: encounter) {}
-                .transition(.opacity.combined(with: .offset(y: 20)))
+                    .padding(.horizontal, 32)
+                    .padding(.top, DetailLayout.bottomActionsTopPadding)
+                    .padding(.bottom, DetailLayout.bottomActionsInset)
+                    .transition(.opacity.combined(with: .offset(y: 20)))
             }
         }
     }
@@ -307,6 +325,10 @@ struct EncounterListView: View {
                 .opacity(showDetailContent ? 0.6 : 1.0)
                 .offset(y: showDetailContent ? -100 : 0)
         }
+    }
+
+    private func syncDetailPresentationState() {
+        isDetailPresented = selectedEncounter != nil
     }
 }
 
