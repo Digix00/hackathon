@@ -2,14 +2,30 @@ import SwiftUI
 
 struct SettingsHubView: View {
     let restartOnboarding: () -> Void
+    @StateObject private var settingsViewModel = UserSettingsViewModel()
     @StateObject private var profileViewModel = CurrentUserProfileViewModel()
 
     private var appSettings: [SettingsDestination] {
         [
             SettingsDestination(id: "share-track", icon: "music.note", title: "シェアする曲", destination: AnyView(SearchView())),
-            SettingsDestination(id: "encounter-settings", icon: "location.fill", title: "すれ違い設定", destination: AnyView(EncounterSettingsView())),
-            SettingsDestination(id: "notification-settings", icon: "bell.fill", title: "通知設定", destination: AnyView(NotificationSettingsView())),
-            SettingsDestination(id: "appearance-settings", icon: "paintbrush.fill", title: "外観", destination: AnyView(AppearanceSettingsView()))
+            SettingsDestination(
+                id: "encounter-settings",
+                icon: "location.fill",
+                title: "すれ違い設定",
+                destination: AnyView(EncounterSettingsView().environmentObject(settingsViewModel))
+            ),
+            SettingsDestination(
+                id: "notification-settings",
+                icon: "bell.fill",
+                title: "通知設定",
+                destination: AnyView(NotificationSettingsView().environmentObject(settingsViewModel))
+            ),
+            SettingsDestination(
+                id: "appearance-settings",
+                icon: "paintbrush.fill",
+                title: "外観",
+                destination: AnyView(AppearanceSettingsView().environmentObject(settingsViewModel))
+            )
         ]
     }
 
@@ -105,6 +121,7 @@ struct SettingsHubView: View {
             }
         }
         .onAppear {
+            settingsViewModel.loadIfNeeded()
             profileViewModel.refresh()
         }
     }
