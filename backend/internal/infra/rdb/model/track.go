@@ -14,9 +14,12 @@ type Track struct {
 	ArtistName  string `gorm:"not null"`
 	AlbumName   *string
 	AlbumArtURL *string
+	PreviewURL  *string
 	DurationMs  *int
 	CachedAt    time.Time `gorm:"not null;autoCreateTime"`
 }
+
+// rest unchanged
 
 type UserTrack struct {
 	ID        string         `gorm:"primaryKey"`

@@ -19,6 +19,7 @@ type Dependencies struct {
 	PlaylistUsecase     usecase.PlaylistUsecase
 	ReportUsecase       usecase.ReportUsecase
 	NotificationUsecase usecase.NotificationUsecase
+	MusicUsecase        usecase.MusicUsecase
 	EncounterUsecase    usecase.EncounterUsecase
 }
 
