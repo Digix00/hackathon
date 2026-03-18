@@ -179,19 +179,17 @@ struct BackendNotificationListResponse: Decodable {
 struct BackendReport: Decodable, Equatable {
     let id: String
     let reportType: String
-    let targetUserId: String?
+    let reportedUserId: String
     let targetCommentId: String?
     let reason: String
-    let detail: String?
     let createdAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id
         case reportType = "report_type"
-        case targetUserId = "target_user_id"
+        case reportedUserId = "reported_user_id"
         case targetCommentId = "target_comment_id"
         case reason
-        case detail
         case createdAt = "created_at"
     }
 }

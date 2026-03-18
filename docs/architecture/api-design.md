@@ -1412,10 +1412,9 @@ API の `target_user_id` は DB スキーマ上の `reports.reported_user_id` �
   "report": {
     "id": "uuid",
     "report_type": "user",
-    "target_user_id": "uuid",
+    "reported_user_id": "uuid",
     "target_comment_id": null,
     "reason": "harassment",
-    "detail": "不適切なメッセージ",
     "created_at": "2026-03-15T11:00:00Z"
   }
 }
