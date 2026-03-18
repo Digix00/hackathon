@@ -18,6 +18,13 @@ actor BackendAPIClient {
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
 
+    // Percent-encode a single path component, ensuring "/" is always escaped.
+    private func escapePathComponent(_ component: String) -> String {
+        var allowed = CharacterSet.urlPathAllowed
+        allowed.remove(charactersIn: "/")
+        return component.addingPercentEncoding(withAllowedCharacters: allowed) ?? component
+    }
+
     init(session: URLSession = .shared) {
         self.session = session
         self.baseURL = Self.resolveBaseURL()
@@ -50,9 +57,7 @@ actor BackendAPIClient {
     }
 
     func getUser(id: String) async throws -> BackendPublicUser {
-        var allowed = CharacterSet.urlPathAllowed
-        allowed.remove(charactersIn: "/")
-        let escapedId = id.addingPercentEncoding(withAllowedCharacters: allowed) ?? id
+        let escapedId = escapePathComponent(id)
         let result = try await send(path: "users/\(escapedId)", method: "GET")
         guard result.response.statusCode == 200 else {
             throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
@@ -104,9 +109,7 @@ actor BackendAPIClient {
     }
 
     func patchPushToken(id: String, request: UpdatePushTokenRequest) async throws -> BackendDevice {
-        var allowed = CharacterSet.urlPathAllowed
-        allowed.remove(charactersIn: "/")
-        let escapedId = id.addingPercentEncoding(withAllowedCharacters: allowed) ?? id
+        let escapedId = escapePathComponent(id)
         let result = try await send(path: "users/me/push-tokens/\(escapedId)", method: "PATCH", body: try encoder.encode(request))
         guard result.response.statusCode == 200 else {
             throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
@@ -115,7 +118,7 @@ actor BackendAPIClient {
     }
 
     func deletePushToken(id: String) async throws {
-        let escapedId = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id
+        let escapedId = escapePathComponent(id)
         let result = try await send(path: "users/me/push-tokens/\(escapedId)", method: "DELETE")
         guard result.response.statusCode == 204 else {
             throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
@@ -137,7 +140,7 @@ actor BackendAPIClient {
     }
 
     func markNotificationAsRead(id: String) async throws {
-        let escapedId = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id
+        let escapedId = escapePathComponent(id)
         let result = try await send(path: "users/me/notifications/\(escapedId)/read", method: "PATCH")
         guard result.response.statusCode == 204 else {
             throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
@@ -145,7 +148,7 @@ actor BackendAPIClient {
     }
 
     func deleteNotification(id: String) async throws {
-        let escapedId = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id
+        let escapedId = escapePathComponent(id)
         let result = try await send(path: "users/me/notifications/\(escapedId)", method: "DELETE")
         guard result.response.statusCode == 204 else {
             throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
@@ -200,7 +203,7 @@ actor BackendAPIClient {
     }
 
     func getEncounter(id: String) async throws -> BackendEncounterDetail {
-        let escapedId = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id
+        let escapedId = escapePathComponent(id)
         let result = try await send(path: "encounters/\(escapedId)", method: "GET")
         guard result.response.statusCode == 200 else {
             throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
