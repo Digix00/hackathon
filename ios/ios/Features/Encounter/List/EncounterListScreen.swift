@@ -136,70 +136,37 @@ struct EncounterListView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
                     // Navigation Header
-                    HStack {
-                        Button {
-                            withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
-                                showDetailContent = false
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
-                                    selectedEncounter = nil
-                                }
-                            }
-                        } label: {
-                            Image(systemName: "arrow.left")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundStyle(PrototypeTheme.textPrimary)
-                                .frame(width: 44, height: 44, alignment: .leading)
+                    EncounterDetailHeader(encounter: encounter, isVisible: showDetailContent) {
+                        withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
+                            showDetailContent = false
                         }
-
-                        Spacer()
-
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("CONNECTED MOMENT")
-                                .font(PrototypeTheme.Typography.font(size: 10, weight: .black, role: .data))
-                                .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.5))
-                                .tracking(2.0)
-
-                            Text(encounter.relativeTime.uppercased())
-                                .font(PrototypeTheme.Typography.font(size: 12, weight: .bold, role: .data))
-                                .foregroundStyle(encounter.track.color)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
+                                selectedEncounter = nil
+                            }
                         }
                     }
-                    .padding(.horizontal, 32)
-                    .padding(.top, 24)
-                    .opacity(showDetailContent ? 1 : 0)
 
                     // Hero composition
                     VStack(spacing: showDetailContent ? 60 : 32) {
-                        // Artwork
-                        MockArtworkView(
-                            color: encounter.track.color,
-                            symbol: "music.note",
+                        EncounterMatchedArtworkView(
+                            encounter: encounter,
                             size: showDetailContent ? 300 : 80,
-                            artwork: encounter.track.artwork
-                        )
-                        .matchedGeometryEffect(id: "artwork-\(encounter.id)", in: encounterNamespace)
-                        .shadow(
-                            color: encounter.track.color.opacity(showDetailContent ? 0.2 : 0.1),
-                            radius: showDetailContent ? 60 : 20,
-                            x: 0,
-                            y: showDetailContent ? 30 : 10
+                            shadowOpacity: showDetailContent ? 0.2 : 0.1,
+                            shadowRadius: showDetailContent ? 60 : 20,
+                            shadowYOffset: showDetailContent ? 30 : 10,
+                            namespace: encounterNamespace
                         )
                         .padding(.top, showDetailContent ? 40 : 80)
 
                         // Text content
                         VStack(spacing: showDetailContent ? 24 : 12) {
                             VStack(spacing: showDetailContent ? 8 : 4) {
-                                Text(encounter.userName)
-                                    .matchedGeometryEffect(id: "userName-\(encounter.id)", in: encounterNamespace)
-                                    .font(PrototypeTheme.Typography.font(
-                                        size: showDetailContent ? 42 : 40,
-                                        weight: .black,
-                                        role: .primary
-                                    ))
-                                    .foregroundStyle(PrototypeTheme.textPrimary)
-                                    .tracking(-1.5)
+                                EncounterMatchedUserNameView(
+                                    encounter: encounter,
+                                    fontSize: showDetailContent ? 42 : 40,
+                                    namespace: encounterNamespace
+                                )
                                     .multilineTextAlignment(.center)
 
                                 if showDetailContent {
@@ -211,15 +178,11 @@ struct EncounterListView: View {
                             }
 
                             VStack(spacing: 4) {
-                                Text(encounter.track.title)
-                                    .matchedGeometryEffect(id: "trackTitle-\(encounter.id)", in: encounterNamespace)
-                                    .font(PrototypeTheme.Typography.font(
-                                        size: showDetailContent ? 24 : 14,
-                                        weight: .bold,
-                                        role: .accent
-                                    ))
-                                    .italic()
-                                    .foregroundStyle(encounter.track.color)
+                                EncounterMatchedTrackTitleView(
+                                    encounter: encounter,
+                                    fontSize: showDetailContent ? 24 : 14,
+                                    namespace: encounterNamespace
+                                )
                                     .multilineTextAlignment(.center)
 
                                 if showDetailContent {
@@ -235,29 +198,7 @@ struct EncounterListView: View {
 
                     // Lyric section
                     if !encounter.lyric.isEmpty && showDetailContent {
-                        VStack(alignment: .leading, spacing: 24) {
-                            Text("記憶の断片")
-                                .font(PrototypeTheme.Typography.font(size: 11, weight: .black, role: .data))
-                                .foregroundStyle(encounter.track.color.opacity(0.6))
-                                .kerning(3)
-                                .padding(.leading, 8)
-
-                            Text(encounter.lyric)
-                                .font(PrototypeTheme.Typography.font(size: 28, weight: .medium))
-                                .foregroundStyle(PrototypeTheme.textPrimary.opacity(0.9))
-                                .lineSpacing(12)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(40)
-                                .background(
-                                    ZStack {
-                                        Color.white.opacity(0.01)
-                                        encounter.track.color.opacity(0.03)
-                                    }
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
-                        }
-                        .padding(.horizontal, 24)
-                        .padding(.top, 100)
+                        EncounterLyricSection(encounter: encounter)
                         .transition(.opacity.combined(with: .offset(y: 20)))
                     }
 
@@ -267,45 +208,7 @@ struct EncounterListView: View {
 
             // Floating actions
             if showDetailContent {
-                VStack {
-                    Spacer()
-                    HStack(spacing: 16) {
-                        Button(action: {
-                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        }) {
-                            Image(systemName: "heart.fill")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundStyle(.white)
-                                .frame(width: 72, height: 72)
-                                .background(
-                                    Circle()
-                                        .fill(encounter.track.color)
-                                        .shadow(color: encounter.track.color.opacity(0.3), radius: 20, x: 0, y: 10)
-                                )
-                        }
-
-                        Button {
-                            // Handle lyric input
-                        } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: "sparkles")
-                                    .font(.system(size: 18, weight: .bold))
-                                Text("想いを刻む")
-                                    .font(PrototypeTheme.Typography.font(size: 16, weight: .bold))
-                            }
-                            .foregroundStyle(PrototypeTheme.textPrimary)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 72)
-                            .background(
-                                Capsule()
-                                    .fill(PrototypeTheme.surfaceElevated)
-                                    .shadow(color: Color.black.opacity(0.08), radius: 20, x: 0, y: 10)
-                            )
-                        }
-                    }
-                    .padding(.horizontal, 32)
-                    .padding(.bottom, 40)
-                }
+                EncounterPrimaryActions(encounter: encounter) {}
                 .transition(.opacity.combined(with: .offset(y: 20)))
             }
         }
