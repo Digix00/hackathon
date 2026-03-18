@@ -15,6 +15,7 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	bleTokenHandler := newBleTokenHandler(deps.BleTokenUsecase)
 	encounterHandler := newEncounterHandler(deps.EncounterUsecase)
 	reportHandler := newReportHandler(deps.ReportUsecase)
+	muteHandler := newMuteHandler(deps.MuteUsecase)
 	notificationHandler := newNotificationHandler(deps.NotificationUsecase)
 	musicHandler := newMusicHandler(deps.MusicUsecase)
 
@@ -46,6 +47,9 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	protected.GET("/encounters/:id", encounterHandler.getEncounterByID)
 
 	protected.POST("/reports", reportHandler.createReport)
+
+	protected.POST("/users/me/mutes", muteHandler.createMute)
+	protected.DELETE("/users/me/mutes/:target_user_id", muteHandler.deleteMute)
 
 	protected.GET("/users/me/notifications", notificationHandler.listNotifications)
 	protected.PATCH("/users/me/notifications/:id/read", notificationHandler.markNotificationAsRead)
