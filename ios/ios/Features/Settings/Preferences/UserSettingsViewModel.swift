@@ -100,42 +100,32 @@ final class UserSettingsViewModel: ObservableObject {
 
     func setEncounterNotifications(_ isEnabled: Bool) {
         let previousEncounter = encounterNotificationEnabled
-        let previousGlobal = notificationEnabled
 
         encounterNotificationEnabled = isEnabled
-        let newGlobal = isEnabled || generatedNotificationEnabled
-        notificationEnabled = newGlobal
 
         submitUpdate(
             UpdateUserSettingsRequest(
-                notificationEnabled: newGlobal,
                 encounterNotificationEnabled: isEnabled
             ),
             field: .encounterNotification,
             revert: {
                 self.encounterNotificationEnabled = previousEncounter
-                self.notificationEnabled = previousGlobal
             }
         )
     }
 
     func setGeneratedNotifications(_ isEnabled: Bool) {
         let previousBatch = generatedNotificationEnabled
-        let previousGlobal = notificationEnabled
 
         generatedNotificationEnabled = isEnabled
-        let newGlobal = encounterNotificationEnabled || isEnabled
-        notificationEnabled = newGlobal
 
         submitUpdate(
             UpdateUserSettingsRequest(
-                notificationEnabled: newGlobal,
                 batchNotificationEnabled: isEnabled
             ),
             field: .generatedNotification,
             revert: {
                 self.generatedNotificationEnabled = previousBatch
-                self.notificationEnabled = previousGlobal
             }
         )
     }
