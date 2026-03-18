@@ -91,7 +91,7 @@ struct EncounterListView: View {
                         GeometryReader { wheelGeometry in
                             ScrollView(.vertical, showsIndicators: false) {
                                 LazyVStack(spacing: wheelItemSpacing) {
-                                    ForEach(Array(encounters.enumerated()), id: \.offset) { index, encounter in
+                                    ForEach(Array(encounters.enumerated()), id: \.element.id) { index, encounter in
                                         let isSelected = selectedEncounter?.id == encounter.id
                                         let isCentered = (scrollTargetID ?? encounters.first?.id) == encounter.id
                                         let isBefore = isEncounterBeforeSelected(encounter)
