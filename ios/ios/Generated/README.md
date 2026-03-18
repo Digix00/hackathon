@@ -29,6 +29,8 @@ Class | Method | HTTP request | Description
 *BleTokensAPI* | [**createBleToken**](docs/BleTokensAPI.md#createbletoken) | **POST** /api/v1/ble-tokens | BLE トークン発行
 *BleTokensAPI* | [**getCurrentBleToken**](docs/BleTokensAPI.md#getcurrentbletoken) | **GET** /api/v1/ble-tokens/current | 有効な BLE トークン取得
 *BleTokensAPI* | [**getUserByBleToken**](docs/BleTokensAPI.md#getuserbybletoken) | **GET** /api/v1/ble-tokens/{token}/user | BLE トークンからユーザー情報取得
+*BlocksAPI* | [**createBlock**](docs/BlocksAPI.md#createblock) | **POST** /api/v1/users/me/blocks | ブロック作成
+*BlocksAPI* | [**deleteBlock**](docs/BlocksAPI.md#deleteblock) | **DELETE** /api/v1/users/me/blocks/{blocked_user_id} | ブロック解除
 *EncountersAPI* | [**createEncounter**](docs/EncountersAPI.md#createencounter) | **POST** /api/v1/encounters | すれ違い登録
 *EncountersAPI* | [**getEncounterByID**](docs/EncountersAPI.md#getencounterbyid) | **GET** /api/v1/encounters/{id} | すれ違い詳細取得
 *EncountersAPI* | [**listEncounters**](docs/EncountersAPI.md#listencounters) | **GET** /api/v1/encounters | すれ違い履歴一覧取得
@@ -60,6 +62,7 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [HackathonInternalHandlerSchemaRequestCreateBlockRequest](docs/HackathonInternalHandlerSchemaRequestCreateBlockRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateEncounterRequest](docs/HackathonInternalHandlerSchemaRequestCreateEncounterRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateMuteRequest](docs/HackathonInternalHandlerSchemaRequestCreateMuteRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreatePushTokenRequest](docs/HackathonInternalHandlerSchemaRequestCreatePushTokenRequest.md)
@@ -72,6 +75,8 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseBleTokenResponse](docs/HackathonInternalHandlerSchemaResponseBleTokenResponse.md)
  - [HackathonInternalHandlerSchemaResponseBleTokenUser](docs/HackathonInternalHandlerSchemaResponseBleTokenUser.md)
  - [HackathonInternalHandlerSchemaResponseBleTokenUserResponse](docs/HackathonInternalHandlerSchemaResponseBleTokenUserResponse.md)
+ - [HackathonInternalHandlerSchemaResponseBlock](docs/HackathonInternalHandlerSchemaResponseBlock.md)
+ - [HackathonInternalHandlerSchemaResponseBlockResponse](docs/HackathonInternalHandlerSchemaResponseBlockResponse.md)
  - [HackathonInternalHandlerSchemaResponseDevice](docs/HackathonInternalHandlerSchemaResponseDevice.md)
  - [HackathonInternalHandlerSchemaResponseDeviceResponse](docs/HackathonInternalHandlerSchemaResponseDeviceResponse.md)
  - [HackathonInternalHandlerSchemaResponseEncounterDetail](docs/HackathonInternalHandlerSchemaResponseEncounterDetail.md)

@@ -69,6 +69,11 @@ type stubBlockRepo struct {
 	blocked bool
 }
 
+func (r *stubBlockRepo) Create(_ context.Context, _ entity.Block) error { return nil }
+func (r *stubBlockRepo) Delete(_ context.Context, _, _ string) error   { return nil }
+func (r *stubBlockRepo) ExistsByBlockerAndBlocked(_ context.Context, _, _ string) (bool, error) {
+	return r.blocked, nil
+}
 func (r *stubBlockRepo) ExistsBetween(_ context.Context, _, _ string) (bool, error) {
 	return r.blocked, nil
 }
