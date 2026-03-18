@@ -141,6 +141,12 @@ resource "google_service_account_iam_member" "terraform_ci_actas_worker" {
   member             = "serviceAccount:${google_service_account.terraform_ci.email}"
 }
 
+resource "google_service_account_iam_member" "terraform_ci_actas_scheduler" {
+  service_account_id = google_service_account.scheduler.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.terraform_ci.email}"
+}
+
 # GitHub Actions Secrets に登録する値の出力
 output "wif_provider" {
   value       = google_iam_workload_identity_pool_provider.github.name
