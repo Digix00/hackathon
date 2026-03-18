@@ -1,6 +1,6 @@
 .PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean reset-db \
 	test test-integration \
-	generate-docs generate-android generate-ios generate-code \
+	generate-docs generate-docs-ci generate-android generate-ios generate-code generate-code-ci \
         _generate-android-only _generate-ios-only
 
 # ==============================================================================
@@ -83,6 +83,16 @@ generate-docs:
 			--parseInternal
 	@echo "==> docs/swagger.json を生成しました"
 
+# CI 向け: コンテナ起動不要で swag を実行する
+generate-docs-ci:
+	docker compose run --rm --no-deps server \
+		swag init \
+			--generalInfo cmd/server/main.go \
+			--output docs \
+			--parseDependency \
+			--parseInternal
+	@echo "==> docs/swagger.json を生成しました"
+
 # swagger.json から Android (Kotlin + Retrofit2) クライアントだけを生成する内部ターゲット
 # generate-code から呼ぶ際に generate-docs の二重実行を避けるために使用する
 _generate-android-only:
@@ -122,5 +132,11 @@ generate-ios: generate-docs _generate-ios-only
 # generate-docs を1回だけ実行してから両クライアントを生成する
 generate-code:
 	$(MAKE) generate-docs
+	$(MAKE) _generate-android-only _generate-ios-only
+	@echo "==> 全コード生成が完了しました"
+
+# CI 向け: generate-docs-ci を使って全コードを生成する
+generate-code-ci:
+	$(MAKE) generate-docs-ci
 	$(MAKE) _generate-android-only _generate-ios-only
 	@echo "==> 全コード生成が完了しました"

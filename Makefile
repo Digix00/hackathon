@@ -1,5 +1,5 @@
 .PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean reset-db \
-        generate-docs generate-android generate-ios generate-code
+        generate-docs generate-docs-ci generate-android generate-ios generate-code generate-code-ci
 
 # ==============================================================================
 # Docker Compose Commands
@@ -43,6 +43,9 @@ fmt:
 generate-docs:
 	$(MAKE) -C backend generate-docs
 
+generate-docs-ci:
+	$(MAKE) -C backend generate-docs-ci
+
 generate-android:
 	$(MAKE) -C backend generate-android
 
@@ -51,3 +54,6 @@ generate-ios:
 
 generate-code:
 	$(MAKE) -C backend generate-code
+
+generate-code-ci:
+	$(MAKE) -C backend generate-code-ci
