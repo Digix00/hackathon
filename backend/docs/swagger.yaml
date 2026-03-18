@@ -1,5 +1,10 @@
 basePath: /
 definitions:
+  hackathon_internal_handler_schema_request.CreateMuteRequest:
+    properties:
+      target_user_id:
+        type: string
+    type: object
   hackathon_internal_handler_schema_request.CreatePushTokenRequest:
     properties:
       app_version:
@@ -188,6 +193,20 @@ definitions:
     properties:
       device:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.Device'
+    type: object
+  hackathon_internal_handler_schema_response.Mute:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      target_user_id:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.MuteResponse:
+    properties:
+      mute:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.Mute'
     type: object
   hackathon_internal_handler_schema_response.NotificationItem:
     properties:
@@ -696,6 +715,83 @@ paths:
       summary: 自分のプロフィール更新
       tags:
       - users
+  /api/v1/users/me/mutes:
+    post:
+      consumes:
+      - application/json
+      description: 指定したユーザーをミュートする。自分自身や存在しないユーザーへのミュート、重複ミュートはエラーになる。
+      operationId: createMute
+      parameters:
+      - description: ミュートリクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.CreateMuteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.MuteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: ミュート作成
+      tags:
+      - mutes
+  /api/v1/users/me/mutes/{target_user_id}:
+    delete:
+      description: 指定したユーザーのミュートを解除する。ミュートが存在しない場合はエラーになる。
+      operationId: deleteMute
+      parameters:
+      - description: ミュート解除対象のユーザーID
+        in: path
+        name: target_user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: ミュート解除
+      tags:
+      - mutes
   /api/v1/users/me/notifications:
     get:
       description: 現在ログインしているユーザーの通知一覧を取得する
