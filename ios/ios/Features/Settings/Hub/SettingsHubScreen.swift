@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsHubView: View {
     let restartOnboarding: () -> Void
+    @StateObject private var profileViewModel = CurrentUserProfileViewModel()
 
     private var appSettings: [SettingsDestination] {
         [
@@ -43,23 +44,29 @@ struct SettingsHubView: View {
                 // Profile Header
                 SectionCard {
                     VStack(spacing: 20) {
-                        ZStack {
-                            Circle()
-                                .fill(PrototypeTheme.surfaceElevated)
-                                .frame(width: 80, height: 80)
-                            Image(systemName: "person.fill")
-                                .font(.system(size: 36))
-                                .foregroundStyle(PrototypeTheme.textTertiary)
-                        }
-                        
+                        UserAvatarView(
+                            avatarURL: profileViewModel.user?.avatarURL,
+                            size: 80,
+                            iconSize: 36
+                        )
+
                         VStack(spacing: 6) {
-                            Text("Miyu")
+                            Text(profileViewModel.user?.displayName ?? "読み込み中...")
                                 .font(.system(size: 24, weight: .bold))
-                            Text("音楽で街の空気を集めたい")
+
+                            let bio = profileViewModel.user?.bio?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                            Text(bio.isEmpty ? "ひとこと未設定" : bio)
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundStyle(PrototypeTheme.textSecondary)
+                                .multilineTextAlignment(.center)
                         }
-                        
+
+                        if let errorMessage = profileViewModel.errorMessage {
+                            Text(errorMessage)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.error)
+                        }
+
                         NavigationLink {
                             ProfileEditView()
                         } label: {
@@ -92,6 +99,9 @@ struct SettingsHubView: View {
                 .padding(.vertical, 20)
             }
         }
+        .onAppear {
+            profileViewModel.refresh()
+        }
     }
 
     private func settingsGroup(title: String, items: [SettingsDestination]) -> some View {
@@ -105,6 +115,38 @@ struct SettingsHubView: View {
                     }
                     .buttonStyle(.plain)
                 }
+            }
+        }
+    }
+}
+
+private struct UserAvatarView: View {
+    let avatarURL: String?
+    let size: CGFloat
+    let iconSize: CGFloat
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(PrototypeTheme.surfaceElevated)
+                .frame(width: size, height: size)
+
+            if let avatarURL, let url = URL(string: avatarURL) {
+                AsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                } placeholder: {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: iconSize))
+                        .foregroundStyle(PrototypeTheme.textTertiary)
+                }
+                .frame(width: size, height: size)
+                .clipShape(Circle())
+            } else {
+                Image(systemName: "person.fill")
+                    .font(.system(size: iconSize))
+                    .foregroundStyle(PrototypeTheme.textTertiary)
             }
         }
     }
