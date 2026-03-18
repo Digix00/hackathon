@@ -36,21 +36,20 @@ struct MockArtworkView: View {
         self.artworkImage = artwork.flatMap { UIImage(named: $0) }
     }
 
+    @ViewBuilder
     var body: some View {
-        content
-            .if(shadowRadius > 0 && shadowColor != nil) { view in
-                guard let shadowColor else {
-                    return view
-                }
-                return view
-                    .shadow(
-                        color: shadowColor,
-                        radius: shadowRadius,
-                        x: shadowOffset.x,
-                        y: shadowOffset.y
-                    )
-                    .compositingGroup()
-            }
+        if let shadowColor, shadowRadius > 0 {
+            content
+                .shadow(
+                    color: shadowColor,
+                    radius: shadowRadius,
+                    x: shadowOffset.x,
+                    y: shadowOffset.y
+                )
+                .compositingGroup()
+        } else {
+            content
+        }
     }
 
     @ViewBuilder
