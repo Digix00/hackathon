@@ -3,6 +3,8 @@ import SwiftUI
 struct SettingsHubView: View {
     let restartOnboarding: () -> Void
 
+    @State private var isBeating = false
+
     private var appSettings: [SettingsDestination] {
         [
             SettingsDestination(id: "share-track", icon: "music.note", title: "シェアする曲", destination: { AnyView(SearchView()) }),
@@ -40,119 +42,206 @@ struct SettingsHubView: View {
             subtitle: "PREFERENCES & SYSTEM"
         ) {
             VStack(alignment: .leading, spacing: 44) {
-                // --- PROFILE SECTION ---
-                VStack(spacing: 24) {
-                    HStack(spacing: 20) {
-                        // Elevated Avatar with Ring
-                        ZStack {
-                            Circle()
-                                .fill(PrototypeTheme.surface)
-                                .frame(width: 84, height: 84)
-                                .shadow(color: Color.black.opacity(0.06), radius: 12, x: 0, y: 6)
-                            
-                            Image(systemName: "person.fill")
-                                .font(.system(size: 38))
-                                .foregroundStyle(PrototypeTheme.textTertiary.opacity(0.8))
-                            
-                            // Accent Ring (Minimal Decoration)
-                            Circle()
-                                .stroke(PrototypeTheme.accent.opacity(0.15), lineWidth: 1)
-                                .frame(width: 94, height: 94)
-                        }
+                
+                // --- BEACON STATUS HEADER ---
+                HStack {
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(PrototypeTheme.success)
+                            .frame(width: 8, height: 8)
+                            .opacity(isBeating ? 1.0 : 0.3)
+                            .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: isBeating)
                         
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                Text("Miyu")
-                                    .font(.system(size: 28, weight: .bold))
-                                    .tracking(-0.8)
+                        Text("BEACON ACTIVE")
+                            .prototypeFont(size: 10, weight: .black, role: .data)
+                            .kerning(1.5)
+                            .foregroundStyle(PrototypeTheme.textPrimary)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(PrototypeTheme.success.opacity(0.1))
+                    .clipShape(Capsule())
+                    
+                    Spacer()
+                    
+                    Text("35.6586° N, 139.7454° E")
+                        .prototypeFont(size: 10, weight: .medium, role: .data)
+                        .foregroundStyle(PrototypeTheme.textTertiary)
+                }
+                .padding(.top, -10)
+                .onAppear { isBeating = true }
+
+                // --- PROFILE SECTION ---
+                GlassmorphicCard {
+                    VStack(spacing: 24) {
+                        HStack(spacing: 20) {
+                            // Elevated Avatar with Pulse Ring
+                            ZStack {
+                                // Animated pulse ring
+                                Circle()
+                                    .stroke(PrototypeTheme.accent.opacity(0.2), lineWidth: 2)
+                                    .frame(width: 84, height: 84)
+                                    .scaleEffect(isBeating ? 1.2 : 1.0)
+                                    .opacity(isBeating ? 0.0 : 0.5)
+                                    .animation(.easeOut(duration: 2.0).repeatForever(autoreverses: false), value: isBeating)
                                 
-                                Text("ID: 0x82A1")
-                                    .prototypeFont(size: 8, weight: .black, role: .data)
+                                Circle()
+                                    .fill(PrototypeTheme.surface)
+                                    .frame(width: 84, height: 84)
+                                    .shadow(color: Color.black.opacity(0.1), radius: 15, x: 0, y: 8)
+                                
+                                Image(systemName: "person.fill")
+                                    .font(.system(size: 38))
                                     .foregroundStyle(PrototypeTheme.textTertiary)
-                                    .kerning(1.2)
+                                
+                                // Status Indicator
+                                Circle()
+                                    .fill(PrototypeTheme.success)
+                                    .frame(width: 14, height: 14)
+                                    .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                                    .offset(x: 28, y: 28)
                             }
                             
-                            Text("音楽で街の空気を集めたい")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(PrototypeTheme.textSecondary)
-                        }
-                        
-                        Spacer()
-                    }
-                    .padding(.horizontal, 4)
-
-                    NavigationLink {
-                        ProfileEditView()
-                    } label: {
-                        HStack {
-                            Text("EDIT PROFILE")
-                                .prototypeFont(size: 10, weight: .black, role: .data)
-                                .kerning(2.0)
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                    Text("Miyu")
+                                        .font(.system(size: 28, weight: .bold))
+                                        .tracking(-1.0)
+                                    
+                                    Text("USR-82A1")
+                                        .prototypeFont(size: 9, weight: .black, role: .data)
+                                        .foregroundStyle(PrototypeTheme.accent)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(PrototypeTheme.accent.opacity(0.1))
+                                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                                }
+                                
+                                Text("音楽で街の空気を集めたい")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundStyle(PrototypeTheme.textSecondary)
+                                
+                                Text("LEVEL 12 · 428 ENCOUNTERS")
+                                    .prototypeFont(size: 9, weight: .black, role: .data)
+                                    .foregroundStyle(PrototypeTheme.textTertiary)
+                                    .padding(.top, 4)
+                            }
+                            
                             Spacer()
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 10, weight: .bold))
                         }
-                        .foregroundStyle(PrototypeTheme.accent)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(PrototypeTheme.surface)
-                                .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 4)
-                        )
+
+                        NavigationLink {
+                            ProfileEditView()
+                        } label: {
+                            HStack {
+                                Text("MODIFY PROTOCOL")
+                                    .prototypeFont(size: 10, weight: .black, role: .data)
+                                    .kerning(2.0)
+                                Spacer()
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 10, weight: .bold))
+                            }
+                            .foregroundStyle(Color.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 14)
+                            .background(
+                                Capsule()
+                                    .fill(PrototypeTheme.accent)
+                                    .shadow(color: PrototypeTheme.accent.opacity(0.3), radius: 10, x: 0, y: 5)
+                            )
+                        }
+                        .buttonStyle(ScaleButtonStyle())
                     }
-                    .buttonStyle(ScaleButtonStyle())
                 }
 
                 // --- SETTINGS GROUPS ---
-                Group {
-                    settingsSection(title: "APPLICATION", items: appSettings)
-                    settingsSection(title: "PRIVACY", items: privacySettings)
-                    settingsSection(title: "SERVICES", items: linkedServices)
-                    settingsSection(title: "EXPERIMENTAL", items: prototypeEntries)
+                VStack(spacing: 32) {
+                    settingsSection(title: "CORE CONFIGURATION", code: "SYS-01", items: appSettings)
+                    settingsSection(title: "PRIVACY PROTOCOLS", code: "PRV-02", items: privacySettings)
+                    settingsSection(title: "SERVICE INTEGRATION", code: "SRV-03", items: linkedServices)
+                    settingsSection(title: "EXPERIMENTAL MODULES", code: "EXP-04", items: prototypeEntries)
                 }
 
-                // --- FOOTER ---
-                VStack(spacing: 8) {
+                // --- SYSTEM DIAGNOSTIC FOOTER ---
+                VStack(spacing: 16) {
                     HStack(spacing: 12) {
                         Rectangle()
                             .fill(PrototypeTheme.border)
-                            .frame(height: 0.5)
+                            .frame(height: 1)
                         
-                        Text("SYSTEM STATUS: OPTIMAL")
-                            .prototypeFont(size: 8.5, weight: .black, role: .data)
-                            .kerning(1.5)
-                            .foregroundStyle(PrototypeTheme.textTertiary.opacity(0.6))
+                        Text("DIAGNOSTIC SUMMARY")
+                            .prototypeFont(size: 10, weight: .black, role: .data)
+                            .kerning(2.0)
+                            .foregroundStyle(PrototypeTheme.textTertiary)
                         
                         Rectangle()
                             .fill(PrototypeTheme.border)
-                            .frame(height: 0.5)
+                            .frame(height: 1)
                     }
                     
-                    VStack(spacing: 4) {
-                        Text("VERSION 0.1.0-RC")
-                            .prototypeFont(size: 9, weight: .black, role: .data)
-                        Text("© 2026 URBAN SERENDIPITY PROJECT")
-                            .font(.system(size: 9, weight: .bold))
-                            .kerning(0.5)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("STATUS:")
+                                .prototypeFont(size: 9, weight: .black, role: .data)
+                                .foregroundStyle(PrototypeTheme.textSecondary)
+                            Text("ALL SYSTEMS OPTIMAL")
+                                .prototypeFont(size: 9, weight: .medium, role: .data)
+                                .foregroundStyle(PrototypeTheme.success)
+                            Spacer()
+                            Text("uptime: 14:22:01")
+                                .prototypeFont(size: 9, weight: .medium, role: .data)
+                                .foregroundStyle(PrototypeTheme.textTertiary)
+                        }
+                        
+                        HStack {
+                            Text("KERNEL:")
+                                .prototypeFont(size: 9, weight: .black, role: .data)
+                                .foregroundStyle(PrototypeTheme.textSecondary)
+                            Text("SERENDIPITY-OS v0.1.0-RELEASE")
+                                .prototypeFont(size: 9, weight: .medium, role: .data)
+                                .foregroundStyle(PrototypeTheme.textTertiary)
+                        }
+                        
+                        HStack {
+                            Text("LOCALITY:")
+                                .prototypeFont(size: 9, weight: .black, role: .data)
+                                .foregroundStyle(PrototypeTheme.textSecondary)
+                            Text("TOKYO-DISTRICT-03")
+                                .prototypeFont(size: 9, weight: .medium, role: .data)
+                                .foregroundStyle(PrototypeTheme.textTertiary)
+                        }
                     }
-                    .foregroundStyle(PrototypeTheme.textTertiary.opacity(0.8))
+                    .padding(16)
+                    .background(PrototypeTheme.surfaceMuted.opacity(0.4))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    
+                    Text("© 2026 URBAN SERENDIPITY PROJECT · NO RIGHTS RESERVED")
+                        .prototypeFont(size: 8, weight: .black, role: .data)
+                        .kerning(1.0)
+                        .foregroundStyle(PrototypeTheme.textTertiary.opacity(0.6))
+                        .padding(.top, 10)
                 }
                 .padding(.top, 20)
-                .padding(.bottom, 40)
+                .padding(.bottom, 60)
             }
-            .padding(.horizontal, 4) // Additional inner padding for breathing room
         }
     }
 
-    private func settingsSection(title: String, items: [SettingsDestination]) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Eyebrow Header
-            Text(title)
-                .prototypeFont(size: 10, weight: .black, role: .data)
-                .kerning(2.5)
-                .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.5))
-                .padding(.leading, 4)
+    private func settingsSection(title: String, code: String, items: [SettingsDestination]) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(title)
+                    .prototypeFont(size: 11, weight: .black, role: .data)
+                    .kerning(2.0)
+                    .foregroundStyle(PrototypeTheme.textSecondary)
+                
+                Spacer()
+                
+                Text(code)
+                    .prototypeFont(size: 9, weight: .black, role: .data)
+                    .foregroundStyle(PrototypeTheme.textTertiary.opacity(0.6))
+            }
+            .padding(.horizontal, 4)
 
             VStack(spacing: 0) {
                 ForEach(Array(items.enumerated()), id: \.offset) { index, item in
@@ -161,7 +250,7 @@ struct SettingsHubView: View {
                     } label: {
                         VStack(spacing: 0) {
                             SettingRow(icon: item.icon, title: item.title)
-                                .padding(.vertical, 16)
+                                .padding(.vertical, 18)
                                 .padding(.horizontal, 20)
                             
                             if index < items.count - 1 {
@@ -170,16 +259,17 @@ struct SettingsHubView: View {
                                     .padding(.horizontal, 20)
                             }
                         }
-                        .background(PrototypeTheme.surface)
+                        .background(PrototypeTheme.surface.opacity(0.7))
                     }
                     .buttonStyle(.plain)
-                    
-                    // Subtle hover/press effect is handled by ButtonStyle if needed, 
-                    // but here we keep it clean.
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .shadow(color: Color.black.opacity(0.02), radius: 20, x: 0, y: 10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(PrototypeTheme.border.opacity(0.5), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.03), radius: 15, x: 0, y: 8)
         }
     }
 }
