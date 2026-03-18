@@ -12,15 +12,13 @@ struct EncounterListView: View {
     @State private var selectedEncounter: Encounter?
     @State private var showDetailContent = false
     @SceneStorage("encounter.list.scrollTargetID") private var scrollTargetID: String?
+    @EnvironmentObject private var bleCoordinator: BLEAppCoordinator
     
     private let wheelItemHeight: CGFloat = 300
     private let wheelItemSpacing: CGFloat = 10
 
     private var encounters: [Encounter] {
-        let previewEncounters = MockData.encountersWithoutLyrics + MockData.encounters
-        return EncounterSection.allCases.flatMap { section in
-            previewEncounters.filter(section.includes)
-        }
+        bleCoordinator.encounters
     }
 
     init(isDetailPresented: Binding<Bool> = .constant(false)) {
@@ -52,6 +50,10 @@ struct EncounterListView: View {
         .onChange(of: selectedEncounter?.id) { _ in
             syncDetailPresentationState()
         }
+        .onChange(of: bleCoordinator.encounters.map(\.id)) { _, ids in
+            guard let selectedEncounter, !ids.contains(selectedEncounter.id) else { return }
+            self.selectedEncounter = nil
+        }
     }
 
     // MARK: - List Content
@@ -59,6 +61,22 @@ struct EncounterListView: View {
     private var listContent: some View {
         GeometryReader { geometry in
             let topPadding = geometry.safeAreaInsets.top
+
+            if encounters.isEmpty {
+                VStack(spacing: 16) {
+                    Spacer()
+                    Text("まだすれ違いがありません")
+                        .font(PrototypeTheme.Typography.font(size: 22, weight: .black, role: .primary))
+                        .foregroundStyle(PrototypeTheme.textPrimary)
+                    Text(bleCoordinator.encounterErrorMessage ?? "BLE をオンにして街ですれ違うと、ここに履歴が表示されます。")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(PrototypeTheme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
 
                 ZStack {
                     // Background
@@ -73,52 +91,47 @@ struct EncounterListView: View {
                         GeometryReader { wheelGeometry in
                             ScrollView(.vertical, showsIndicators: false) {
                                 LazyVStack(spacing: wheelItemSpacing) {
-                                ForEach(Array(encounters.enumerated()), id: \.offset) { index, encounter in
-                                    let isSelected = selectedEncounter?.id == encounter.id
-                                    let isCentered = (scrollTargetID ?? encounters.first?.id) == encounter.id
-                                    let isBefore = selectedEncounter.flatMap { selected -> Bool? in
-                                        guard let selectedIndex = encounters.firstIndex(where: { $0.id == selected.id }),
-                                              let encounterIndex = encounters.firstIndex(where: { $0.id == encounter.id }) else {
-                                            return nil
-                                        }
-                                        return selectedIndex > encounterIndex
-                                    } ?? false
-                                    
-                                    GeometryReader { itemGeometry in
-                                        let metrics = wheelMetrics(itemGeometry: itemGeometry, wheelGeometry: wheelGeometry)
-                                        
-                                        Button {
-                                            withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
-                                                selectedEncounter = encounter
-                                            }
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                                withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
-                                                    showDetailContent = true
+                                    ForEach(Array(encounters.enumerated()), id: \.offset) { index, encounter in
+                                        let isSelected = selectedEncounter?.id == encounter.id
+                                        let isCentered = (scrollTargetID ?? encounters.first?.id) == encounter.id
+                                        let isBefore = isEncounterBeforeSelected(encounter)
+
+                                        GeometryReader { itemGeometry in
+                                            let metrics = wheelMetrics(itemGeometry: itemGeometry, wheelGeometry: wheelGeometry)
+
+                                            Button {
+                                                withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
+                                                    selectedEncounter = encounter
                                                 }
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                                    withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
+                                                        showDetailContent = true
+                                                    }
+                                                }
+                                            } label: {
+                                                EncounterRow(
+                                                    encounter: encounter,
+                                                    isFixed: index == 0,
+                                                    hideMatchedElements: isSelected && selectedEncounter != nil
+                                                )
+                                                .scaleEffect(metrics.scale)
+                                                .opacity(selectedEncounter != nil && !isSelected ? 0 : metrics.opacity)
+                                                .blur(radius: metrics.blur)
+                                                .saturation(metrics.saturation)
+                                                .offset(
+                                                    y: selectedEncounter != nil && !isSelected
+                                                        ? (isBefore ? -200 : 200)
+                                                        : metrics.verticalOffset
+                                                )
+                                                .zIndex(metrics.zIndex)
                                             }
-                                        } label: {
-                                            EncounterRow(
-                                                encounter: encounter,
-                                                isFixed: index == 0,
-                                                hideMatchedElements: isSelected && selectedEncounter != nil
-                                            )
-                                            .scaleEffect(metrics.scale)
-                                            .opacity(selectedEncounter != nil && !isSelected ? 0 : metrics.opacity)
-                                            .blur(radius: metrics.blur)
-                                            .saturation(metrics.saturation)
-                                            .offset(
-                                                y: selectedEncounter != nil && !isSelected
-                                                    ? (isBefore ? -200 : 200)
-                                                    : metrics.verticalOffset
-                                            )
-                                            .zIndex(metrics.zIndex)
+                                            .buttonStyle(EncounterScaleButtonStyle())
+                                            .disabled(!isCentered || selectedEncounter != nil)
+                                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                                         }
-                                        .buttonStyle(EncounterScaleButtonStyle())
-                                        .disabled(!isCentered || selectedEncounter != nil)
-                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                        .frame(height: wheelItemHeight)
+                                        .id(encounter.id)
                                     }
-                                    .frame(height: wheelItemHeight)
-                                    .id(encounter.id)
                                 }
                             }
                             .scrollTargetLayout()
@@ -132,6 +145,11 @@ struct EncounterListView: View {
                     }
                     .padding(.top, topPadding + 8)
                 }
+            }
+        }
+        .task {
+            if bleCoordinator.encounters.isEmpty {
+                bleCoordinator.refreshEncounters()
             }
         }
     }
@@ -152,6 +170,16 @@ struct EncounterListView: View {
             verticalOffset: eased * 26,
             zIndex: 1.0 - Double(normalizedDistance)
         )
+    }
+
+    private func isEncounterBeforeSelected(_ encounter: Encounter) -> Bool {
+        guard let selected = selectedEncounter,
+              let selectedIndex = encounters.firstIndex(where: { $0.id == selected.id }),
+              let encounterIndex = encounters.firstIndex(where: { $0.id == encounter.id }) else {
+            return false
+        }
+
+        return selectedIndex > encounterIndex
     }
     
     private struct WheelMetrics {

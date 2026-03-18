@@ -1,11 +1,19 @@
 import Foundation
 
 struct Encounter: Identifiable, Hashable {
-    var id: String { "\(userName)-\(track.id)-\(relativeTime)-\(lyric)" }
+    let id: String
     let userName: String
     let track: Track
     let relativeTime: String
     let lyric: String
+
+    init(id: String? = nil, userName: String, track: Track, relativeTime: String, lyric: String) {
+        self.id = id ?? "\(userName)-\(track.id)-\(relativeTime)-\(lyric)"
+        self.userName = userName
+        self.track = track
+        self.relativeTime = relativeTime
+        self.lyric = lyric
+    }
 
     var happenedYesterday: Bool {
         relativeTime == "昨日"

@@ -45,6 +45,7 @@ struct MainPrototypeView: View {
     @State private var selectedLibraryTab: LibraryTab = .insights
     @State private var isEncounterDetailPresented = false
     @GestureState private var verticalDragOffset: CGFloat = 0
+    @EnvironmentObject private var bleCoordinator: BLEAppCoordinator
     let restartOnboarding: () -> Void
     @Namespace private var homeNamespace
 
@@ -89,7 +90,28 @@ struct MainPrototypeView: View {
     }
 
     private var homeState: HomeScreenState {
-        MockData.home
+        let encounters = bleCoordinator.encounters
+        let featuredTrack = encounters.first?.track ?? MockData.featuredTrack
+        let weeklyTracks = uniqueTracks(from: encounters.map(\.track) + MockData.tracks).prefix(8)
+        let todayCount = encounters.filter { !$0.happenedYesterday }.count
+
+        return HomeScreenState(
+            userName: "Miyu",
+            featuredTrack: featuredTrack,
+            weeklyTracks: Array(weeklyTracks),
+            recentEncounters: encounters,
+            todayEncounterCount: todayCount,
+            weekEncounterCount: encounters.count,
+            isOffline: bleCoordinator.encounterErrorMessage != nil && encounters.isEmpty
+        )
+    }
+
+    private func uniqueTracks(from tracks: [Track]) -> [Track] {
+        var seen: Set<String> = []
+
+        return tracks.filter { track in
+            seen.insert(track.id).inserted
+        }
     }
 
     private var isShowingTrackSurface: Bool {

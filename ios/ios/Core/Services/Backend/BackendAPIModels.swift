@@ -377,6 +377,42 @@ struct UpdateUserSettingsRequest: Encodable {
         case announcementNotificationEnabled = "announcement_notification_enabled"
         case themeMode = "theme_mode"
     }
+
+    init(
+        bleEnabled: Bool? = nil,
+        locationEnabled: Bool? = nil,
+        detectionDistance: Int? = nil,
+        scheduleEnabled: Bool? = nil,
+        scheduleStartTime: String? = nil,
+        scheduleEndTime: String? = nil,
+        profileVisible: Bool? = nil,
+        trackVisible: Bool? = nil,
+        notificationEnabled: Bool? = nil,
+        encounterNotificationEnabled: Bool? = nil,
+        batchNotificationEnabled: Bool? = nil,
+        notificationFrequency: String? = nil,
+        commentNotificationEnabled: Bool? = nil,
+        likeNotificationEnabled: Bool? = nil,
+        announcementNotificationEnabled: Bool? = nil,
+        themeMode: String? = nil
+    ) {
+        self.bleEnabled = bleEnabled
+        self.locationEnabled = locationEnabled
+        self.detectionDistance = detectionDistance
+        self.scheduleEnabled = scheduleEnabled
+        self.scheduleStartTime = scheduleStartTime
+        self.scheduleEndTime = scheduleEndTime
+        self.profileVisible = profileVisible
+        self.trackVisible = trackVisible
+        self.notificationEnabled = notificationEnabled
+        self.encounterNotificationEnabled = encounterNotificationEnabled
+        self.batchNotificationEnabled = batchNotificationEnabled
+        self.notificationFrequency = notificationFrequency
+        self.commentNotificationEnabled = commentNotificationEnabled
+        self.likeNotificationEnabled = likeNotificationEnabled
+        self.announcementNotificationEnabled = announcementNotificationEnabled
+        self.themeMode = themeMode
+    }
 }
 
 struct CreatePushTokenRequest: Encodable {
