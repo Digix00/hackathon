@@ -30,6 +30,7 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
 	reportRepo := rdb.NewReportRepository(db)
 	notificationRepo := rdb.NewNotificationRepository(db)
+	_ = rdb.NewTransactor(db)
 	spotifyProvider := music.NewSpotifyProvider(music.SpotifyConfig{
 		ClientID:     cfg.SpotifyClientID,
 		ClientSecret: cfg.SpotifyClientSecret,
