@@ -261,6 +261,9 @@ const docTemplate = `{
                             "$ref": "#/definitions/hackathon_internal_handler_schema_response.EncounterResponse"
                         }
                     },
+                    "204": {
+                        "description": "No Content"
+                    },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
