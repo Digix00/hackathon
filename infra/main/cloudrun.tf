@@ -1,10 +1,6 @@
 locals {
-  # 初回 apply 時は実イメージが未 push のためプレースホルダーを使用。
-  # CI/CD（deploy.yml）が実イメージを push・デプロイするため、
-  # lifecycle.ignore_changes = [template] で Terraform による上書きを防ぐ。
-  image_placeholder = "us-docker.pkg.dev/cloudrun/container/hello:latest"
-  image_server      = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/server:latest"
-  image_worker      = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/worker:latest"
+  image_server = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/server:${var.server_image_tag}"
+  image_worker = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/worker:${var.worker_image_tag}"
 }
 
 # Cloud Run Service（API サーバー）
@@ -30,14 +26,14 @@ resource "google_cloud_run_v2_service" "api" {
     }
 
     containers {
-      image = local.image_placeholder
+      image = local.image_server
 
       resources {
         limits = {
           cpu    = "1"
           memory = "256Mi"
         }
-        cpu_idle          = true # リクエスト処理中のみ CPU 割当（無料枠内に収める）
+        cpu_idle          = true
         startup_cpu_boost = false
       }
 
@@ -143,10 +139,6 @@ resource "google_cloud_run_v2_service" "api" {
     }
   }
 
-  lifecycle {
-    ignore_changes = [template[0].containers[0].image]
-  }
-
   depends_on = [
     google_project_service.apis,
     google_secret_manager_secret_version.db_password,
@@ -183,7 +175,7 @@ resource "google_cloud_run_v2_job" "worker" {
       }
 
       containers {
-        image = local.image_placeholder
+        image = local.image_worker
 
         resources {
           limits = {
@@ -223,10 +215,6 @@ resource "google_cloud_run_v2_job" "worker" {
         }
       }
     }
-  }
-
-  lifecycle {
-    ignore_changes = [template[0].template[0].containers[0].image]
   }
 
   depends_on = [
