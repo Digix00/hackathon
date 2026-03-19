@@ -19,7 +19,8 @@ struct ChainProgressView: View {
                 } else if let chain = viewModel.chain {
                     let status = chain.status.lowercased()
                     let isPending = status == "pending"
-                    let isRecruiting = isPending && chain.participantCount < chain.threshold
+                    let remainingParticipants = max(chain.threshold - chain.participantCount, 0)
+                    let isRecruiting = isPending && remainingParticipants > 0
 
                     SectionCard {
                         VStack(alignment: .leading, spacing: 20) {
@@ -63,7 +64,9 @@ struct ChainProgressView: View {
                                     )
                                 },
                                 waitingLine: isRecruiting
-                                    ? "\(chain.participantCount + 1). 最後のひとりを待っています..."
+                                    ? remainingParticipants == 1
+                                        ? "\(chain.participantCount + 1). 最後のひとりを待っています..."
+                                        : "\(chain.participantCount + 1). あと\(remainingParticipants)人を待っています..."
                                     : nil
                             )
                         }
