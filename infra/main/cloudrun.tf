@@ -1,6 +1,7 @@
 locals {
-  image_server = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/server:${var.server_image_tag}"
-  image_worker = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/worker:${var.worker_image_tag}"
+  image_server  = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/server:${var.server_image_tag}"
+  image_worker  = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/worker:${var.worker_image_tag}"
+  image_migrate = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/migrate:${var.migrate_image_tag}"
 }
 
 # Cloud Run Service（API サーバー）
@@ -222,6 +223,75 @@ resource "google_cloud_run_v2_service" "worker" {
       volume_mounts {
         name       = "cloudsql"
         mount_path = "/cloudsql"
+      }
+    }
+  }
+
+  depends_on = [
+    google_project_service.apis,
+    google_secret_manager_secret_version.db_password,
+  ]
+}
+
+# Cloud Run Job（DB マイグレーション）
+resource "google_cloud_run_v2_job" "migrate" {
+  name     = "migrate"
+  location = var.region
+
+  deletion_protection = false
+
+  template {
+    template {
+      max_retries     = 0      # マイグレーションは失敗時に即停止（自動リトライ禁止）
+      timeout         = "300s" # 最大 5 分
+      service_account = google_service_account.worker.email
+
+      volumes {
+        name = "cloudsql"
+        cloud_sql_instance {
+          instances = [google_sql_database_instance.main.connection_name]
+        }
+      }
+
+      containers {
+        image = local.image_migrate
+
+        resources {
+          limits = {
+            cpu    = "1"
+            memory = "512Mi"
+          }
+        }
+
+        env {
+          name  = "DB_USER"
+          value = google_sql_user.app.name
+        }
+
+        env {
+          name  = "DB_NAME"
+          value = google_sql_database.app.name
+        }
+
+        env {
+          name  = "DB_CONNECTION_NAME"
+          value = google_sql_database_instance.main.connection_name
+        }
+
+        env {
+          name = "DB_PASSWORD"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.db_password.secret_id
+              version = "latest"
+            }
+          }
+        }
+
+        volume_mounts {
+          name       = "cloudsql"
+          mount_path = "/cloudsql"
+        }
       }
     }
   }

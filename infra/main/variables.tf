@@ -23,3 +23,9 @@ variable "worker_image_tag" {
   description = "デプロイする worker イメージのタグ（git SHA または latest）"
   default     = "latest"
 }
+
+variable "migrate_image_tag" {
+  type        = string
+  description = "デプロイする migrate イメージのタグ（git SHA または latest）"
+  default     = "latest"
+}

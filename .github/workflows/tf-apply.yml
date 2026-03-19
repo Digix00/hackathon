@@ -55,6 +55,7 @@ jobs:
           WORKER_TAG=${WORKER_TAG:-latest}
           echo "TF_VAR_server_image_tag=$SERVER_TAG" >> $GITHUB_ENV
           echo "TF_VAR_worker_image_tag=$WORKER_TAG" >> $GITHUB_ENV
+          echo "TF_VAR_migrate_image_tag=$MIGRATE_TAG" >> $GITHUB_ENV
 
       - name: Terraform Apply
         env:
