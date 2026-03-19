@@ -10,6 +10,7 @@ final class OtherUserProfileViewModel: ObservableObject {
     @Published private(set) var actionErrorMessage: String?
     @Published private(set) var isMuting = false
     @Published private(set) var isBlocking = false
+    @Published private(set) var isReporting = false
 
     private let client: BackendAPIClient
 
@@ -76,6 +77,17 @@ final class OtherUserProfileViewModel: ObservableObject {
         Task { await performBlock(userID: user.id) }
     }
 
+    func report() {
+        guard let user else {
+            actionErrorMessage = "ユーザー情報を読み込んでください"
+            actionMessage = nil
+            return
+        }
+        guard !isActionInProgress else { return }
+        isReporting = true
+        Task { await performReport(userID: user.id) }
+    }
+
     private func performMute(userID: String) async {
         actionMessage = nil
         actionErrorMessage = nil
@@ -100,8 +112,33 @@ final class OtherUserProfileViewModel: ObservableObject {
         isBlocking = false
     }
 
+    private func performReport(userID: String) async {
+        actionMessage = nil
+        actionErrorMessage = nil
+        do {
+            let request = CreateReportRequest(
+                reportType: "user",
+                reportedUserId: userID,
+                targetCommentId: nil,
+                reason: "user_report"
+            )
+            _ = try await client.createReport(request)
+            actionMessage = "通報しました"
+        } catch let error as BackendAPIClient.BackendError {
+            switch error {
+            case let .unexpectedStatus(status, _):
+                actionErrorMessage = status == 409 ? "すでに通報済みです" : "通報に失敗しました"
+            default:
+                actionErrorMessage = "通報に失敗しました"
+            }
+        } catch {
+            actionErrorMessage = "通報に失敗しました"
+        }
+        isReporting = false
+    }
+
     var isActionInProgress: Bool {
-        isMuting || isBlocking
+        isMuting || isBlocking || isReporting
     }
 
     private func paletteColor(for key: String) -> Color {

@@ -155,6 +155,34 @@ actor BackendAPIClient {
         }
     }
 
+    // MARK: - Tracks
+
+    func searchTracks(query: String, limit: Int? = nil, cursor: String? = nil) async throws -> BackendTrackSearchResponse {
+        var queryItems: [URLQueryItem] = [URLQueryItem(name: "q", value: query)]
+        if let limit { queryItems.append(URLQueryItem(name: "limit", value: "\(limit)")) }
+        if let cursor { queryItems.append(URLQueryItem(name: "cursor", value: cursor)) }
+
+        let result = try await send(path: "tracks/search", method: "GET", queryItems: queryItems)
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendTrackSearchResponse.self, from: result.data)
+    }
+
+    func getTrack(id: String) async throws -> BackendPublicTrack {
+        let escapedId = escapePathComponent(id)
+        let result = try await send(path: "tracks/\(escapedId)", method: "GET")
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+
+        let response = try decoder.decode(BackendTrackResponse.self, from: result.data)
+        guard let track = response.track else {
+            throw BackendError.invalidResponse
+        }
+        return track
+    }
+
     // MARK: - Reports
 
     func createReport(_ request: CreateReportRequest) async throws -> BackendReport {
