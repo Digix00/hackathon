@@ -14,16 +14,16 @@ type LyricUsecase interface {
 }
 
 type lyricUsecase struct {
-	userRepo     repository.UserRepository
+	userRepo      repository.UserRepository
 	encounterRepo repository.EncounterRepository
-	lyricRepo    repository.LyricRepository
+	lyricRepo     repository.LyricRepository
 }
 
 func NewLyricUsecase(userRepo repository.UserRepository, encounterRepo repository.EncounterRepository, lyricRepo repository.LyricRepository) LyricUsecase {
 	return &lyricUsecase{
-		userRepo:     userRepo,
+		userRepo:      userRepo,
 		encounterRepo: encounterRepo,
-		lyricRepo:    lyricRepo,
+		lyricRepo:     lyricRepo,
 	}
 }
 
