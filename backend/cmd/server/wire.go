@@ -25,6 +25,7 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config
 	blockRepo := rdb.NewBlockRepository(db)
 	encounterRepo := rdb.NewEncounterRepository(db)
 	trackRepo := rdb.NewUserCurrentTrackRepository(db)
+	userTrackRepo := rdb.NewUserTrackRepository(db)
 	trackCatalogRepo := rdb.NewTrackCatalogRepository(db)
 	musicConnectionRepo := rdb.NewMusicConnectionRepository(db, tokenEncrypter)
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
@@ -71,5 +72,6 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config
 		CommentUsecase:      usecase.NewCommentUsecase(userRepo, commentRepo, encounterRepo),
 		LyricUsecase:        usecase.NewLyricUsecase(userRepo, lyricRepo),
 		SongUsecase:         usecase.NewSongUsecase(userRepo, lyricRepo),
+		UserTrackUsecase:    usecase.NewUserTrackUsecase(userRepo, userTrackRepo, trackRepo, trackCatalogRepo),
 	}
 }
