@@ -63,10 +63,10 @@ final class UserSettingsViewModel: ObservableObject {
 
     init(
         client: BackendAPIClient = BackendAPIClient(),
-        pushManager: PushNotificationManager = .shared
+        pushManager: PushNotificationManager? = nil
     ) {
         self.client = client
-        self.pushManager = pushManager
+        self.pushManager = pushManager ?? .shared
     }
 
     func loadIfNeeded() {

@@ -154,70 +154,74 @@ resource "google_cloud_run_v2_service_iam_member" "noauth" {
   member   = "allUsers"
 }
 
-# Cloud Run Job（Worker）
-resource "google_cloud_run_v2_job" "worker" {
+# Cloud Run Service（Worker Function）
+# Cloud Scheduler から HTTP POST でトリガーされる。スケールゼロ対応。
+resource "google_cloud_run_v2_service" "worker" {
   name     = "worker"
   location = var.region
 
   deletion_protection = false
 
   template {
-    template {
-      max_retries     = 0     # リトライなし。失敗時の二重課金を防ぐ
-      timeout         = "10s" # タスク最大実行時間 10 秒（現行と同じ）
-      service_account = google_service_account.worker.email
+    service_account = google_service_account.worker.email
 
-      volumes {
-        name = "cloudsql"
-        cloud_sql_instance {
-          instances = [google_sql_database_instance.main.connection_name]
+    volumes {
+      name = "cloudsql"
+      cloud_sql_instance {
+        instances = [google_sql_database_instance.main.connection_name]
+      }
+    }
+
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 1
+    }
+
+    containers {
+      image = local.image_worker
+
+      resources {
+        limits = {
+          cpu    = "1"
+          memory = "512Mi"
+        }
+        cpu_idle          = true
+        startup_cpu_boost = false
+      }
+
+      env {
+        name  = "DB_USER"
+        value = google_sql_user.app.name
+      }
+
+      env {
+        name  = "DB_NAME"
+        value = google_sql_database.app.name
+      }
+
+      env {
+        name  = "DB_CONNECTION_NAME"
+        value = google_sql_database_instance.main.connection_name
+      }
+
+      env {
+        name = "DB_PASSWORD"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.db_password.secret_id
+            version = "latest"
+          }
         }
       }
 
-      containers {
-        image = local.image_worker
+      env {
+        name  = "GO_ENV"
+        value = "production"
+      }
 
-        resources {
-          limits = {
-            cpu    = "1"
-            memory = "512Mi"
-          }
-        }
-
-        env {
-          name  = "WORKER_ONESHOT"
-          value = "true"
-        }
-
-        env {
-          name  = "DB_USER"
-          value = google_sql_user.app.name
-        }
-
-        env {
-          name  = "DB_NAME"
-          value = google_sql_database.app.name
-        }
-
-        env {
-          name  = "DB_CONNECTION_NAME"
-          value = google_sql_database_instance.main.connection_name
-        }
-
-        env {
-          name = "DB_PASSWORD"
-          value_source {
-            secret_key_ref {
-              secret  = google_secret_manager_secret.db_password.secret_id
-              version = "latest"
-            }
-          }
-        }
-
-        volume_mounts {
-          name       = "cloudsql"
-          mount_path = "/cloudsql"
-        }
+      volume_mounts {
+        name       = "cloudsql"
+        mount_path = "/cloudsql"
       }
     }
   }
@@ -231,4 +235,9 @@ resource "google_cloud_run_v2_job" "worker" {
 output "api_url" {
   value       = google_cloud_run_v2_service.api.uri
   description = "Cloud Run Service の URL"
+}
+
+output "worker_url" {
+  value       = google_cloud_run_v2_service.worker.uri
+  description = "Worker Function の URL（Cloud Scheduler がトリガー）"
 }
