@@ -43,4 +43,7 @@ type PlaylistRepository interface {
 
 	// RemoveFavorite removes a playlist from the user's favorites.
 	RemoveFavorite(ctx context.Context, userID, playlistID string) error
+
+	// ListFavoritesByUserID returns the playlists favorited by the user with cursor-based pagination.
+	ListFavoritesByUserID(ctx context.Context, userID string, limit int, cursor *PlaylistFavoriteCursor) ([]entity.Playlist, *PlaylistFavoriteCursor, bool, error)
 }

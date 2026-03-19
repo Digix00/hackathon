@@ -153,6 +153,7 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 	}
 
 	userTrackRepo := rdb.NewUserTrackRepository(db)
+	trackFavoriteRepo := rdb.NewTrackFavoriteRepository(db)
 
 	e := echo.New()
 	RegisterRoutes(e, Dependencies{
@@ -174,6 +175,7 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 		SongUsecase:         usecase.NewSongUsecase(userRepo, lyricRepo),
 		UserTrackUsecase:    usecase.NewUserTrackUsecase(userRepo, userTrackRepo, trackRepo, trackCatalogRepo),
 		LocationUsecase:     usecase.NewLocationUsecase(userRepo, userSettingsRepo, locationRepo, encounterRepo, blockRepo),
+		FavoriteUsecase:     usecase.NewFavoriteUsecase(userRepo, trackFavoriteRepo, playlistRepo, trackCatalogRepo),
 	})
 	return e
 }

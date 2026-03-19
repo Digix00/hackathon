@@ -179,6 +179,58 @@ func (r *playlistRepository) RemoveFavorite(ctx context.Context, userID, playlis
 	return nil
 }
 
+func (r *playlistRepository) ListFavoritesByUserID(ctx context.Context, userID string, limit int, cursor *repository.PlaylistFavoriteCursor) ([]entity.Playlist, *repository.PlaylistFavoriteCursor, bool, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 50 {
+		limit = 50
+	}
+
+	query := r.db.WithContext(ctx).
+		Select("playlist_favorites.*").
+		Model(&model.PlaylistFavorite{}).
+		Joins("JOIN playlists ON playlists.id = playlist_favorites.playlist_id AND playlists.deleted_at IS NULL").
+		Where("playlist_favorites.user_id = ? AND playlist_favorites.deleted_at IS NULL", userID).
+		Preload("Playlist").
+		Order("playlist_favorites.created_at DESC, playlist_favorites.id DESC")
+
+	if cursor != nil {
+		query = query.Where(
+			"(playlist_favorites.created_at < ? OR (playlist_favorites.created_at = ? AND playlist_favorites.id < ?))",
+			cursor.CreatedAt, cursor.CreatedAt, cursor.ID,
+		)
+	}
+
+	var rows []model.PlaylistFavorite
+	if err := query.Limit(limit + 1).Find(&rows).Error; err != nil {
+		return nil, nil, false, err
+	}
+
+	hasMore := len(rows) > limit
+	if hasMore {
+		rows = rows[:limit]
+	}
+
+	playlists := make([]entity.Playlist, len(rows))
+	for i, row := range rows {
+		if row.Playlist != nil {
+			playlists[i] = modelToEntityPlaylist(*row.Playlist, nil)
+		}
+	}
+
+	var nextCursor *repository.PlaylistFavoriteCursor
+	if hasMore && len(rows) > 0 {
+		last := rows[len(rows)-1]
+		nextCursor = &repository.PlaylistFavoriteCursor{
+			CreatedAt: last.CreatedAt,
+			ID:        last.ID,
+		}
+	}
+
+	return playlists, nextCursor, hasMore, nil
+}
+
 func modelToEntityPlaylist(m model.Playlist, tracks []entity.PlaylistTrack) entity.Playlist {
 	return entity.Playlist{
 		ID:          m.ID,

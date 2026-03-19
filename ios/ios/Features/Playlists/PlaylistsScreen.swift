@@ -4,6 +4,8 @@ import SwiftUI
 struct PlaylistsView: View {
     @StateObject private var viewModel = PlaylistsViewModel()
     @StateObject private var myTracksViewModel = MyTracksViewModel()
+    @StateObject private var favoritePlaylistsViewModel = FavoritePlaylistsViewModel()
+    @StateObject private var favoriteTracksViewModel = FavoriteTracksViewModel()
     @State private var isCreatePresented = false
     @State private var isAddTrackPresented = false
 
@@ -52,6 +54,73 @@ struct PlaylistsView: View {
                     }
                 }
 
+                SectionCard(title: "お気に入りトラック") {
+                    VStack(alignment: .leading, spacing: 16) {
+                        if favoriteTracksViewModel.isLoading && favoriteTracksViewModel.tracks.isEmpty {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                        } else if favoriteTracksViewModel.tracks.isEmpty {
+                            Text("お気に入りトラックがありません")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.textSecondary)
+                        } else {
+                            ForEach(favoriteTracksViewModel.tracks) { track in
+                                MyTrackRow(track: track) {
+                                    if let backendId = track.backendId {
+                                        favoriteTracksViewModel.removeFavorite(trackId: backendId)
+                                    }
+                                }
+                            }
+                        }
+
+                        if let errorMessage = favoriteTracksViewModel.errorMessage {
+                            Text(errorMessage)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.error)
+                        }
+                    }
+                }
+
+                SectionCard(title: "お気に入りプレイリスト") {
+                    VStack(alignment: .leading, spacing: 16) {
+                        if favoritePlaylistsViewModel.isLoading && favoritePlaylistsViewModel.playlists.isEmpty {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                        } else if favoritePlaylistsViewModel.playlists.isEmpty {
+                            Text("お気に入りプレイリストがありません")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.textSecondary)
+                        } else {
+                            ForEach(favoritePlaylistsViewModel.playlists) { playlist in
+                                HStack(spacing: 12) {
+                                    NavigationLink {
+                                        PlaylistDetailView(playlistId: playlist.id)
+                                    } label: {
+                                        PlaylistRowView(playlist: playlist)
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    Button {
+                                        favoritePlaylistsViewModel.removeFavorite(id: playlist.id)
+                                    } label: {
+                                        Image(systemName: "heart.slash.fill")
+                                            .font(.system(size: 16))
+                                            .foregroundStyle(PrototypeTheme.error)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .disabled(favoritePlaylistsViewModel.isUpdating)
+                                }
+                            }
+                        }
+
+                        if let errorMessage = favoritePlaylistsViewModel.errorMessage {
+                            Text(errorMessage)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.error)
+                        }
+                    }
+                }
+
                 SectionCard(title: "プレイリスト一覧") {
                     VStack(alignment: .leading, spacing: 16) {
                         if viewModel.isLoading && viewModel.playlists.isEmpty {
@@ -83,12 +152,16 @@ struct PlaylistsView: View {
                 SecondaryButton(title: "更新", systemImage: "arrow.clockwise") {
                     viewModel.refresh()
                     myTracksViewModel.refresh()
+                    favoritePlaylistsViewModel.refresh()
+                    favoriteTracksViewModel.refresh()
                 }
             }
         }
         .onAppear {
             viewModel.refresh()
             myTracksViewModel.refresh()
+            favoritePlaylistsViewModel.refresh()
+            favoriteTracksViewModel.refresh()
         }
         .sheet(isPresented: $isCreatePresented) {
             PlaylistEditorSheet(

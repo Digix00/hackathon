@@ -8,6 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchemaRequestCreateMuteRequest
+import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchemaResponseMuteListResponse
 import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchemaResponseMuteResponse
 import com.digix00.musicswapping.generated.models.InternalHandlererrorResponse
 
@@ -43,5 +44,21 @@ interface MutesApi {
      */
     @DELETE("api/v1/users/me/mutes/{target_user_id}")
     suspend fun deleteMute(@Path("target_user_id") targetUserId: kotlin.String): Response<Unit>
+
+    /**
+     * ミュート一覧取得
+     * 認証済みユーザーがミュートしているユーザーの一覧をカーソルページネーションで取得する
+     * Responses:
+     *  - 200: OK
+     *  - 400: Bad Request
+     *  - 401: Unauthorized
+     *  - 500: Internal Server Error
+     *
+     * @param limit 取得件数（省略時 20、最大 50） (optional)
+     * @param cursor ページネーションカーソル (optional)
+     * @return [HackathonInternalHandlerSchemaResponseMuteListResponse]
+     */
+    @GET("api/v1/users/me/mutes")
+    suspend fun listMutes(@Query("limit") limit: kotlin.Int? = null, @Query("cursor") cursor: kotlin.String? = null): Response<HackathonInternalHandlerSchemaResponseMuteListResponse>
 
 }

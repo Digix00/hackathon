@@ -258,6 +258,22 @@ definitions:
       id:
         type: string
     type: object
+  hackathon_internal_handler_schema_response.BlockListPagination:
+    properties:
+      has_more:
+        type: boolean
+      next_cursor:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.BlockListResponse:
+    properties:
+      blocks:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.Block'
+        type: array
+      pagination:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.BlockListPagination'
+    type: object
   hackathon_internal_handler_schema_response.BlockResponse:
     properties:
       block:
@@ -533,6 +549,22 @@ definitions:
       target_user_id:
         type: string
     type: object
+  hackathon_internal_handler_schema_response.MuteListPagination:
+    properties:
+      has_more:
+        type: boolean
+      next_cursor:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.MuteListResponse:
+    properties:
+      mutes:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.Mute'
+        type: array
+      pagination:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.MuteListPagination'
+    type: object
   hackathon_internal_handler_schema_response.MuteResponse:
     properties:
       mute:
@@ -597,6 +629,15 @@ definitions:
     - tracks
     - updated_at
     - user_id
+    type: object
+  hackathon_internal_handler_schema_response.PlaylistFavoriteListResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.UserTrackPagination'
+      playlists:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.PlaylistSummary'
+        type: array
     type: object
   hackathon_internal_handler_schema_response.PlaylistListResponse:
     properties:
@@ -861,6 +902,31 @@ definitions:
         type: string
       title:
         type: string
+    type: object
+  hackathon_internal_handler_schema_response.TrackFavorite:
+    properties:
+      created_at:
+        type: string
+      favorited:
+        type: boolean
+      resource_id:
+        type: string
+      resource_type:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.TrackFavoriteListResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.UserTrackPagination'
+      tracks:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.PublicTrack'
+        type: array
+    type: object
+  hackathon_internal_handler_schema_response.TrackFavoriteResponse:
+    properties:
+      favorite:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.TrackFavorite'
     type: object
   hackathon_internal_handler_schema_response.TrackResponse:
     properties:
@@ -2030,6 +2096,73 @@ paths:
       summary: 楽曲詳細取得
       tags:
       - tracks
+  /api/v1/tracks/{id}/favorites:
+    delete:
+      description: 指定したトラックをお気に入りから削除する
+      operationId: removeTrackFavorite
+      parameters:
+      - description: 'トラックID（例: spotify:track:123）'
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: トラックのお気に入り解除
+      tags:
+      - favorites
+    post:
+      description: 指定したトラックをお気に入りに追加する。既にお気に入り済みの場合はべき等に処理し 200 を返す。
+      operationId: addTrackFavorite
+      parameters:
+      - description: 'トラックID（例: spotify:track:123）'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.TrackFavoriteResponse'
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.TrackFavoriteResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: トラックをお気に入り登録
+      tags:
+      - favorites
   /api/v1/tracks/search:
     get:
       description: 連携済み Spotify アカウントを使ってトラック検索する
@@ -2251,6 +2384,42 @@ paths:
       tags:
       - users
   /api/v1/users/me/blocks:
+    get:
+      description: 認証済みユーザーがブロックしているユーザーの一覧をカーソルページネーションで取得する
+      operationId: listBlocks
+      parameters:
+      - description: 取得件数（省略時 20、最大 50）
+        in: query
+        name: limit
+        type: integer
+      - description: ページネーションカーソル
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.BlockListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: ブロック一覧取得
+      tags:
+      - blocks
     post:
       consumes:
       - application/json
@@ -2393,6 +2562,42 @@ paths:
       tags:
       - music-connections
   /api/v1/users/me/mutes:
+    get:
+      description: 認証済みユーザーがミュートしているユーザーの一覧をカーソルページネーションで取得する
+      operationId: listMutes
+      parameters:
+      - description: 取得件数（省略時 20、最大 50）
+        in: query
+        name: limit
+        type: integer
+      - description: ページネーションカーソル
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.MuteListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: ミュート一覧取得
+      tags:
+      - mutes
     post:
       consumes:
       - application/json
@@ -2564,6 +2769,43 @@ paths:
       summary: 通知を既読にする
       tags:
       - notifications
+  /api/v1/users/me/playlist-favorites:
+    get:
+      description: 認証済みユーザーのお気に入りプレイリスト一覧をカーソルページネーションで取得する
+      operationId: listPlaylistFavorites
+      parameters:
+      - description: 取得件数（省略時 20、最大 50）
+        in: query
+        name: limit
+        type: integer
+      - description: ページネーションカーソル
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.PlaylistFavoriteListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: お気に入りプレイリスト一覧取得
+      tags:
+      - favorites
   /api/v1/users/me/push-tokens:
     post:
       consumes:
@@ -2868,6 +3110,43 @@ paths:
       summary: 自分が参加した楽曲一覧
       tags:
       - songs
+  /api/v1/users/me/track-favorites:
+    get:
+      description: 認証済みユーザーのお気に入りトラック一覧をカーソルページネーションで取得する
+      operationId: listTrackFavorites
+      parameters:
+      - description: 取得件数（省略時 20、最大 50）
+        in: query
+        name: limit
+        type: integer
+      - description: ページネーションカーソル
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.TrackFavoriteListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: お気に入りトラック一覧取得
+      tags:
+      - favorites
   /api/v1/users/me/tracks:
     get:
       description: 認証済みユーザーのマイトラック一覧をカーソルページネーションで取得する

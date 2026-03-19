@@ -1717,6 +1717,110 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/tracks/{id}/favorites": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したトラックをお気に入りに追加する。既にお気に入り済みの場合はべき等に処理し 200 を返す。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "favorites"
+                ],
+                "summary": "トラックをお気に入り登録",
+                "operationId": "addTrackFavorite",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "トラックID（例: spotify:track:123）",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.TrackFavoriteResponse"
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.TrackFavoriteResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したトラックをお気に入りから削除する",
+                "tags": [
+                    "favorites"
+                ],
+                "summary": "トラックのお気に入り解除",
+                "operationId": "removeTrackFavorite",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "トラックID（例: spotify:track:123）",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users": {
             "post": {
                 "security": [
@@ -1924,6 +2028,62 @@ const docTemplate = `{
             }
         },
         "/api/v1/users/me/blocks": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証済みユーザーがブロックしているユーザーの一覧をカーソルページネーションで取得する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blocks"
+                ],
+                "summary": "ブロック一覧取得",
+                "operationId": "listBlocks",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "取得件数（省略時 20、最大 50）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ページネーションカーソル",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.BlockListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -2145,6 +2305,62 @@ const docTemplate = `{
             }
         },
         "/api/v1/users/me/mutes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証済みユーザーがミュートしているユーザーの一覧をカーソルページネーションで取得する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mutes"
+                ],
+                "summary": "ミュート一覧取得",
+                "operationId": "listMutes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "取得件数（省略時 20、最大 50）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ページネーションカーソル",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.MuteListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -2400,6 +2616,64 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/playlist-favorites": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証済みユーザーのお気に入りプレイリスト一覧をカーソルページネーションで取得する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "favorites"
+                ],
+                "summary": "お気に入りプレイリスト一覧取得",
+                "operationId": "listPlaylistFavorites",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "取得件数（省略時 20、最大 50）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ページネーションカーソル",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.PlaylistFavoriteListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/internal_handler.errorResponse"
                         }
@@ -2870,6 +3144,64 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/hackathon_internal_handler_schema_response.ListUserSongsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/track-favorites": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証済みユーザーのお気に入りトラック一覧をカーソルページネーションで取得する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "favorites"
+                ],
+                "summary": "お気に入りトラック一覧取得",
+                "operationId": "listTrackFavorites",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "取得件数（省略時 20、最大 50）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ページネーションカーソル",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.TrackFavoriteListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
                         }
                     },
                     "401": {
@@ -3573,6 +3905,31 @@ const docTemplate = `{
                 }
             }
         },
+        "hackathon_internal_handler_schema_response.BlockListPagination": {
+            "type": "object",
+            "properties": {
+                "has_more": {
+                    "type": "boolean"
+                },
+                "next_cursor": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.BlockListResponse": {
+            "type": "object",
+            "properties": {
+                "blocks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.Block"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.BlockListPagination"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_response.BlockResponse": {
             "type": "object",
             "properties": {
@@ -3997,6 +4354,31 @@ const docTemplate = `{
                 }
             }
         },
+        "hackathon_internal_handler_schema_response.MuteListPagination": {
+            "type": "object",
+            "properties": {
+                "has_more": {
+                    "type": "boolean"
+                },
+                "next_cursor": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.MuteListResponse": {
+            "type": "object",
+            "properties": {
+                "mutes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.Mute"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.MuteListPagination"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_response.MuteResponse": {
             "type": "object",
             "properties": {
@@ -4091,6 +4473,20 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.PlaylistFavoriteListResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.UserTrackPagination"
+                },
+                "playlists": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.PlaylistSummary"
+                    }
                 }
             }
         },
@@ -4489,6 +4885,45 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.TrackFavorite": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "favorited": {
+                    "type": "boolean"
+                },
+                "resource_id": {
+                    "type": "string"
+                },
+                "resource_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.TrackFavoriteListResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.UserTrackPagination"
+                },
+                "tracks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.PublicTrack"
+                    }
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.TrackFavoriteResponse": {
+            "type": "object",
+            "properties": {
+                "favorite": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.TrackFavorite"
                 }
             }
         },

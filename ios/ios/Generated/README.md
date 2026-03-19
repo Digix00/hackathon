@@ -31,6 +31,7 @@ Class | Method | HTTP request | Description
 *BleTokensAPI* | [**getUserByBleToken**](docs/BleTokensAPI.md#getuserbybletoken) | **GET** /api/v1/ble-tokens/{token}/user | BLE トークンからユーザー情報取得
 *BlocksAPI* | [**createBlock**](docs/BlocksAPI.md#createblock) | **POST** /api/v1/users/me/blocks | ブロック作成
 *BlocksAPI* | [**deleteBlock**](docs/BlocksAPI.md#deleteblock) | **DELETE** /api/v1/users/me/blocks/{blocked_user_id} | ブロック解除
+*BlocksAPI* | [**listBlocks**](docs/BlocksAPI.md#listblocks) | **GET** /api/v1/users/me/blocks | ブロック一覧取得
 *CommentsAPI* | [**createComment**](docs/CommentsAPI.md#createcomment) | **POST** /api/v1/encounters/{id}/comments | コメント作成
 *CommentsAPI* | [**deleteComment**](docs/CommentsAPI.md#deletecomment) | **DELETE** /api/v1/comments/{id} | コメント削除
 *CommentsAPI* | [**listComments**](docs/CommentsAPI.md#listcomments) | **GET** /api/v1/encounters/{id}/comments | コメント一覧取得
@@ -38,6 +39,10 @@ Class | Method | HTTP request | Description
 *EncountersAPI* | [**getEncounterByID**](docs/EncountersAPI.md#getencounterbyid) | **GET** /api/v1/encounters/{id} | すれ違い詳細取得
 *EncountersAPI* | [**listEncounters**](docs/EncountersAPI.md#listencounters) | **GET** /api/v1/encounters | すれ違い履歴一覧取得
 *EncountersAPI* | [**markEncounterAsRead**](docs/EncountersAPI.md#markencounterasread) | **PATCH** /api/v1/encounters/{id}/read | エンカウントを既読にする
+*FavoritesAPI* | [**addTrackFavorite**](docs/FavoritesAPI.md#addtrackfavorite) | **POST** /api/v1/tracks/{id}/favorites | トラックをお気に入り登録
+*FavoritesAPI* | [**listPlaylistFavorites**](docs/FavoritesAPI.md#listplaylistfavorites) | **GET** /api/v1/users/me/playlist-favorites | お気に入りプレイリスト一覧取得
+*FavoritesAPI* | [**listTrackFavorites**](docs/FavoritesAPI.md#listtrackfavorites) | **GET** /api/v1/users/me/track-favorites | お気に入りトラック一覧取得
+*FavoritesAPI* | [**removeTrackFavorite**](docs/FavoritesAPI.md#removetrackfavorite) | **DELETE** /api/v1/tracks/{id}/favorites | トラックのお気に入り解除
 *HealthAPI* | [**healthz**](docs/HealthAPI.md#healthz) | **GET** /healthz | ヘルスチェック
 *HealthAPI* | [**healthzPostgres**](docs/HealthAPI.md#healthzpostgres) | **GET** /healthz/postgres | PostgreSQL ヘルスチェック
 *LocationsAPI* | [**postLocation**](docs/LocationsAPI.md#postlocation) | **POST** /api/v1/locations | 現在位置送信・エンカウント判定
@@ -49,6 +54,7 @@ Class | Method | HTTP request | Description
 *MusicConnectionsAPI* | [**listMusicConnections**](docs/MusicConnectionsAPI.md#listmusicconnections) | **GET** /api/v1/users/me/music-connections | 自分の音楽連携一覧を取得
 *MutesAPI* | [**createMute**](docs/MutesAPI.md#createmute) | **POST** /api/v1/users/me/mutes | ミュート作成
 *MutesAPI* | [**deleteMute**](docs/MutesAPI.md#deletemute) | **DELETE** /api/v1/users/me/mutes/{target_user_id} | ミュート解除
+*MutesAPI* | [**listMutes**](docs/MutesAPI.md#listmutes) | **GET** /api/v1/users/me/mutes | ミュート一覧取得
 *NotificationsAPI* | [**deleteNotification**](docs/NotificationsAPI.md#deletenotification) | **DELETE** /api/v1/users/me/notifications/{id} | 通知削除
 *NotificationsAPI* | [**listNotifications**](docs/NotificationsAPI.md#listnotifications) | **GET** /api/v1/users/me/notifications | 通知一覧取得
 *NotificationsAPI* | [**markNotificationAsRead**](docs/NotificationsAPI.md#marknotificationasread) | **PATCH** /api/v1/users/me/notifications/{id}/read | 通知を既読にする
@@ -109,6 +115,8 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseBleTokenUser](docs/HackathonInternalHandlerSchemaResponseBleTokenUser.md)
  - [HackathonInternalHandlerSchemaResponseBleTokenUserResponse](docs/HackathonInternalHandlerSchemaResponseBleTokenUserResponse.md)
  - [HackathonInternalHandlerSchemaResponseBlock](docs/HackathonInternalHandlerSchemaResponseBlock.md)
+ - [HackathonInternalHandlerSchemaResponseBlockListPagination](docs/HackathonInternalHandlerSchemaResponseBlockListPagination.md)
+ - [HackathonInternalHandlerSchemaResponseBlockListResponse](docs/HackathonInternalHandlerSchemaResponseBlockListResponse.md)
  - [HackathonInternalHandlerSchemaResponseBlockResponse](docs/HackathonInternalHandlerSchemaResponseBlockResponse.md)
  - [HackathonInternalHandlerSchemaResponseChainDetail](docs/HackathonInternalHandlerSchemaResponseChainDetail.md)
  - [HackathonInternalHandlerSchemaResponseChainDetailResponse](docs/HackathonInternalHandlerSchemaResponseChainDetailResponse.md)
@@ -137,11 +145,14 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseMusicConnection](docs/HackathonInternalHandlerSchemaResponseMusicConnection.md)
  - [HackathonInternalHandlerSchemaResponseMusicConnectionsResponse](docs/HackathonInternalHandlerSchemaResponseMusicConnectionsResponse.md)
  - [HackathonInternalHandlerSchemaResponseMute](docs/HackathonInternalHandlerSchemaResponseMute.md)
+ - [HackathonInternalHandlerSchemaResponseMuteListPagination](docs/HackathonInternalHandlerSchemaResponseMuteListPagination.md)
+ - [HackathonInternalHandlerSchemaResponseMuteListResponse](docs/HackathonInternalHandlerSchemaResponseMuteListResponse.md)
  - [HackathonInternalHandlerSchemaResponseMuteResponse](docs/HackathonInternalHandlerSchemaResponseMuteResponse.md)
  - [HackathonInternalHandlerSchemaResponseNotificationItem](docs/HackathonInternalHandlerSchemaResponseNotificationItem.md)
  - [HackathonInternalHandlerSchemaResponseNotificationListResponse](docs/HackathonInternalHandlerSchemaResponseNotificationListResponse.md)
  - [HackathonInternalHandlerSchemaResponsePagination](docs/HackathonInternalHandlerSchemaResponsePagination.md)
  - [HackathonInternalHandlerSchemaResponsePlaylist](docs/HackathonInternalHandlerSchemaResponsePlaylist.md)
+ - [HackathonInternalHandlerSchemaResponsePlaylistFavoriteListResponse](docs/HackathonInternalHandlerSchemaResponsePlaylistFavoriteListResponse.md)
  - [HackathonInternalHandlerSchemaResponsePlaylistListResponse](docs/HackathonInternalHandlerSchemaResponsePlaylistListResponse.md)
  - [HackathonInternalHandlerSchemaResponsePlaylistResponse](docs/HackathonInternalHandlerSchemaResponsePlaylistResponse.md)
  - [HackathonInternalHandlerSchemaResponsePlaylistSummary](docs/HackathonInternalHandlerSchemaResponsePlaylistSummary.md)
@@ -161,6 +172,9 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseSubmitLyricEntry](docs/HackathonInternalHandlerSchemaResponseSubmitLyricEntry.md)
  - [HackathonInternalHandlerSchemaResponseSubmitLyricResponse](docs/HackathonInternalHandlerSchemaResponseSubmitLyricResponse.md)
  - [HackathonInternalHandlerSchemaResponseTrack](docs/HackathonInternalHandlerSchemaResponseTrack.md)
+ - [HackathonInternalHandlerSchemaResponseTrackFavorite](docs/HackathonInternalHandlerSchemaResponseTrackFavorite.md)
+ - [HackathonInternalHandlerSchemaResponseTrackFavoriteListResponse](docs/HackathonInternalHandlerSchemaResponseTrackFavoriteListResponse.md)
+ - [HackathonInternalHandlerSchemaResponseTrackFavoriteResponse](docs/HackathonInternalHandlerSchemaResponseTrackFavoriteResponse.md)
  - [HackathonInternalHandlerSchemaResponseTrackResponse](docs/HackathonInternalHandlerSchemaResponseTrackResponse.md)
  - [HackathonInternalHandlerSchemaResponseTrackSearchPagination](docs/HackathonInternalHandlerSchemaResponseTrackSearchPagination.md)
  - [HackathonInternalHandlerSchemaResponseTrackSearchResponse](docs/HackathonInternalHandlerSchemaResponseTrackSearchResponse.md)

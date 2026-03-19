@@ -21,4 +21,8 @@ type BleTokenRepository interface {
 
 	// FindByToken returns the token record based on the 16-character hex string (8 bytes) emitted via BLE.
 	FindByToken(ctx context.Context, tokenStr string) (entity.BleToken, error)
+
+	// DeleteExpired physically deletes all tokens whose valid_to is in the past.
+	// Returns the number of rows deleted.
+	DeleteExpired(ctx context.Context) (int64, error)
 }

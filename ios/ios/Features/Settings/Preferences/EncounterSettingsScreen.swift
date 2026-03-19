@@ -1,11 +1,16 @@
-
 import SwiftUI
 
 struct EncounterSettingsView: View {
     @EnvironmentObject private var bleCoordinator: BLEAppCoordinator
     @EnvironmentObject private var bleManager: BLEManager
+
     @State private var detectionDistance: Double = 30
     @State private var profileVisible = true
+
+    @State private var locationLat: String = "35.6586"
+    @State private var locationLng: String = "139.7454"
+    @State private var locationAccuracy: String = "25"
+    @State private var locationInputErrorMessage: String?
 
     private var bleToggleBinding: Binding<Bool> {
         Binding(
@@ -37,8 +42,7 @@ struct EncounterSettingsView: View {
             subtitle: "PROXIMITY PROTOCOL",
             showsBackButton: true
         ) {
-            VStack(alignment: .leading, spacing: 56) { // Large spacing for airy feel
-                
+            VStack(alignment: .leading, spacing: 56) {
                 // --- Section: BLE STATUS ---
                 VStack(alignment: .leading, spacing: 24) {
                     settingLabel("BLE STATUS")
@@ -48,12 +52,12 @@ struct EncounterSettingsView: View {
                             Text("BLE ネットワーク")
                                 .font(.system(size: 20, weight: .black))
                                 .tracking(-0.5)
-                            
+
                             HStack(spacing: 8) {
                                 Circle()
                                     .fill(bleCoordinator.bleEnabled ? PrototypeTheme.success : PrototypeTheme.textTertiary)
                                     .frame(width: 8, height: 8)
-                                
+
                                 Text(bleStatusText)
                                     .font(.system(size: 14, weight: .bold))
                                     .foregroundStyle(PrototypeTheme.textSecondary)
@@ -80,9 +84,9 @@ struct EncounterSettingsView: View {
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundStyle(PrototypeTheme.textSecondary)
                             }
-                            
+
                             Spacer()
-                            
+
                             HStack(alignment: .firstTextBaseline, spacing: 2) {
                                 Text("\(Int(detectionDistance))")
                                     .font(.system(size: 48, weight: .black, design: .monospaced))
@@ -115,6 +119,7 @@ struct EncounterSettingsView: View {
                             .shadow(color: Color.black.opacity(0.02), radius: 20, x: 0, y: 10)
                     )
                 }
+                .disabled(bleCoordinator.isUpdatingEncounterSettings)
 
                 // --- Section: PRIVACY ---
                 VStack(alignment: .leading, spacing: 24) {
@@ -136,9 +141,8 @@ struct EncounterSettingsView: View {
                 }
 
                 // --- Action Area ---
-                VStack(spacing: 24) {
+                VStack(alignment: .leading, spacing: 24) {
                     Button {
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                         bleCoordinator.updateEncounterSettings(
                             detectionDistance: Int(detectionDistance),
                             profileVisible: profileVisible
@@ -154,6 +158,7 @@ struct EncounterSettingsView: View {
                             .clipShape(Capsule())
                             .shadow(color: PrototypeTheme.accent.opacity(0.2), radius: 25, x: 0, y: 12)
                     }
+                    .buttonStyle(.plain)
                     .disabled(bleCoordinator.isUpdatingEncounterSettings)
                     .opacity(bleCoordinator.isUpdatingEncounterSettings ? 0.6 : 1)
 
@@ -164,6 +169,52 @@ struct EncounterSettingsView: View {
                     }
                 }
                 .padding(.top, 12)
+
+                // --- Section: LOCATION POST ---
+                SectionCard(title: "位置情報送信") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 12) {
+                            TextField("緯度", text: $locationLat)
+                                .keyboardType(.numbersAndPunctuation)
+                                .padding(12)
+                                .background(PrototypeTheme.surfaceMuted)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                            TextField("経度", text: $locationLng)
+                                .keyboardType(.numbersAndPunctuation)
+                                .padding(12)
+                                .background(PrototypeTheme.surfaceMuted)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+
+                        TextField("精度 (m)", text: $locationAccuracy)
+                            .keyboardType(.decimalPad)
+                            .padding(12)
+                            .background(PrototypeTheme.surfaceMuted)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                        PrimaryButton(title: bleCoordinator.isPostingLocation ? "送信中..." : "位置情報を送信") {
+                            submitLocation()
+                        }
+                        .disabled(bleCoordinator.isPostingLocation)
+
+                        if let message = bleCoordinator.locationPostMessage {
+                            Text(message)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.success)
+                        }
+
+                        if let errorMessage = locationInputErrorMessage {
+                            Text(errorMessage)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.error)
+                        } else if let errorMessage = bleCoordinator.locationPostErrorMessage {
+                            Text(errorMessage)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.error)
+                        }
+                    }
+                }
 
                 // --- Footer Info ---
                 Text("現在、あなたのデバイスは半径 \(Int(detectionDistance))m 以内の BLE ビーコンをスキャンし、自身のシグナルを送信しています。精度は環境（遮蔽物、電波干渉）によって変動します。")
@@ -192,5 +243,20 @@ struct EncounterSettingsView: View {
             .kerning(2.5)
             .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
             .padding(.leading, 4)
+    }
+
+    private func submitLocation() {
+        locationInputErrorMessage = nil
+
+        guard
+            let lat = Double(locationLat),
+            let lng = Double(locationLng),
+            let accuracy = Double(locationAccuracy)
+        else {
+            locationInputErrorMessage = "位置情報は数値で入力してください"
+            return
+        }
+
+        bleCoordinator.postLocation(lat: lat, lng: lng, accuracyM: accuracy)
     }
 }

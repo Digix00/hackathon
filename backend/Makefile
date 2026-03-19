@@ -73,10 +73,12 @@ test:
 # 必要に応じて PG_TEST_DATABASE_URL を上書き可能
 test-integration:
 	docker compose exec -e PG_TEST_DATABASE_URL=postgres://postgres:postgres@postgres:5432/hackathon?sslmode=disable server go test -tags=integration ./internal/handler -run PostgresIntegration
+	docker compose exec -e PG_TEST_DATABASE_URL=postgres://postgres:postgres@postgres:5432/hackathon?sslmode=disable server go test -tags=integration ./internal/infra/rdb -run "^TestIntegration_"
 
 # CI 向け: ホストの Go を直接使用（GitHub Actions サービスコンテナの PostgreSQL を利用）
 test-integration-ci:
 	go test -tags=integration ./internal/handler -run PostgresIntegration
+	go test -tags=integration ./internal/infra/rdb -run "^TestIntegration_"
 
 # ==============================================================================
 # Code Generation (全て Docker で完結。ホストへのツールインストール不要)

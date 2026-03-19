@@ -11,3 +11,9 @@ type BlockDTO struct {
 	BlockedUserID string
 	CreatedAt     time.Time
 }
+
+type BlockListDTO struct {
+	Blocks     []BlockDTO
+	NextCursor *string
+	HasMore    bool
+}

@@ -205,6 +205,16 @@ struct SearchView: View {
                                     }
                                 }
                             }
+
+                            SecondaryButton(
+                                title: viewModel.isFavoriteUpdating
+                                    ? "更新中..."
+                                    : (viewModel.isSelectedTrackFavorite ? "お気に入り解除" : "お気に入りに追加"),
+                                systemImage: viewModel.isSelectedTrackFavorite ? "heart.slash" : "heart"
+                            ) {
+                                Task { await viewModel.toggleFavoriteSelectedTrack() }
+                            }
+                            .disabled(viewModel.isFavoriteUpdating || selectedTrack.backendId == nil)
                         } else {
                             Text("曲を選択してください。")
                                 .font(.system(size: 12, weight: .medium))
@@ -230,6 +240,7 @@ struct SearchView: View {
                 viewModel.query = defaultQuery
                 viewModel.search()
             }
+            viewModel.loadFavoriteTracks()
             if mode == .shareTrack {
                 viewModel.loadSharedTrack()
             }

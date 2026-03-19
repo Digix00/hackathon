@@ -11,3 +11,15 @@ type Block struct {
 	BlockedUserID string `json:"blocked_user_id"`
 	CreatedAt     string `json:"created_at"`
 }
+
+// @name BlockListResponse
+type BlockListResponse struct {
+	Blocks     []Block             `json:"blocks"`
+	Pagination BlockListPagination `json:"pagination"`
+}
+
+// @name BlockListPagination
+type BlockListPagination struct {
+	NextCursor *string `json:"next_cursor"`
+	HasMore    bool    `json:"has_more"`
+}

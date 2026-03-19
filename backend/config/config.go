@@ -46,6 +46,34 @@ type Config struct {
 	AppleMusicAPIBaseURL   string `envconfig:"APPLE_MUSIC_API_BASE_URL"`
 }
 
+type WorkerConfig struct {
+	GoEnv            string `envconfig:"GO_ENV" default:"production"`
+	DatabaseURL      string `envconfig:"DATABASE_URL"`
+	DBUser           string `envconfig:"DB_USER"`
+	DBPassword       string `envconfig:"DB_PASSWORD"`
+	DBName           string `envconfig:"DB_NAME"`
+	DBConnectionName string `envconfig:"DB_CONNECTION_NAME"`
+}
+
+func LoadWorker() (*WorkerConfig, error) {
+	var cfg WorkerConfig
+	if err := envconfig.Process("", &cfg); err != nil {
+		return nil, err
+	}
+	if cfg.DatabaseURL == "" {
+		if cfg.DBUser == "" || cfg.DBPassword == "" || cfg.DBName == "" || cfg.DBConnectionName == "" {
+			return nil, fmt.Errorf("DATABASE_URL または DB_USER/DB_PASSWORD/DB_NAME/DB_CONNECTION_NAME を設定してください")
+		}
+		cfg.DatabaseURL = fmt.Sprintf(
+			"postgres://%s@/%s?host=/cloudsql/%s",
+			url.UserPassword(cfg.DBUser, cfg.DBPassword).String(),
+			url.PathEscape(cfg.DBName),
+			cfg.DBConnectionName,
+		)
+	}
+	return &cfg, nil
+}
+
 func Load() (*Config, error) {
 	var cfg Config
 	if err := envconfig.Process("", &cfg); err != nil {

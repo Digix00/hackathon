@@ -25,6 +25,7 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	songHandler := newSongHandler(deps.SongUsecase)
 	userTrackHandler := newUserTrackHandler(deps.UserTrackUsecase)
 	locationHandler := newLocationHandler(deps.LocationUsecase)
+	favoriteHandler := newFavoriteHandler(deps.FavoriteUsecase)
 
 	api := e.Group("/api/v1")
 	api.GET("/music-connections/:provider/callback", musicHandler.callback)
@@ -65,6 +66,11 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	protected.POST("/playlists/:id/favorites", playlistHandler.addPlaylistFavorite)
 	protected.DELETE("/playlists/:id/favorites", playlistHandler.removePlaylistFavorite)
 
+	protected.POST("/tracks/:id/favorites", favoriteHandler.addTrackFavorite)
+	protected.DELETE("/tracks/:id/favorites", favoriteHandler.removeTrackFavorite)
+	protected.GET("/users/me/track-favorites", favoriteHandler.listTrackFavorites)
+	protected.GET("/users/me/playlist-favorites", favoriteHandler.listPlaylistFavorites)
+
 	protected.POST("/locations", locationHandler.postLocation)
 
 	protected.POST("/encounters", encounterHandler.createEncounter)
@@ -76,9 +82,11 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 
 	protected.POST("/users/me/mutes", muteHandler.createMute)
 	protected.DELETE("/users/me/mutes/:target_user_id", muteHandler.deleteMute)
+	protected.GET("/users/me/mutes", muteHandler.listMutes)
 
 	protected.POST("/users/me/blocks", blockHandler.createBlock)
 	protected.DELETE("/users/me/blocks/:blocked_user_id", blockHandler.deleteBlock)
+	protected.GET("/users/me/blocks", blockHandler.listBlocks)
 
 	protected.GET("/users/me/notifications", notificationHandler.listNotifications)
 	protected.PATCH("/users/me/notifications/:id/read", notificationHandler.markNotificationAsRead)

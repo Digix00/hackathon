@@ -34,6 +34,7 @@ final class PlaylistDetailViewModel: ObservableObject {
     private let client: BackendAPIClient
     private let playlistId: String
     private var hasLoaded = false
+    private var hasLoadedFavoriteState = false
 
     init(playlistId: String, client: BackendAPIClient = BackendAPIClient()) {
         self.playlistId = playlistId
@@ -46,6 +47,7 @@ final class PlaylistDetailViewModel: ObservableObject {
     }
 
     func refresh() {
+        hasLoadedFavoriteState = false
         Task { await loadPlaylist() }
     }
 
@@ -96,6 +98,9 @@ final class PlaylistDetailViewModel: ObservableObject {
             let playlist = try await client.getPlaylist(id: playlistId)
             self.playlist = Self.mapPlaylist(playlist)
             hasLoaded = true
+            if !hasLoadedFavoriteState {
+                await loadFavoriteState()
+            }
         } catch {
             errorMessage = "プレイリストの取得に失敗しました"
             hasLoaded = false
@@ -162,6 +167,31 @@ final class PlaylistDetailViewModel: ObservableObject {
         } catch {
             errorMessage = "お気に入りの更新に失敗しました"
         }
+    }
+
+    private func loadFavoriteState() async {
+        do {
+            let isFavorite = try await isPlaylistFavorite()
+            self.isFavorite = isFavorite
+            hasLoadedFavoriteState = true
+        } catch {
+            // Favorite state is optional; keep silent.
+        }
+    }
+
+    private func isPlaylistFavorite() async throws -> Bool {
+        var cursor: String?
+        while true {
+            let response = try await client.listPlaylistFavorites(limit: 50, cursor: cursor)
+            if let playlists = response.playlists, playlists.contains(where: { $0.id == playlistId }) {
+                return true
+            }
+            guard response.pagination?.hasMore == true, let next = response.pagination?.nextCursor else {
+                break
+            }
+            cursor = next
+        }
+        return false
     }
 
     private static func mapPlaylist(_ playlist: BackendPlaylist) -> PlaylistDetailModel {
