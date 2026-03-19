@@ -241,7 +241,22 @@ final class BLEAppCoordinator: ObservableObject {
             let response = try await apiClient.listEncounters(limit: 50)
             let mappedEncounters = response.encounters.map(Self.makeEncounter(from:))
             await MainActor.run {
-                encounters = mappedEncounters
+                let existingLyrics = Dictionary(
+                    uniqueKeysWithValues: encounters.compactMap { encounter in
+                        encounter.lyric.isEmpty ? nil : (encounter.id, encounter.lyric)
+                    }
+                )
+                let mergedEncounters = mappedEncounters.map { encounter in
+                    guard let lyric = existingLyrics[encounter.id] else { return encounter }
+                    return Encounter(
+                        id: encounter.id,
+                        userName: encounter.userName,
+                        track: encounter.track,
+                        relativeTime: encounter.relativeTime,
+                        lyric: lyric
+                    )
+                }
+                encounters = mergedEncounters
                 encounterErrorMessage = nil
                 isLoadingEncounters = false
             }
