@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 
@@ -21,10 +22,24 @@ func main() {
 	}
 	defer sqlDB.Close() //nolint:errcheck
 
-	if err := rdb.Migrate(db); err != nil {
-		log.Fatalf("migrate failed: %v", err)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if err := rdb.Migrate(db); err != nil {
+			log.Printf("migrate failed: %v", err)
+			http.Error(w, "migration failed", http.StatusInternalServerError)
+			return
+		}
+		log.Println("migration completed")
+		w.WriteHeader(http.StatusOK)
+	})
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
-	log.Println("migration completed")
+	log.Printf("listening on :%s", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatalf("server failed: %v", err)
+	}
 }
 
 func buildDSN() string {
