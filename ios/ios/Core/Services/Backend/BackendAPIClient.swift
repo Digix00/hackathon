@@ -256,6 +256,91 @@ actor BackendAPIClient {
         }
     }
 
+    // MARK: - Playlists
+
+    func getMyPlaylists() async throws -> BackendPlaylistListResponse {
+        let result = try await send(path: "playlists/me", method: "GET")
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendPlaylistListResponse.self, from: result.data)
+    }
+
+    func getPlaylist(id: String) async throws -> BackendPlaylist {
+        let escapedId = escapePathComponent(id)
+        let result = try await send(path: "playlists/\(escapedId)", method: "GET")
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendPlaylistResponse.self, from: result.data).playlist
+    }
+
+    func createPlaylist(_ request: CreatePlaylistRequest) async throws -> BackendPlaylist {
+        let result = try await send(path: "playlists", method: "POST", body: try encoder.encode(request))
+        guard result.response.statusCode == 201 || result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendPlaylistResponse.self, from: result.data).playlist
+    }
+
+    func updatePlaylist(id: String, request: UpdatePlaylistRequest) async throws -> BackendPlaylist {
+        let escapedId = escapePathComponent(id)
+        let result = try await send(path: "playlists/\(escapedId)", method: "PATCH", body: try encoder.encode(request))
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendPlaylistResponse.self, from: result.data).playlist
+    }
+
+    func deletePlaylist(id: String) async throws {
+        let escapedId = escapePathComponent(id)
+        let result = try await send(path: "playlists/\(escapedId)", method: "DELETE")
+        guard result.response.statusCode == 204 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+    }
+
+    func addPlaylistTrack(id: String, trackId: String) async throws {
+        let escapedId = escapePathComponent(id)
+        let request = AddPlaylistTrackRequest(trackId: trackId)
+        let result = try await send(
+            path: "playlists/\(escapedId)/tracks",
+            method: "POST",
+            body: try encoder.encode(request)
+        )
+        guard result.response.statusCode == 204 || result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+    }
+
+    func removePlaylistTrack(id: String, trackId: String) async throws {
+        let escapedId = escapePathComponent(id)
+        let escapedTrackId = escapePathComponent(trackId)
+        let result = try await send(
+            path: "playlists/\(escapedId)/tracks/\(escapedTrackId)",
+            method: "DELETE"
+        )
+        guard result.response.statusCode == 204 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+    }
+
+    func addPlaylistFavorite(id: String) async throws {
+        let escapedId = escapePathComponent(id)
+        let result = try await send(path: "playlists/\(escapedId)/favorites", method: "POST")
+        guard result.response.statusCode == 204 || result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+    }
+
+    func removePlaylistFavorite(id: String) async throws {
+        let escapedId = escapePathComponent(id)
+        let result = try await send(path: "playlists/\(escapedId)/favorites", method: "DELETE")
+        guard result.response.statusCode == 204 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+    }
+
     // MARK: - Internal
 
     private func send(
