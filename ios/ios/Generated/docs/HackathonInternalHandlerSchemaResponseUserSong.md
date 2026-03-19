@@ -4,6 +4,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **audioUrl** | **String** |  | [optional] 
+**chainId** | **String** |  | [optional] 
 **generatedAt** | **String** |  | [optional] 
 **id** | **String** |  | [optional] 
 **myLyric** | **String** |  | [optional] 

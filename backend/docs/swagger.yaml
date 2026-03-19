@@ -446,10 +446,19 @@ definitions:
       id:
         type: string
     type: object
-  hackathon_internal_handler_schema_response.LikeSongResponse:
+  hackathon_internal_handler_schema_response.LikeSongDetail:
     properties:
+      created_at:
+        type: string
       liked:
         type: boolean
+      song_id:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.LikeSongResponse:
+    properties:
+      like:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.LikeSongDetail'
     type: object
   hackathon_internal_handler_schema_response.ListUserSongsResponse:
     properties:
@@ -889,6 +898,8 @@ definitions:
   hackathon_internal_handler_schema_response.UserSong:
     properties:
       audio_url:
+        type: string
+      chain_id:
         type: string
       generated_at:
         type: string
@@ -1851,7 +1862,7 @@ paths:
       tags:
       - songs
     post:
-      description: 指定した楽曲にいいねする。すでにいいね済みの場合はエラー。
+      description: 指定した楽曲にいいねする。すでにいいね済みの場合は既存状態を返す。
       operationId: likeSong
       parameters:
       - description: 楽曲ID
@@ -1862,6 +1873,10 @@ paths:
       produces:
       - application/json
       responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.LikeSongResponse'
         "201":
           description: Created
           schema:

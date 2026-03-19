@@ -12,21 +12,21 @@ import AnyCodable
 
 public struct HackathonInternalHandlerSchemaResponseLikeSongResponse: Codable, JSONEncodable, Hashable {
 
-    public var liked: Bool?
+    public var like: HackathonInternalHandlerSchemaResponseLikeSongDetail?
 
-    public init(liked: Bool? = nil) {
-        self.liked = liked
+    public init(like: HackathonInternalHandlerSchemaResponseLikeSongDetail? = nil) {
+        self.like = like
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
-        case liked
+        case like
     }
 
     // Encodable protocol methods
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(liked, forKey: .liked)
+        try container.encodeIfPresent(like, forKey: .like)
     }
 }
 

@@ -15,7 +15,6 @@
 
 package com.digix00.musicswapping.generated.models
 
-import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchemaResponseLikeSongDetail
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -24,14 +23,22 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param like 
+ * @param createdAt 
+ * @param liked 
+ * @param songId 
  */
 @Serializable
 
-data class HackathonInternalHandlerSchemaResponseLikeSongResponse (
+data class HackathonInternalHandlerSchemaResponseLikeSongDetail (
 
-    @SerialName(value = "like")
-    val like: HackathonInternalHandlerSchemaResponseLikeSongDetail? = null
+    @SerialName(value = "created_at")
+    val createdAt: kotlin.String? = null,
+
+    @SerialName(value = "liked")
+    val liked: kotlin.Boolean? = null,
+
+    @SerialName(value = "song_id")
+    val songId: kotlin.String? = null
 
 ) {
 

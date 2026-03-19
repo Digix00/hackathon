@@ -12,7 +12,7 @@ All URIs are relative to *http://localhost:8000*
 
 楽曲にいいね
 
-指定した楽曲にいいねする。すでにいいね済みの場合はエラー。
+指定した楽曲にいいねする。すでにいいね済みの場合は既存状態を返す。
 
 ### Example
 ```kotlin

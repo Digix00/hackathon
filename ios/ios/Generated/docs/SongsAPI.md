@@ -16,7 +16,7 @@ Method | HTTP request | Description
 
 楽曲にいいね
 
-指定した楽曲にいいねする。すでにいいね済みの場合はエラー。
+指定した楽曲にいいねする。すでにいいね済みの場合は既存状態を返す。
 
 ### Example
 ```swift

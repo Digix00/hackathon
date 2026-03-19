@@ -125,6 +125,7 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseEncounterUser](docs/HackathonInternalHandlerSchemaResponseEncounterUser.md)
  - [HackathonInternalHandlerSchemaResponseEntryDetail](docs/HackathonInternalHandlerSchemaResponseEntryDetail.md)
  - [HackathonInternalHandlerSchemaResponseEntryUser](docs/HackathonInternalHandlerSchemaResponseEntryUser.md)
+ - [HackathonInternalHandlerSchemaResponseLikeSongDetail](docs/HackathonInternalHandlerSchemaResponseLikeSongDetail.md)
  - [HackathonInternalHandlerSchemaResponseLikeSongResponse](docs/HackathonInternalHandlerSchemaResponseLikeSongResponse.md)
  - [HackathonInternalHandlerSchemaResponseListUserSongsResponse](docs/HackathonInternalHandlerSchemaResponseListUserSongsResponse.md)
  - [HackathonInternalHandlerSchemaResponseMusicAuthorizeResponse](docs/HackathonInternalHandlerSchemaResponseMusicAuthorizeResponse.md)

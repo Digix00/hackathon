@@ -4,7 +4,7 @@
 ## Properties
 | Name | Type | Description | Notes |
 | ------------ | ------------- | ------------- | ------------- |
-| **liked** | **kotlin.Boolean** |  |  [optional] |
+| **like** | [**HackathonInternalHandlerSchemaResponseLikeSongDetail**](HackathonInternalHandlerSchemaResponseLikeSongDetail.md) |  |  [optional] |
 
 
 

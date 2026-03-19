@@ -26,7 +26,7 @@ open class SongsAPI {
     /**
      楽曲にいいね
      - POST /api/v1/songs/{id}/likes
-     - 指定した楽曲にいいねする。すでにいいね済みの場合はエラー。
+     - 指定した楽曲にいいねする。すでにいいね済みの場合は既存状態を返す。
      - API Key:
        - type: apiKey Authorization (HEADER)
        - name: BearerAuth

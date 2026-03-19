@@ -14,8 +14,9 @@ import com.digix00.musicswapping.generated.models.InternalHandlererrorResponse
 interface SongsApi {
     /**
      * 楽曲にいいね
-     * 指定した楽曲にいいねする。すでにいいね済みの場合はエラー。
+     * 指定した楽曲にいいねする。すでにいいね済みの場合は既存状態を返す。
      * Responses:
+     *  - 200: OK
      *  - 201: Created
      *  - 401: Unauthorized
      *  - 404: Not Found

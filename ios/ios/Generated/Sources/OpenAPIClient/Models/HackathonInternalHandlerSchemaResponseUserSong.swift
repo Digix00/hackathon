@@ -13,14 +13,16 @@ import AnyCodable
 public struct HackathonInternalHandlerSchemaResponseUserSong: Codable, JSONEncodable, Hashable {
 
     public var audioUrl: String?
+    public var chainId: String?
     public var generatedAt: String?
     public var id: String?
     public var myLyric: String?
     public var participantCount: Int?
     public var title: String?
 
-    public init(audioUrl: String? = nil, generatedAt: String? = nil, id: String? = nil, myLyric: String? = nil, participantCount: Int? = nil, title: String? = nil) {
+    public init(audioUrl: String? = nil, chainId: String? = nil, generatedAt: String? = nil, id: String? = nil, myLyric: String? = nil, participantCount: Int? = nil, title: String? = nil) {
         self.audioUrl = audioUrl
+        self.chainId = chainId
         self.generatedAt = generatedAt
         self.id = id
         self.myLyric = myLyric
@@ -30,6 +32,7 @@ public struct HackathonInternalHandlerSchemaResponseUserSong: Codable, JSONEncod
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
         case audioUrl = "audio_url"
+        case chainId = "chain_id"
         case generatedAt = "generated_at"
         case id
         case myLyric = "my_lyric"
@@ -42,6 +45,7 @@ public struct HackathonInternalHandlerSchemaResponseUserSong: Codable, JSONEncod
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(audioUrl, forKey: .audioUrl)
+        try container.encodeIfPresent(chainId, forKey: .chainId)
         try container.encodeIfPresent(generatedAt, forKey: .generatedAt)
         try container.encodeIfPresent(id, forKey: .id)
         try container.encodeIfPresent(myLyric, forKey: .myLyric)

@@ -1376,7 +1376,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "指定した楽曲にいいねする。すでにいいね済みの場合はエラー。",
+                "description": "指定した楽曲にいいねする。すでにいいね済みの場合は既存状態を返す。",
                 "produces": [
                     "application/json"
                 ],
@@ -1395,6 +1395,12 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.LikeSongResponse"
+                        }
+                    },
                     "201": {
                         "description": "Created",
                         "schema": {
@@ -3751,11 +3757,25 @@ const docTemplate = `{
                 }
             }
         },
+        "hackathon_internal_handler_schema_response.LikeSongDetail": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "liked": {
+                    "type": "boolean"
+                },
+                "song_id": {
+                    "type": "string"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_response.LikeSongResponse": {
             "type": "object",
             "properties": {
-                "liked": {
-                    "type": "boolean"
+                "like": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.LikeSongDetail"
                 }
             }
         },
@@ -4419,6 +4439,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "audio_url": {
+                    "type": "string"
+                },
+                "chain_id": {
                     "type": "string"
                 },
                 "generated_at": {
