@@ -506,6 +506,58 @@ actor BackendAPIClient {
         }
     }
 
+    // MARK: - Lyrics
+
+    func submitLyric(encounterId: String, content: String) async throws -> BackendLyricSubmitResponse {
+        let request = SubmitLyricRequest(encounterId: encounterId, content: content)
+        let result = try await send(path: "lyrics", method: "POST", body: try encoder.encode(request))
+        guard result.response.statusCode == 201 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendLyricSubmitResponse.self, from: result.data)
+    }
+
+    func getLyricChainDetail(chainId: String) async throws -> BackendChainDetailResponse {
+        let escapedId = escapePathComponent(chainId)
+        let result = try await send(path: "lyrics/chains/\(escapedId)", method: "GET")
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendChainDetailResponse.self, from: result.data)
+    }
+
+    // MARK: - Songs
+
+    func listMySongs(cursor: String? = nil) async throws -> BackendListUserSongsResponse {
+        var queryItems: [URLQueryItem] = []
+        if let cursor, !cursor.isEmpty {
+            queryItems.append(URLQueryItem(name: "cursor", value: cursor))
+        }
+
+        let result = try await send(path: "users/me/songs", method: "GET", queryItems: queryItems)
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendListUserSongsResponse.self, from: result.data)
+    }
+
+    func likeSong(id: String) async throws -> BackendLikeSongResponse {
+        let escapedId = escapePathComponent(id)
+        let result = try await send(path: "songs/\(escapedId)/likes", method: "POST")
+        guard result.response.statusCode == 201 || result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendLikeSongResponse.self, from: result.data)
+    }
+
+    func unlikeSong(id: String) async throws {
+        let escapedId = escapePathComponent(id)
+        let result = try await send(path: "songs/\(escapedId)/likes", method: "DELETE")
+        guard result.response.statusCode == 204 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+    }
+
     // MARK: - Internal
 
     private func send(
