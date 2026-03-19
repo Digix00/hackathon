@@ -19,12 +19,12 @@ type LocationUsecase interface {
 }
 
 type locationUsecase struct {
-	userRepo        repository.UserRepository
-	settingsRepo    repository.UserSettingsRepository
-	locationRepo    repository.UserLocationRepository
-	encounterRepo   repository.EncounterRepository
-	blockRepo       repository.BlockRepository
-	clock           Clock
+	userRepo      repository.UserRepository
+	settingsRepo  repository.UserSettingsRepository
+	locationRepo  repository.UserLocationRepository
+	encounterRepo repository.EncounterRepository
+	blockRepo     repository.BlockRepository
+	clock         Clock
 }
 
 type LocationUsecaseOption func(*locationUsecase)
