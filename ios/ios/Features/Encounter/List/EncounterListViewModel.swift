@@ -78,7 +78,8 @@ private extension EncounterListViewModel {
             userName: item.user.displayName,
             track: mapTrack(item.tracks.first, fallbackKey: item.id),
             relativeTime: relativeTime(from: item.occurredAt),
-            lyric: ""
+            lyric: "",
+            occurredAt: item.occurredAt
         )
     }
 
@@ -88,7 +89,8 @@ private extension EncounterListViewModel {
             userName: detail.user.displayName,
             track: mapTrack(detail.tracks.first, fallbackKey: detail.id),
             relativeTime: relativeTime(from: detail.occurredAt),
-            lyric: ""
+            lyric: "",
+            occurredAt: detail.occurredAt
         )
     }
 

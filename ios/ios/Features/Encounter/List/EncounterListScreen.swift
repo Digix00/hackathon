@@ -22,6 +22,20 @@ struct EncounterListView: View {
         bleCoordinator.encounters
     }
 
+    private var totalEncountersCount: Int {
+        encounters.count
+    }
+
+    private var weeklyEncountersCount: Int {
+        let calendar = Calendar.current
+        let now = Date()
+        let sevenDaysAgo = calendar.date(byAdding: .day, value: -7, to: now) ?? now
+        return encounters.filter { encounter in
+            guard let date = encounter.occurredAt else { return true }
+            return date >= sevenDaysAgo
+        }.count
+    }
+
     private var selectedEncounter: Encounter? {
         guard let selectedEncounterID else { return nil }
         return encounters.first(where: { $0.id == selectedEncounterID })
@@ -73,6 +87,64 @@ struct EncounterListView: View {
 
     // MARK: - List Content
 
+    private struct EncounterStatsHeader: View {
+        let totalCount: Int
+        let weeklyCount: Int
+
+        @State private var isAnimating = false
+
+        var body: some View {
+            VStack(alignment: .leading, spacing: 32) {
+                // Secondary Stat (Subtle & Data-focused)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text("TOTAL SPECIMENS")
+                        .prototypeFont(size: 10, weight: .black, role: .data)
+                        .foregroundStyle(PrototypeTheme.textTertiary)
+                        .kerning(1.8)
+                    
+                    Text("\(totalCount)")
+                        .font(.system(size: 14, weight: .black, design: .monospaced))
+                        .foregroundStyle(PrototypeTheme.textSecondary)
+                }
+                .padding(.leading, 4)
+                .opacity(isAnimating ? 1.0 : 0)
+                .offset(x: isAnimating ? 0 : -10)
+
+                // Primary Stat (Large & Airy)
+                HStack(alignment: .bottom, spacing: 20) {
+                    Text("\(weeklyCount)")
+                        .font(.system(size: 84, weight: .black))
+                        .foregroundStyle(PrototypeTheme.textPrimary)
+                        .tracking(-4)
+                        .contentTransition(.numericText())
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("ENCOUNTERS")
+                            .prototypeFont(size: 11, weight: .black, role: .data)
+                            .foregroundStyle(PrototypeTheme.textPrimary)
+                            .kerning(2.0)
+
+                        Text("THIS WEEK")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(PrototypeTheme.textTertiary)
+                            .kerning(1.0)
+                    }
+                    .padding(.bottom, 22)
+                }
+                .opacity(isAnimating ? 1.0 : 0)
+                .offset(y: isAnimating ? 0 : 20)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 32)
+            .padding(.bottom, 48)
+            .onAppear {
+                withAnimation(.spring(response: 0.9, dampingFraction: 0.8)) {
+                    isAnimating = true
+                }
+            }
+        }
+    }
+
     private var listContent: some View {
         GeometryReader { geometry in
             let topPadding = geometry.safeAreaInsets.top
@@ -93,8 +165,24 @@ struct EncounterListView: View {
                     ZStack {
                         PrototypeTheme.background.ignoresSafeArea()
                         DotGridBackground()
-                        .opacity(0.15)
-                }
+                            .opacity(0.15)
+                        
+                        if selectedEncounterID == nil {
+                            GeometryReader { g in
+                                // Position stats in the top gap created by safeAreaPadding
+                                let headerHeight = (g.size.height - wheelItemHeight) / 2
+                                if headerHeight > 80 {
+                                    EncounterStatsHeader(
+                                        totalCount: totalEncountersCount,
+                                        weeklyCount: weeklyEncountersCount
+                                    )
+                                    .frame(height: headerHeight)
+                                    .offset(y: g.safeAreaInsets.top)
+                                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                                }
+                            }
+                        }
+                    }
                     .opacity(selectedEncounterID == nil ? 1 : 0)
 
                     VStack(spacing: 0) {

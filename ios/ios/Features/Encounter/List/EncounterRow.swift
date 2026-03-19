@@ -197,6 +197,9 @@ struct EncounterRow: View {
                         .font(PrototypeTheme.Typography.font(size: 40 * nameLengthWeight, weight: .black, role: .primary))
                         .foregroundStyle(PrototypeTheme.textPrimary)
                         .tracking(-1.5)
+                        .lineLimit(nil)
+                        .minimumScaleFactor(0.68)
+                        .fixedSize(horizontal: false, vertical: true)
 
                         Group {
                             if let namespace = namespace, !hideMatchedElements {

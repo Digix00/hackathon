@@ -52,6 +52,9 @@ struct EncounterMatchedUserNameView: View {
         .font(PrototypeTheme.Typography.font(size: fontSize, weight: .black, role: .primary))
         .foregroundStyle(PrototypeTheme.textPrimary)
         .tracking(-1.5)
+        .lineLimit(nil)
+        .minimumScaleFactor(0.68)
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
 

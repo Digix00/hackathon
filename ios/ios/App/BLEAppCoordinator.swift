@@ -80,7 +80,8 @@ final class BLEAppCoordinator: ObservableObject {
                 userName: encounter.userName,
                 track: encounter.track,
                 relativeTime: encounter.relativeTime,
-                lyric: content
+                lyric: content,
+                occurredAt: encounter.occurredAt
             )
         }
         latestLyricChain = response.chain
@@ -256,7 +257,8 @@ final class BLEAppCoordinator: ObservableObject {
                         userName: encounter.userName,
                         track: encounter.track,
                         relativeTime: encounter.relativeTime,
-                        lyric: lyric
+                        lyric: lyric,
+                        occurredAt: encounter.occurredAt
                     )
                 }
                 encounters = mergedEncounters
@@ -327,7 +329,8 @@ final class BLEAppCoordinator: ObservableObject {
             userName: item.user.displayName,
             track: track,
             relativeTime: relativeTimeText(from: item.occurredAt),
-            lyric: item.lyric ?? ""
+            lyric: item.lyric ?? "",
+            occurredAt: item.occurredAt
         )
     }
 
