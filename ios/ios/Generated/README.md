@@ -39,6 +39,8 @@ Class | Method | HTTP request | Description
 *EncountersAPI* | [**listEncounters**](docs/EncountersAPI.md#listencounters) | **GET** /api/v1/encounters | すれ違い履歴一覧取得
 *HealthAPI* | [**healthz**](docs/HealthAPI.md#healthz) | **GET** /healthz | ヘルスチェック
 *HealthAPI* | [**healthzPostgres**](docs/HealthAPI.md#healthzpostgres) | **GET** /healthz/postgres | PostgreSQL ヘルスチェック
+*LyricsAPI* | [**getChainDetail**](docs/LyricsAPI.md#getchaindetail) | **GET** /api/v1/lyrics/chains/{chain_id} | チェーン詳細取得
+*LyricsAPI* | [**submitLyric**](docs/LyricsAPI.md#submitlyric) | **POST** /api/v1/lyrics | 歌詞投稿
 *MusicConnectionsAPI* | [**deleteMusicConnection**](docs/MusicConnectionsAPI.md#deletemusicconnection) | **DELETE** /api/v1/users/me/music-connections/{provider} | 音楽連携を解除
 *MusicConnectionsAPI* | [**getMusicAuthorizeURL**](docs/MusicConnectionsAPI.md#getmusicauthorizeurl) | **GET** /api/v1/music-connections/{provider}/authorize | 音楽サービス連携の認可 URL を取得
 *MusicConnectionsAPI* | [**handleMusicCallback**](docs/MusicConnectionsAPI.md#handlemusiccallback) | **GET** /api/v1/music-connections/{provider}/callback | 音楽サービス連携のコールバック
@@ -63,6 +65,9 @@ Class | Method | HTTP request | Description
 *ReportsAPI* | [**createReport**](docs/ReportsAPI.md#createreport) | **POST** /api/v1/reports | 通報作成
 *SettingsAPI* | [**getMySettings**](docs/SettingsAPI.md#getmysettings) | **GET** /api/v1/users/me/settings | 自分の設定取得
 *SettingsAPI* | [**patchMySettings**](docs/SettingsAPI.md#patchmysettings) | **PATCH** /api/v1/users/me/settings | 自分の設定更新
+*SongsAPI* | [**likeSong**](docs/SongsAPI.md#likesong) | **POST** /api/v1/songs/{id}/likes | 楽曲にいいね
+*SongsAPI* | [**listMySongs**](docs/SongsAPI.md#listmysongs) | **GET** /api/v1/users/me/songs | 自分が参加した楽曲一覧
+*SongsAPI* | [**unlikeSong**](docs/SongsAPI.md#unlikesong) | **DELETE** /api/v1/songs/{id}/likes | 楽曲のいいねを取り消す
 *TracksAPI* | [**getTrack**](docs/TracksAPI.md#gettrack) | **GET** /api/v1/tracks/{id} | 楽曲詳細取得
 *TracksAPI* | [**searchTracks**](docs/TracksAPI.md#searchtracks) | **GET** /api/v1/tracks/search | 楽曲検索
 *UsersAPI* | [**createUser**](docs/UsersAPI.md#createuser) | **POST** /api/v1/users | ユーザー作成
@@ -83,6 +88,7 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaRequestCreatePushTokenRequest](docs/HackathonInternalHandlerSchemaRequestCreatePushTokenRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateReportRequest](docs/HackathonInternalHandlerSchemaRequestCreateReportRequest.md)
  - [HackathonInternalHandlerSchemaRequestCreateUserRequest](docs/HackathonInternalHandlerSchemaRequestCreateUserRequest.md)
+ - [HackathonInternalHandlerSchemaRequestSubmitLyricRequest](docs/HackathonInternalHandlerSchemaRequestSubmitLyricRequest.md)
  - [HackathonInternalHandlerSchemaRequestUpdatePlaylistRequest](docs/HackathonInternalHandlerSchemaRequestUpdatePlaylistRequest.md)
  - [HackathonInternalHandlerSchemaRequestUpdatePushTokenRequest](docs/HackathonInternalHandlerSchemaRequestUpdatePushTokenRequest.md)
  - [HackathonInternalHandlerSchemaRequestUpdateSettingsRequest](docs/HackathonInternalHandlerSchemaRequestUpdateSettingsRequest.md)
@@ -93,6 +99,8 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseBleTokenUserResponse](docs/HackathonInternalHandlerSchemaResponseBleTokenUserResponse.md)
  - [HackathonInternalHandlerSchemaResponseBlock](docs/HackathonInternalHandlerSchemaResponseBlock.md)
  - [HackathonInternalHandlerSchemaResponseBlockResponse](docs/HackathonInternalHandlerSchemaResponseBlockResponse.md)
+ - [HackathonInternalHandlerSchemaResponseChainDetail](docs/HackathonInternalHandlerSchemaResponseChainDetail.md)
+ - [HackathonInternalHandlerSchemaResponseChainDetailResponse](docs/HackathonInternalHandlerSchemaResponseChainDetailResponse.md)
  - [HackathonInternalHandlerSchemaResponseComment](docs/HackathonInternalHandlerSchemaResponseComment.md)
  - [HackathonInternalHandlerSchemaResponseCommentListResponse](docs/HackathonInternalHandlerSchemaResponseCommentListResponse.md)
  - [HackathonInternalHandlerSchemaResponseCommentResponse](docs/HackathonInternalHandlerSchemaResponseCommentResponse.md)
@@ -107,6 +115,10 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseEncounterSummary](docs/HackathonInternalHandlerSchemaResponseEncounterSummary.md)
  - [HackathonInternalHandlerSchemaResponseEncounterTrack](docs/HackathonInternalHandlerSchemaResponseEncounterTrack.md)
  - [HackathonInternalHandlerSchemaResponseEncounterUser](docs/HackathonInternalHandlerSchemaResponseEncounterUser.md)
+ - [HackathonInternalHandlerSchemaResponseEntryDetail](docs/HackathonInternalHandlerSchemaResponseEntryDetail.md)
+ - [HackathonInternalHandlerSchemaResponseEntryUser](docs/HackathonInternalHandlerSchemaResponseEntryUser.md)
+ - [HackathonInternalHandlerSchemaResponseLikeSongResponse](docs/HackathonInternalHandlerSchemaResponseLikeSongResponse.md)
+ - [HackathonInternalHandlerSchemaResponseListUserSongsResponse](docs/HackathonInternalHandlerSchemaResponseListUserSongsResponse.md)
  - [HackathonInternalHandlerSchemaResponseMusicAuthorizeResponse](docs/HackathonInternalHandlerSchemaResponseMusicAuthorizeResponse.md)
  - [HackathonInternalHandlerSchemaResponseMusicConnection](docs/HackathonInternalHandlerSchemaResponseMusicConnection.md)
  - [HackathonInternalHandlerSchemaResponseMusicConnectionsResponse](docs/HackathonInternalHandlerSchemaResponseMusicConnectionsResponse.md)
@@ -127,12 +139,18 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseReportResponse](docs/HackathonInternalHandlerSchemaResponseReportResponse.md)
  - [HackathonInternalHandlerSchemaResponseSettings](docs/HackathonInternalHandlerSchemaResponseSettings.md)
  - [HackathonInternalHandlerSchemaResponseSettingsResponse](docs/HackathonInternalHandlerSchemaResponseSettingsResponse.md)
+ - [HackathonInternalHandlerSchemaResponseSongDetail](docs/HackathonInternalHandlerSchemaResponseSongDetail.md)
+ - [HackathonInternalHandlerSchemaResponseSongPagination](docs/HackathonInternalHandlerSchemaResponseSongPagination.md)
+ - [HackathonInternalHandlerSchemaResponseSubmitLyricChain](docs/HackathonInternalHandlerSchemaResponseSubmitLyricChain.md)
+ - [HackathonInternalHandlerSchemaResponseSubmitLyricEntry](docs/HackathonInternalHandlerSchemaResponseSubmitLyricEntry.md)
+ - [HackathonInternalHandlerSchemaResponseSubmitLyricResponse](docs/HackathonInternalHandlerSchemaResponseSubmitLyricResponse.md)
  - [HackathonInternalHandlerSchemaResponseTrack](docs/HackathonInternalHandlerSchemaResponseTrack.md)
  - [HackathonInternalHandlerSchemaResponseTrackResponse](docs/HackathonInternalHandlerSchemaResponseTrackResponse.md)
  - [HackathonInternalHandlerSchemaResponseTrackSearchPagination](docs/HackathonInternalHandlerSchemaResponseTrackSearchPagination.md)
  - [HackathonInternalHandlerSchemaResponseTrackSearchResponse](docs/HackathonInternalHandlerSchemaResponseTrackSearchResponse.md)
  - [HackathonInternalHandlerSchemaResponseUser](docs/HackathonInternalHandlerSchemaResponseUser.md)
  - [HackathonInternalHandlerSchemaResponseUserResponse](docs/HackathonInternalHandlerSchemaResponseUserResponse.md)
+ - [HackathonInternalHandlerSchemaResponseUserSong](docs/HackathonInternalHandlerSchemaResponseUserSong.md)
  - [InternalHandlerErrorBody](docs/InternalHandlerErrorBody.md)
  - [InternalHandlerErrorResponse](docs/InternalHandlerErrorResponse.md)
 
