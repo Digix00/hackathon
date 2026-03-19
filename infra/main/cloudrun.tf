@@ -185,6 +185,11 @@ resource "google_cloud_run_v2_job" "worker" {
         }
 
         env {
+          name  = "WORKER_ONESHOT"
+          value = "true"
+        }
+
+        env {
           name  = "DB_USER"
           value = google_sql_user.app.name
         }
