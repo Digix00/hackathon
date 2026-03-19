@@ -11,3 +11,15 @@ type Mute struct {
 	TargetUserID string `json:"target_user_id"`
 	CreatedAt    string `json:"created_at"`
 }
+
+// @name MuteListResponse
+type MuteListResponse struct {
+	Mutes      []Mute             `json:"mutes"`
+	Pagination MuteListPagination `json:"pagination"`
+}
+
+// @name MuteListPagination
+type MuteListPagination struct {
+	NextCursor *string `json:"next_cursor"`
+	HasMore    bool    `json:"has_more"`
+}

@@ -11,3 +11,9 @@ type MuteDTO struct {
 	TargetUserID string
 	CreatedAt    time.Time
 }
+
+type MuteListDTO struct {
+	Mutes      []MuteDTO
+	NextCursor *string
+	HasMore    bool
+}
