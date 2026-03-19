@@ -15,7 +15,13 @@ type TokenVerifier interface {
 	VerifyIDToken(ctx context.Context, idToken string) (*firebaseauth.Token, error)
 }
 
-func FirebaseAuth(verifier TokenVerifier) echo.MiddlewareFunc {
+type DevAuthConfig struct {
+	Enabled bool
+	Token   string
+	UID     string
+}
+
+func FirebaseAuth(verifier TokenVerifier, devAuth DevAuthConfig) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			token, err := extractBearerToken(c.Request().Header.Get(echo.HeaderAuthorization))
@@ -25,6 +31,15 @@ func FirebaseAuth(verifier TokenVerifier) echo.MiddlewareFunc {
 					"message": "Authorization header must be Bearer token",
 					"details": nil,
 				})
+			}
+
+			if devAuth.Enabled && devAuth.Token != "" && token == devAuth.Token {
+				uid := devAuth.UID
+				if uid == "" {
+					uid = "dev-user"
+				}
+				c.Set(ContextKeyUserID, uid)
+				return next(c)
 			}
 
 			decoded, err := verifier.VerifyIDToken(c.Request().Context(), token)
