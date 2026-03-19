@@ -11,7 +11,10 @@ final class SearchViewModel: ObservableObject {
     @Published private(set) var isSelecting = false
     @Published private(set) var isLoadingSharedTrack = false
     @Published private(set) var isSubmitting = false
+    @Published private(set) var isFavoriteUpdating = false
+    @Published private(set) var isLoadingFavorites = false
     @Published private(set) var errorMessage: String?
+    @Published private(set) var favoriteTrackIDs: Set<String> = []
 
     private let client: BackendAPIClient
 
@@ -34,6 +37,11 @@ final class SearchViewModel: ObservableObject {
     func loadSharedTrack() {
         guard !isLoadingSharedTrack else { return }
         Task { await fetchSharedTrack() }
+    }
+
+    func loadFavoriteTracks() {
+        guard !isLoadingFavorites else { return }
+        Task { await fetchFavoriteTracks() }
     }
 
     func shareSelectedTrack() async -> Bool {
@@ -65,6 +73,40 @@ final class SearchViewModel: ObservableObject {
         isSubmitting = false
     }
 
+    func toggleFavoriteSelectedTrack() async {
+        guard let backendId = selectedTrack?.backendId, !isFavoriteUpdating else { return }
+        isFavoriteUpdating = true
+        errorMessage = nil
+
+        do {
+            if favoriteTrackIDs.contains(backendId) {
+                try await client.removeTrackFavorite(id: backendId)
+                favoriteTrackIDs.remove(backendId)
+            } else {
+                _ = try await client.addTrackFavorite(id: backendId)
+                favoriteTrackIDs.insert(backendId)
+            }
+        } catch let error as BackendAPIClient.BackendError {
+            switch error {
+            case .unexpectedStatus(let code, _) where code == 409:
+                favoriteTrackIDs.insert(backendId)
+            case .unexpectedStatus(let code, _) where code == 404:
+                favoriteTrackIDs.remove(backendId)
+            default:
+                errorMessage = "お気に入りの更新に失敗しました"
+            }
+        } catch {
+            errorMessage = "お気に入りの更新に失敗しました"
+        }
+
+        isFavoriteUpdating = false
+    }
+
+    var isSelectedTrackFavorite: Bool {
+        guard let backendId = selectedTrack?.backendId else { return false }
+        return favoriteTrackIDs.contains(backendId)
+    }
+
     func addSelectedTrackToMyTracks() async -> Bool {
         guard let backendId = selectedTrack?.backendId, !isSubmitting else { return false }
         isSubmitting = true
@@ -78,6 +120,26 @@ final class SearchViewModel: ObservableObject {
             isSubmitting = false
             return false
         }
+    }
+
+    private func fetchFavoriteTracks() async {
+        isLoadingFavorites = true
+        do {
+            var cursor: String?
+            var collected: [BackendPublicTrack] = []
+            while true {
+                let response = try await client.listTrackFavorites(limit: 50, cursor: cursor)
+                collected.append(contentsOf: response.tracks ?? [])
+                guard response.pagination?.hasMore == true, let next = response.pagination?.nextCursor else {
+                    break
+                }
+                cursor = next
+            }
+            favoriteTrackIDs = Set(collected.map(\.id))
+        } catch {
+            // Favorite state is optional; keep silent.
+        }
+        isLoadingFavorites = false
     }
 
     private func performSearch(query: String) async {

@@ -6,6 +6,10 @@ struct EncounterSettingsView: View {
     @EnvironmentObject private var bleManager: BLEManager
     @State private var detectionDistance: Double = 30
     @State private var profileVisible = true
+    @State private var locationLat: String = "35.6586"
+    @State private var locationLng: String = "139.7454"
+    @State private var locationAccuracy: String = "25"
+    @State private var locationInputErrorMessage: String?
 
     private var bleToggleBinding: Binding<Bool> {
         Binding(
@@ -161,6 +165,51 @@ struct EncounterSettingsView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
+                SectionCard(title: "位置情報送信") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 12) {
+                            TextField("緯度", text: $locationLat)
+                                .keyboardType(.numbersAndPunctuation)
+                                .padding(12)
+                                .background(PrototypeTheme.surfaceMuted)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                            TextField("経度", text: $locationLng)
+                                .keyboardType(.numbersAndPunctuation)
+                                .padding(12)
+                                .background(PrototypeTheme.surfaceMuted)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+
+                        TextField("精度 (m)", text: $locationAccuracy)
+                            .keyboardType(.decimalPad)
+                            .padding(12)
+                            .background(PrototypeTheme.surfaceMuted)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                        PrimaryButton(title: bleCoordinator.isPostingLocation ? "送信中..." : "位置情報を送信") {
+                            submitLocation()
+                        }
+                        .disabled(bleCoordinator.isPostingLocation)
+
+                        if let message = bleCoordinator.locationPostMessage {
+                            Text(message)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.success)
+                        }
+
+                        if let errorMessage = locationInputErrorMessage {
+                            Text(errorMessage)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.error)
+                        } else if let errorMessage = bleCoordinator.locationPostErrorMessage {
+                            Text(errorMessage)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.error)
+                        }
+                    }
+                }
+
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(spacing: 8) {
                         Circle()
@@ -192,5 +241,14 @@ struct EncounterSettingsView: View {
         .onChange(of: bleCoordinator.profileVisible) { _, newValue in
             profileVisible = newValue
         }
+    }
+
+    private func submitLocation() {
+        locationInputErrorMessage = nil
+        guard let lat = Double(locationLat), let lng = Double(locationLng), let accuracy = Double(locationAccuracy) else {
+            locationInputErrorMessage = "位置情報は数値で入力してください"
+            return
+        }
+        bleCoordinator.postLocation(lat: lat, lng: lng, accuracyM: accuracy)
     }
 }

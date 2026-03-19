@@ -55,6 +55,9 @@ struct EncounterListView: View {
         }
         .onChange(of: selectedEncounterID) { _ in
             syncDetailPresentationState()
+            if let selectedEncounterID {
+                bleCoordinator.markEncounterRead(id: selectedEncounterID)
+            }
         }
         .onChange(of: bleCoordinator.encounters.map(\.id)) { _, ids in
             if let target = scrollTargetID, !ids.contains(target) {

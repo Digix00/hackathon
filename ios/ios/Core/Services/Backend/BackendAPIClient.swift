@@ -211,6 +211,37 @@ actor BackendAPIClient {
         return track
     }
 
+    // MARK: - Track Favorites
+
+    func listTrackFavorites(limit: Int? = nil, cursor: String? = nil) async throws -> BackendTrackFavoriteListResponse {
+        var queryItems: [URLQueryItem] = []
+        if let limit { queryItems.append(URLQueryItem(name: "limit", value: "\(limit)")) }
+        if let cursor { queryItems.append(URLQueryItem(name: "cursor", value: cursor)) }
+
+        let result = try await send(path: "users/me/track-favorites", method: "GET", queryItems: queryItems)
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendTrackFavoriteListResponse.self, from: result.data)
+    }
+
+    func addTrackFavorite(id: String) async throws -> BackendTrackFavorite? {
+        let escapedId = escapePathComponent(id)
+        let result = try await send(path: "tracks/\(escapedId)/favorites", method: "POST")
+        guard result.response.statusCode == 200 || result.response.statusCode == 201 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendTrackFavoriteResponse.self, from: result.data).favorite
+    }
+
+    func removeTrackFavorite(id: String) async throws {
+        let escapedId = escapePathComponent(id)
+        let result = try await send(path: "tracks/\(escapedId)/favorites", method: "DELETE")
+        guard result.response.statusCode == 204 || result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+    }
+
     // MARK: - Shared Tracks
 
     func getSharedTrack() async throws -> BackendSharedTrack? {
@@ -291,6 +322,18 @@ actor BackendAPIClient {
 
     // MARK: - Blocks & Mutes
 
+    func listBlocks(limit: Int? = nil, cursor: String? = nil) async throws -> BackendBlockListResponse {
+        var queryItems: [URLQueryItem] = []
+        if let limit { queryItems.append(URLQueryItem(name: "limit", value: "\(limit)")) }
+        if let cursor { queryItems.append(URLQueryItem(name: "cursor", value: cursor)) }
+
+        let result = try await send(path: "users/me/blocks", method: "GET", queryItems: queryItems)
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendBlockListResponse.self, from: result.data)
+    }
+
     func createBlock(blockedUserId: String) async throws -> BackendBlock {
         let request = CreateBlockRequest(blockedUserId: blockedUserId)
         let result = try await send(path: "users/me/blocks", method: "POST", body: try encoder.encode(request))
@@ -310,6 +353,18 @@ actor BackendAPIClient {
         guard result.response.statusCode == 204 else {
             throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
         }
+    }
+
+    func listMutes(limit: Int? = nil, cursor: String? = nil) async throws -> BackendMuteListResponse {
+        var queryItems: [URLQueryItem] = []
+        if let limit { queryItems.append(URLQueryItem(name: "limit", value: "\(limit)")) }
+        if let cursor { queryItems.append(URLQueryItem(name: "cursor", value: cursor)) }
+
+        let result = try await send(path: "users/me/mutes", method: "GET", queryItems: queryItems)
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendMuteListResponse.self, from: result.data)
     }
 
     func createMute(targetUserId: String) async throws -> BackendMute {
@@ -377,6 +432,23 @@ actor BackendAPIClient {
         return try decoder.decode(BackendEncounterDetailResponse.self, from: result.data).encounter
     }
 
+    func markEncounterAsRead(id: String) async throws -> BackendEncounterReadResult? {
+        let escapedId = escapePathComponent(id)
+        let result = try await send(path: "encounters/\(escapedId)/read", method: "PATCH")
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendEncounterReadResponse.self, from: result.data).encounter
+    }
+
+    func postLocation(_ request: PostLocationRequest) async throws -> BackendLocationResponse {
+        let result = try await send(path: "locations", method: "POST", body: try encoder.encode(request))
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendLocationResponse.self, from: result.data)
+    }
+
     @available(*, deprecated, message: "Use getEncounter(id:) instead.")
     func getEncounterByID(id: String) async throws -> BackendEncounterDetail {
         try await getEncounter(id: id)
@@ -422,6 +494,18 @@ actor BackendAPIClient {
     }
 
     // MARK: - Playlists
+
+    func listPlaylistFavorites(limit: Int? = nil, cursor: String? = nil) async throws -> BackendPlaylistFavoriteListResponse {
+        var queryItems: [URLQueryItem] = []
+        if let limit { queryItems.append(URLQueryItem(name: "limit", value: "\(limit)")) }
+        if let cursor { queryItems.append(URLQueryItem(name: "cursor", value: cursor)) }
+
+        let result = try await send(path: "users/me/playlist-favorites", method: "GET", queryItems: queryItems)
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendPlaylistFavoriteListResponse.self, from: result.data)
+    }
 
     func getMyPlaylists() async throws -> BackendPlaylistListResponse {
         let result = try await send(path: "playlists/me", method: "GET")
