@@ -89,6 +89,7 @@ locals {
     "roles/serviceusage.serviceUsageAdmin",
     "roles/storage.admin",
     "roles/logging.admin",
+    "roles/identitytoolkit.admin",
   ]
 }
 
