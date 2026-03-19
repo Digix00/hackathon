@@ -25,6 +25,7 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	songHandler := newSongHandler(deps.SongUsecase)
 	userTrackHandler := newUserTrackHandler(deps.UserTrackUsecase)
 	locationHandler := newLocationHandler(deps.LocationUsecase)
+	favoriteHandler := newFavoriteHandler(deps.FavoriteUsecase)
 
 	api := e.Group("/api/v1")
 	api.GET("/music-connections/:provider/callback", musicHandler.callback)
@@ -64,6 +65,11 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 
 	protected.POST("/playlists/:id/favorites", playlistHandler.addPlaylistFavorite)
 	protected.DELETE("/playlists/:id/favorites", playlistHandler.removePlaylistFavorite)
+
+	protected.POST("/tracks/:id/favorites", favoriteHandler.addTrackFavorite)
+	protected.DELETE("/tracks/:id/favorites", favoriteHandler.removeTrackFavorite)
+	protected.GET("/users/me/track-favorites", favoriteHandler.listTrackFavorites)
+	protected.GET("/users/me/playlist-favorites", favoriteHandler.listPlaylistFavorites)
 
 	protected.POST("/locations", locationHandler.postLocation)
 
