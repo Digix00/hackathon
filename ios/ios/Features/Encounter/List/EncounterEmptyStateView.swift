@@ -101,21 +101,30 @@ struct EncounterEmptyStateView: View {
                         UIImpactFeedbackGenerator(style: .soft).impactOccurred()
                         onRefresh()
                     }) {
-                        Text("RETRY CONNECTION")
-                            .font(PrototypeTheme.Typography.font(size: 12, weight: .black, role: .data))
-                            .kerning(2)
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 32)
-                            .padding(.vertical, 18)
-                            .background(
-                                Capsule()
-                                    .fill(PrototypeTheme.textPrimary)
-                                    .shadow(color: Color.black.opacity(0.15), radius: 20, x: 0, y: 10)
-                            )
+                        HStack(spacing: 12) {
+                            if isLoading {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            } else {
+                                Image(systemName: "arrow.clockwise")
+                                    .font(.system(size: 12, weight: .black))
+                            }
+                            
+                            Text("RETRY CONNECTION")
+                                .font(PrototypeTheme.Typography.font(size: 12, weight: .black, role: .data))
+                                .kerning(2)
+                        }
+                        .foregroundStyle(themeColor)
+                        .padding(.horizontal, 28)
+                        .padding(.vertical, 14)
+                        .background(
+                            Capsule()
+                                .fill(themeColor.opacity(0.06))
+                        )
                     }
                     .buttonStyle(EncounterScaleButtonStyle())
                     .disabled(isLoading)
-                    .opacity(isLoading ? 0.6 : 1.0)
+                    .padding(.top, 12)
                 }
             }
             .offset(y: -20)
