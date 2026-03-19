@@ -5,11 +5,15 @@ on:
     branches: [ main, develop ]
     paths:
       - backend/**
+      - android/app/src/main/java/com/digix00/musicswapping/generated/**
+      - ios/ios/Generated/**
       - .github/workflows/codegen-check.yml
   pull_request:
     branches: [ main, develop ]
     paths:
       - backend/**
+      - android/app/src/main/java/com/digix00/musicswapping/generated/**
+      - ios/ios/Generated/**
       - .github/workflows/codegen-check.yml
 
 jobs:
