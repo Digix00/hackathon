@@ -36,6 +36,7 @@ func autoMigrate(db *gorm.DB) error {
 
 		// users に依存
 		&model.UserSettings{},
+		&model.UserLocation{},
 		&model.UserDevice{},
 		&model.MusicConnection{},
 		&model.BleToken{},

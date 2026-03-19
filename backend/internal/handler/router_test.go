@@ -90,6 +90,7 @@ TRUNCATE TABLE
 	prefectures,
 	tracks,
 	user_current_tracks,
+	user_locations,
 	encounters,
 	blocks
 RESTART IDENTITY CASCADE;
@@ -141,6 +142,7 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 	reportRepo := rdb.NewReportRepository(db)
 	muteRepo := rdb.NewMuteRepository(db)
 	notificationRepo := rdb.NewNotificationRepository(db)
+	locationRepo := rdb.NewUserLocationRepository(db)
 	commentRepo := rdb.NewCommentRepository(db)
 	lyricRepo := rdb.NewLyricRepository(db)
 	if providers == nil {
@@ -171,6 +173,7 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 		LyricUsecase:        usecase.NewLyricUsecase(userRepo, encounterRepo, lyricRepo),
 		SongUsecase:         usecase.NewSongUsecase(userRepo, lyricRepo),
 		UserTrackUsecase:    usecase.NewUserTrackUsecase(userRepo, userTrackRepo, trackRepo, trackCatalogRepo),
+		LocationUsecase:     usecase.NewLocationUsecase(userRepo, userSettingsRepo, locationRepo, encounterRepo, blockRepo),
 	})
 	return e
 }
