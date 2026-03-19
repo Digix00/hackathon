@@ -33,10 +33,10 @@ struct HomeFeaturedTrackCard: View {
                             symbol: "music.note",
                             size: 240,
                             artwork: track.artwork,
-                            shadowColor: track.color.opacity(0.15),
-                            shadowRadius: 40,
+                            shadowColor: track.color.opacity(0.28),
+                            shadowRadius: 56,
                             shadowX: 0,
-                            shadowY: 20
+                            shadowY: 24
                         )
                         .offset(x: motionX, y: motionY)
                         .matchedGeometryEffect(id: "home_artwork_\(track.id)", in: homeNamespace)
