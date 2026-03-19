@@ -160,14 +160,19 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 	}
 	musicConnectionRepo := rdb.NewMusicConnectionRepository(db, enc)
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
+	playlistRepo := rdb.NewPlaylistRepository(db)
 	reportRepo := rdb.NewReportRepository(db)
+	muteRepo := rdb.NewMuteRepository(db)
 	notificationRepo := rdb.NewNotificationRepository(db)
+	commentRepo := rdb.NewCommentRepository(db)
 	if providers == nil {
 		providers = []usecaseport.MusicProvider{
 			music.NewSpotifyProvider(music.SpotifyConfig{}),
 			music.NewAppleMusicProvider(music.AppleMusicConfig{}),
 		}
 	}
+
+	userTrackRepo := rdb.NewUserTrackRepository(db)
 
 	e := echo.New()
 	RegisterRoutes(e, Dependencies{
@@ -177,10 +182,15 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 		SettingsUsecase:     usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
 		PushTokenUsecase:    usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
 		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
+		PlaylistUsecase:     usecase.NewPlaylistUsecase(playlistRepo, userRepo),
 		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
+		MuteUsecase:         usecase.NewMuteUsecase(userRepo, muteRepo),
+		BlockUsecase:        usecase.NewBlockUsecase(userRepo, blockRepo),
 		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
 		MusicUsecase:        usecase.NewMusicUsecase(userRepo, musicConnectionRepo, trackCatalogRepo, providers, "test-state-secret", "digix"),
 		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
+		CommentUsecase:      usecase.NewCommentUsecase(userRepo, commentRepo, encounterRepo),
+		UserTrackUsecase:    usecase.NewUserTrackUsecase(userRepo, userTrackRepo, trackRepo, trackCatalogRepo),
 	})
 	return e
 }

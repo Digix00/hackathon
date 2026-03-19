@@ -1,0 +1,13 @@
+# ---- builder ----
+FROM golang:1.25-bookworm AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /worker ./cmd/worker
+
+# ---- production ----
+# CGO_ENABLED=0 で完全静的バイナリ。distroless/static は CA 証明書内包・非 root(UID=65532)。
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=builder /worker /worker
+CMD ["/worker"]

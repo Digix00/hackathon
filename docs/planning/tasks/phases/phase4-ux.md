@@ -118,9 +118,9 @@
 
 ### 4.5.2 ブロック API
 
-- [ ] **Backend** `POST /blocks` - ユーザーブロック
-- [ ] **Backend** `DELETE /blocks/:user_id` - ブロック解除
-- [ ] **Backend** `GET /blocks` - ブロック一覧取得
+- [ ] **Backend** `POST /users/me/blocks` - ユーザーブロック
+- [ ] **Backend** `DELETE /users/me/blocks/:blocked_user_id` - ブロック解除
+- [ ] **Backend** `GET /users/me/blocks` - ブロック一覧取得
 
 ### 4.5.3 ミュート基盤（Backend）
 
@@ -131,9 +131,9 @@
 
 ### 4.5.4 ミュート API
 
-- [ ] **Backend** `POST /mutes` - ユーザーミュート
-- [ ] **Backend** `DELETE /mutes/:user_id` - ミュート解除
-- [ ] **Backend** `GET /mutes` - ミュート一覧取得
+- [ ] **Backend** `POST /users/me/mutes` - ユーザーミュート
+- [ ] **Backend** `DELETE /users/me/mutes/:target_user_id` - ミュート解除
+- [ ] **Backend** `GET /users/me/mutes` - ミュート一覧取得
 
 ### 4.5.5 ブロック・ミュート画面
 

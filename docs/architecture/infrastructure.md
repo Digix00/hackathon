@@ -39,13 +39,15 @@ infra/
     ├── cloudrun.tf            # Cloud Run service（API）+ Cloud Run Jobs（worker）
     ├── cloudsql.tf            # Cloud SQL インスタンス・DB・ユーザー
     ├── scheduler.tf           # Cloud Scheduler ジョブ
-    └── secret_manager.tf      # Secret Manager シークレット
+    ├── secret_manager.tf      # Secret Manager シークレット
+    └── storage.tf             # Cloud Storage バケット（生成楽曲保存）
 ```
 
 ### 環境方針
 
-現時点では dev 単一環境（GCP プロジェクト: `musicswapping`）で運用する。
-prod 環境は必要になった時点で `infra/` 配下に別ディレクトリを追加する方針。
+dev / prod の2環境構成で運用する。
+- **dev**: `develop` ブランチへのマージで自動デプロイ（GCP プロジェクト: `musicswapping`）
+- **prod**: `main` ブランチへのマージで自動デプロイ
 
 ### State 管理
 
@@ -99,16 +101,24 @@ terraform fmt / validate / plan
   ↓
 plan 結果を PR コメントに自動投稿
 
-main マージ時
+develop マージ時
   ↓
-terraform apply（自動）
+terraform apply（dev 環境）自動実行
   ↓
 docker build → Artifact Registry プッシュ
   ↓
-Cloud Run 自動デプロイ
+Cloud Run（dev）自動デプロイ
+
+main マージ時（develop → main）
+  ↓
+terraform apply（prod 環境）自動実行
+  ↓
+docker build → Artifact Registry プッシュ
+  ↓
+Cloud Run（prod）自動デプロイ
 ```
 
-- `infra/main/**` の変更は main マージで自動 apply
+- `infra/main/**` の変更は develop マージで dev 環境に自動 apply、main マージで prod 環境に自動 apply
 
 ## 開発環境（Docker）
 

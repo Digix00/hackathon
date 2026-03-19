@@ -5,6 +5,8 @@ import (
 
 	"gorm.io/gorm"
 
+	"hackathon/internal/domain/entity"
+	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
 	"hackathon/internal/infra/rdb/model"
 )
@@ -15,6 +17,40 @@ type blockRepository struct {
 
 func NewBlockRepository(db *gorm.DB) repository.BlockRepository {
 	return &blockRepository{db: db}
+}
+
+func (r *blockRepository) Create(ctx context.Context, block entity.Block) error {
+	m := model.Block{
+		ID:            block.ID,
+		BlockerUserID: block.BlockerUserID,
+		BlockedUserID: block.BlockedUserID,
+	}
+	return r.db.WithContext(ctx).Create(&m).Error
+}
+
+func (r *blockRepository) Delete(ctx context.Context, blockerUserID, blockedUserID string) error {
+	result := r.db.WithContext(ctx).
+		Where("blocker_user_id = ? AND blocked_user_id = ?", blockerUserID, blockedUserID).
+		Delete(&model.Block{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return domainerrs.NotFound("block not found")
+	}
+	return nil
+}
+
+func (r *blockRepository) ExistsByBlockerAndBlocked(ctx context.Context, blockerUserID, blockedUserID string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).
+		Model(&model.Block{}).
+		Where("blocker_user_id = ? AND blocked_user_id = ?", blockerUserID, blockedUserID).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 func (r *blockRepository) ExistsBetween(ctx context.Context, userID1, userID2 string) (bool, error) {

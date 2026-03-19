@@ -50,6 +50,7 @@ docker compose logs -f worker
 - `make restart-dev` : 環境の再起動
 - `make logs` : 全コンテナのログを追従して表示
 - `make clean` : ボリューム（DB等）を含めて環境を完全に削除
+- `make init-db` : ローカルDBにマイグレーションとシードデータを投入
 - `make db-shell` : PostgreSQLコンテナ内のDBクライアント(`psql`)を起動
 - `make tidy` : Goの依存パッケージ整理 (`go mod tidy`)
 - `make fmt` : Goコードのフォーマット (`go fmt ./...`)
@@ -85,6 +86,32 @@ curl -v http://127.0.0.1:8000/healthz/postgres
 ### 3) Emulator UI
 
 - http://127.0.0.1:4000/
+
+### 4) デモデータ（encounters）
+
+開発環境では起動時にデモユーザー・トラック・encounter を自動で投入します。
+
+- デモユーザー UID: `demo-user-1` / `demo-user-2`
+- デモ encounter: 1件（`demo-user-1` 視点で `demo-user-2` が表示されます）
+
+iOS から動作確認する場合は `ios/README.md` の Firebase Auth Emulator 手順を参照してください。
+
+### 5) 開発用認証バイパス（DEV_AUTH_TOKEN）
+
+開発中のみ Firebase 検証をスキップできるトークンを利用できます（`GO_ENV=development` のみ有効）。
+
+- `Authorization: Bearer <DEV_AUTH_TOKEN>` を送ると Firebase 検証を行わず通過します
+- `DEV_AUTH_UID` を指定すると固定 UID で動作します（未指定なら `dev-user`）
+
+設定例:
+
+```
+DEV_AUTH_TOKEN=dev-auth-token
+DEV_AUTH_UID=demo-user-1
+```
+
+無効化したい場合は `backend/.env.development` から `DEV_AUTH_TOKEN`, `DEV_AUTH_UID` を削除し、
+`docs/architecture/backend.md` の「削除手順」に従ってコード側を削除してください。
 
 ## 停止
 

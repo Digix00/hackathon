@@ -6,6 +6,7 @@ locals {
     "storage.googleapis.com",
     "cloudscheduler.googleapis.com",
     "secretmanager.googleapis.com",
+    "sqladmin.googleapis.com",
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
     "sts.googleapis.com",
@@ -13,6 +14,7 @@ locals {
     "monitoring.googleapis.com",
     "firebase.googleapis.com",
     "identitytoolkit.googleapis.com",
+    "aiplatform.googleapis.com",
   ]
 }
 

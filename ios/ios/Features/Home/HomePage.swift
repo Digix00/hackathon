@@ -6,10 +6,42 @@ struct HomePage: View {
 
     @Environment(\.topSafeAreaInset) private var topSafeArea
     @Environment(\.bottomSafeAreaInset) private var bottomSafeArea
+    @EnvironmentObject private var bleCoordinator: BLEAppCoordinator
+    @EnvironmentObject private var bleManager: BLEManager
     @StateObject private var motion = MotionManager()
 
     private var homeColor: Color {
         state.featuredTrack?.color ?? PrototypeTheme.surfaceElevated
+    }
+
+    private var bleStatusText: String {
+        guard bleCoordinator.bleEnabled else { return "BLE OFF" }
+
+        switch bleManager.state {
+        case .poweredOn:
+            return bleManager.isScanning ? "SCANNING" : "STANDBY"
+        case .poweredOff:
+            return "BT OFF"
+        case .unauthorized:
+            return "NO ACCESS"
+        case .unsupported:
+            return "UNSUPPORTED"
+        case .unknown:
+            return "CHECKING"
+        }
+    }
+
+    private var bleStatusColor: Color {
+        guard bleCoordinator.bleEnabled else { return PrototypeTheme.textTertiary }
+
+        switch bleManager.state {
+        case .poweredOn:
+            return bleManager.isScanning ? PrototypeTheme.success : PrototypeTheme.accent
+        case .poweredOff, .unauthorized, .unsupported:
+            return PrototypeTheme.warning
+        case .unknown:
+            return PrototypeTheme.textSecondary
+        }
     }
 
     var body: some View {
@@ -51,10 +83,10 @@ struct HomePage: View {
 
                     HStack(spacing: 6) {
                         Circle()
-                            .fill(PrototypeTheme.accent.opacity(0.6))
+                            .fill(bleStatusColor.opacity(0.8))
                             .frame(width: 3.5, height: 3.5)
 
-                        Text("SCANNING")
+                        Text(bleStatusText)
                             .font(.system(size: 8.5, weight: .black))
                             .kerning(1.2)
                             .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.7))

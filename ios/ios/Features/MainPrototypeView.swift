@@ -2,7 +2,9 @@ import SwiftUI
 
 struct MainPrototypeView: View {
     private enum Layout {
-        static let swipeThreshold: CGFloat = 90
+        static let trackToLibrarySwipeThreshold: CGFloat = 90
+        static let libraryToTrackSwipeThreshold: CGFloat = 180
+        static let libraryToTrackPredictedThreshold: CGFloat = 240
         static let dragResponseFactor: CGFloat = 0.9
         static let backgroundScale: CGFloat = 0.95
         static let inactiveOpacity: Double = 0.5
@@ -41,7 +43,9 @@ struct MainPrototypeView: View {
 
     @State private var selectedSurface: Surface = .track
     @State private var selectedLibraryTab: LibraryTab = .insights
+    @State private var isEncounterDetailPresented = false
     @GestureState private var verticalDragOffset: CGFloat = 0
+    @EnvironmentObject private var bleCoordinator: BLEAppCoordinator
     let restartOnboarding: () -> Void
     @Namespace private var homeNamespace
 
@@ -57,7 +61,10 @@ struct MainPrototypeView: View {
 
                 librarySurface(bottomSafeArea: proxy.safeAreaInsets.bottom)
                     .environment(\.topSafeAreaInset, proxy.safeAreaInsets.top)
-                    .environment(\.bottomSafeAreaInset, proxy.safeAreaInsets.bottom + Layout.libraryFooterReserve)
+                    .environment(
+                        \.bottomSafeAreaInset,
+                        libraryBottomInset(bottomSafeArea: proxy.safeAreaInsets.bottom)
+                    )
                     .offset(y: librarySurfaceOffset(screenHeight: screenHeight))
                     .opacity(isShowingTrackSurface ? Layout.inactiveOpacity : 1.0)
             }
@@ -71,7 +78,7 @@ struct MainPrototypeView: View {
                     }
                     .onEnded { value in
                         guard isVerticalSwipe(value.translation) else { return }
-                        handleVerticalSwipe(translation: value.translation.height)
+                        handleVerticalSwipe(value)
                     }
             )
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: selectedSurface)
@@ -83,7 +90,28 @@ struct MainPrototypeView: View {
     }
 
     private var homeState: HomeScreenState {
-        MockData.home
+        let encounters = bleCoordinator.encounters
+        let featuredTrack = encounters.first?.track ?? MockData.featuredTrack
+        let weeklyTracks = uniqueTracks(from: encounters.map(\.track) + MockData.tracks).prefix(8)
+        let todayCount = encounters.filter { $0.happenedToday }.count
+
+        return HomeScreenState(
+            userName: "Miyu",
+            featuredTrack: featuredTrack,
+            weeklyTracks: Array(weeklyTracks),
+            recentEncounters: encounters,
+            todayEncounterCount: todayCount,
+            weekEncounterCount: encounters.count,
+            isOffline: bleCoordinator.encounterErrorMessage != nil && encounters.isEmpty
+        )
+    }
+
+    private func uniqueTracks(from tracks: [Track]) -> [Track] {
+        var seen: Set<String> = []
+
+        return tracks.filter { track in
+            seen.insert(track.id).inserted
+        }
     }
 
     private var isShowingTrackSurface: Bool {
@@ -112,7 +140,7 @@ struct MainPrototypeView: View {
             .tag(LibraryTab.insights)
 
             navigationContainer {
-                EncounterListView()
+                EncounterListView(isDetailPresented: $isEncounterDetailPresented)
             }
             .tag(LibraryTab.history)
 
@@ -132,11 +160,11 @@ struct MainPrototypeView: View {
             DragGesture(minimumDistance: 20, coordinateSpace: .local)
                 .onEnded { value in
                     guard isVerticalSwipe(value.translation) else { return }
-                    handleVerticalSwipe(translation: value.translation.height)
+                    handleVerticalSwipe(value)
                 }
         )
         .overlay(alignment: .bottom) {
-            if selectedSurface == .library {
+            if shouldShowLibraryFooter {
                 LibraryFooter(
                     selectedTab: $selectedLibraryTab,
                     tabs: LibraryTab.allCases
@@ -145,6 +173,14 @@ struct MainPrototypeView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+    }
+
+    private var shouldShowLibraryFooter: Bool {
+        selectedSurface == .library && !(selectedLibraryTab == .history && isEncounterDetailPresented)
+    }
+
+    private func libraryBottomInset(bottomSafeArea: CGFloat) -> CGFloat {
+        shouldShowLibraryFooter ? bottomSafeArea + Layout.libraryFooterReserve : bottomSafeArea
     }
 
     private var dragOffset: CGFloat {
@@ -178,11 +214,18 @@ struct MainPrototypeView: View {
         abs(translation.height) > abs(translation.width)
     }
 
-    private func handleVerticalSwipe(translation: CGFloat) {
-        if translation < -Layout.swipeThreshold, selectedSurface == .track {
+    private func handleVerticalSwipe(_ value: DragGesture.Value) {
+        let translation = value.translation.height
+        let predicted = value.predictedEndTranslation.height
+
+        if translation < -Layout.trackToLibrarySwipeThreshold, selectedSurface == .track {
             HapticsService.impact(.medium)
             selectedSurface = .library
-        } else if translation > Layout.swipeThreshold, selectedSurface == .library {
+        } else if
+            selectedSurface == .library &&
+            translation > Layout.libraryToTrackSwipeThreshold &&
+            predicted > Layout.libraryToTrackPredictedThreshold
+        {
             HapticsService.impact(.medium)
             selectedSurface = .track
         }

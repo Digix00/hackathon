@@ -13,16 +13,25 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	settingsHandler := newSettingsHandler(deps.SettingsUsecase)
 	pushTokenHandler := newPushTokenHandler(deps.PushTokenUsecase)
 	bleTokenHandler := newBleTokenHandler(deps.BleTokenUsecase)
+	playlistHandler := newPlaylistHandler(deps.PlaylistUsecase)
 	encounterHandler := newEncounterHandler(deps.EncounterUsecase)
 	reportHandler := newReportHandler(deps.ReportUsecase)
+	muteHandler := newMuteHandler(deps.MuteUsecase)
+	blockHandler := newBlockHandler(deps.BlockUsecase)
 	notificationHandler := newNotificationHandler(deps.NotificationUsecase)
 	musicHandler := newMusicHandler(deps.MusicUsecase)
+	commentHandler := newCommentHandler(deps.CommentUsecase)
+	userTrackHandler := newUserTrackHandler(deps.UserTrackUsecase)
 
 	api := e.Group("/api/v1")
 	api.GET("/music-connections/:provider/callback", musicHandler.callback)
 
 	protected := api.Group("")
-	protected.Use(middleware.FirebaseAuth(deps.AuthTokenVerifier))
+	protected.Use(middleware.FirebaseAuth(deps.AuthTokenVerifier, middleware.DevAuthConfig{
+		Enabled: deps.GoEnv == "development" && deps.DevAuthToken != "",
+		Token:   deps.DevAuthToken,
+		UID:     deps.DevAuthUID,
+	}))
 
 	protected.POST("/users", userHandler.createUser)
 	protected.GET("/users/me", userHandler.getMe)
@@ -41,11 +50,29 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	protected.GET("/ble-tokens/current", bleTokenHandler.getCurrentBleToken)
 	protected.GET("/ble-tokens/:token/user", bleTokenHandler.getUserByBleToken)
 
+	protected.POST("/playlists", playlistHandler.createPlaylist)
+	protected.GET("/playlists/me", playlistHandler.getMyPlaylists)
+	protected.GET("/playlists/:id", playlistHandler.getPlaylist)
+	protected.PATCH("/playlists/:id", playlistHandler.updatePlaylist)
+	protected.DELETE("/playlists/:id", playlistHandler.deletePlaylist)
+
+	protected.POST("/playlists/:id/tracks", playlistHandler.addPlaylistTrack)
+	protected.DELETE("/playlists/:id/tracks/:trackId", playlistHandler.removePlaylistTrack)
+
+	protected.POST("/playlists/:id/favorites", playlistHandler.addPlaylistFavorite)
+	protected.DELETE("/playlists/:id/favorites", playlistHandler.removePlaylistFavorite)
+
 	protected.POST("/encounters", encounterHandler.createEncounter)
 	protected.GET("/encounters", encounterHandler.listEncounters)
 	protected.GET("/encounters/:id", encounterHandler.getEncounterByID)
 
 	protected.POST("/reports", reportHandler.createReport)
+
+	protected.POST("/users/me/mutes", muteHandler.createMute)
+	protected.DELETE("/users/me/mutes/:target_user_id", muteHandler.deleteMute)
+
+	protected.POST("/users/me/blocks", blockHandler.createBlock)
+	protected.DELETE("/users/me/blocks/:blocked_user_id", blockHandler.deleteBlock)
 
 	protected.GET("/users/me/notifications", notificationHandler.listNotifications)
 	protected.PATCH("/users/me/notifications/:id/read", notificationHandler.markNotificationAsRead)
@@ -56,4 +83,16 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	protected.DELETE("/users/me/music-connections/:provider", musicHandler.deleteConnection)
 	protected.GET("/tracks/search", musicHandler.searchTracks)
 	protected.GET("/tracks/:id", musicHandler.getTrack)
+
+	protected.POST("/encounters/:id/comments", commentHandler.createComment)
+	protected.GET("/encounters/:id/comments", commentHandler.listComments)
+	protected.DELETE("/comments/:id", commentHandler.deleteComment)
+
+	protected.POST("/users/me/tracks", userTrackHandler.addUserTrack)
+	protected.GET("/users/me/tracks", userTrackHandler.listUserTracks)
+	protected.DELETE("/users/me/tracks/:id", userTrackHandler.deleteUserTrack)
+
+	protected.GET("/users/me/shared-track", userTrackHandler.getSharedTrack)
+	protected.PUT("/users/me/shared-track", userTrackHandler.upsertSharedTrack)
+	protected.DELETE("/users/me/shared-track", userTrackHandler.deleteSharedTrack)
 }

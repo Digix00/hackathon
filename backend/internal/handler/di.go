@@ -12,14 +12,22 @@ import (
 type Dependencies struct {
 	AuthTokenVerifier   middleware.TokenVerifier
 	AuthUserManager     FirebaseUserManager
+	GoEnv               string
+	DevAuthToken        string
+	DevAuthUID          string
 	UserUsecase         usecase.UserUsecase
 	SettingsUsecase     usecase.SettingsUsecase
 	PushTokenUsecase    usecase.PushTokenUsecase
 	BleTokenUsecase     usecase.BleTokenUsecase
+	PlaylistUsecase     usecase.PlaylistUsecase
 	ReportUsecase       usecase.ReportUsecase
+	MuteUsecase         usecase.MuteUsecase
+	BlockUsecase        usecase.BlockUsecase
 	NotificationUsecase usecase.NotificationUsecase
 	MusicUsecase        usecase.MusicUsecase
 	EncounterUsecase    usecase.EncounterUsecase
+	CommentUsecase      usecase.CommentUsecase
+	UserTrackUsecase    usecase.UserTrackUsecase
 }
 
 // FirebaseUserManager はFirebase Auth上のユーザー削除操作を抽象化する。

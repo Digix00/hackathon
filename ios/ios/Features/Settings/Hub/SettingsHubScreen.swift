@@ -2,15 +2,31 @@ import SwiftUI
 
 struct SettingsHubView: View {
     let restartOnboarding: () -> Void
-
+    @StateObject private var settingsViewModel = UserSettingsViewModel()
+    @StateObject private var profileViewModel = CurrentUserProfileViewModel()
     @State private var isBeating = false
 
     private var appSettings: [SettingsDestination] {
         [
             SettingsDestination(id: "share-track", icon: "music.note", title: "シェアする曲", destination: { AnyView(SearchView()) }),
-            SettingsDestination(id: "encounter-settings", icon: "location.fill", title: "すれ違い設定", destination: { AnyView(EncounterSettingsView()) }),
-            SettingsDestination(id: "notification-settings", icon: "bell.fill", title: "通知設定", destination: { AnyView(NotificationSettingsView()) }),
-            SettingsDestination(id: "appearance-settings", icon: "paintbrush.fill", title: "外観", destination: { AnyView(AppearanceSettingsView()) })
+            SettingsDestination(
+                id: "encounter-settings",
+                icon: "location.fill",
+                title: "すれ違い設定",
+                destination: { AnyView(EncounterSettingsView().environmentObject(settingsViewModel)) }
+            ),
+            SettingsDestination(
+                id: "notification-settings",
+                icon: "bell.fill",
+                title: "通知設定",
+                destination: { AnyView(NotificationSettingsView().environmentObject(settingsViewModel)) }
+            ),
+            SettingsDestination(
+                id: "appearance-settings",
+                icon: "paintbrush.fill",
+                title: "外観",
+                destination: { AnyView(AppearanceSettingsView().environmentObject(settingsViewModel)) }
+            )
         ]
     }
 
@@ -32,7 +48,12 @@ struct SettingsHubView: View {
             SettingsDestination(id: "empty-states", icon: "rectangle.stack.fill", title: "空状態・エラー状態", destination: { AnyView(EmptyStatesGalleryView()) }),
             SettingsDestination(id: "realtime-demo", icon: "dot.radiowaves.left.and.right", title: "リアルタイム演出", destination: { AnyView(RealtimeDemoView()) }),
             SettingsDestination(id: "restart-onboarding", icon: "sparkles", title: "オンボーディングをやり直す", destination: { AnyView(RestartOnboardingView(restartOnboarding: restartOnboarding)) }),
-            SettingsDestination(id: "delete-account", icon: "trash.fill", title: "アカウント削除", destination: { AnyView(DeleteAccountView()) })
+            SettingsDestination(
+                id: "delete-account",
+                icon: "trash.fill",
+                title: "アカウント削除",
+                destination: { AnyView(DeleteAccountView(onAccountDeleted: restartOnboarding)) }
+            )
         ]
     }
 
@@ -42,8 +63,6 @@ struct SettingsHubView: View {
             subtitle: "PREFERENCES & SYSTEM"
         ) {
             VStack(alignment: .leading, spacing: 44) {
-                
-                // --- BEACON STATUS HEADER ---
                 HStack {
                     HStack(spacing: 8) {
                         Circle()
@@ -51,7 +70,7 @@ struct SettingsHubView: View {
                             .frame(width: 8, height: 8)
                             .opacity(isBeating ? 1.0 : 0.3)
                             .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: isBeating)
-                        
+
                         Text("BEACON ACTIVE")
                             .prototypeFont(size: 10, weight: .black, role: .data)
                             .kerning(1.5)
@@ -61,9 +80,9 @@ struct SettingsHubView: View {
                     .padding(.vertical, 6)
                     .background(PrototypeTheme.success.opacity(0.1))
                     .clipShape(Capsule())
-                    
+
                     Spacer()
-                    
+
                     Text("35.6586° N, 139.7454° E")
                         .prototypeFont(size: 10, weight: .medium, role: .data)
                         .foregroundStyle(PrototypeTheme.textTertiary)
@@ -71,43 +90,37 @@ struct SettingsHubView: View {
                 .padding(.top, -10)
                 .onAppear { isBeating = true }
 
-                // --- PROFILE SECTION ---
                 GlassmorphicCard {
                     VStack(spacing: 24) {
                         HStack(spacing: 20) {
-                            // Elevated Avatar with Pulse Ring
                             ZStack {
-                                // Animated pulse ring
                                 Circle()
                                     .stroke(PrototypeTheme.accent.opacity(0.2), lineWidth: 2)
                                     .frame(width: 84, height: 84)
                                     .scaleEffect(isBeating ? 1.2 : 1.0)
                                     .opacity(isBeating ? 0.0 : 0.5)
                                     .animation(.easeOut(duration: 2.0).repeatForever(autoreverses: false), value: isBeating)
-                                
-                                Circle()
-                                    .fill(PrototypeTheme.surface)
-                                    .frame(width: 84, height: 84)
-                                    .shadow(color: Color.black.opacity(0.1), radius: 15, x: 0, y: 8)
-                                
-                                Image(systemName: "person.fill")
-                                    .font(.system(size: 38))
-                                    .foregroundStyle(PrototypeTheme.textTertiary)
-                                
-                                // Status Indicator
+
+                                UserAvatarView(
+                                    avatarURL: profileViewModel.user?.avatarURL,
+                                    size: 84,
+                                    iconSize: 38
+                                )
+                                .shadow(color: Color.black.opacity(0.1), radius: 15, x: 0, y: 8)
+
                                 Circle()
                                     .fill(PrototypeTheme.success)
                                     .frame(width: 14, height: 14)
                                     .overlay(Circle().stroke(Color.white, lineWidth: 2))
                                     .offset(x: 28, y: 28)
                             }
-                            
+
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                    Text("Miyu")
+                                    Text(profileViewModel.user?.displayName ?? "読み込み中...")
                                         .font(.system(size: 28, weight: .bold))
                                         .tracking(-1.0)
-                                    
+
                                     Text("USR-82A1")
                                         .prototypeFont(size: 9, weight: .black, role: .data)
                                         .foregroundStyle(PrototypeTheme.accent)
@@ -116,17 +129,25 @@ struct SettingsHubView: View {
                                         .background(PrototypeTheme.accent.opacity(0.1))
                                         .clipShape(RoundedRectangle(cornerRadius: 4))
                                 }
-                                
-                                Text("音楽で街の空気を集めたい")
+
+                                let bio = profileViewModel.user?.bio?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                                Text(bio.isEmpty ? "ひとこと未設定" : bio)
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundStyle(PrototypeTheme.textSecondary)
-                                
+
                                 Text("LEVEL 12 · 428 ENCOUNTERS")
                                     .prototypeFont(size: 9, weight: .black, role: .data)
                                     .foregroundStyle(PrototypeTheme.textTertiary)
                                     .padding(.top, 4)
+
+                                if let errorMessage = profileViewModel.errorMessage {
+                                    Text(errorMessage)
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundStyle(PrototypeTheme.error)
+                                        .padding(.top, 4)
+                                }
                             }
-                            
+
                             Spacer()
                         }
 
@@ -154,7 +175,6 @@ struct SettingsHubView: View {
                     }
                 }
 
-                // --- SETTINGS GROUPS ---
                 VStack(spacing: 32) {
                     settingsSection(title: "CORE CONFIGURATION", code: "SYS-01", items: appSettings)
                     settingsSection(title: "PRIVACY PROTOCOLS", code: "PRV-02", items: privacySettings)
@@ -162,23 +182,22 @@ struct SettingsHubView: View {
                     settingsSection(title: "EXPERIMENTAL MODULES", code: "EXP-04", items: prototypeEntries)
                 }
 
-                // --- SYSTEM DIAGNOSTIC FOOTER ---
                 VStack(spacing: 16) {
                     HStack(spacing: 12) {
                         Rectangle()
                             .fill(PrototypeTheme.border)
                             .frame(height: 1)
-                        
+
                         Text("DIAGNOSTIC SUMMARY")
                             .prototypeFont(size: 10, weight: .black, role: .data)
                             .kerning(2.0)
                             .foregroundStyle(PrototypeTheme.textTertiary)
-                        
+
                         Rectangle()
                             .fill(PrototypeTheme.border)
                             .frame(height: 1)
                     }
-                    
+
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text("STATUS:")
@@ -192,7 +211,7 @@ struct SettingsHubView: View {
                                 .prototypeFont(size: 9, weight: .medium, role: .data)
                                 .foregroundStyle(PrototypeTheme.textTertiary)
                         }
-                        
+
                         HStack {
                             Text("KERNEL:")
                                 .prototypeFont(size: 9, weight: .black, role: .data)
@@ -201,7 +220,7 @@ struct SettingsHubView: View {
                                 .prototypeFont(size: 9, weight: .medium, role: .data)
                                 .foregroundStyle(PrototypeTheme.textTertiary)
                         }
-                        
+
                         HStack {
                             Text("LOCALITY:")
                                 .prototypeFont(size: 9, weight: .black, role: .data)
@@ -214,7 +233,7 @@ struct SettingsHubView: View {
                     .padding(16)
                     .background(PrototypeTheme.surfaceMuted.opacity(0.4))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    
+
                     Text("© 2026 URBAN SERENDIPITY PROJECT · NO RIGHTS RESERVED")
                         .prototypeFont(size: 8, weight: .black, role: .data)
                         .kerning(1.0)
@@ -225,6 +244,10 @@ struct SettingsHubView: View {
                 .padding(.bottom, 60)
             }
         }
+        .onAppear {
+            settingsViewModel.loadIfNeeded()
+            profileViewModel.refresh()
+        }
     }
 
     private func settingsSection(title: String, code: String, items: [SettingsDestination]) -> some View {
@@ -234,9 +257,9 @@ struct SettingsHubView: View {
                     .prototypeFont(size: 11, weight: .black, role: .data)
                     .kerning(2.0)
                     .foregroundStyle(PrototypeTheme.textSecondary)
-                
+
                 Spacer()
-                
+
                 Text(code)
                     .prototypeFont(size: 9, weight: .black, role: .data)
                     .foregroundStyle(PrototypeTheme.textTertiary.opacity(0.6))
@@ -252,7 +275,7 @@ struct SettingsHubView: View {
                             SettingRow(icon: item.icon, title: item.title)
                                 .padding(.vertical, 18)
                                 .padding(.horizontal, 20)
-                            
+
                             if index < items.count - 1 {
                                 Divider()
                                     .background(PrototypeTheme.border.opacity(0.5))
@@ -270,6 +293,38 @@ struct SettingsHubView: View {
                     .stroke(PrototypeTheme.border.opacity(0.5), lineWidth: 1)
             )
             .shadow(color: Color.black.opacity(0.03), radius: 15, x: 0, y: 8)
+        }
+    }
+}
+
+private struct UserAvatarView: View {
+    let avatarURL: String?
+    let size: CGFloat
+    let iconSize: CGFloat
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(PrototypeTheme.surfaceElevated)
+                .frame(width: size, height: size)
+
+            if let avatarURL, let url = URL(string: avatarURL) {
+                AsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                } placeholder: {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: iconSize))
+                        .foregroundStyle(PrototypeTheme.textTertiary)
+                }
+                .frame(width: size, height: size)
+                .clipShape(Circle())
+            } else {
+                Image(systemName: "person.fill")
+                    .font(.system(size: iconSize))
+                    .foregroundStyle(PrototypeTheme.textTertiary)
+            }
         }
     }
 }

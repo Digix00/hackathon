@@ -35,6 +35,7 @@ struct OnboardingFlowView: View {
     }
 
     @State private var step: Step = .welcome
+    @StateObject private var userViewModel = OnboardingUserViewModel()
     let onFinish: () -> Void
 
     var body: some View {
@@ -58,6 +59,12 @@ struct OnboardingFlowView: View {
                     }
                 }
 
+                if let errorMessage = userViewModel.errorMessage {
+                    Text(errorMessage)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(PrototypeTheme.error)
+                }
+
                 Spacer()
 
                 HStack(spacing: 16) {
@@ -74,15 +81,21 @@ struct OnboardingFlowView: View {
                         }
                     }
 
-                    PrimaryButton(title: primaryButtonTitle) {
+                    PrimaryButton(
+                        title: primaryButtonTitle,
+                        isDisabled: isPrimaryButtonDisabled
+                    ) {
                         if isLastStep {
-                            onFinish()
+                            userViewModel.submitUser(onSuccess: onFinish)
                         } else {
                             moveToNextStep()
                         }
                     }
                 }
             }
+        }
+        .onAppear {
+            userViewModel.prefillIfPossible()
         }
     }
 
@@ -103,7 +116,20 @@ struct OnboardingFlowView: View {
     }
 
     private var primaryButtonTitle: String {
-        isLastStep ? "はじめる" : "次へ"
+        if isLastStep {
+            return userViewModel.isSubmitting ? "処理中..." : "はじめる"
+        }
+        return "次へ"
+    }
+
+    private var isPrimaryButtonDisabled: Bool {
+        if isLastStep {
+            return userViewModel.isSubmitting
+        }
+        if step == .profile {
+            return !userViewModel.canAdvanceProfile
+        }
+        return false
     }
 
     private var progress: some View {
@@ -186,36 +212,56 @@ struct OnboardingFlowView: View {
                             Text("ニックネーム")
                                 .font(PrototypeTheme.Typography.Onboarding.cardLabel)
                                 .foregroundStyle(PrototypeTheme.textSecondary)
-                            Text("miyu")
+                            TextField("表示名", text: $userViewModel.displayName)
                                 .font(.system(size: 20, weight: .bold))
                                 .foregroundStyle(PrototypeTheme.textPrimary)
+                                .textInputAutocapitalization(.words)
+                                .autocorrectionDisabled()
+                                .padding(.vertical, 6)
+                                .padding(.horizontal, 10)
+                                .background(PrototypeTheme.surfaceMuted)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
                     }
 
                     Divider()
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("シェアする曲")
-                            .font(PrototypeTheme.Typography.Onboarding.cardLabel)
-                            .foregroundStyle(PrototypeTheme.textSecondary)
-
-                        HStack(spacing: 14) {
-                            MockArtworkView(color: .indigo, symbol: "music.note", size: 52)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("夜に駆ける")
-                                    .font(.system(size: 16, weight: .bold))
-                                Text("YOASOBI")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(PrototypeTheme.textSecondary)
-                            }
-                            Spacer()
-                            Image(systemName: "pencil")
-                                .font(.system(size: 14))
-                                .foregroundStyle(PrototypeTheme.textTertiary)
+                    VStack(alignment: .leading, spacing: 16) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("ひとこと")
+                                .font(PrototypeTheme.Typography.Onboarding.cardLabel)
+                                .foregroundStyle(PrototypeTheme.textSecondary)
+                            TextEditor(text: $userViewModel.bio)
+                                .frame(minHeight: 72)
+                                .padding(12)
+                                .background(PrototypeTheme.surfaceElevated.opacity(0.5))
+                                .clipShape(RoundedRectangle(cornerRadius: 14))
+                                .scrollContentBackground(.hidden)
                         }
-                        .padding(12)
-                        .background(PrototypeTheme.surfaceElevated.opacity(0.5))
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("シェアする曲")
+                                .font(PrototypeTheme.Typography.Onboarding.cardLabel)
+                                .foregroundStyle(PrototypeTheme.textSecondary)
+
+                            HStack(spacing: 14) {
+                                MockArtworkView(color: .indigo, symbol: "music.note", size: 52)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("夜に駆ける")
+                                        .font(.system(size: 16, weight: .bold))
+                                    Text("YOASOBI")
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(PrototypeTheme.textSecondary)
+                                }
+                                Spacer()
+                                Image(systemName: "pencil")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(PrototypeTheme.textTertiary)
+                            }
+                            .padding(12)
+                            .background(PrototypeTheme.surfaceElevated.opacity(0.5))
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                        }
                     }
                 }
             }

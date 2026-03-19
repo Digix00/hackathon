@@ -69,6 +69,11 @@ type stubBlockRepo struct {
 	blocked bool
 }
 
+func (r *stubBlockRepo) Create(_ context.Context, _ entity.Block) error { return nil }
+func (r *stubBlockRepo) Delete(_ context.Context, _, _ string) error    { return nil }
+func (r *stubBlockRepo) ExistsByBlockerAndBlocked(_ context.Context, _, _ string) (bool, error) {
+	return r.blocked, nil
+}
 func (r *stubBlockRepo) ExistsBetween(_ context.Context, _, _ string) (bool, error) {
 	return r.blocked, nil
 }
@@ -131,6 +136,10 @@ func (r *stubEncounterRepo) CreateWithRateLimit(_ context.Context, encounter ent
 	return encounter, nil
 }
 
+func (r *stubEncounterRepo) ExistsByIDAndParticipant(_ context.Context, _, _ string) (bool, error) {
+	return false, nil
+}
+
 type stubTrackRepo struct {
 	track entity.TrackInfo
 	found bool
@@ -138,6 +147,18 @@ type stubTrackRepo struct {
 
 func (r *stubTrackRepo) FindCurrentByUserID(_ context.Context, _ string) (entity.TrackInfo, bool, error) {
 	return r.track, r.found, nil
+}
+
+func (r *stubTrackRepo) FindCurrentWithTimestampByUserID(_ context.Context, _ string) (entity.UserCurrentTrack, bool, error) {
+	return entity.UserCurrentTrack{}, false, nil
+}
+
+func (r *stubTrackRepo) Upsert(_ context.Context, _, _ string) (entity.UserCurrentTrack, bool, error) {
+	return entity.UserCurrentTrack{}, false, nil
+}
+
+func (r *stubTrackRepo) DeleteByUserID(_ context.Context, _ string) error {
+	return nil
 }
 
 // ─── userCalcAgeRange ────────────────────────────────────────────────────────

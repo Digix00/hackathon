@@ -1,6 +1,15 @@
 import SwiftUI
 
 struct DeleteAccountView: View {
+    let onAccountDeleted: () -> Void
+    @StateObject private var viewModel: DeleteAccountViewModel
+    @State private var showsConfirmation = false
+
+    init(onAccountDeleted: @escaping () -> Void = {}) {
+        self.onAccountDeleted = onAccountDeleted
+        _viewModel = StateObject(wrappedValue: DeleteAccountViewModel(onAccountDeleted: onAccountDeleted))
+    }
+
     var body: some View {
         AppScaffold(
             title: "アカウント削除",
@@ -19,7 +28,19 @@ struct DeleteAccountView: View {
                     }
                 }
 
-                Button(action: {}) {
+                if let errorMessage = viewModel.errorMessage {
+                    Text(errorMessage)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(PrototypeTheme.error)
+                }
+
+                if viewModel.didDelete {
+                    Text("アカウントを削除しました")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(PrototypeTheme.success)
+                }
+
+                Button(action: { showsConfirmation = true }) {
                     Text("アカウントを削除")
                         .font(.system(size: 16, weight: .black))
                         .foregroundStyle(Color.white)
@@ -28,7 +49,21 @@ struct DeleteAccountView: View {
                         .background(PrototypeTheme.error)
                         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
+                .disabled(viewModel.isDeleting || viewModel.didDelete)
+                .opacity(viewModel.isDeleting || viewModel.didDelete ? 0.6 : 1)
             }
+        }
+        .confirmationDialog(
+            "アカウントを削除しますか？",
+            isPresented: $showsConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("削除する", role: .destructive) {
+                viewModel.deleteAccount()
+            }
+            Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text("この操作は取り消せません。")
         }
     }
 }

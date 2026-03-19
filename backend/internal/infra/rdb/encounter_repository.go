@@ -284,6 +284,18 @@ func (r *encounterRepository) ExistsByUsersAndTypeOnDate(ctx context.Context, us
 	return count > 0, nil
 }
 
+func (r *encounterRepository) ExistsByIDAndParticipant(ctx context.Context, encounterID, userID string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).
+		Model(&model.Encounter{}).
+		Where("id = ? AND (user_id1 = ? OR user_id2 = ?)", encounterID, userID, userID).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 func (r *encounterRepository) IncrementDailyCountWithLimit(ctx context.Context, userID string, date time.Time, limit int) (int, error) {
 	var count int
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {

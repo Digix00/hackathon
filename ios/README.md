@@ -70,7 +70,33 @@ ios/
 API_BASE_URL = http:/$()/127.0.0.1:8000
 ```
 
-※ `$()/` は Xcode の設定ファイルで `//` をエスケープするための記法です。
+※ `$()/` は Xcode の設定ファイルで `//` をエスケープするための記法です。Run Scheme の環境変数では不要です。
+
+### Firebase Auth Emulator のトークンを使う
+
+ローカルの `encounters` 取得には Firebase ID トークンが必要です。開発環境では Firebase Auth Emulator を使ってトークンを発行し、Xcode の環境変数で渡します。
+
+1. Firebase Auth Emulator でデモユーザーを作成（UID は `demo-user-1`）
+
+```bash
+curl -s "http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signUp?key=demo" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "demo1@example.com",
+    "password": "password",
+    "returnSecureToken": true,
+    "localId": "demo-user-1"
+  }'
+```
+
+レスポンスの `idToken` を控えておきます。
+
+2. Xcode の Run Scheme で環境変数を設定
+
+- `API_BASE_URL` = `http://127.0.0.1:8000`
+- `FIREBASE_ID_TOKEN` = `<emulatorで発行したtoken>`
+
+`FIREBASE_ID_TOKEN` は `BackendAPIClient` が優先して使用します。
 
 ## ビルド・実行
 

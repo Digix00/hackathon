@@ -31,6 +31,9 @@ func (r *bleTokenRepository) Create(ctx context.Context, e entity.BleToken) erro
 	}
 
 	if err := r.db.WithContext(ctx).Create(&m).Error; err != nil {
+		if isUniqueConstraintViolation(err) {
+			return domainerrs.Conflict("Token already exists")
+		}
 		return err
 	}
 	return nil
@@ -51,7 +54,13 @@ func (r *bleTokenRepository) RotateToken(ctx context.Context, newToken entity.Bl
 			ValidFrom: newToken.ValidFrom,
 			ValidTo:   newToken.ValidTo,
 		}
-		return tx.Create(&m).Error
+		if err := tx.Create(&m).Error; err != nil {
+			if isUniqueConstraintViolation(err) {
+				return domainerrs.Conflict("Token already exists")
+			}
+			return err
+		}
+		return nil
 	})
 }
 
