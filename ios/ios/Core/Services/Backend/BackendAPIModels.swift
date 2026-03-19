@@ -193,6 +193,47 @@ nonisolated struct BackendNotificationListResponse: Decodable {
     }
 }
 
+// MARK: - Music Connections
+
+enum MusicConnectionProvider: String, CaseIterable, Codable, Hashable {
+    case spotify = "spotify"
+    case appleMusic = "apple_music"
+}
+
+nonisolated struct BackendMusicConnection: Decodable, Equatable {
+    let provider: String?
+    let providerUserId: String?
+    let providerUsername: String?
+    let expiresAt: Date?
+    let updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case provider
+        case providerUserId = "provider_user_id"
+        case providerUsername = "provider_username"
+        case expiresAt = "expires_at"
+        case updatedAt = "updated_at"
+    }
+}
+
+nonisolated struct BackendMusicConnectionsResponse: Decodable {
+    let musicConnections: [BackendMusicConnection]?
+
+    enum CodingKeys: String, CodingKey {
+        case musicConnections = "music_connections"
+    }
+}
+
+nonisolated struct BackendMusicAuthorizeResponse: Decodable {
+    let authorizeURL: String?
+    let state: String?
+
+    enum CodingKeys: String, CodingKey {
+        case authorizeURL = "authorize_url"
+        case state
+    }
+}
+
 // MARK: - Reports
 
 nonisolated struct BackendReport: Decodable, Equatable {

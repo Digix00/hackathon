@@ -98,6 +98,34 @@ actor BackendAPIClient {
         return try decoder.decode(BackendUserSettingsResponse.self, from: result.data).settings
     }
 
+    // MARK: - Music Connections
+
+    func listMusicConnections() async throws -> [BackendMusicConnection] {
+        let result = try await send(path: "users/me/music-connections", method: "GET")
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        let response = try decoder.decode(BackendMusicConnectionsResponse.self, from: result.data)
+        return response.musicConnections ?? []
+    }
+
+    func getMusicAuthorizeURL(provider: MusicConnectionProvider) async throws -> BackendMusicAuthorizeResponse {
+        let escapedProvider = escapePathComponent(provider.rawValue)
+        let result = try await send(path: "music-connections/\(escapedProvider)/authorize", method: "GET")
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendMusicAuthorizeResponse.self, from: result.data)
+    }
+
+    func deleteMusicConnection(provider: MusicConnectionProvider) async throws {
+        let escapedProvider = escapePathComponent(provider.rawValue)
+        let result = try await send(path: "users/me/music-connections/\(escapedProvider)", method: "DELETE")
+        guard result.response.statusCode == 204 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+    }
+
     // MARK: - Push Tokens
 
     func createPushToken(_ request: CreatePushTokenRequest) async throws -> BackendDevice {
