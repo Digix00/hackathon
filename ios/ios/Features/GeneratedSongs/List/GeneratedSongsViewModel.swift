@@ -106,8 +106,17 @@ final class GeneratedSongsViewModel: ObservableObject {
 
     private static func paletteColor(for key: String) -> Color {
         let palette: [Color] = [.indigo, .orange, .teal, .pink, .red, .green, .purple, .blue, .mint]
-        let index = Int(UInt(bitPattern: key.hashValue) % UInt(palette.count))
+        let index = Int(stableHash(key) % UInt64(palette.count))
         return palette[index]
+    }
+
+    private static func stableHash(_ s: String) -> UInt64 {
+        var hash: UInt64 = 14695981039346656037
+        for byte in s.utf8 {
+            hash ^= UInt64(byte)
+            hash &*= 1099511628211
+        }
+        return hash
     }
 
     private static let dateFormatter: DateFormatter = {
