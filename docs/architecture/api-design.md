@@ -8,6 +8,7 @@
 - 一覧取得 API の `cursor` は不透明なトークンであり、クライアントは解釈せずそのまま再送する。
 - 一覧取得 API の `limit` は特に明記がない限り省略時 20、最大 50 とする。
 - 一覧取得 API の並び順は特に明記がない限り `created_at` 降順（新しい順）とする。`occurred_at` を持つリソースは `occurred_at` 降順を優先する。
+- ただしプレイリストのように `updated_at` があるリソースは、クライアント表示では `updated_at` を優先し、`updated_at` がない場合は `created_at` を使う（UI 側で `updated_at ?? created_at` の並び順を許容）。
 - 特に記載がない限り、レスポンスの `id` は UUID を想定する。
 - ただしトラック系リソースの `id` / `track_id` / パスパラメータ `{id}` は例外として `<provider>:track:<external_id>` 形式の外部識別子を使用する（例: `spotify:track:123`）。DB スキーマでは `tracks.provider` と `tracks.external_id` の組み合わせに対応する。
 - トラック系レスポンスの `preview_url` は外部音楽サービス由来の補助情報であり、取得時点で利用不能または `null` の場合がある。キャッシュ有無に依存せず、常に未設定を許容する。
