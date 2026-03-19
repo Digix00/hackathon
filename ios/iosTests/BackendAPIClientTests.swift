@@ -124,6 +124,102 @@ final class BackendAPIClientTests: XCTestCase {
         XCTAssertTrue(request.url?.path.hasSuffix("/api/v1/encounters/enc-2") == true)
     }
 
+    func testGetMySettingsParsesResponse() async throws {
+        let session = makeSession()
+        let client = BackendAPIClient(session: session)
+
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.lastRequest = request
+            let responseBody = """
+            {
+              "settings": {
+                "ble_enabled": true,
+                "location_enabled": false,
+                "detection_distance": 80,
+                "schedule_enabled": false,
+                "schedule_start_time": null,
+                "schedule_end_time": null,
+                "profile_visible": true,
+                "track_visible": true,
+                "notification_enabled": true,
+                "encounter_notification_enabled": true,
+                "batch_notification_enabled": false,
+                "notification_frequency": "immediate",
+                "comment_notification_enabled": true,
+                "like_notification_enabled": true,
+                "announcement_notification_enabled": true,
+                "theme_mode": "dark",
+                "updated_at": "2026-03-18T00:00:00Z"
+              }
+            }
+            """
+            return (200, Data(responseBody.utf8))
+        }
+
+        let settings = try await client.getMySettings()
+        XCTAssertEqual(settings.detectionDistance, 80)
+        XCTAssertEqual(settings.themeMode, "dark")
+        XCTAssertFalse(settings.batchNotificationEnabled)
+
+        let request = try XCTUnwrap(MockURLProtocol.lastRequest)
+        XCTAssertEqual(request.httpMethod, "GET")
+        XCTAssertTrue(request.url?.path.hasSuffix("/api/v1/users/me/settings") == true)
+    }
+
+    func testPatchMySettingsSendsExpectedPayload() async throws {
+        let session = makeSession()
+        let client = BackendAPIClient(session: session)
+
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.lastRequest = request
+            let responseBody = """
+            {
+              "settings": {
+                "ble_enabled": true,
+                "location_enabled": false,
+                "detection_distance": 75,
+                "schedule_enabled": false,
+                "schedule_start_time": null,
+                "schedule_end_time": null,
+                "profile_visible": false,
+                "track_visible": true,
+                "notification_enabled": true,
+                "encounter_notification_enabled": true,
+                "batch_notification_enabled": true,
+                "notification_frequency": "daily",
+                "comment_notification_enabled": true,
+                "like_notification_enabled": true,
+                "announcement_notification_enabled": true,
+                "theme_mode": "light",
+                "updated_at": "2026-03-18T00:00:00Z"
+              }
+            }
+            """
+            return (200, Data(responseBody.utf8))
+        }
+
+        let requestPayload = UpdateUserSettingsRequest(
+            detectionDistance: 75,
+            profileVisible: false,
+            themeMode: "light"
+        )
+        let settings = try await client.patchMySettings(requestPayload)
+        XCTAssertEqual(settings.detectionDistance, 75)
+        XCTAssertEqual(settings.themeMode, "light")
+        XCTAssertFalse(settings.profileVisible)
+
+        let request = try XCTUnwrap(MockURLProtocol.lastRequest)
+        XCTAssertEqual(request.httpMethod, "PATCH")
+        XCTAssertTrue(request.url?.path.hasSuffix("/api/v1/users/me/settings") == true)
+
+        let body = try XCTUnwrap(request.httpBody)
+        let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        XCTAssertEqual(payload["detection_distance"] as? Int, 75)
+        XCTAssertEqual(payload["profile_visible"] as? Bool, false)
+        XCTAssertEqual(payload["theme_mode"] as? String, "light")
+        XCTAssertEqual(payload.keys.count, 3)
+    }
+
     private func makeSession() -> URLSession {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [MockURLProtocol.self]

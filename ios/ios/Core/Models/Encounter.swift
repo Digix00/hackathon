@@ -7,19 +7,32 @@ struct Encounter: Identifiable, Hashable {
     let relativeTime: String
     let lyric: String
 
-    var happenedToday: Bool {
-        relativeTime == "たった今"
-            || relativeTime.hasSuffix("分前")
-            || relativeTime.hasSuffix("時間前")
-            || relativeTime == "近日"
+    init(id: String? = nil, userName: String, track: Track, relativeTime: String, lyric: String) {
+        self.id = id ?? "\(userName)-\(track.id)-\(relativeTime)-\(lyric)"
+        self.userName = userName
+        self.track = track
+        self.relativeTime = relativeTime
+        self.lyric = lyric
     }
 
     var happenedYesterday: Bool {
         relativeTime == "昨日"
     }
 
+    var happenedToday: Bool {
+        !happenedYesterday && !happenedEarlier
+    }
+
     var happenedEarlier: Bool {
-        !happenedToday && !happenedYesterday
+        if relativeTime == "以前" ||
+            relativeTime.hasSuffix("日前") ||
+            relativeTime.hasSuffix("週間前") ||
+            relativeTime.hasSuffix("か月前") ||
+            relativeTime.hasSuffix("年前") {
+            return true
+        }
+
+        return relativeTime == "不明"
     }
 }
 

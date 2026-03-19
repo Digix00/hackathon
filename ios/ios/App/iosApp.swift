@@ -9,6 +9,7 @@ struct iosApp: App {
         WindowGroup {
             ContentView()
                 .prototypeTypography()
+                .environmentObject(bleCoordinator)
                 .environmentObject(bleCoordinator.bleManager)
                 .task {
                     bleCoordinator.startIfNeeded(scenePhase: scenePhase)

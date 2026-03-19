@@ -5,7 +5,7 @@ struct EncounterLyricsList: View {
     var waitingLine: String? = nil
 
     var body: some View {
-        ForEach(Array(encounters.enumerated()), id: \.offset) { index, encounter in
+        ForEach(Array(encounters.enumerated()), id: \.element.id) { index, encounter in
             VStack(alignment: .leading, spacing: 4) {
                 Text("\(index + 1). \(encounter.lyric)")
                     .font(.system(size: 15, weight: .medium))
