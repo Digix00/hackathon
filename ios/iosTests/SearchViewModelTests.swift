@@ -70,6 +70,7 @@ final class SearchViewModelTests: XCTestCase {
 
         viewModel.search()
 
+        await waitFor { viewModel.isSearching }
         await waitFor { !viewModel.isSearching }
         XCTAssertEqual(viewModel.errorMessage, "検索に失敗しました")
     }
