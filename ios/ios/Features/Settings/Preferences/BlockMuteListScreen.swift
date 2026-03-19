@@ -48,6 +48,42 @@ struct BlockMuteListView: View {
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(PrototypeTheme.error)
                         }
+
+                        Divider()
+                            .opacity(0.4)
+
+                        if viewModel.isLoadingBlocks && viewModel.blockedUsers.isEmpty {
+                            ProgressView()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        } else if viewModel.blockedUsers.isEmpty {
+                            Text("ブロック中のユーザーはいません")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.textSecondary)
+                        } else {
+                            ForEach(viewModel.blockedUsers) { user in
+                                HStack {
+                                    Text(user.blockedUserId)
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(PrototypeTheme.textPrimary)
+                                    Spacer()
+                                    Button {
+                                        viewModel.unblock(userID: user.blockedUserId)
+                                    } label: {
+                                        Image(systemName: "hand.raised.slash.fill")
+                                            .foregroundStyle(PrototypeTheme.error)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .disabled(viewModel.isBlockActionInProgress)
+                                }
+                                .padding(.vertical, 6)
+                            }
+                        }
+
+                        if let listErrorMessage = viewModel.blockListErrorMessage {
+                            Text(listErrorMessage)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.error)
+                        }
                     }
                 }
                 SectionCard(title: "ミュート") {
@@ -88,9 +124,48 @@ struct BlockMuteListView: View {
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(PrototypeTheme.error)
                         }
+
+                        Divider()
+                            .opacity(0.4)
+
+                        if viewModel.isLoadingMutes && viewModel.mutedUsers.isEmpty {
+                            ProgressView()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        } else if viewModel.mutedUsers.isEmpty {
+                            Text("ミュート中のユーザーはいません")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.textSecondary)
+                        } else {
+                            ForEach(viewModel.mutedUsers) { user in
+                                HStack {
+                                    Text(user.targetUserId)
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(PrototypeTheme.textPrimary)
+                                    Spacer()
+                                    Button {
+                                        viewModel.unmute(userID: user.targetUserId)
+                                    } label: {
+                                        Image(systemName: "speaker.wave.2.fill")
+                                            .foregroundStyle(PrototypeTheme.error)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .disabled(viewModel.isMuteActionInProgress)
+                                }
+                                .padding(.vertical, 6)
+                            }
+                        }
+
+                        if let listErrorMessage = viewModel.muteListErrorMessage {
+                            Text(listErrorMessage)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.error)
+                        }
                     }
                 }
             }
+        }
+        .onAppear {
+            viewModel.refresh()
         }
     }
 }

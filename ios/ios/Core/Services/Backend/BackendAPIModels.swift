@@ -132,6 +132,36 @@ nonisolated struct BackendUserTrackResponse: Decodable {
     let track: BackendPublicTrack?
 }
 
+// MARK: - Track Favorites
+
+nonisolated struct BackendTrackFavorite: Decodable, Equatable {
+    let resourceId: String?
+    let resourceType: String?
+    let favorited: Bool?
+    let createdAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case resourceId = "resource_id"
+        case resourceType = "resource_type"
+        case favorited
+        case createdAt = "created_at"
+    }
+}
+
+nonisolated struct BackendTrackFavoriteResponse: Decodable {
+    let favorite: BackendTrackFavorite?
+}
+
+nonisolated struct BackendTrackFavoriteListResponse: Decodable {
+    let pagination: BackendUserTrackPagination?
+    let tracks: [BackendPublicTrack]?
+}
+
+nonisolated struct BackendPlaylistFavoriteListResponse: Decodable {
+    let pagination: BackendUserTrackPagination?
+    let playlists: [BackendPlaylistSummary]?
+}
+
 nonisolated struct BackendUserResponse: Decodable {
     let user: BackendUser
 }
@@ -321,6 +351,21 @@ nonisolated struct BackendBlockResponse: Decodable {
     let block: BackendBlock?
 }
 
+nonisolated struct BackendBlockListPagination: Decodable, Equatable {
+    let nextCursor: String?
+    let hasMore: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case nextCursor = "next_cursor"
+        case hasMore = "has_more"
+    }
+}
+
+nonisolated struct BackendBlockListResponse: Decodable {
+    let blocks: [BackendBlock]?
+    let pagination: BackendBlockListPagination?
+}
+
 nonisolated struct BackendMute: Decodable, Equatable {
     let id: String?
     let targetUserId: String?
@@ -335,6 +380,21 @@ nonisolated struct BackendMute: Decodable, Equatable {
 
 nonisolated struct BackendMuteResponse: Decodable {
     let mute: BackendMute?
+}
+
+nonisolated struct BackendMuteListPagination: Decodable, Equatable {
+    let nextCursor: String?
+    let hasMore: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case nextCursor = "next_cursor"
+        case hasMore = "has_more"
+    }
+}
+
+nonisolated struct BackendMuteListResponse: Decodable {
+    let mutes: [BackendMute]?
+    let pagination: BackendMuteListPagination?
 }
 
 // MARK: - Encounters
@@ -419,6 +479,32 @@ nonisolated struct BackendEncounterDetail: Decodable, Equatable {
 
 nonisolated struct BackendEncounterResponse: Decodable {
     let encounter: BackendEncounterSummary
+}
+
+nonisolated struct BackendEncounterReadResult: Decodable, Equatable {
+    let id: String
+    let isRead: Bool?
+    let readAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case isRead = "is_read"
+        case readAt = "read_at"
+    }
+}
+
+nonisolated struct BackendEncounterReadResponse: Decodable {
+    let encounter: BackendEncounterReadResult?
+}
+
+nonisolated struct BackendLocationResponse: Decodable {
+    let encounterCount: Int?
+    let encounters: [BackendEncounterSummary]?
+
+    enum CodingKeys: String, CodingKey {
+        case encounterCount = "encounter_count"
+        case encounters
+    }
 }
 
 nonisolated struct BackendEncounterDetailResponse: Decodable {
@@ -759,6 +845,20 @@ nonisolated struct UpdateUserRequest: Encodable {
         case ageVisibility = "age_visibility"
         case prefectureId = "prefecture_id"
         case sex
+    }
+}
+
+nonisolated struct PostLocationRequest: Encodable {
+    let accuracyM: Double
+    let lat: Double
+    let lng: Double
+    let recordedAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case accuracyM = "accuracy_m"
+        case lat
+        case lng
+        case recordedAt = "recorded_at"
     }
 }
 
