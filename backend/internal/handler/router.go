@@ -95,7 +95,7 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	protected.GET("/users/me/songs", songHandler.listMySongs)
 	protected.POST("/songs/:id/likes", songHandler.likeSong)
 	protected.DELETE("/songs/:id/likes", songHandler.unlikeSong)
-  
+
 	protected.POST("/users/me/tracks", userTrackHandler.addUserTrack)
 	protected.GET("/users/me/tracks", userTrackHandler.listUserTracks)
 	protected.DELETE("/users/me/tracks/:id", userTrackHandler.deleteUserTrack)
