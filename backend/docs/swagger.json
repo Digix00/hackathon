@@ -546,6 +546,117 @@
                 }
             }
         },
+        "/api/v1/lyrics": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "すれ違い成立時に歌詞を投稿し、LyricChainに追加する。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lyrics"
+                ],
+                "summary": "歌詞投稿",
+                "operationId": "submitLyric",
+                "parameters": [
+                    {
+                        "description": "歌詞投稿リクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.SubmitLyricRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.SubmitLyricResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lyrics/chains/{chain_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "チェーンの詳細と参加者の歌詞一覧、生成楽曲を取得する。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lyrics"
+                ],
+                "summary": "チェーン詳細取得",
+                "operationId": "getChainDetail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チェーンID",
+                        "name": "chain_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.ChainDetailResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/music-connections/{provider}/authorize": {
             "get": {
                 "security": [
@@ -1239,6 +1350,113 @@
                     },
                     "409": {
                         "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/songs/{id}/likes": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定した楽曲にいいねする。すでにいいね済みの場合はエラー。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "songs"
+                ],
+                "summary": "楽曲にいいね",
+                "operationId": "likeSong",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "楽曲ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.LikeSongResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定した楽曲のいいねを取り消す。いいねが存在しない場合はエラー。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "songs"
+                ],
+                "summary": "楽曲のいいねを取り消す",
+                "operationId": "unlikeSong",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "楽曲ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/internal_handler.errorResponse"
                         }
@@ -2506,6 +2724,52 @@
                 }
             }
         },
+        "/api/v1/users/me/songs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "自分がLyricChainに参加して生成された楽曲の一覧を返す。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "songs"
+                ],
+                "summary": "自分が参加した楽曲一覧",
+                "operationId": "listMySongs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ページネーションカーソル",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.ListUserSongsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/me/tracks": {
             "get": {
                 "security": [
@@ -2959,6 +3223,17 @@
                 }
             }
         },
+        "hackathon_internal_handler_schema_request.SubmitLyricRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "encounter_id": {
+                    "type": "string"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_request.UpdatePlaylistRequest": {
             "type": "object",
             "properties": {
@@ -3169,6 +3444,46 @@
             "properties": {
                 "block": {
                     "$ref": "#/definitions/hackathon_internal_handler_schema_response.Block"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.ChainDetail": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "participant_count": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "threshold": {
+                    "type": "integer"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.ChainDetailResponse": {
+            "type": "object",
+            "properties": {
+                "chain": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.ChainDetail"
+                },
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.EntryDetail"
+                    }
+                },
+                "song": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.SongDetail"
                 }
             }
         },
@@ -3399,6 +3714,56 @@
                 },
                 "id": {
                     "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.EntryDetail": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "sequence_num": {
+                    "type": "integer"
+                },
+                "user": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.EntryUser"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.EntryUser": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.LikeSongResponse": {
+            "type": "object",
+            "properties": {
+                "liked": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.ListUserSongsResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.SongPagination"
+                },
+                "songs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.UserSong"
+                    }
                 }
             }
         },
@@ -3852,6 +4217,85 @@
                 }
             }
         },
+        "hackathon_internal_handler_schema_response.SongDetail": {
+            "type": "object",
+            "properties": {
+                "audio_url": {
+                    "type": "string"
+                },
+                "duration_sec": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mood": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.SongPagination": {
+            "type": "object",
+            "properties": {
+                "has_more": {
+                    "type": "boolean"
+                },
+                "next_cursor": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.SubmitLyricChain": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "participant_count": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "threshold": {
+                    "type": "integer"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.SubmitLyricEntry": {
+            "type": "object",
+            "properties": {
+                "chain_id": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "sequence_num": {
+                    "type": "integer"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.SubmitLyricResponse": {
+            "type": "object",
+            "properties": {
+                "chain": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.SubmitLyricChain"
+                },
+                "lyric_entry": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.SubmitLyricEntry"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_response.Track": {
             "type": "object",
             "properties": {
@@ -3962,6 +4406,29 @@
             "properties": {
                 "user": {
                     "$ref": "#/definitions/hackathon_internal_handler_schema_response.User"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.UserSong": {
+            "type": "object",
+            "properties": {
+                "audio_url": {
+                    "type": "string"
+                },
+                "generated_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "my_lyric": {
+                    "type": "string"
+                },
+                "participant_count": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },

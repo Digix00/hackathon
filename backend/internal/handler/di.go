@@ -27,6 +27,8 @@ type Dependencies struct {
 	MusicUsecase        usecase.MusicUsecase
 	EncounterUsecase    usecase.EncounterUsecase
 	CommentUsecase      usecase.CommentUsecase
+	LyricUsecase        usecase.LyricUsecase
+	SongUsecase         usecase.SongUsecase
 	UserTrackUsecase    usecase.UserTrackUsecase
 }
 
