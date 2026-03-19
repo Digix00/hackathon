@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"net/http"
+	"os"
 	"time"
 
 	"go.uber.org/zap"
@@ -42,9 +44,24 @@ func main() {
 
 	workerUsecase := buildDependencies(db)
 
-	deleted, err := workerUsecase.DeleteExpiredBleTokens(context.Background())
-	if err != nil {
-		log.Fatal("delete expired ble tokens failed", zap.Error(err))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
-	log.Info("deleted expired ble tokens", zap.Int64("count", deleted))
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		deleted, err := workerUsecase.DeleteExpiredBleTokens(context.Background())
+		if err != nil {
+			log.Error("delete expired ble tokens failed", zap.Error(err))
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+		log.Info("deleted expired ble tokens", zap.Int64("count", deleted))
+		w.WriteHeader(http.StatusOK)
+	})
+
+	log.Info("worker http server starting", zap.String("port", port))
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatal("http server failed", zap.Error(err))
+	}
 }

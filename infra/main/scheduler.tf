@@ -6,10 +6,11 @@ resource "google_cloud_scheduler_job" "worker_kick" {
 
   http_target {
     http_method = "POST"
-    uri         = "https://run.googleapis.com/v2/projects/${var.project_id}/locations/${var.region}/jobs/${google_cloud_run_v2_job.worker.name}:run"
+    uri         = "${google_cloud_run_v2_service.worker.uri}/"
 
-    oauth_token {
+    oidc_token {
       service_account_email = google_service_account.scheduler.email
+      audience              = google_cloud_run_v2_service.worker.uri
     }
   }
 

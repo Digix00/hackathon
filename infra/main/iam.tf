@@ -64,10 +64,13 @@ resource "google_service_account" "scheduler" {
   display_name = "Cloud Scheduler Service Account"
 }
 
-resource "google_project_iam_member" "scheduler_run_invoker" {
-  project = var.project_id
-  role    = "roles/run.invoker"
-  member  = "serviceAccount:${google_service_account.scheduler.email}"
+# Scheduler SA に worker Service の invoker 権限を付与（サービス単位で限定）
+resource "google_cloud_run_v2_service_iam_member" "scheduler_worker_invoker" {
+  project  = var.project_id
+  location = google_cloud_run_v2_service.worker.location
+  name     = google_cloud_run_v2_service.worker.name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.scheduler.email}"
 }
 
 # Terraform CI/CD 用サービスアカウント（GitHub Actions WIF）

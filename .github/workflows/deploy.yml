@@ -60,9 +60,9 @@ jobs:
             --region asia-northeast1 \
             --project ${{ vars.TF_PROJECT_ID }}
 
-      - name: Deploy Cloud Run Job (worker)
+      - name: Deploy Cloud Run Service (worker)
         run: |
-          gcloud run jobs update worker \
+          gcloud run services update worker \
             --image asia-northeast1-docker.pkg.dev/${{ vars.TF_PROJECT_ID }}/app/worker:${{ github.sha }} \
             --region asia-northeast1 \
             --project ${{ vars.TF_PROJECT_ID }}
