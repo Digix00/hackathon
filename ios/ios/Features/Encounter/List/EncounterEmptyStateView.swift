@@ -67,9 +67,10 @@ struct EncounterEmptyStateView: View {
                                 .tint(themeColor)
                         } else {
                             Image(systemName: iconName)
-                                .font(.system(size: 28, weight: .ultraLight))
-                                .foregroundStyle(themeColor)
-                                .symbolEffect(.variableColor.iterative.dimInactiveLayers, options: .repeating, isActive: errorMessage == nil)
+                                .font(.system(size: 32, weight: .semibold))
+                                .foregroundStyle(themeColor.gradient)
+                                .symbolRenderingMode(.hierarchical)
+                                .symbolEffect(.pulse, options: .repeating, isActive: errorMessage == nil)
                         }
                     }
                 }
@@ -142,9 +143,9 @@ struct EncounterEmptyStateView: View {
 
     private var iconName: String {
         if errorMessage != nil {
-            return "exclamationmark.bubble"
+            return "exclamationmark.triangle.fill"
         }
-        return "waveform.and.mic"
+        return "sensor.tag.radiowaves.forward.fill"
     }
 
     private var eyebrowText: String {

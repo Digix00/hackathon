@@ -12,7 +12,7 @@ struct EncounterMatchedArtworkView: View {
         Group {
             if let namespace {
                 artworkView
-                    .matchedGeometryEffect(id: "artwork-\(encounter.id)", in: namespace)
+                    .matchedGeometryEffect(id: "artwork-\(encounter.id)", in: namespace, isSource: false)
             } else {
                 artworkView
             }
@@ -44,7 +44,7 @@ struct EncounterMatchedUserNameView: View {
         Group {
             if let namespace {
                 Text(encounter.userName)
-                    .matchedGeometryEffect(id: "userName-\(encounter.id)", in: namespace)
+                    .matchedGeometryEffect(id: "userName-\(encounter.id)", in: namespace, isSource: false)
             } else {
                 Text(encounter.userName)
             }
@@ -52,6 +52,11 @@ struct EncounterMatchedUserNameView: View {
         .font(PrototypeTheme.Typography.font(size: fontSize, weight: .black, role: .primary))
         .foregroundStyle(PrototypeTheme.textPrimary)
         .tracking(-1.5)
+        .lineLimit(nil)
+        .minimumScaleFactor(0.68)
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity, alignment: .center)
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
 
@@ -64,7 +69,7 @@ struct EncounterMatchedTrackTitleView: View {
         Group {
             if let namespace {
                 Text(encounter.track.title)
-                    .matchedGeometryEffect(id: "trackTitle-\(encounter.id)", in: namespace)
+                    .matchedGeometryEffect(id: "trackTitle-\(encounter.id)", in: namespace, isSource: false)
             } else {
                 Text(encounter.track.title)
             }
@@ -72,12 +77,18 @@ struct EncounterMatchedTrackTitleView: View {
         .font(PrototypeTheme.Typography.font(size: fontSize, weight: .bold, role: .accent))
         .italic()
         .foregroundStyle(encounter.track.color)
+        .multilineTextAlignment(.center)
+        .lineLimit(3)
+        .minimumScaleFactor(0.75)
+        .frame(maxWidth: .infinity, alignment: .center)
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
 
 struct EncounterDetailHeader: View {
     let encounter: Encounter
     let isVisible: Bool
+    let horizontalPadding: CGFloat
     let onBack: () -> Void
 
     var body: some View {
@@ -102,7 +113,7 @@ struct EncounterDetailHeader: View {
                     .foregroundStyle(encounter.track.color)
             }
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, horizontalPadding)
         .padding(.top, 8)
         .opacity(isVisible ? 1 : 0)
         .allowsHitTesting(isVisible)

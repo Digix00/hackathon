@@ -201,9 +201,9 @@ final class SearchViewModel: ObservableObject {
     }
 
     private func mapSharedTrack(_ track: BackendSharedTrack) -> Track {
-        let title = track.title ?? "不明な曲"
-        let artist = track.artistName ?? "Unknown Artist"
-        let seed = track.id ?? "\(title)-\(artist)"
+        let title = track.title
+        let artist = track.artistName
+        let seed = track.id
         return Track(
             title: title,
             artist: artist,

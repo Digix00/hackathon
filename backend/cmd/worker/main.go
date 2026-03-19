@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"net/http"
 	"os"
 	"time"
@@ -50,7 +49,7 @@ func main() {
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		deleted, err := workerUsecase.DeleteExpiredBleTokens(context.Background())
+		deleted, err := workerUsecase.DeleteExpiredBleTokens(r.Context())
 		if err != nil {
 			log.Error("delete expired ble tokens failed", zap.Error(err))
 			http.Error(w, "internal server error", http.StatusInternalServerError)

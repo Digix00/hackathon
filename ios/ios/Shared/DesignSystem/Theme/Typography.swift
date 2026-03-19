@@ -8,14 +8,7 @@ extension PrototypeTheme {
             case data
 
             var design: Font.Design {
-                switch self {
-                case .primary:
-                    return .rounded
-                case .accent:
-                    return .serif
-                case .data:
-                    return .monospaced
-                }
+                .default
             }
         }
 
