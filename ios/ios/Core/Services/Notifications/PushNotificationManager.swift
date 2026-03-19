@@ -47,6 +47,7 @@ final class PushNotificationManager: NSObject, ObservableObject {
 
     func applyNotificationPreference(isEnabled: Bool) async {
         desiredEnabled = isEnabled
+        lastErrorMessage = nil
         if isEnabled {
             let granted = await requestAuthorizationIfNeeded()
             if granted {
