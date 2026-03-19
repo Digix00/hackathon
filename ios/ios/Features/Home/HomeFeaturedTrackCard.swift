@@ -5,11 +5,6 @@ struct HomeFeaturedTrackCard: View {
         static let artworkSize: CGFloat = 240
         static let rippleBaseSize: CGFloat = 260
         static let rippleExpandedScale: CGFloat = 1.6
-        static let motionPadding: CGFloat = 20
-
-        static var animatedContainerSize: CGFloat {
-            (rippleBaseSize * rippleExpandedScale) + (motionPadding * 2)
-        }
     }
 
     let track: Track?
@@ -24,40 +19,37 @@ struct HomeFeaturedTrackCard: View {
             if let track {
                 VStack(spacing: 48) {
                     ZStack {
-                        ZStack {
-                            // Keep ripple and artwork in the same coordinate space.
-                            ForEach(0..<2) { i in
-                                Circle()
-                                    .stroke(track.color.opacity(0.12), lineWidth: 1.0)
-                                    .frame(width: Layout.rippleBaseSize, height: Layout.rippleBaseSize)
-                                    .scaleEffect(isAnimating ? Layout.rippleExpandedScale : 1.0)
-                                    .opacity(isAnimating ? 0 : 1)
-                                    .animation(
-                                        .easeOut(duration: 5)
-                                            .repeatForever(autoreverses: false)
-                                            .delay(Double(i) * 2.5),
-                                        value: isAnimating
-                                    )
-                            }
-
-                            MockArtworkView(
-                                color: track.color,
-                                symbol: "music.note",
-                                size: Layout.artworkSize,
-                                artwork: track.artwork,
-                                shadowColor: track.color.opacity(0.28),
-                                shadowRadius: 56,
-                                shadowX: 0,
-                                shadowY: 24
-                            )
-                            .matchedGeometryEffect(id: "home_artwork_\(track.id)", in: homeNamespace)
+                        // Keep ripple and artwork in the same coordinate space
+                        // without inflating the layout width on narrow devices.
+                        ForEach(0..<2) { i in
+                            Circle()
+                                .stroke(track.color.opacity(0.12), lineWidth: 1.0)
+                                .frame(width: Layout.rippleBaseSize, height: Layout.rippleBaseSize)
+                                .scaleEffect(isAnimating ? Layout.rippleExpandedScale : 1.0)
+                                .opacity(isAnimating ? 0 : 1)
+                                .animation(
+                                    .easeOut(duration: 5)
+                                        .repeatForever(autoreverses: false)
+                                        .delay(Double(i) * 2.5),
+                                    value: isAnimating
+                                )
                         }
-                        .frame(
-                            width: Layout.animatedContainerSize,
-                            height: Layout.animatedContainerSize
+
+                        MockArtworkView(
+                            color: track.color,
+                            symbol: "music.note",
+                            size: Layout.artworkSize,
+                            artwork: track.artwork,
+                            shadowColor: track.color.opacity(0.28),
+                            shadowRadius: 56,
+                            shadowX: 0,
+                            shadowY: 24
                         )
-                        .offset(x: motionX, y: motionY)
+                        .matchedGeometryEffect(id: "home_artwork_\(track.id)", in: homeNamespace)
                     }
+                    .frame(width: Layout.rippleBaseSize, height: Layout.rippleBaseSize)
+                    .contentShape(Rectangle())
+                    .offset(x: motionX, y: motionY)
                     .onAppear {
                         isAnimating = true
                     }
