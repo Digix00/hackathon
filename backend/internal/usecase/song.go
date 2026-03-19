@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"hackathon/internal/domain/entity"
-	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
 	usecasedto "hackathon/internal/usecase/dto"
 )
@@ -76,14 +75,6 @@ func (u *songUsecase) LikeSong(ctx context.Context, authUID string, songID strin
 
 	if _, err := u.lyricRepo.FindSongByID(ctx, songID); err != nil {
 		return err
-	}
-
-	exists, err := u.lyricRepo.ExistsSongLike(ctx, user.ID, songID)
-	if err != nil {
-		return err
-	}
-	if exists {
-		return domainerrs.Conflict("already liked")
 	}
 
 	like := entity.NewSongLike(songID, user.ID)

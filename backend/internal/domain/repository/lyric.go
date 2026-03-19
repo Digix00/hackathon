@@ -35,6 +35,7 @@ type SubmitLyricResult struct {
 // LyricRepository handles all lyric chain / entry / song / like operations.
 type LyricRepository interface {
 	SubmitEntry(ctx context.Context, userID, encounterID, content string) (SubmitLyricResult, error)
+	ExistsEntryByUserAndEncounter(ctx context.Context, userID, encounterID string) (bool, error)
 	GetChainWithDetails(ctx context.Context, chainID string) (ChainDetailResult, error)
 	FindSongByID(ctx context.Context, songID string) (entity.GeneratedSong, error)
 	ListUserSongs(ctx context.Context, userID string, cursor string, limit int) ([]UserSongResult, string, bool, error)

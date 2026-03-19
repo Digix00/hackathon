@@ -41,6 +41,14 @@ func (u *lyricUsecase) SubmitLyric(ctx context.Context, authUID string, input us
 		return usecasedto.SubmitLyricResult{}, domainerrs.NotFound("encounter not found")
 	}
 
+	alreadySubmitted, err := u.lyricRepo.ExistsEntryByUserAndEncounter(ctx, user.ID, input.EncounterID)
+	if err != nil {
+		return usecasedto.SubmitLyricResult{}, err
+	}
+	if alreadySubmitted {
+		return usecasedto.SubmitLyricResult{}, domainerrs.Conflict("lyric already submitted for this encounter")
+	}
+
 	res, err := u.lyricRepo.SubmitEntry(ctx, user.ID, input.EncounterID, input.Content)
 	if err != nil {
 		return usecasedto.SubmitLyricResult{}, err

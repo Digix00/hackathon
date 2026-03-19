@@ -115,6 +115,18 @@ func (r *lyricRepository) SubmitEntry(ctx context.Context, userID, encounterID, 
 	return result, err
 }
 
+func (r *lyricRepository) ExistsEntryByUserAndEncounter(ctx context.Context, userID, encounterID string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).
+		Model(&model.LyricEntry{}).
+		Where("user_id = ? AND encounter_id = ? AND deleted_at IS NULL", userID, encounterID).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 func (r *lyricRepository) GetChainWithDetails(ctx context.Context, chainID string) (repository.ChainDetailResult, error) {
 	var chain model.LyricChain
 	err := r.db.WithContext(ctx).
