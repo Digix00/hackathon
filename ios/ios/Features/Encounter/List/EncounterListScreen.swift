@@ -7,6 +7,36 @@ struct EncounterListView: View {
         static let contentBottomSpacing: CGFloat = 148
     }
 
+    private struct DetailMetrics {
+        let isTablet: Bool
+        let horizontalPadding: CGFloat
+        let readableWidth: CGFloat
+        let artworkSize: CGFloat
+        let heroSpacing: CGFloat
+        let artworkTopPadding: CGFloat
+        let heroTextSpacing: CGFloat
+        let detailLabelSpacing: CGFloat
+        let userNameFontSize: CGFloat
+        let trackTitleFontSize: CGFloat
+        let supportingFontSize: CGFloat
+
+        init(availableWidth: CGFloat) {
+            let isNarrowPhone = availableWidth < 390
+            isTablet = availableWidth >= 700
+
+            horizontalPadding = isNarrowPhone ? 20 : (isTablet ? 40 : 32)
+            readableWidth = isTablet ? min(availableWidth - 80, 620) : max(availableWidth - (horizontalPadding * 2), 0)
+            artworkSize = isNarrowPhone ? 240 : (isTablet ? 320 : 300)
+            heroSpacing = isNarrowPhone ? 44 : (isTablet ? 68 : 60)
+            artworkTopPadding = isNarrowPhone ? 28 : 40
+            heroTextSpacing = isNarrowPhone ? 18 : 24
+            detailLabelSpacing = isNarrowPhone ? 6 : 8
+            userNameFontSize = isNarrowPhone ? 34 : (isTablet ? 46 : 42)
+            trackTitleFontSize = isNarrowPhone ? 20 : (isTablet ? 26 : 24)
+            supportingFontSize = isNarrowPhone ? 13 : 14
+        }
+    }
+
     @Namespace private var encounterNamespace
     @Binding private var isDetailPresented: Bool
     @State private var selectedEncounterID: String?
@@ -94,7 +124,7 @@ struct EncounterListView: View {
         @State private var isAnimating = false
 
         var body: some View {
-            VStack(alignment: .leading, spacing: 32) {
+            VStack(alignment: .leading, spacing: 12) { // Tightened spacing
                 // Secondary Stat (Subtle & Data-focused)
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text("TOTAL SPECIMENS")
@@ -111,32 +141,31 @@ struct EncounterListView: View {
                 .offset(x: isAnimating ? 0 : -10)
 
                 // Primary Stat (Large & Airy)
-                HStack(alignment: .bottom, spacing: 20) {
+                HStack(alignment: .bottom, spacing: 16) { // Slightly tighter spacing
                     Text("\(weeklyCount)")
                         .font(.system(size: 84, weight: .black))
                         .foregroundStyle(PrototypeTheme.textPrimary)
                         .tracking(-4)
                         .contentTransition(.numericText())
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 2) { // Tightened inner vertical spacing
                         Text("ENCOUNTERS")
-                            .prototypeFont(size: 11, weight: .black, role: .data)
+                            .prototypeFont(size: 10, weight: .black, role: .data)
                             .foregroundStyle(PrototypeTheme.textPrimary)
                             .kerning(2.0)
 
                         Text("THIS WEEK")
-                            .font(.system(size: 11, weight: .bold))
+                            .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(PrototypeTheme.textTertiary)
                             .kerning(1.0)
                     }
-                    .padding(.bottom, 22)
+                    .padding(.bottom, 20)
                 }
                 .opacity(isAnimating ? 1.0 : 0)
                 .offset(y: isAnimating ? 0 : 20)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 32)
-            .padding(.bottom, 48)
             .onAppear {
                 withAnimation(.spring(response: 0.9, dampingFraction: 0.8)) {
                     isAnimating = true
@@ -169,16 +198,16 @@ struct EncounterListView: View {
                         
                         if selectedEncounterID == nil {
                             GeometryReader { g in
-                                // Position stats in the top gap created by safeAreaPadding
-                                let headerHeight = (g.size.height - wheelItemHeight) / 2
-                                if headerHeight > 80 {
+                                // Position stats compactly near the top
+                                let headerAreaHeight = (g.size.height - wheelItemHeight) / 2
+                                if headerAreaHeight > 100 {
                                     EncounterStatsHeader(
                                         totalCount: totalEncountersCount,
                                         weeklyCount: weeklyEncountersCount
                                     )
-                                    .frame(height: headerHeight)
-                                    .offset(y: g.safeAreaInsets.top)
-                                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                                    .frame(height: headerAreaHeight, alignment: .top) // Top align
+                                    .offset(y: g.safeAreaInsets.top + 20) // Precise offset from notch
+                                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
                                 }
                             }
                         }
@@ -292,104 +321,127 @@ struct EncounterListView: View {
     // MARK: - Detail Content
 
     private func detailContent(for encounter: Encounter) -> some View {
-        ZStack {
-            // Keep background consistent - no flash
-            Color.clear
+        GeometryReader { proxy in
+            let globalWidth = proxy.frame(in: .global).width
+            let layoutWidth = globalWidth > 0 ? min(proxy.size.width, globalWidth) : proxy.size.width
+            let metrics = DetailMetrics(availableWidth: layoutWidth)
+            let contentWidth = max(layoutWidth - (metrics.horizontalPadding * 2), 0)
+            let heroWidth = min(contentWidth, 520)
+            let sectionWidth = metrics.isTablet ? min(metrics.readableWidth, contentWidth) : layoutWidth
+            let transitionNamespace = showDetailContent ? nil : encounterNamespace
 
-            // Morphing aura background
-            morphingAura(for: encounter)
-                .ignoresSafeArea()
+            ZStack {
+                // Keep background consistent - no flash
+                Color.clear
 
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 0) {
-                    // Hero composition
-                    VStack(spacing: showDetailContent ? 60 : 32) {
-                        EncounterMatchedArtworkView(
-                            encounter: encounter,
-                            size: showDetailContent ? 300 : 80,
-                            shadowOpacity: showDetailContent ? 0.2 : 0.1,
-                            shadowRadius: showDetailContent ? 60 : 20,
-                            shadowYOffset: showDetailContent ? 30 : 10,
-                            namespace: encounterNamespace
-                        )
-                        .padding(.top, showDetailContent ? 40 : 80)
+                // Morphing aura background
+                morphingAura(for: encounter)
+                    .ignoresSafeArea()
 
-                        // Text content
-                        VStack(spacing: showDetailContent ? 24 : 12) {
-                            VStack(spacing: showDetailContent ? 8 : 4) {
-                                EncounterMatchedUserNameView(
-                                    encounter: encounter,
-                                    fontSize: showDetailContent ? 42 : 40,
-                                    namespace: encounterNamespace
-                                )
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        // Hero composition
+                        VStack(spacing: showDetailContent ? metrics.heroSpacing : 32) {
+                            EncounterMatchedArtworkView(
+                                encounter: encounter,
+                                size: showDetailContent ? metrics.artworkSize : 80,
+                                shadowOpacity: showDetailContent ? 0.2 : 0.1,
+                                shadowRadius: showDetailContent ? 60 : 20,
+                                shadowYOffset: showDetailContent ? 30 : 10,
+                                namespace: transitionNamespace
+                            )
+                            .padding(.top, showDetailContent ? metrics.artworkTopPadding : 80)
+
+                            // Text content
+                            VStack(spacing: showDetailContent ? metrics.heroTextSpacing : 12) {
+                                VStack(spacing: showDetailContent ? metrics.detailLabelSpacing : 4) {
+                                    EncounterMatchedUserNameView(
+                                        encounter: encounter,
+                                        fontSize: showDetailContent ? metrics.userNameFontSize : 40,
+                                        namespace: transitionNamespace
+                                    )
                                     .multilineTextAlignment(.center)
 
-                                if showDetailContent {
-                                    Text("との共鳴")
-                                        .font(PrototypeTheme.Typography.font(size: 14, weight: .bold))
-                                        .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
-                                        .transition(.opacity)
+                                    if showDetailContent {
+                                        Text("との共鳴")
+                                            .font(PrototypeTheme.Typography.font(size: metrics.supportingFontSize, weight: .bold))
+                                            .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
+                                            .transition(.opacity)
+                                    }
                                 }
-                            }
 
-                            VStack(spacing: 4) {
-                                EncounterMatchedTrackTitleView(
-                                    encounter: encounter,
-                                    fontSize: showDetailContent ? 24 : 14,
-                                    namespace: encounterNamespace
-                                )
+                                VStack(spacing: 4) {
+                                    EncounterMatchedTrackTitleView(
+                                        encounter: encounter,
+                                        fontSize: showDetailContent ? metrics.trackTitleFontSize : 14,
+                                        namespace: transitionNamespace
+                                    )
                                     .multilineTextAlignment(.center)
 
-                                if showDetailContent {
-                                    Text(encounter.track.artist)
-                                        .font(PrototypeTheme.Typography.font(size: 14, weight: .medium))
-                                        .foregroundStyle(PrototypeTheme.textSecondary)
-                                        .transition(.opacity)
+                                    if showDetailContent {
+                                        Text(encounter.track.artist)
+                                            .font(PrototypeTheme.Typography.font(size: metrics.supportingFontSize, weight: .medium))
+                                            .foregroundStyle(PrototypeTheme.textSecondary)
+                                            .multilineTextAlignment(.center)
+                                            .lineLimit(2)
+                                            .transition(.opacity)
+                                    }
                                 }
                             }
                         }
-                        .padding(.horizontal, 32)
-                    }
+                        .frame(maxWidth: heroWidth)
+                        .frame(maxWidth: .infinity)
 
-                    // Lyric section
-                    if !encounter.lyric.isEmpty && showDetailContent {
-                        EncounterLyricSection(encounter: encounter)
-                        .transition(.opacity.combined(with: .offset(y: 20)))
-                    }
+                        if !encounter.lyric.isEmpty && showDetailContent {
+                            EncounterLyricSection(encounter: encounter)
+                                .frame(maxWidth: sectionWidth)
+                                .frame(maxWidth: .infinity)
+                                .transition(.opacity.combined(with: .offset(y: 20)))
+                        }
 
-                    if showDetailContent {
-                        EncounterCommentsSection(encounter: encounter)
-                            .transition(.opacity.combined(with: .offset(y: 20)))
-                    }
+                        if showDetailContent {
+                            EncounterCommentsSection(encounter: encounter)
+                                .frame(maxWidth: sectionWidth)
+                                .frame(maxWidth: .infinity)
+                                .transition(.opacity.combined(with: .offset(y: 20)))
+                        }
 
-                    Spacer(minLength: DetailLayout.contentBottomSpacing)
+                        Spacer(minLength: DetailLayout.contentBottomSpacing)
+                    }
+                    .frame(width: layoutWidth)
+                    .padding(.top, 16)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 16)
             }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .safeAreaInset(edge: .top, spacing: 0) {
-            EncounterDetailHeader(encounter: encounter, isVisible: showDetailContent) {
-                withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
-                    showDetailContent = false
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            .frame(width: layoutWidth, height: proxy.size.height, alignment: .top)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                EncounterDetailHeader(
+                    encounter: encounter,
+                    isVisible: showDetailContent,
+                    horizontalPadding: metrics.horizontalPadding
+                ) {
                     withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
-                        selectedEncounterID = nil
+                        showDetailContent = false
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
+                            selectedEncounterID = nil
+                        }
                     }
                 }
             }
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if showDetailContent {
-                EncounterPrimaryActions(encounter: encounter) {
-                    lyricComposerEncounter = encounter
-                }
-                    .padding(.horizontal, 32)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if showDetailContent {
+                    EncounterPrimaryActions(encounter: encounter) {
+                        lyricComposerEncounter = encounter
+                    }
+                    .frame(maxWidth: sectionWidth)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, metrics.isTablet ? 0 : metrics.horizontalPadding)
                     .padding(.top, DetailLayout.bottomActionsTopPadding)
                     .padding(.bottom, DetailLayout.bottomActionsInset)
                     .transition(.opacity.combined(with: .offset(y: 20)))
+                }
             }
         }
     }

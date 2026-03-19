@@ -174,7 +174,7 @@ struct EncounterRow: View {
                     Group {
                         if let namespace = namespace, !hideMatchedElements {
                             jacketView(size: 80)
-                                .matchedGeometryEffect(id: "artwork-\(encounter.id)", in: namespace)
+                                .matchedGeometryEffect(id: "artwork-\(encounter.id)", in: namespace, isSource: true)
                         } else {
                             jacketView(size: 80)
                                 .opacity(hideMatchedElements ? 0 : 1)
@@ -188,7 +188,7 @@ struct EncounterRow: View {
                         Group {
                             if let namespace = namespace, !hideMatchedElements {
                                 Text(encounter.userName)
-                                    .matchedGeometryEffect(id: "userName-\(encounter.id)", in: namespace)
+                                    .matchedGeometryEffect(id: "userName-\(encounter.id)", in: namespace, isSource: true)
                             } else {
                                 Text(encounter.userName)
                                     .opacity(hideMatchedElements ? 0 : 1)
@@ -204,7 +204,7 @@ struct EncounterRow: View {
                         Group {
                             if let namespace = namespace, !hideMatchedElements {
                                 Text(encounter.track.title)
-                                    .matchedGeometryEffect(id: "trackTitle-\(encounter.id)", in: namespace)
+                                    .matchedGeometryEffect(id: "trackTitle-\(encounter.id)", in: namespace, isSource: true)
                             } else {
                                 Text(encounter.track.title)
                                     .opacity(hideMatchedElements ? 0 : 1)
