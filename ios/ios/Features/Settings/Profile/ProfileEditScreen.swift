@@ -6,7 +6,8 @@ struct ProfileEditView: View {
     var body: some View {
         AppScaffold(
             title: "プロフィール",
-            subtitle: "公開される情報を管理"
+            subtitle: "公開される情報を管理",
+            showsBackButton: true
         ) {
             VStack(alignment: .leading, spacing: 28) {
                 SectionCard(title: "基本情報") {

@@ -3,17 +3,20 @@ import SwiftUI
 struct AppScaffold<Content: View>: View {
     let title: String
     let subtitle: String?
+    let showsBackButton: Bool
     let trailingSymbol: String?
     let accentColor: Color?
     let customBackground: AnyView?
     @ViewBuilder var content: Content
 
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.topSafeAreaInset) private var envTopSafeArea
     @Environment(\.bottomSafeAreaInset) private var envBottomSafeArea
 
     init(
         title: String,
         subtitle: String? = nil,
+        showsBackButton: Bool = false,
         trailingSymbol: String? = nil,
         accentColor: Color? = nil,
         customBackground: AnyView? = nil,
@@ -21,6 +24,7 @@ struct AppScaffold<Content: View>: View {
     ) {
         self.title = title
         self.subtitle = subtitle
+        self.showsBackButton = showsBackButton
         self.trailingSymbol = trailingSymbol
         self.accentColor = accentColor
         self.customBackground = customBackground
@@ -49,6 +53,25 @@ struct AppScaffold<Content: View>: View {
                     VStack(alignment: .leading, spacing: 28) {
                         HStack(alignment: .top) {
                             VStack(alignment: .leading, spacing: 8) {
+                                if showsBackButton {
+                                    Button {
+                                        dismiss()
+                                    } label: {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "chevron.left")
+                                            Text("戻る")
+                                        }
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(PrototypeTheme.textPrimary)
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 10)
+                                        .background(PrototypeTheme.surface.opacity(0.92))
+                                        .clipShape(Capsule())
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(.bottom, 8)
+                                }
+
                                 Text(title)
                                     .font(PrototypeTheme.Typography.Product.screenTitle)
                                     .foregroundStyle(PrototypeTheme.textPrimary)
