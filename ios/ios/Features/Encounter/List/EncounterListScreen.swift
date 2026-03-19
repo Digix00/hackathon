@@ -225,6 +225,11 @@ struct EncounterListView: View {
 
                                         GeometryReader { itemGeometry in
                                             let metrics = wheelMetrics(itemGeometry: itemGeometry, wheelGeometry: wheelGeometry)
+                                            let rowOpacity: Double = {
+                                                if selectedEncounter != nil && !isSelected { return 0 }
+                                                if isSelected && showDetailContent { return 0 }
+                                                return metrics.opacity
+                                            }()
 
                                             Button {
                                                 withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
@@ -242,7 +247,7 @@ struct EncounterListView: View {
                                                     hideMatchedElements: isSelected && selectedEncounter != nil
                                                 )
                                                 .scaleEffect(metrics.scale)
-                                                .opacity(selectedEncounter != nil && !isSelected ? 0 : metrics.opacity)
+                                                .opacity(rowOpacity)
                                                 .blur(radius: metrics.blur)
                                                 .saturation(metrics.saturation)
                                                 .offset(
@@ -328,7 +333,7 @@ struct EncounterListView: View {
             let contentWidth = max(layoutWidth - (metrics.horizontalPadding * 2), 0)
             let heroWidth = min(contentWidth, 520)
             let sectionWidth = metrics.isTablet ? min(metrics.readableWidth, contentWidth) : layoutWidth
-            let transitionNamespace = showDetailContent ? nil : encounterNamespace
+            let transitionNamespace: Namespace.ID? = encounterNamespace
 
             ZStack {
                 // Keep background consistent - no flash
@@ -486,6 +491,9 @@ struct EncounterListView: View {
 
     private func syncDetailPresentationState() {
         isDetailPresented = selectedEncounterID != nil
+        if selectedEncounterID == nil {
+            showDetailContent = false
+        }
     }
 }
 
