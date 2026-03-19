@@ -130,7 +130,7 @@ func (u *locationUsecase) PostLocation(ctx context.Context, authUID string, inpu
 			UserID1:       userID1,
 			UserID2:       userID2,
 			EncounterType: vo.EncounterTypeLocation,
-			OccurredAt:    now,
+			OccurredAt:    input.RecordedAt,
 			Latitude:      &input.Lat,
 			Longitude:     &input.Lng,
 		}, []string{requester.ID, candidate.UserID}, requester.ID, now, dailyEncounterUserLimit, dailyEncounterPairLimit)
