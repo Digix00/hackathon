@@ -3,17 +3,14 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"hackathon/internal/infra/rdb"
@@ -24,32 +21,11 @@ import (
 func openPostgresIntegrationDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
-	dsn := os.Getenv("PG_TEST_DATABASE_URL")
-	if dsn == "" {
-		dsn = "postgres://postgres:postgres@127.0.0.1:5432/hackathon?sslmode=disable"
+	if sharedTestDB == nil {
+		t.Skip("skip integration test: postgres not available")
 	}
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		t.Skipf("skip integration test: postgres is not reachable (%v)", err)
-	}
-
-	sqlDB, err := db.DB()
-	if err != nil {
-		t.Fatalf("get sql.DB: %v", err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	if err := sqlDB.PingContext(ctx); err != nil {
-		t.Skipf("skip integration test: postgres ping failed (%v)", err)
-	}
-
-	if err := rdb.Migrate(db); err != nil {
-		t.Fatalf("migrate postgres: %v", err)
-	}
-
-	return db
+	return sharedTestDB
 }
 
 func cleanupPostgresTestData(t *testing.T, db *gorm.DB) {
