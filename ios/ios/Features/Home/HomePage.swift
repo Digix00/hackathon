@@ -136,8 +136,8 @@ struct HomePage: View {
                 motion.startUpdates()
             }
         }
-        .onChange(of: isMotionActive) { isActive in
-            if isActive {
+        .onChange(of: isMotionActive) {
+            if isMotionActive {
                 motion.startUpdates()
             } else {
                 motion.stopUpdates()

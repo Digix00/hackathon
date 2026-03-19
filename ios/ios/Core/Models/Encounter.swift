@@ -6,13 +6,15 @@ struct Encounter: Identifiable, Hashable {
     let track: Track
     let relativeTime: String
     let lyric: String
+    let occurredAt: Date?
 
-    init(id: String? = nil, userName: String, track: Track, relativeTime: String, lyric: String) {
+    init(id: String? = nil, userName: String, track: Track, relativeTime: String, lyric: String, occurredAt: Date? = nil) {
         self.id = id ?? "\(userName)-\(track.id)-\(relativeTime)-\(lyric)"
         self.userName = userName
         self.track = track
         self.relativeTime = relativeTime
         self.lyric = lyric
+        self.occurredAt = occurredAt
     }
 
     var happenedYesterday: Bool {
