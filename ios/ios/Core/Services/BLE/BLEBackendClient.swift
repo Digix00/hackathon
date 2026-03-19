@@ -458,18 +458,18 @@ private struct PendingEncounter {
 
     nonisolated var dictionaryValue: [String: Any] {
         [
-            "target_ble_token": targetBLEToken,
+            "targetBLEToken": targetBLEToken,
             "rssi": rssi,
-            "occurred_at_epoch_ms": occurredAtEpochMs,
+            "occurredAtEpochMs": occurredAtEpochMs,
             "attempts": attempts
         ]
     }
 
     nonisolated init?(dictionary: [String: Any]) {
         guard
-            let targetBLEToken = dictionary["target_ble_token"] as? String,
+            let targetBLEToken = Self.stringValue(in: dictionary, primaryKey: "targetBLEToken", legacyKey: "target_ble_token"),
             let rssi = Self.intValue(from: dictionary["rssi"]),
-            let occurredAtEpochMs = Self.int64Value(from: dictionary["occurred_at_epoch_ms"]),
+            let occurredAtEpochMs = Self.int64Value(in: dictionary, primaryKey: "occurredAtEpochMs", legacyKey: "occurred_at_epoch_ms"),
             let attempts = Self.intValue(from: dictionary["attempts"])
         else {
             return nil
@@ -491,6 +491,13 @@ private struct PendingEncounter {
         return nil
     }
 
+    nonisolated static func stringValue(in dictionary: [String: Any], primaryKey: String, legacyKey: String) -> String? {
+        if let value = dictionary[primaryKey] as? String {
+            return value
+        }
+        return dictionary[legacyKey] as? String
+    }
+
     nonisolated static func int64Value(from raw: Any?) -> Int64? {
         if let value = raw as? Int64 {
             return value
@@ -502,6 +509,13 @@ private struct PendingEncounter {
             return number.int64Value
         }
         return nil
+    }
+
+    nonisolated static func int64Value(in dictionary: [String: Any], primaryKey: String, legacyKey: String) -> Int64? {
+        if let value = int64Value(from: dictionary[primaryKey]) {
+            return value
+        }
+        return int64Value(from: dictionary[legacyKey])
     }
 }
 
@@ -534,23 +548,23 @@ private struct FailedEncounter {
 
     nonisolated var dictionaryValue: [String: Any] {
         [
-            "target_ble_token": targetBLEToken,
+            "targetBLEToken": targetBLEToken,
             "rssi": rssi,
-            "occurred_at_epoch_ms": occurredAtEpochMs,
+            "occurredAtEpochMs": occurredAtEpochMs,
             "attempts": attempts,
-            "failed_at_epoch_ms": failedAtEpochMs,
-            "status_code": statusCode as Any,
+            "failedAtEpochMs": failedAtEpochMs,
+            "statusCode": statusCode as Any,
             "reason": reason
         ]
     }
 
     nonisolated init?(dictionary: [String: Any]) {
         guard
-            let targetBLEToken = dictionary["target_ble_token"] as? String,
+            let targetBLEToken = PendingEncounter.stringValue(in: dictionary, primaryKey: "targetBLEToken", legacyKey: "target_ble_token"),
             let rssi = PendingEncounter.intValue(from: dictionary["rssi"]),
-            let occurredAtEpochMs = PendingEncounter.int64Value(from: dictionary["occurred_at_epoch_ms"]),
+            let occurredAtEpochMs = PendingEncounter.int64Value(in: dictionary, primaryKey: "occurredAtEpochMs", legacyKey: "occurred_at_epoch_ms"),
             let attempts = PendingEncounter.intValue(from: dictionary["attempts"]),
-            let failedAtEpochMs = PendingEncounter.int64Value(from: dictionary["failed_at_epoch_ms"]),
+            let failedAtEpochMs = PendingEncounter.int64Value(in: dictionary, primaryKey: "failedAtEpochMs", legacyKey: "failed_at_epoch_ms"),
             let reason = dictionary["reason"] as? String
         else {
             return nil
@@ -561,7 +575,9 @@ private struct FailedEncounter {
         self.occurredAtEpochMs = occurredAtEpochMs
         self.attempts = attempts
         self.failedAtEpochMs = failedAtEpochMs
-        self.statusCode = PendingEncounter.intValue(from: dictionary["status_code"])
+        self.statusCode =
+            PendingEncounter.intValue(from: dictionary["statusCode"]) ??
+            PendingEncounter.intValue(from: dictionary["status_code"])
         self.reason = reason
     }
 }

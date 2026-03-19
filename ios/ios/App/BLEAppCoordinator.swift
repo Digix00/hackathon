@@ -324,6 +324,7 @@ final class BLEAppCoordinator: ObservableObject {
         } catch {
             await MainActor.run {
                 isLoadingEncounters = false
+                encounterErrorMessage = "すれ違い履歴の取得に失敗しました。"
             }
         }
     }
