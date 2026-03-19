@@ -74,12 +74,11 @@ func (r *userCurrentTrackRepository) Upsert(ctx context.Context, userID, externa
 	// Check if already set with the same track.
 	var existing model.UserCurrentTrack
 	findErr := r.db.WithContext(ctx).Where("user_id = ?", userID).First(&existing).Error
-	isNew := errors.Is(findErr, gorm.ErrRecordNotFound)
-	if findErr != nil && !isNew {
+	if findErr != nil && !errors.Is(findErr, gorm.ErrRecordNotFound) {
 		return entity.UserCurrentTrack{}, false, findErr
 	}
 
-	if !isNew && existing.TrackID == internalTrackID {
+	if !errors.Is(findErr, gorm.ErrRecordNotFound) && existing.TrackID == internalTrackID {
 		// Same track already set — idempotent
 		if err2 := r.db.WithContext(ctx).Preload("Track").First(&existing, "user_id = ?", userID).Error; err2 != nil {
 			return entity.UserCurrentTrack{}, false, err2
@@ -123,7 +122,7 @@ func (r *userCurrentTrackRepository) Upsert(ctx context.Context, userID, externa
 		TrackID:   saved.TrackID,
 		Track:     &track,
 		UpdatedAt: saved.UpdatedAt,
-	}, isNew, nil
+	}, saved.ID == row.ID, nil
 }
 
 func (r *userCurrentTrackRepository) DeleteByUserID(ctx context.Context, userID string) error {
