@@ -69,9 +69,9 @@ nonisolated struct BackendPublicTrack: Decodable, Equatable {
 }
 
 nonisolated struct BackendSharedTrack: Decodable, Equatable {
-    let id: String?
-    let title: String?
-    let artistName: String?
+    let id: String
+    let title: String
+    let artistName: String
     let artworkURL: String?
     let previewURL: String?
     let updatedAt: Date?
