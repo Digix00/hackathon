@@ -1,15 +1,54 @@
 import SwiftUI
 
+enum SearchMode {
+    case shareTrack
+    case addToMyTracks
+
+    var subtitle: String {
+        switch self {
+        case .shareTrack:
+            return "シェアする曲を選ぶ"
+        case .addToMyTracks:
+            return "マイトラックに追加する曲を選ぶ"
+        }
+    }
+
+    var actionTitle: String {
+        switch self {
+        case .shareTrack:
+            return "この曲をシェアする"
+        case .addToMyTracks:
+            return "マイトラックに追加"
+        }
+    }
+
+    var backButtonTitle: String {
+        switch self {
+        case .shareTrack:
+            return "ホーム画面に戻る"
+        case .addToMyTracks:
+            return "閉じる"
+        }
+    }
+}
+
 struct SearchView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.homeNamespace) var homeNamespace
     @StateObject private var viewModel = SearchViewModel()
     private let defaultQuery = "夜に駆ける"
+    let mode: SearchMode
+    let onTrackAdded: (() -> Void)?
+
+    init(mode: SearchMode = .shareTrack, onTrackAdded: (() -> Void)? = nil) {
+        self.mode = mode
+        self.onTrackAdded = onTrackAdded
+    }
 
     var body: some View {
         AppScaffold(
             title: "曲を検索",
-            subtitle: "シェアする曲を選ぶ"
+            subtitle: mode.subtitle
         ) {
             VStack(alignment: .leading, spacing: 32) {
                 Button {
@@ -17,7 +56,7 @@ struct SearchView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "chevron.left")
-                        Text("ホーム画面に戻る")
+                        Text(mode.backButtonTitle)
                     }
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(PrototypeTheme.textPrimary)
@@ -97,6 +136,30 @@ struct SearchView: View {
                     }
                 }
 
+                if mode == .shareTrack {
+                    SectionCard(title: "現在シェア中の曲") {
+                        VStack(alignment: .leading, spacing: 16) {
+                            if viewModel.isLoadingSharedTrack {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                            } else if let sharedTrack = viewModel.sharedTrack {
+                                TrackSelectionRow(track: sharedTrack, showsActionIcon: false)
+                                SecondaryButton(
+                                    title: viewModel.isSubmitting ? "解除中..." : "シェアを解除",
+                                    systemImage: "xmark.circle"
+                                ) {
+                                    Task { await viewModel.clearSharedTrack() }
+                                }
+                                .disabled(viewModel.isSubmitting)
+                            } else {
+                                Text("まだシェア中の曲がありません。")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(PrototypeTheme.textSecondary)
+                            }
+                        }
+                    }
+                }
+
                 SectionCard(title: "選択中の曲") {
                     VStack(alignment: .leading, spacing: 20) {
                         if let selectedTrack = viewModel.selectedTrack {
@@ -122,8 +185,25 @@ struct SearchView: View {
                                     .font(.system(size: 20))
                                     .foregroundStyle(PrototypeTheme.success)
                             }
-                            PrimaryButton(title: "この曲をシェアする", isDisabled: viewModel.isSelecting) {
-                                dismiss()
+                            PrimaryButton(
+                                title: viewModel.isSubmitting ? "送信中..." : mode.actionTitle,
+                                isDisabled: viewModel.isSelecting || viewModel.isSubmitting || selectedTrack.backendId == nil
+                            ) {
+                                Task {
+                                    let success: Bool
+                                    switch mode {
+                                    case .shareTrack:
+                                        success = await viewModel.shareSelectedTrack()
+                                    case .addToMyTracks:
+                                        success = await viewModel.addSelectedTrackToMyTracks()
+                                        if success {
+                                            onTrackAdded?()
+                                        }
+                                    }
+                                    if success {
+                                        dismiss()
+                                    }
+                                }
                             }
                         } else {
                             Text("曲を選択してください。")
@@ -149,6 +229,9 @@ struct SearchView: View {
             if viewModel.query.isEmpty {
                 viewModel.query = defaultQuery
                 viewModel.search()
+            }
+            if mode == .shareTrack {
+                viewModel.loadSharedTrack()
             }
         }
     }

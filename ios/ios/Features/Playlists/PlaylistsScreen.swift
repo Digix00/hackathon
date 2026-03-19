@@ -3,7 +3,9 @@ import SwiftUI
 
 struct PlaylistsView: View {
     @StateObject private var viewModel = PlaylistsViewModel()
+    @StateObject private var myTracksViewModel = MyTracksViewModel()
     @State private var isCreatePresented = false
+    @State private var isAddTrackPresented = false
 
     var body: some View {
         AppScaffold(
@@ -15,6 +17,40 @@ struct PlaylistsView: View {
                     isCreatePresented = true
                 }
                 .disabled(viewModel.isCreating)
+
+                SectionCard(title: "マイトラック") {
+                    VStack(alignment: .leading, spacing: 16) {
+                        SecondaryButton(
+                            title: "マイトラックに追加",
+                            systemImage: "plus.circle"
+                        ) {
+                            isAddTrackPresented = true
+                        }
+
+                        if myTracksViewModel.isLoading && myTracksViewModel.tracks.isEmpty {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                        } else if myTracksViewModel.tracks.isEmpty {
+                            Text("まだマイトラックがありません")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.textSecondary)
+                        } else {
+                            ForEach(myTracksViewModel.tracks) { track in
+                                MyTrackRow(track: track) {
+                                    if let backendId = track.backendId {
+                                        myTracksViewModel.remove(trackId: backendId)
+                                    }
+                                }
+                            }
+                        }
+
+                        if let errorMessage = myTracksViewModel.errorMessage {
+                            Text(errorMessage)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.error)
+                        }
+                    }
+                }
 
                 SectionCard(title: "プレイリスト一覧") {
                     VStack(alignment: .leading, spacing: 16) {
@@ -46,11 +82,13 @@ struct PlaylistsView: View {
 
                 SecondaryButton(title: "更新", systemImage: "arrow.clockwise") {
                     viewModel.refresh()
+                    myTracksViewModel.refresh()
                 }
             }
         }
         .onAppear {
             viewModel.refresh()
+            myTracksViewModel.refresh()
         }
         .sheet(isPresented: $isCreatePresented) {
             PlaylistEditorSheet(
@@ -62,6 +100,11 @@ struct PlaylistsView: View {
                 isSaving: viewModel.isCreating
             ) { name, description, isPublic in
                 viewModel.createPlaylist(name: name, description: description, isPublic: isPublic)
+            }
+        }
+        .sheet(isPresented: $isAddTrackPresented) {
+            SearchView(mode: .addToMyTracks) {
+                myTracksViewModel.refresh()
             }
         }
     }
@@ -100,6 +143,39 @@ private struct PlaylistRowView: View {
 
             Image(systemName: "chevron.right")
                 .foregroundStyle(PrototypeTheme.textTertiary)
+        }
+        .padding(16)
+        .background(PrototypeTheme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+private struct MyTrackRow: View {
+    let track: Track
+    let onDelete: () -> Void
+
+    var body: some View {
+        HStack(spacing: 16) {
+            MockArtworkView(color: track.color, symbol: "music.note", size: 52, artwork: track.artwork)
+                .shadow(color: track.color.opacity(0.2), radius: 8, x: 0, y: 4)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(track.title)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(PrototypeTheme.textPrimary)
+                Text(track.artist)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(PrototypeTheme.textSecondary)
+            }
+
+            Spacer()
+
+            Button(action: onDelete) {
+                Image(systemName: "minus.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(PrototypeTheme.error)
+            }
+            .buttonStyle(.plain)
         }
         .padding(16)
         .background(PrototypeTheme.surface)

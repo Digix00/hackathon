@@ -211,6 +211,71 @@ actor BackendAPIClient {
         return track
     }
 
+    // MARK: - Shared Tracks
+
+    func getSharedTrack() async throws -> BackendSharedTrack? {
+        let result = try await send(path: "users/me/shared-track", method: "GET")
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendSharedTrackResponse.self, from: result.data).sharedTrack
+    }
+
+    func upsertSharedTrack(trackId: String) async throws -> BackendSharedTrack? {
+        let request = UpsertSharedTrackRequest(trackId: trackId)
+        let result = try await send(
+            path: "users/me/shared-track",
+            method: "PUT",
+            body: try encoder.encode(request)
+        )
+        guard result.response.statusCode == 200 || result.response.statusCode == 201 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendSharedTrackResponse.self, from: result.data).sharedTrack
+    }
+
+    func deleteSharedTrack() async throws {
+        let result = try await send(path: "users/me/shared-track", method: "DELETE")
+        guard result.response.statusCode == 204 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+    }
+
+    // MARK: - User Tracks
+
+    func listUserTracks(limit: Int? = nil, cursor: String? = nil) async throws -> BackendUserTrackListResponse {
+        var queryItems: [URLQueryItem] = []
+        if let limit { queryItems.append(URLQueryItem(name: "limit", value: "\(limit)")) }
+        if let cursor { queryItems.append(URLQueryItem(name: "cursor", value: cursor)) }
+
+        let result = try await send(path: "users/me/tracks", method: "GET", queryItems: queryItems)
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendUserTrackListResponse.self, from: result.data)
+    }
+
+    func addUserTrack(trackId: String) async throws -> BackendPublicTrack? {
+        let request = AddUserTrackRequest(trackId: trackId)
+        let result = try await send(
+            path: "users/me/tracks",
+            method: "POST",
+            body: try encoder.encode(request)
+        )
+        guard result.response.statusCode == 200 || result.response.statusCode == 201 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        return try decoder.decode(BackendUserTrackResponse.self, from: result.data).track
+    }
+
+    func deleteUserTrack(id: String) async throws {
+        let escapedId = escapePathComponent(id)
+        let result = try await send(path: "users/me/tracks/\(escapedId)", method: "DELETE")
+        guard result.response.statusCode == 204 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+    }
+
     // MARK: - Reports
 
     func createReport(_ request: CreateReportRequest) async throws -> BackendReport {
