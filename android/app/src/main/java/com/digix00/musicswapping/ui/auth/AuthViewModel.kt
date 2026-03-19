@@ -42,7 +42,7 @@ class AuthViewModel @Inject constructor() : ViewModel() {
             _uiState.update {
                 it.copy(
                     isLoading = false,
-                    error = "Google ログイン設定が未完了です。local.properties の google.web_client_id を設定してください。"
+                    error = "Google ログイン設定が未完了です。local.properties の dev.google.web_client_id または prod.google.web_client_id を設定してください。"
                 )
             }
             return

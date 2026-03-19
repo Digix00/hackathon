@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A1000001AAAA000000000001 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A1000001AAAA000000000101 /* FirebaseAuth */; };
+		A1000001AAAA000000000002 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = A1000001AAAA000000000102 /* FirebaseCore */; };
+		A1000001AAAA000000000003 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A1000001AAAA000000000103 /* GoogleSignIn */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		524C6BA92F6562AE007E823F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -31,9 +37,26 @@
 		524C6BD62F6562AE007E823F /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ios/config/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A1000001AAAA000000000301 /* Exceptions for "ios" folder in "ios" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				config/Debug.xcconfig,
+				config/Release.xcconfig,
+				config/Secrets.example.xcconfig,
+				config/Secrets.xcconfig,
+			);
+			target = 524C6B9A2F6562AC007E823F /* ios */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		524C6B9D2F6562AC007E823F /* ios */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A1000001AAAA000000000301 /* Exceptions for "ios" folder in "ios" target */,
+			);
 			path = ios;
 			sourceTree = "<group>";
 		};
@@ -54,6 +77,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1000001AAAA000000000003 /* GoogleSignIn in Frameworks */,
+				A1000001AAAA000000000002 /* FirebaseCore in Frameworks */,
+				A1000001AAAA000000000001 /* FirebaseAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -124,6 +150,9 @@
 			);
 			name = ios;
 			packageProductDependencies = (
+				A1000001AAAA000000000101 /* FirebaseAuth */,
+				A1000001AAAA000000000102 /* FirebaseCore */,
+				A1000001AAAA000000000103 /* GoogleSignIn */,
 			);
 			productName = ios;
 			productReference = 524C6B9B2F6562AC007E823F /* ios.app */;
@@ -207,6 +236,10 @@
 			);
 			mainGroup = 524C6B922F6562AC007E823F;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A1000001AAAA000000000201 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				A1000001AAAA000000000202 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 524C6B9C2F6562AC007E823F /* Products */;
 			projectDirPath = "";
@@ -410,7 +443,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = U3KL94T3GX;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ios/Info.plist;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "近くのユーザーと音楽を交換するためにBluetoothを使用します。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -444,7 +478,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ios/Info.plist;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "近くのユーザーと音楽を交換するためにBluetoothを使用します。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -589,6 +624,43 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A1000001AAAA000000000201 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+		A1000001AAAA000000000202 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A1000001AAAA000000000101 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000001AAAA000000000201 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		A1000001AAAA000000000102 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000001AAAA000000000201 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		A1000001AAAA000000000103 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000001AAAA000000000202 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 524C6B932F6562AC007E823F /* Project object */;
 }

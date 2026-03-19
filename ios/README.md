@@ -17,33 +17,49 @@ open ios.xcodeproj
 
 Xcode がプロジェクトを開いた際に自動的に依存関係を解決します。
 
-### 3. Secrets.xcconfig の作成
+### 3. Firebase 設定ファイルを用意する
 
-`ios/config/Secrets.xcconfig` は `.gitignore` で除外されているため、手動で作成する必要があります。
+iOS は `.env` ではなく `xcconfig` を使います。まず example をコピーしてください。
 
 ```bash
-touch ios/config/Secrets.xcconfig
+cp ios/config/Secrets.example.xcconfig ios/config/Secrets.xcconfig
 ```
 
-Firebase の API キーなどの秘匿情報を記述してください。
+`ios/config/Secrets.xcconfig` は `.gitignore` で除外しています。実値はコミットしません。
 
+最低限必要なキー:
+
+```xcconfig
+FIREBASE_API_KEY = YOUR_IOS_FIREBASE_API_KEY
+FIREBASE_APP_ID = YOUR_IOS_FIREBASE_APP_ID
+FIREBASE_GCM_SENDER_ID = YOUR_FIREBASE_SENDER_ID
+FIREBASE_PROJECT_ID = YOUR_FIREBASE_PROJECT_ID
+FIREBASE_STORAGE_BUCKET = YOUR_FIREBASE_STORAGE_BUCKET
+GOOGLE_CLIENT_ID = YOUR_IOS_GOOGLE_CLIENT_ID
+GOOGLE_REVERSED_CLIENT_ID = YOUR_IOS_REVERSED_CLIENT_ID
 ```
-// Secrets.xcconfig の例
-FIREBASE_API_KEY = your_firebase_api_key_here
-```
+
+### 4. Firebase Console 側の前提
+
+- Firebase Authentication で `apple.com` と Google を有効化
+- iOS アプリを Firebase に登録
+- Google ログインを使う場合は iOS 用 Client ID と Reversed Client ID を取得
+
+`GoogleService-Info.plist` を使う運用でも動きますが、このプロジェクトでは `Secrets.xcconfig` だけでも Firebase を初期化できます。
 
 ## プロジェクト構造
 
-```
+```text
 ios/
-├── App/          # アプリケーションエントリーポイント
-├── Core/         # コア機能
-├── Features/     # 機能別モジュール
-├── Shared/       # 共有コンポーネント
-└── config/       # 環境別設定ファイル
-    ├── Debug.xcconfig    # 開発環境設定
-    ├── Release.xcconfig  # 本番環境設定
-    └── Secrets.xcconfig  # 秘匿情報（要手動作成）
+├── App/
+├── Core/
+├── Features/
+├── Shared/
+└── config/
+    ├── Debug.xcconfig
+    ├── Release.xcconfig
+    ├── Secrets.example.xcconfig
+    └── Secrets.xcconfig
 ```
 
 ## 環境別設定
@@ -66,11 +82,11 @@ ios/
 
 バックエンドがローカルで起動している場合（`http://127.0.0.1:8000`）、`ios/config/Debug.xcconfig` の `API_BASE_URL` を以下のように変更してください。
 
-```
+```xcconfig
 API_BASE_URL = http:/$()/127.0.0.1:8000
 ```
 
-※ `$()/` は Xcode の設定ファイルで `//` をエスケープするための記法です。Run Scheme の環境変数では不要です。
+`$()/` は Xcode の設定ファイルで `//` を表すための記法です。
 
 ### Firebase Auth Emulator のトークンを使う
 
@@ -89,12 +105,10 @@ curl -s "http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signUp
   }'
 ```
 
-レスポンスの `idToken` を控えておきます。
-
 2. Xcode の Run Scheme で環境変数を設定
 
-- `API_BASE_URL` = `http://127.0.0.1:8000`
-- `FIREBASE_ID_TOKEN` = `<emulatorで発行したtoken>`
+- `API_BASE_URL = http://127.0.0.1:8000`
+- `FIREBASE_ID_TOKEN = <emulatorで発行したtoken>`
 
 `FIREBASE_ID_TOKEN` は `BackendAPIClient` が優先して使用します。
 
@@ -108,7 +122,7 @@ curl -s "http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signUp
 
 ### Swift Package Manager の依存関係が解決されない場合
 
-```
+```text
 File > Packages > Reset Package Caches
 ```
 
@@ -123,6 +137,7 @@ rm -rf ~/Library/Developer/Xcode/DerivedData
 
 ## 関連ファイル
 
-- `ios.xcodeproj` - Xcode プロジェクトファイル
-- `ios/config/*.xcconfig` - 環境別設定ファイル
-- `.gitignore` - Git 除外設定
+- `ios.xcodeproj`
+- `ios/config/*.xcconfig`
+- `ios/config/Secrets.example.xcconfig`
+- `.gitignore`

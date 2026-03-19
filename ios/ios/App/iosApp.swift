@@ -14,6 +14,9 @@ struct iosApp: App {
                 .environmentObject(bleCoordinator)
                 .environmentObject(bleCoordinator.bleManager)
                 .environmentObject(pushManager)
+                .onOpenURL { url in
+                    _ = GoogleSignInCoordinator.handle(url: url)
+                }
                 .task {
                     bleCoordinator.startIfNeeded(scenePhase: scenePhase)
                 }

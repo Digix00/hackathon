@@ -143,7 +143,7 @@ struct AuthGateView: View {
                 .foregroundStyle(PrototypeTheme.textTertiary)
                 .multilineTextAlignment(.center)
 
-            Text("Google ログインには `GoogleService-Info.plist` と URL Scheme 設定が必要です。")
+            Text("Google ログインには `GoogleService-Info.plist` または `Secrets.xcconfig` の設定と URL Scheme が必要です。")
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(PrototypeTheme.textTertiary)
                 .multilineTextAlignment(.center)
@@ -216,7 +216,7 @@ final class AuthGateViewModel: ObservableObject {
         }
 
         let credential = OAuthProvider.credential(
-            providerID: "apple.com",
+            providerID: .apple,
             idToken: tokenString,
             rawNonce: nonce
         )
