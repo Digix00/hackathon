@@ -137,4 +137,46 @@ open class EncountersAPI {
 
         return localVariableRequestBuilder.init(method: "GET", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true)
     }
+
+    /**
+     エンカウントを既読にする
+     
+     - parameter id: (path) 対象エンカウント ID 
+     - returns: HackathonInternalHandlerSchemaResponseEncounterReadResponse
+     */
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    open class func markEncounterAsRead(id: String) async throws -> HackathonInternalHandlerSchemaResponseEncounterReadResponse {
+        return try await markEncounterAsReadWithRequestBuilder(id: id).execute().body
+    }
+
+    /**
+     エンカウントを既読にする
+     - PATCH /api/v1/encounters/{id}/read
+     - 指定したエンカウントを既読マークする（冪等）
+     - API Key:
+       - type: apiKey Authorization (HEADER)
+       - name: BearerAuth
+     - parameter id: (path) 対象エンカウント ID 
+     - returns: RequestBuilder<HackathonInternalHandlerSchemaResponseEncounterReadResponse> 
+     */
+    open class func markEncounterAsReadWithRequestBuilder(id: String) -> RequestBuilder<HackathonInternalHandlerSchemaResponseEncounterReadResponse> {
+        var localVariablePath = "/api/v1/encounters/{id}/read"
+        let idPreEscape = "\(APIHelper.mapValueToPathItem(id))"
+        let idPostEscape = idPreEscape.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        localVariablePath = localVariablePath.replacingOccurrences(of: "{id}", with: idPostEscape, options: .literal, range: nil)
+        let localVariableURLString = OpenAPIClientAPI.basePath + localVariablePath
+        let localVariableParameters: [String: Any]? = nil
+
+        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
+
+        let localVariableNillableHeaders: [String: Any?] = [
+            :
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<HackathonInternalHandlerSchemaResponseEncounterReadResponse>.Type = OpenAPIClientAPI.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "PATCH", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true)
+    }
 }

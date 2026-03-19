@@ -11,6 +11,7 @@ struct EncounterListView: View {
     @Binding private var isDetailPresented: Bool
     @State private var selectedEncounterID: String?
     @State private var showDetailContent = false
+    @State private var lyricComposerEncounter: Encounter?
     @SceneStorage("encounter.list.scrollTargetID") private var scrollTargetID: String?
     @EnvironmentObject private var bleCoordinator: BLEAppCoordinator
     
@@ -54,6 +55,9 @@ struct EncounterListView: View {
         }
         .onChange(of: selectedEncounterID) { _ in
             syncDetailPresentationState()
+            if let selectedEncounterID {
+                bleCoordinator.markEncounterRead(id: selectedEncounterID)
+            }
         }
         .onChange(of: bleCoordinator.encounters.map(\.id)) { _, ids in
             if let target = scrollTargetID, !ids.contains(target) {
@@ -64,6 +68,10 @@ struct EncounterListView: View {
             guard let selectedEncounterID, !ids.contains(selectedEncounterID) else { return }
             self.selectedEncounterID = nil
         }
+        .sheet(item: $lyricComposerEncounter) { encounter in
+            LyricComposerSheet(encounter: encounter)
+                .environmentObject(bleCoordinator)
+        }
     }
 
     // MARK: - List Content
@@ -73,18 +81,13 @@ struct EncounterListView: View {
             let topPadding = geometry.safeAreaInsets.top
 
             if encounters.isEmpty {
-                VStack(spacing: 16) {
-                    Spacer()
-                    Text("まだすれ違いがありません")
-                        .font(PrototypeTheme.Typography.font(size: 22, weight: .black, role: .primary))
-                        .foregroundStyle(PrototypeTheme.textPrimary)
-                    Text(bleCoordinator.encounterErrorMessage ?? "BLE をオンにして街ですれ違うと、ここに履歴が表示されます。")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(PrototypeTheme.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
-                    Spacer()
-                }
+                EncounterEmptyStateView(
+                    errorMessage: bleCoordinator.encounterErrorMessage,
+                    isLoading: bleCoordinator.isLoadingEncounters,
+                    onRefresh: {
+                        bleCoordinator.refreshEncounters()
+                    }
+                )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
 
@@ -295,7 +298,9 @@ struct EncounterListView: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if showDetailContent {
-                EncounterPrimaryActions(encounter: encounter) {}
+                EncounterPrimaryActions(encounter: encounter) {
+                    lyricComposerEncounter = encounter
+                }
                     .padding(.horizontal, 32)
                     .padding(.top, DetailLayout.bottomActionsTopPadding)
                     .padding(.bottom, DetailLayout.bottomActionsInset)

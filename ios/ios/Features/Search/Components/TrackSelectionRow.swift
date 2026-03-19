@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TrackSelectionRow: View {
     let track: Track
+    var showsActionIcon: Bool = true
 
     var body: some View {
         HStack(spacing: 20) {
@@ -46,10 +47,12 @@ struct TrackSelectionRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            VStack {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(PrototypeTheme.accent.opacity(0.12))
+            if showsActionIcon {
+                VStack {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(PrototypeTheme.accent.opacity(0.12))
+                }
             }
         }
         .padding(.vertical, 14)

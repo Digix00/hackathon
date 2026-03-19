@@ -15,6 +15,11 @@ final class BLEAppCoordinator: ObservableObject {
     @Published private(set) var isLoadingSettings = false
     @Published private(set) var encounterErrorMessage: String?
     @Published private(set) var settingsErrorMessage: String?
+    @Published private(set) var latestLyricChain: BackendLyricChainSummary?
+    @Published private(set) var isPostingLocation = false
+    @Published private(set) var locationPostMessage: String?
+    @Published private(set) var locationPostErrorMessage: String?
+    @Published private(set) var lastLocationEncounterCount: Int?
 
     private let backendClient: BLEBackendClient
     private let apiClient: BackendAPIClient
@@ -26,6 +31,8 @@ final class BLEAppCoordinator: ObservableObject {
     private var encounterSettingsRequestVersion = 0
     private var detectionSubscription: AnyCancellable?
     private var currentScenePhase: ScenePhase = .active
+    private var readRequestInFlight: Set<String> = []
+    private var markedReadEncounterIDs: Set<String> = []
 
     init() {
         self.bleManager = BLEManager()
@@ -68,6 +75,72 @@ final class BLEAppCoordinator: ObservableObject {
         Task { [weak self] in
             await self?.loadEncounters()
         }
+    }
+
+    func markEncounterRead(id: String) {
+        guard !markedReadEncounterIDs.contains(id), !readRequestInFlight.contains(id) else { return }
+        readRequestInFlight.insert(id)
+        Task { [weak self] in
+            do {
+                _ = try await self?.apiClient.markEncounterAsRead(id: id)
+                await MainActor.run {
+                    self?.markedReadEncounterIDs.insert(id)
+                    self?.readRequestInFlight.remove(id)
+                }
+            } catch {
+                await MainActor.run {
+                    self?.readRequestInFlight.remove(id)
+                }
+            }
+        }
+    }
+
+    func postLocation(lat: Double, lng: Double, accuracyM: Double, recordedAt: Date = Date()) {
+        guard !isPostingLocation else { return }
+        isPostingLocation = true
+        locationPostMessage = nil
+        locationPostErrorMessage = nil
+
+        Task { [weak self] in
+            do {
+                let response = try await self?.apiClient.postLocation(
+                    PostLocationRequest(
+                        accuracyM: accuracyM,
+                        lat: lat,
+                        lng: lng,
+                        recordedAt: recordedAt
+                    )
+                )
+                await MainActor.run {
+                    let count = response?.encounterCount ?? 0
+                    self?.lastLocationEncounterCount = count
+                    self?.locationPostMessage = "位置情報を送信しました（新規\(count)件）"
+                    self?.locationPostErrorMessage = nil
+                    self?.isPostingLocation = false
+                }
+            } catch {
+                await MainActor.run {
+                    self?.locationPostErrorMessage = "位置情報の送信に失敗しました"
+                    self?.isPostingLocation = false
+                }
+            }
+        }
+    }
+
+    func submitLyric(encounterId: String, content: String) async throws -> BackendLyricSubmitResponse {
+        let response = try await apiClient.submitLyric(encounterId: encounterId, content: content)
+        if let index = encounters.firstIndex(where: { $0.id == encounterId }) {
+            let encounter = encounters[index]
+            encounters[index] = Encounter(
+                id: encounter.id,
+                userName: encounter.userName,
+                track: encounter.track,
+                relativeTime: encounter.relativeTime,
+                lyric: content
+            )
+        }
+        latestLyricChain = response.chain
+        return response
     }
 
     func setBLEEnabled(_ isEnabled: Bool) {
@@ -218,14 +291,32 @@ final class BLEAppCoordinator: ObservableObject {
 
         await MainActor.run {
             isLoadingEncounters = true
-            encounterErrorMessage = nil
         }
 
         do {
             let response = try await apiClient.listEncounters(limit: 50)
             let mappedEncounters = response.encounters.map(Self.makeEncounter(from:))
             await MainActor.run {
-                encounters = mappedEncounters
+                let existingLyrics = Dictionary(
+                    uniqueKeysWithValues: encounters.compactMap { encounter in
+                        encounter.lyric.isEmpty ? nil : (encounter.id, encounter.lyric)
+                    }
+                )
+                let mergedEncounters = mappedEncounters.map { encounter in
+                    if !encounter.lyric.isEmpty {
+                        return encounter
+                    }
+                    guard let lyric = existingLyrics[encounter.id] else { return encounter }
+                    return Encounter(
+                        id: encounter.id,
+                        userName: encounter.userName,
+                        track: encounter.track,
+                        relativeTime: encounter.relativeTime,
+                        lyric: lyric
+                    )
+                }
+                encounters = mergedEncounters
+                encounterErrorMessage = nil
                 isLoadingEncounters = false
             }
         } catch {
@@ -292,7 +383,7 @@ final class BLEAppCoordinator: ObservableObject {
             userName: item.user.displayName,
             track: track,
             relativeTime: relativeTimeText(from: item.occurredAt),
-            lyric: ""
+            lyric: item.lyric ?? ""
         )
     }
 

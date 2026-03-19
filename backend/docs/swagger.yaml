@@ -103,6 +103,24 @@ definitions:
         - no-answer
         type: string
     type: object
+  hackathon_internal_handler_schema_request.PostLocationRequest:
+    properties:
+      accuracy_m:
+        type: number
+      lat:
+        type: number
+      lng:
+        type: number
+      recorded_at:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_request.SubmitLyricRequest:
+    properties:
+      content:
+        type: string
+      encounter_id:
+        type: string
+    type: object
   hackathon_internal_handler_schema_request.UpdatePlaylistRequest:
     properties:
       description:
@@ -240,10 +258,52 @@ definitions:
       id:
         type: string
     type: object
+  hackathon_internal_handler_schema_response.BlockListPagination:
+    properties:
+      has_more:
+        type: boolean
+      next_cursor:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.BlockListResponse:
+    properties:
+      blocks:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.Block'
+        type: array
+      pagination:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.BlockListPagination'
+    type: object
   hackathon_internal_handler_schema_response.BlockResponse:
     properties:
       block:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.Block'
+    type: object
+  hackathon_internal_handler_schema_response.ChainDetail:
+    properties:
+      completed_at:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      participant_count:
+        type: integer
+      status:
+        type: string
+      threshold:
+        type: integer
+    type: object
+  hackathon_internal_handler_schema_response.ChainDetailResponse:
+    properties:
+      chain:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.ChainDetail'
+      entries:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.EntryDetail'
+        type: array
+      song:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.SongDetail'
     type: object
   hackathon_internal_handler_schema_response.Comment:
     properties:
@@ -354,6 +414,20 @@ definitions:
       pagination:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.Pagination'
     type: object
+  hackathon_internal_handler_schema_response.EncounterReadResponse:
+    properties:
+      encounter:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterReadResult'
+    type: object
+  hackathon_internal_handler_schema_response.EncounterReadResult:
+    properties:
+      id:
+        type: string
+      is_read:
+        type: boolean
+      read_at:
+        type: string
+    type: object
   hackathon_internal_handler_schema_response.EncounterResponse:
     properties:
       encounter:
@@ -395,6 +469,47 @@ definitions:
       id:
         type: string
     type: object
+  hackathon_internal_handler_schema_response.EntryDetail:
+    properties:
+      content:
+        type: string
+      sequence_num:
+        type: integer
+      user:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.EntryUser'
+    type: object
+  hackathon_internal_handler_schema_response.EntryUser:
+    properties:
+      avatar_url:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.LikeSongResponse:
+    properties:
+      liked:
+        type: boolean
+    type: object
+  hackathon_internal_handler_schema_response.ListUserSongsResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.SongPagination'
+      songs:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.UserSong'
+        type: array
+    type: object
+  hackathon_internal_handler_schema_response.LocationResponse:
+    properties:
+      encounter_count:
+        type: integer
+      encounters:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterSummary'
+        type: array
+    type: object
   hackathon_internal_handler_schema_response.MusicAuthorizeResponse:
     properties:
       authorize_url:
@@ -433,6 +548,22 @@ definitions:
         type: string
       target_user_id:
         type: string
+    type: object
+  hackathon_internal_handler_schema_response.MuteListPagination:
+    properties:
+      has_more:
+        type: boolean
+      next_cursor:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.MuteListResponse:
+    properties:
+      mutes:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.Mute'
+        type: array
+      pagination:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.MuteListPagination'
     type: object
   hackathon_internal_handler_schema_response.MuteResponse:
     properties:
@@ -498,6 +629,15 @@ definitions:
     - tracks
     - updated_at
     - user_id
+    type: object
+  hackathon_internal_handler_schema_response.PlaylistFavoriteListResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.UserTrackPagination'
+      playlists:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.PlaylistSummary'
+        type: array
     type: object
   hackathon_internal_handler_schema_response.PlaylistListResponse:
     properties:
@@ -695,6 +835,57 @@ definitions:
       shared_track:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.SharedTrack'
     type: object
+  hackathon_internal_handler_schema_response.SongDetail:
+    properties:
+      audio_url:
+        type: string
+      duration_sec:
+        type: integer
+      id:
+        type: string
+      mood:
+        type: string
+      title:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.SongPagination:
+    properties:
+      has_more:
+        type: boolean
+      next_cursor:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.SubmitLyricChain:
+    properties:
+      id:
+        type: string
+      participant_count:
+        type: integer
+      status:
+        type: string
+      threshold:
+        type: integer
+    type: object
+  hackathon_internal_handler_schema_response.SubmitLyricEntry:
+    properties:
+      chain_id:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      sequence_num:
+        type: integer
+    type: object
+  hackathon_internal_handler_schema_response.SubmitLyricResponse:
+    properties:
+      chain:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.SubmitLyricChain'
+      lyric_entry:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.SubmitLyricEntry'
+    type: object
   hackathon_internal_handler_schema_response.Track:
     properties:
       album_name:
@@ -711,6 +902,31 @@ definitions:
         type: string
       title:
         type: string
+    type: object
+  hackathon_internal_handler_schema_response.TrackFavorite:
+    properties:
+      created_at:
+        type: string
+      favorited:
+        type: boolean
+      resource_id:
+        type: string
+      resource_type:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.TrackFavoriteListResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.UserTrackPagination'
+      tracks:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.PublicTrack'
+        type: array
+    type: object
+  hackathon_internal_handler_schema_response.TrackFavoriteResponse:
+    properties:
+      favorite:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.TrackFavorite'
     type: object
   hackathon_internal_handler_schema_response.TrackResponse:
     properties:
@@ -769,6 +985,21 @@ definitions:
     properties:
       user:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.User'
+    type: object
+  hackathon_internal_handler_schema_response.UserSong:
+    properties:
+      audio_url:
+        type: string
+      generated_at:
+        type: string
+      id:
+        type: string
+      my_lyric:
+        type: string
+      participant_count:
+        type: integer
+      title:
+        type: string
     type: object
   hackathon_internal_handler_schema_response.UserTrackListResponse:
     properties:
@@ -1158,6 +1389,148 @@ paths:
       summary: コメント作成
       tags:
       - comments
+  /api/v1/encounters/{id}/read:
+    patch:
+      description: 指定したエンカウントを既読マークする（冪等）
+      operationId: markEncounterAsRead
+      parameters:
+      - description: 対象エンカウント ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterReadResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: エンカウントを既読にする
+      tags:
+      - encounters
+  /api/v1/locations:
+    post:
+      consumes:
+      - application/json
+      description: 現在位置をサーバーに送信し、近くにいるユーザーとのエンカウントを判定・作成する
+      operationId: postLocation
+      parameters:
+      - description: 位置情報リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.PostLocationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.LocationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 現在位置送信・エンカウント判定
+      tags:
+      - locations
+  /api/v1/lyrics:
+    post:
+      consumes:
+      - application/json
+      description: すれ違い成立時に歌詞を投稿し、LyricChainに追加する。
+      operationId: submitLyric
+      parameters:
+      - description: 歌詞投稿リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.SubmitLyricRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.SubmitLyricResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 歌詞投稿
+      tags:
+      - lyrics
+  /api/v1/lyrics/chains/{chain_id}:
+    get:
+      description: チェーンの詳細と参加者の歌詞一覧、生成楽曲を取得する。
+      operationId: getChainDetail
+      parameters:
+      - description: チェーンID
+        in: path
+        name: chain_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.ChainDetailResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: チェーン詳細取得
+      tags:
+      - lyrics
   /api/v1/music-connections/{provider}/authorize:
     get:
       description: Spotify / Apple Music の OAuth 認可開始 URL と state を返す
@@ -1616,6 +1989,75 @@ paths:
       summary: 通報作成
       tags:
       - reports
+  /api/v1/songs/{id}/likes:
+    delete:
+      description: 指定した楽曲のいいねを取り消す。いいねが存在しない場合はエラー。
+      operationId: unlikeSong
+      parameters:
+      - description: 楽曲ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 楽曲のいいねを取り消す
+      tags:
+      - songs
+    post:
+      description: 指定した楽曲にいいねする。すでにいいね済みの場合はエラー。
+      operationId: likeSong
+      parameters:
+      - description: 楽曲ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.LikeSongResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 楽曲にいいね
+      tags:
+      - songs
   /api/v1/tracks/{id}:
     get:
       description: 連携済み音楽アカウント経由でトラック詳細を取得する
@@ -1654,6 +2096,73 @@ paths:
       summary: 楽曲詳細取得
       tags:
       - tracks
+  /api/v1/tracks/{id}/favorites:
+    delete:
+      description: 指定したトラックをお気に入りから削除する
+      operationId: removeTrackFavorite
+      parameters:
+      - description: 'トラックID（例: spotify:track:123）'
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: トラックのお気に入り解除
+      tags:
+      - favorites
+    post:
+      description: 指定したトラックをお気に入りに追加する。既にお気に入り済みの場合はべき等に処理し 200 を返す。
+      operationId: addTrackFavorite
+      parameters:
+      - description: 'トラックID（例: spotify:track:123）'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.TrackFavoriteResponse'
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.TrackFavoriteResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: トラックをお気に入り登録
+      tags:
+      - favorites
   /api/v1/tracks/search:
     get:
       description: 連携済み Spotify アカウントを使ってトラック検索する
@@ -1875,6 +2384,42 @@ paths:
       tags:
       - users
   /api/v1/users/me/blocks:
+    get:
+      description: 認証済みユーザーがブロックしているユーザーの一覧をカーソルページネーションで取得する
+      operationId: listBlocks
+      parameters:
+      - description: 取得件数（省略時 20、最大 50）
+        in: query
+        name: limit
+        type: integer
+      - description: ページネーションカーソル
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.BlockListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: ブロック一覧取得
+      tags:
+      - blocks
     post:
       consumes:
       - application/json
@@ -2017,6 +2562,42 @@ paths:
       tags:
       - music-connections
   /api/v1/users/me/mutes:
+    get:
+      description: 認証済みユーザーがミュートしているユーザーの一覧をカーソルページネーションで取得する
+      operationId: listMutes
+      parameters:
+      - description: 取得件数（省略時 20、最大 50）
+        in: query
+        name: limit
+        type: integer
+      - description: ページネーションカーソル
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.MuteListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: ミュート一覧取得
+      tags:
+      - mutes
     post:
       consumes:
       - application/json
@@ -2188,6 +2769,43 @@ paths:
       summary: 通知を既読にする
       tags:
       - notifications
+  /api/v1/users/me/playlist-favorites:
+    get:
+      description: 認証済みユーザーのお気に入りプレイリスト一覧をカーソルページネーションで取得する
+      operationId: listPlaylistFavorites
+      parameters:
+      - description: 取得件数（省略時 20、最大 50）
+        in: query
+        name: limit
+        type: integer
+      - description: ページネーションカーソル
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.PlaylistFavoriteListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: お気に入りプレイリスト一覧取得
+      tags:
+      - favorites
   /api/v1/users/me/push-tokens:
     post:
       consumes:
@@ -2463,6 +3081,72 @@ paths:
       summary: シェア中の楽曲設定・更新
       tags:
       - shared-track
+  /api/v1/users/me/songs:
+    get:
+      description: 自分がLyricChainに参加して生成された楽曲の一覧を返す。
+      operationId: listMySongs
+      parameters:
+      - description: ページネーションカーソル
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.ListUserSongsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分が参加した楽曲一覧
+      tags:
+      - songs
+  /api/v1/users/me/track-favorites:
+    get:
+      description: 認証済みユーザーのお気に入りトラック一覧をカーソルページネーションで取得する
+      operationId: listTrackFavorites
+      parameters:
+      - description: 取得件数（省略時 20、最大 50）
+        in: query
+        name: limit
+        type: integer
+      - description: ページネーションカーソル
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.TrackFavoriteListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: お気に入りトラック一覧取得
+      tags:
+      - favorites
   /api/v1/users/me/tracks:
     get:
       description: 認証済みユーザーのマイトラック一覧をカーソルページネーションで取得する

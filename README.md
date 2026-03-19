@@ -87,12 +87,16 @@ curl -v http://127.0.0.1:8000/healthz/postgres
 
 - http://127.0.0.1:4000/
 
-### 4) デモデータ（encounters）
+### 4) デモデータ
 
-開発環境では起動時にデモユーザー・トラック・encounter を自動で投入します。
+開発環境では起動時にデモユーザー・トラック・encounter などのデモデータを自動で投入します。
 
-- デモユーザー UID: `demo-user-1` / `demo-user-2`
-- デモ encounter: 1件（`demo-user-1` 視点で `demo-user-2` が表示されます）
+- デモユーザー UID: `demo-user-1` / `demo-user-2` / `demo-user-3`
+- デモ encounter: 2件（`demo-user-1` 視点で `demo-user-2` / `demo-user-3` が表示されます）
+- デモトラック: 3件
+- デモプレイリスト: 2件
+- デモコメント: 2件（`demo-user-1` と `demo-user-2` のやり取り）
+- デモ通知: 2件（`demo-user-1` 宛て）
 
 iOS から動作確認する場合は `ios/README.md` の Firebase Auth Emulator 手順を参照してください。
 

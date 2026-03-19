@@ -7,7 +7,8 @@ struct OtherUserProfileStandaloneView: View {
     var body: some View {
         AppScaffold(
             title: "他ユーザープロフィール",
-            subtitle: "相手からの見え方を確認"
+            subtitle: "相手からの見え方を確認",
+            showsBackButton: true
         ) {
             VStack(alignment: .leading, spacing: 20) {
                 SectionCard(title: "ユーザーID") {
@@ -39,8 +40,32 @@ struct OtherUserProfileStandaloneView: View {
                         displayName: user.displayName,
                         bio: user.bio ?? "ひとこと未設定",
                         avatarURL: user.avatarURL,
-                        sharedTrack: viewModel.sharedTrack
+                        sharedTrack: viewModel.sharedTrack,
+                        onMute: {
+                            viewModel.mute()
+                        },
+                        onBlock: {
+                            viewModel.block()
+                        },
+                        onReport: {
+                            viewModel.report()
+                        },
+                        isMuteDisabled: viewModel.isActionInProgress,
+                        isBlockDisabled: viewModel.isActionInProgress,
+                        isReportDisabled: viewModel.isActionInProgress
                     )
+
+                    if let actionMessage = viewModel.actionMessage {
+                        Text(actionMessage)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(PrototypeTheme.success)
+                    }
+
+                    if let actionErrorMessage = viewModel.actionErrorMessage {
+                        Text(actionErrorMessage)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(PrototypeTheme.error)
+                    }
                 } else if viewModel.isLoading {
                     ProgressView()
                         .progressViewStyle(.circular)

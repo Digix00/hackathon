@@ -16,3 +16,10 @@ type Encounter struct {
 	Longitude     *float64
 	CreatedAt     time.Time
 }
+
+type EncounterRead struct {
+	ID          string
+	UserID      string
+	EncounterID string
+	ReadAt      time.Time
+}

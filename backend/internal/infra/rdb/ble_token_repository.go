@@ -89,6 +89,17 @@ func (r *bleTokenRepository) FindLatestByUserID(ctx context.Context, userID stri
 	}, nil
 }
 
+func (r *bleTokenRepository) DeleteExpired(ctx context.Context) (int64, error) {
+	result := r.db.WithContext(ctx).
+		Unscoped().
+		Where("valid_to < ?", time.Now().UTC()).
+		Delete(&model.BleToken{})
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	return result.RowsAffected, nil
+}
+
 func (r *bleTokenRepository) FindByToken(ctx context.Context, tokenStr string) (entity.BleToken, error) {
 	var m model.BleToken
 

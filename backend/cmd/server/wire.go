@@ -29,12 +29,15 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config
 	trackCatalogRepo := rdb.NewTrackCatalogRepository(db)
 	musicConnectionRepo := rdb.NewMusicConnectionRepository(db, tokenEncrypter)
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
+	locationRepo := rdb.NewUserLocationRepository(db)
 	playlistRepo := rdb.NewPlaylistRepository(db)
+	trackFavoriteRepo := rdb.NewTrackFavoriteRepository(db)
 	reportRepo := rdb.NewReportRepository(db)
 	muteRepo := rdb.NewMuteRepository(db)
 	notificationRepo := rdb.NewNotificationRepository(db)
 	commentRepo := rdb.NewCommentRepository(db)
 	_ = rdb.NewTransactor(db)
+	lyricRepo := rdb.NewLyricRepository(db)
 	spotifyProvider := music.NewSpotifyProvider(music.SpotifyConfig{
 		ClientID:     cfg.SpotifyClientID,
 		ClientSecret: cfg.SpotifyClientSecret,
@@ -69,6 +72,10 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config
 		MusicUsecase:        usecase.NewMusicUsecase(userRepo, musicConnectionRepo, trackCatalogRepo, []usecaseport.MusicProvider{spotifyProvider, appleMusicProvider}, cfg.MusicStateSecret, cfg.AppDeepLinkScheme),
 		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
 		CommentUsecase:      usecase.NewCommentUsecase(userRepo, commentRepo, encounterRepo),
+		LyricUsecase:        usecase.NewLyricUsecase(userRepo, encounterRepo, lyricRepo),
+		SongUsecase:         usecase.NewSongUsecase(userRepo, lyricRepo),
 		UserTrackUsecase:    usecase.NewUserTrackUsecase(userRepo, userTrackRepo, trackRepo, trackCatalogRepo),
+		LocationUsecase:     usecase.NewLocationUsecase(userRepo, userSettingsRepo, locationRepo, encounterRepo, blockRepo),
+		FavoriteUsecase:     usecase.NewFavoriteUsecase(userRepo, trackFavoriteRepo, playlistRepo, trackCatalogRepo),
 	}
 }

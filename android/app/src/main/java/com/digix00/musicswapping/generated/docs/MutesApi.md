@@ -6,6 +6,7 @@ All URIs are relative to *http://localhost:8000*
 | ------------- | ------------- | ------------- |
 | [**createMute**](MutesApi.md#createMute) | **POST** api/v1/users/me/mutes | ミュート作成 |
 | [**deleteMute**](MutesApi.md#deleteMute) | **DELETE** api/v1/users/me/mutes/{target_user_id} | ミュート解除 |
+| [**listMutes**](MutesApi.md#listMutes) | **GET** api/v1/users/me/mutes | ミュート一覧取得 |
 
 
 
@@ -76,6 +77,47 @@ launch(Dispatchers.IO) {
 ### Return type
 
 null (empty response body)
+
+### Authorization
+
+
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+ミュート一覧取得
+
+認証済みユーザーがミュートしているユーザーの一覧をカーソルページネーションで取得する
+
+### Example
+```kotlin
+// Import classes:
+//import com.digix00.musicswapping.generated.*
+//import com.digix00.musicswapping.generated.infrastructure.*
+//import com.digix00.musicswapping.generated.models.*
+
+val apiClient = ApiClient()
+val webService = apiClient.createWebservice(MutesApi::class.java)
+val limit : kotlin.Int = 56 // kotlin.Int | 取得件数（省略時 20、最大 50）
+val cursor : kotlin.String = cursor_example // kotlin.String | ページネーションカーソル
+
+launch(Dispatchers.IO) {
+    val result : HackathonInternalHandlerSchemaResponseMuteListResponse = webService.listMutes(limit, cursor)
+}
+```
+
+### Parameters
+| **limit** | **kotlin.Int**| 取得件数（省略時 20、最大 50） | [optional] |
+| Name | Type | Description  | Notes |
+| ------------- | ------------- | ------------- | ------------- |
+| **cursor** | **kotlin.String**| ページネーションカーソル | [optional] |
+
+### Return type
+
+[**HackathonInternalHandlerSchemaResponseMuteListResponse**](HackathonInternalHandlerSchemaResponseMuteListResponse.md)
 
 ### Authorization
 

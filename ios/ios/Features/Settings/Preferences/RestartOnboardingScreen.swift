@@ -6,7 +6,8 @@ struct RestartOnboardingView: View {
     var body: some View {
         AppScaffold(
             title: "オンボーディング再表示",
-            subtitle: "最初の案内をやり直す"
+            subtitle: "最初の案内をやり直す",
+            showsBackButton: true
         ) {
             VStack(spacing: 28) {
                 EmptyStateCard(

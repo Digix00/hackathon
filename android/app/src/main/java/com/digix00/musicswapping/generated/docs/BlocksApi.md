@@ -6,6 +6,7 @@ All URIs are relative to *http://localhost:8000*
 | ------------- | ------------- | ------------- |
 | [**createBlock**](BlocksApi.md#createBlock) | **POST** api/v1/users/me/blocks | ブロック作成 |
 | [**deleteBlock**](BlocksApi.md#deleteBlock) | **DELETE** api/v1/users/me/blocks/{blocked_user_id} | ブロック解除 |
+| [**listBlocks**](BlocksApi.md#listBlocks) | **GET** api/v1/users/me/blocks | ブロック一覧取得 |
 
 
 
@@ -76,6 +77,47 @@ launch(Dispatchers.IO) {
 ### Return type
 
 null (empty response body)
+
+### Authorization
+
+
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+ブロック一覧取得
+
+認証済みユーザーがブロックしているユーザーの一覧をカーソルページネーションで取得する
+
+### Example
+```kotlin
+// Import classes:
+//import com.digix00.musicswapping.generated.*
+//import com.digix00.musicswapping.generated.infrastructure.*
+//import com.digix00.musicswapping.generated.models.*
+
+val apiClient = ApiClient()
+val webService = apiClient.createWebservice(BlocksApi::class.java)
+val limit : kotlin.Int = 56 // kotlin.Int | 取得件数（省略時 20、最大 50）
+val cursor : kotlin.String = cursor_example // kotlin.String | ページネーションカーソル
+
+launch(Dispatchers.IO) {
+    val result : HackathonInternalHandlerSchemaResponseBlockListResponse = webService.listBlocks(limit, cursor)
+}
+```
+
+### Parameters
+| **limit** | **kotlin.Int**| 取得件数（省略時 20、最大 50） | [optional] |
+| Name | Type | Description  | Notes |
+| ------------- | ------------- | ------------- | ------------- |
+| **cursor** | **kotlin.String**| ページネーションカーソル | [optional] |
+
+### Return type
+
+[**HackathonInternalHandlerSchemaResponseBlockListResponse**](HackathonInternalHandlerSchemaResponseBlockListResponse.md)
 
 ### Authorization
 

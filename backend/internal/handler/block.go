@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -99,4 +100,62 @@ func (h *blockHandler) deleteBlock(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusNoContent)
+}
+
+// listBlocks godoc
+// @ID           listBlocks
+// @Summary      ブロック一覧取得
+// @Description  認証済みユーザーがブロックしているユーザーの一覧をカーソルページネーションで取得する
+// @Tags         blocks
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit   query     int     false  "取得件数（省略時 20、最大 50）"
+// @Param        cursor  query     string  false  "ページネーションカーソル"
+// @Success      200  {object}  schemares.BlockListResponse
+// @Failure      400  {object}  errorResponse
+// @Failure      401  {object}  errorResponse
+// @Failure      500  {object}  errorResponse
+// @Router       /api/v1/users/me/blocks [get]
+func (h *blockHandler) listBlocks(c echo.Context) error {
+	ctx := c.Request().Context()
+	authUID, ok := middleware.UserIDFromContext(c)
+	if !ok {
+		return errUnauthorized()
+	}
+
+	limit := 20
+	if l := c.QueryParam("limit"); l != "" {
+		parsed, err := strconv.Atoi(l)
+		if err != nil || parsed <= 0 {
+			return errBadRequest("limit must be a positive integer")
+		}
+		limit = parsed
+	}
+
+	var cursor *string
+	if raw := c.QueryParam("cursor"); raw != "" {
+		cursor = &raw
+	}
+
+	result, err := h.usecase.ListBlocks(ctx, authUID, limit, cursor)
+	if err != nil {
+		return err
+	}
+
+	blocks := make([]schemares.Block, len(result.Blocks))
+	for i, b := range result.Blocks {
+		blocks[i] = schemares.Block{
+			ID:            b.ID,
+			BlockedUserID: b.BlockedUserID,
+			CreatedAt:     b.CreatedAt.UTC().Format(time.RFC3339),
+		}
+	}
+
+	return c.JSON(http.StatusOK, schemares.BlockListResponse{
+		Blocks: blocks,
+		Pagination: schemares.BlockListPagination{
+			NextCursor: result.NextCursor,
+			HasMore:    result.HasMore,
+		},
+	})
 }

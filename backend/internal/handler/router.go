@@ -21,7 +21,11 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	notificationHandler := newNotificationHandler(deps.NotificationUsecase)
 	musicHandler := newMusicHandler(deps.MusicUsecase)
 	commentHandler := newCommentHandler(deps.CommentUsecase)
+	lyricHandler := newLyricHandler(deps.LyricUsecase)
+	songHandler := newSongHandler(deps.SongUsecase)
 	userTrackHandler := newUserTrackHandler(deps.UserTrackUsecase)
+	locationHandler := newLocationHandler(deps.LocationUsecase)
+	favoriteHandler := newFavoriteHandler(deps.FavoriteUsecase)
 
 	api := e.Group("/api/v1")
 	api.GET("/music-connections/:provider/callback", musicHandler.callback)
@@ -62,17 +66,27 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	protected.POST("/playlists/:id/favorites", playlistHandler.addPlaylistFavorite)
 	protected.DELETE("/playlists/:id/favorites", playlistHandler.removePlaylistFavorite)
 
+	protected.POST("/tracks/:id/favorites", favoriteHandler.addTrackFavorite)
+	protected.DELETE("/tracks/:id/favorites", favoriteHandler.removeTrackFavorite)
+	protected.GET("/users/me/track-favorites", favoriteHandler.listTrackFavorites)
+	protected.GET("/users/me/playlist-favorites", favoriteHandler.listPlaylistFavorites)
+
+	protected.POST("/locations", locationHandler.postLocation)
+
 	protected.POST("/encounters", encounterHandler.createEncounter)
 	protected.GET("/encounters", encounterHandler.listEncounters)
 	protected.GET("/encounters/:id", encounterHandler.getEncounterByID)
+	protected.PATCH("/encounters/:id/read", encounterHandler.markEncounterAsRead)
 
 	protected.POST("/reports", reportHandler.createReport)
 
 	protected.POST("/users/me/mutes", muteHandler.createMute)
 	protected.DELETE("/users/me/mutes/:target_user_id", muteHandler.deleteMute)
+	protected.GET("/users/me/mutes", muteHandler.listMutes)
 
 	protected.POST("/users/me/blocks", blockHandler.createBlock)
 	protected.DELETE("/users/me/blocks/:blocked_user_id", blockHandler.deleteBlock)
+	protected.GET("/users/me/blocks", blockHandler.listBlocks)
 
 	protected.GET("/users/me/notifications", notificationHandler.listNotifications)
 	protected.PATCH("/users/me/notifications/:id/read", notificationHandler.markNotificationAsRead)
@@ -87,6 +101,12 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	protected.POST("/encounters/:id/comments", commentHandler.createComment)
 	protected.GET("/encounters/:id/comments", commentHandler.listComments)
 	protected.DELETE("/comments/:id", commentHandler.deleteComment)
+
+	protected.POST("/lyrics", lyricHandler.submitLyric)
+	protected.GET("/lyrics/chains/:chain_id", lyricHandler.getChainDetail)
+	protected.GET("/users/me/songs", songHandler.listMySongs)
+	protected.POST("/songs/:id/likes", songHandler.likeSong)
+	protected.DELETE("/songs/:id/likes", songHandler.unlikeSong)
 
 	protected.POST("/users/me/tracks", userTrackHandler.addUserTrack)
 	protected.GET("/users/me/tracks", userTrackHandler.listUserTracks)

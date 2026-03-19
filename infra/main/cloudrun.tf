@@ -32,6 +32,15 @@ resource "google_cloud_run_v2_service" "api" {
     containers {
       image = local.image_placeholder
 
+      resources {
+        limits = {
+          cpu    = "1"
+          memory = "256Mi"
+        }
+        cpu_idle          = true # リクエスト処理中のみ CPU 割当（無料枠内に収める）
+        startup_cpu_boost = false
+      }
+
       env {
         name  = "DB_USER"
         value = google_sql_user.app.name
@@ -135,7 +144,7 @@ resource "google_cloud_run_v2_service" "api" {
   }
 
   lifecycle {
-    ignore_changes = [template]
+    ignore_changes = [template[0].containers[0].image]
   }
 
   depends_on = [
@@ -162,6 +171,8 @@ resource "google_cloud_run_v2_job" "worker" {
 
   template {
     template {
+      max_retries     = 0     # リトライなし。失敗時の二重課金を防ぐ
+      timeout         = "10s" # タスク最大実行時間 10 秒（現行と同じ）
       service_account = google_service_account.worker.email
 
       volumes {
@@ -215,7 +226,7 @@ resource "google_cloud_run_v2_job" "worker" {
   }
 
   lifecycle {
-    ignore_changes = [template]
+    ignore_changes = [template[0].template[0].containers[0].image]
   }
 
   depends_on = [

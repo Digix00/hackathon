@@ -54,6 +54,10 @@ func (r *stubBleTokenRepo) FindByToken(_ context.Context, tokenStr string) (enti
 	return token, nil
 }
 
+func (r *stubBleTokenRepo) DeleteExpired(_ context.Context) (int64, error) {
+	return 0, nil
+}
+
 func TestCreateBleToken(t *testing.T) {
 	authUID := "test-auth-uid"
 	userID := "test-user-id"

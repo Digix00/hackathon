@@ -92,4 +92,49 @@ open class MutesAPI {
 
         return localVariableRequestBuilder.init(method: "DELETE", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true)
     }
+
+    /**
+     ミュート一覧取得
+     
+     - parameter limit: (query) 取得件数（省略時 20、最大 50） (optional)
+     - parameter cursor: (query) ページネーションカーソル (optional)
+     - returns: HackathonInternalHandlerSchemaResponseMuteListResponse
+     */
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    open class func listMutes(limit: Int? = nil, cursor: String? = nil) async throws -> HackathonInternalHandlerSchemaResponseMuteListResponse {
+        return try await listMutesWithRequestBuilder(limit: limit, cursor: cursor).execute().body
+    }
+
+    /**
+     ミュート一覧取得
+     - GET /api/v1/users/me/mutes
+     - 認証済みユーザーがミュートしているユーザーの一覧をカーソルページネーションで取得する
+     - API Key:
+       - type: apiKey Authorization (HEADER)
+       - name: BearerAuth
+     - parameter limit: (query) 取得件数（省略時 20、最大 50） (optional)
+     - parameter cursor: (query) ページネーションカーソル (optional)
+     - returns: RequestBuilder<HackathonInternalHandlerSchemaResponseMuteListResponse> 
+     */
+    open class func listMutesWithRequestBuilder(limit: Int? = nil, cursor: String? = nil) -> RequestBuilder<HackathonInternalHandlerSchemaResponseMuteListResponse> {
+        let localVariablePath = "/api/v1/users/me/mutes"
+        let localVariableURLString = OpenAPIClientAPI.basePath + localVariablePath
+        let localVariableParameters: [String: Any]? = nil
+
+        var localVariableUrlComponents = URLComponents(string: localVariableURLString)
+        localVariableUrlComponents?.queryItems = APIHelper.mapValuesToQueryItems([
+            "limit": (wrappedValue: limit?.encodeToJSON(), isExplode: false),
+            "cursor": (wrappedValue: cursor?.encodeToJSON(), isExplode: false),
+        ])
+
+        let localVariableNillableHeaders: [String: Any?] = [
+            :
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<HackathonInternalHandlerSchemaResponseMuteListResponse>.Type = OpenAPIClientAPI.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "GET", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true)
+    }
 }

@@ -7,6 +7,7 @@ Method | HTTP request | Description
 [**createEncounter**](EncountersAPI.md#createencounter) | **POST** /api/v1/encounters | すれ違い登録
 [**getEncounterByID**](EncountersAPI.md#getencounterbyid) | **GET** /api/v1/encounters/{id} | すれ違い詳細取得
 [**listEncounters**](EncountersAPI.md#listencounters) | **GET** /api/v1/encounters | すれ違い履歴一覧取得
+[**markEncounterAsRead**](EncountersAPI.md#markencounterasread) | **PATCH** /api/v1/encounters/{id}/read | エンカウントを既読にする
 
 
 # **createEncounter**
@@ -149,6 +150,56 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**HackathonInternalHandlerSchemaResponseEncounterListResponse**](HackathonInternalHandlerSchemaResponseEncounterListResponse.md)
+
+### Authorization
+
+[BearerAuth](../README.md#BearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **markEncounterAsRead**
+```swift
+    open class func markEncounterAsRead(id: String, completion: @escaping (_ data: HackathonInternalHandlerSchemaResponseEncounterReadResponse?, _ error: Error?) -> Void)
+```
+
+エンカウントを既読にする
+
+指定したエンカウントを既読マークする（冪等）
+
+### Example
+```swift
+// The following code samples are still beta. For any issue, please report via http://github.com/OpenAPITools/openapi-generator/issues/new
+import OpenAPIClient
+
+let id = "id_example" // String | 対象エンカウント ID
+
+// エンカウントを既読にする
+EncountersAPI.markEncounterAsRead(id: id) { (response, error) in
+    guard error == nil else {
+        print(error)
+        return
+    }
+
+    if (response) {
+        dump(response)
+    }
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String** | 対象エンカウント ID | 
+
+### Return type
+
+[**HackathonInternalHandlerSchemaResponseEncounterReadResponse**](HackathonInternalHandlerSchemaResponseEncounterReadResponse.md)
 
 ### Authorization
 

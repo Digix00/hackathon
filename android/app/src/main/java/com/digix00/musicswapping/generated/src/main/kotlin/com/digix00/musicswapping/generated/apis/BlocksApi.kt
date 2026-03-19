@@ -8,6 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchemaRequestCreateBlockRequest
+import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchemaResponseBlockListResponse
 import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchemaResponseBlockResponse
 import com.digix00.musicswapping.generated.models.InternalHandlererrorResponse
 
@@ -43,5 +44,21 @@ interface BlocksApi {
      */
     @DELETE("api/v1/users/me/blocks/{blocked_user_id}")
     suspend fun deleteBlock(@Path("blocked_user_id") blockedUserId: kotlin.String): Response<Unit>
+
+    /**
+     * ブロック一覧取得
+     * 認証済みユーザーがブロックしているユーザーの一覧をカーソルページネーションで取得する
+     * Responses:
+     *  - 200: OK
+     *  - 400: Bad Request
+     *  - 401: Unauthorized
+     *  - 500: Internal Server Error
+     *
+     * @param limit 取得件数（省略時 20、最大 50） (optional)
+     * @param cursor ページネーションカーソル (optional)
+     * @return [HackathonInternalHandlerSchemaResponseBlockListResponse]
+     */
+    @GET("api/v1/users/me/blocks")
+    suspend fun listBlocks(@Query("limit") limit: kotlin.Int? = null, @Query("cursor") cursor: kotlin.String? = null): Response<HackathonInternalHandlerSchemaResponseBlockListResponse>
 
 }

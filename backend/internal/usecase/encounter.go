@@ -17,6 +17,7 @@ type EncounterUsecase interface {
 	CreateEncounter(ctx context.Context, authUID string, input usecasedto.CreateEncounterInput) (usecasedto.EncounterSummaryDTO, bool, bool, error)
 	ListEncounters(ctx context.Context, authUID string, limit int, cursor string) ([]usecasedto.EncounterListItemDTO, *string, bool, error)
 	GetEncounterByID(ctx context.Context, authUID string, encounterID string) (usecasedto.EncounterDetailDTO, error)
+	MarkEncounterAsRead(ctx context.Context, authUID string, encounterID string) (usecasedto.EncounterReadDTO, error)
 }
 
 type encounterUsecase struct {
@@ -221,6 +222,25 @@ func (u *encounterUsecase) GetEncounterByID(ctx context.Context, authUID string,
 		User:       buildEncounterUserDTO(other),
 		OccurredAt: encounter.OccurredAt,
 		Tracks:     buildEncounterTrackDTOs(tracksByEncounter[encounter.ID]),
+	}, nil
+}
+
+func (u *encounterUsecase) MarkEncounterAsRead(ctx context.Context, authUID string, encounterID string) (usecasedto.EncounterReadDTO, error) {
+	requester, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, firebaseProvider, authUID)
+	if err != nil {
+		return usecasedto.EncounterReadDTO{}, err
+	}
+
+	read, err := u.encounterRepo.MarkAsRead(ctx, encounterID, requester.ID)
+	if err != nil {
+		return usecasedto.EncounterReadDTO{}, err
+	}
+
+	return usecasedto.EncounterReadDTO{
+		ID:          read.ID,
+		EncounterID: read.EncounterID,
+		IsRead:      true,
+		ReadAt:      read.ReadAt,
 	}, nil
 }
 

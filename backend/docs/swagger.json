@@ -546,6 +546,228 @@
                 }
             }
         },
+        "/api/v1/encounters/{id}/read": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したエンカウントを既読マークする（冪等）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "encounters"
+                ],
+                "summary": "エンカウントを既読にする",
+                "operationId": "markEncounterAsRead",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "対象エンカウント ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.EncounterReadResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/locations": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "現在位置をサーバーに送信し、近くにいるユーザーとのエンカウントを判定・作成する",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "locations"
+                ],
+                "summary": "現在位置送信・エンカウント判定",
+                "operationId": "postLocation",
+                "parameters": [
+                    {
+                        "description": "位置情報リクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.PostLocationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.LocationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lyrics": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "すれ違い成立時に歌詞を投稿し、LyricChainに追加する。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lyrics"
+                ],
+                "summary": "歌詞投稿",
+                "operationId": "submitLyric",
+                "parameters": [
+                    {
+                        "description": "歌詞投稿リクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.SubmitLyricRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.SubmitLyricResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lyrics/chains/{chain_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "チェーンの詳細と参加者の歌詞一覧、生成楽曲を取得する。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lyrics"
+                ],
+                "summary": "チェーン詳細取得",
+                "operationId": "getChainDetail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チェーンID",
+                        "name": "chain_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.ChainDetailResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/music-connections/{provider}/authorize": {
             "get": {
                 "security": [
@@ -1252,6 +1474,113 @@
                 }
             }
         },
+        "/api/v1/songs/{id}/likes": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定した楽曲にいいねする。すでにいいね済みの場合はエラー。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "songs"
+                ],
+                "summary": "楽曲にいいね",
+                "operationId": "likeSong",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "楽曲ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.LikeSongResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定した楽曲のいいねを取り消す。いいねが存在しない場合はエラー。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "songs"
+                ],
+                "summary": "楽曲のいいねを取り消す",
+                "operationId": "unlikeSong",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "楽曲ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/tracks/search": {
             "get": {
                 "security": [
@@ -1360,6 +1689,110 @@
                         "schema": {
                             "$ref": "#/definitions/internal_handler.errorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tracks/{id}/favorites": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したトラックをお気に入りに追加する。既にお気に入り済みの場合はべき等に処理し 200 を返す。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "favorites"
+                ],
+                "summary": "トラックをお気に入り登録",
+                "operationId": "addTrackFavorite",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "トラックID（例: spotify:track:123）",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.TrackFavoriteResponse"
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.TrackFavoriteResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したトラックをお気に入りから削除する",
+                "tags": [
+                    "favorites"
+                ],
+                "summary": "トラックのお気に入り解除",
+                "operationId": "removeTrackFavorite",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "トラックID（例: spotify:track:123）",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
                     },
                     "401": {
                         "description": "Unauthorized",
@@ -1589,6 +2022,62 @@
             }
         },
         "/api/v1/users/me/blocks": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証済みユーザーがブロックしているユーザーの一覧をカーソルページネーションで取得する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blocks"
+                ],
+                "summary": "ブロック一覧取得",
+                "operationId": "listBlocks",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "取得件数（省略時 20、最大 50）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ページネーションカーソル",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.BlockListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -1810,6 +2299,62 @@
             }
         },
         "/api/v1/users/me/mutes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証済みユーザーがミュートしているユーザーの一覧をカーソルページネーションで取得する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mutes"
+                ],
+                "summary": "ミュート一覧取得",
+                "operationId": "listMutes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "取得件数（省略時 20、最大 50）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ページネーションカーソル",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.MuteListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -2065,6 +2610,64 @@
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/playlist-favorites": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証済みユーザーのお気に入りプレイリスト一覧をカーソルページネーションで取得する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "favorites"
+                ],
+                "summary": "お気に入りプレイリスト一覧取得",
+                "operationId": "listPlaylistFavorites",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "取得件数（省略時 20、最大 50）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ページネーションカーソル",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.PlaylistFavoriteListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/internal_handler.errorResponse"
                         }
@@ -2493,6 +3096,110 @@
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/songs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "自分がLyricChainに参加して生成された楽曲の一覧を返す。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "songs"
+                ],
+                "summary": "自分が参加した楽曲一覧",
+                "operationId": "listMySongs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ページネーションカーソル",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.ListUserSongsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/track-favorites": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証済みユーザーのお気に入りトラック一覧をカーソルページネーションで取得する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "favorites"
+                ],
+                "summary": "お気に入りトラック一覧取得",
+                "operationId": "listTrackFavorites",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "取得件数（省略時 20、最大 50）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ページネーションカーソル",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.TrackFavoriteListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/internal_handler.errorResponse"
                         }
@@ -2959,6 +3666,34 @@
                 }
             }
         },
+        "hackathon_internal_handler_schema_request.PostLocationRequest": {
+            "type": "object",
+            "properties": {
+                "accuracy_m": {
+                    "type": "number"
+                },
+                "lat": {
+                    "type": "number"
+                },
+                "lng": {
+                    "type": "number"
+                },
+                "recorded_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_request.SubmitLyricRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "encounter_id": {
+                    "type": "string"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_request.UpdatePlaylistRequest": {
             "type": "object",
             "properties": {
@@ -3164,11 +3899,76 @@
                 }
             }
         },
+        "hackathon_internal_handler_schema_response.BlockListPagination": {
+            "type": "object",
+            "properties": {
+                "has_more": {
+                    "type": "boolean"
+                },
+                "next_cursor": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.BlockListResponse": {
+            "type": "object",
+            "properties": {
+                "blocks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.Block"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.BlockListPagination"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_response.BlockResponse": {
             "type": "object",
             "properties": {
                 "block": {
                     "$ref": "#/definitions/hackathon_internal_handler_schema_response.Block"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.ChainDetail": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "participant_count": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "threshold": {
+                    "type": "integer"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.ChainDetailResponse": {
+            "type": "object",
+            "properties": {
+                "chain": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.ChainDetail"
+                },
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.EntryDetail"
+                    }
+                },
+                "song": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.SongDetail"
                 }
             }
         },
@@ -3339,6 +4139,28 @@
                 }
             }
         },
+        "hackathon_internal_handler_schema_response.EncounterReadResponse": {
+            "type": "object",
+            "properties": {
+                "encounter": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.EncounterReadResult"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.EncounterReadResult": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "is_read": {
+                    "type": "boolean"
+                },
+                "read_at": {
+                    "type": "string"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_response.EncounterResponse": {
             "type": "object",
             "properties": {
@@ -3402,6 +4224,70 @@
                 }
             }
         },
+        "hackathon_internal_handler_schema_response.EntryDetail": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "sequence_num": {
+                    "type": "integer"
+                },
+                "user": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.EntryUser"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.EntryUser": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.LikeSongResponse": {
+            "type": "object",
+            "properties": {
+                "liked": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.ListUserSongsResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.SongPagination"
+                },
+                "songs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.UserSong"
+                    }
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.LocationResponse": {
+            "type": "object",
+            "properties": {
+                "encounter_count": {
+                    "type": "integer"
+                },
+                "encounters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.EncounterSummary"
+                    }
+                }
+            }
+        },
         "hackathon_internal_handler_schema_response.MusicAuthorizeResponse": {
             "type": "object",
             "properties": {
@@ -3459,6 +4345,31 @@
                 },
                 "target_user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.MuteListPagination": {
+            "type": "object",
+            "properties": {
+                "has_more": {
+                    "type": "boolean"
+                },
+                "next_cursor": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.MuteListResponse": {
+            "type": "object",
+            "properties": {
+                "mutes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.Mute"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.MuteListPagination"
                 }
             }
         },
@@ -3556,6 +4467,20 @@
                 },
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.PlaylistFavoriteListResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.UserTrackPagination"
+                },
+                "playlists": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.PlaylistSummary"
+                    }
                 }
             }
         },
@@ -3852,6 +4777,85 @@
                 }
             }
         },
+        "hackathon_internal_handler_schema_response.SongDetail": {
+            "type": "object",
+            "properties": {
+                "audio_url": {
+                    "type": "string"
+                },
+                "duration_sec": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mood": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.SongPagination": {
+            "type": "object",
+            "properties": {
+                "has_more": {
+                    "type": "boolean"
+                },
+                "next_cursor": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.SubmitLyricChain": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "participant_count": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "threshold": {
+                    "type": "integer"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.SubmitLyricEntry": {
+            "type": "object",
+            "properties": {
+                "chain_id": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "sequence_num": {
+                    "type": "integer"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.SubmitLyricResponse": {
+            "type": "object",
+            "properties": {
+                "chain": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.SubmitLyricChain"
+                },
+                "lyric_entry": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.SubmitLyricEntry"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_response.Track": {
             "type": "object",
             "properties": {
@@ -3875,6 +4879,45 @@
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.TrackFavorite": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "favorited": {
+                    "type": "boolean"
+                },
+                "resource_id": {
+                    "type": "string"
+                },
+                "resource_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.TrackFavoriteListResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.UserTrackPagination"
+                },
+                "tracks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.PublicTrack"
+                    }
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.TrackFavoriteResponse": {
+            "type": "object",
+            "properties": {
+                "favorite": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.TrackFavorite"
                 }
             }
         },
@@ -3962,6 +5005,29 @@
             "properties": {
                 "user": {
                     "$ref": "#/definitions/hackathon_internal_handler_schema_response.User"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.UserSong": {
+            "type": "object",
+            "properties": {
+                "audio_url": {
+                    "type": "string"
+                },
+                "generated_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "my_lyric": {
+                    "type": "string"
+                },
+                "participant_count": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },

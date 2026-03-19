@@ -83,6 +83,9 @@ func (r *stubBlockRepo) ListBlockedUserIDs(_ context.Context, _ string, _ []stri
 	}
 	return map[string]bool{}, nil
 }
+func (r *stubBlockRepo) ListByBlockerUserID(_ context.Context, _ string, _ int, _ *repository.BlockCursor) ([]entity.Block, *repository.BlockCursor, bool, error) {
+	return nil, nil, false, nil
+}
 
 type stubEncounterRepo struct {
 	count int64
@@ -138,6 +141,10 @@ func (r *stubEncounterRepo) CreateWithRateLimit(_ context.Context, encounter ent
 
 func (r *stubEncounterRepo) ExistsByIDAndParticipant(_ context.Context, _, _ string) (bool, error) {
 	return false, nil
+}
+
+func (r *stubEncounterRepo) MarkAsRead(_ context.Context, _, _ string) (entity.EncounterRead, error) {
+	return entity.EncounterRead{}, nil
 }
 
 type stubTrackRepo struct {

@@ -6,7 +6,8 @@ struct EmptyStatesGalleryView: View {
     var body: some View {
         AppScaffold(
             title: "空状態・エラー状態",
-            subtitle: "例外ケースの表示確認"
+            subtitle: "例外ケースの表示確認",
+            showsBackButton: true
         ) {
             VStack(alignment: .leading, spacing: 24) {
                 Picker("状態", selection: $scenario) {
@@ -57,4 +58,3 @@ struct EmptyStatesGalleryView: View {
         }
     }
 }
-

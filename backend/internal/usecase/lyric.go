@@ -1,0 +1,114 @@
+package usecase
+
+import (
+	"context"
+
+	domainerrs "hackathon/internal/domain/errs"
+	"hackathon/internal/domain/repository"
+	usecasedto "hackathon/internal/usecase/dto"
+)
+
+type LyricUsecase interface {
+	SubmitLyric(ctx context.Context, authUID string, input usecasedto.SubmitLyricInput) (usecasedto.SubmitLyricResult, error)
+	GetChainDetail(ctx context.Context, chainID string) (usecasedto.ChainDetailResult, error)
+}
+
+type lyricUsecase struct {
+	userRepo      repository.UserRepository
+	encounterRepo repository.EncounterRepository
+	lyricRepo     repository.LyricRepository
+}
+
+func NewLyricUsecase(userRepo repository.UserRepository, encounterRepo repository.EncounterRepository, lyricRepo repository.LyricRepository) LyricUsecase {
+	return &lyricUsecase{
+		userRepo:      userRepo,
+		encounterRepo: encounterRepo,
+		lyricRepo:     lyricRepo,
+	}
+}
+
+func (u *lyricUsecase) SubmitLyric(ctx context.Context, authUID string, input usecasedto.SubmitLyricInput) (usecasedto.SubmitLyricResult, error) {
+	user, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, firebaseProvider, authUID)
+	if err != nil {
+		return usecasedto.SubmitLyricResult{}, err
+	}
+
+	exists, err := u.encounterRepo.ExistsByIDAndParticipant(ctx, input.EncounterID, user.ID)
+	if err != nil {
+		return usecasedto.SubmitLyricResult{}, err
+	}
+	if !exists {
+		return usecasedto.SubmitLyricResult{}, domainerrs.NotFound("encounter not found")
+	}
+
+	alreadySubmitted, err := u.lyricRepo.ExistsEntryByUserAndEncounter(ctx, user.ID, input.EncounterID)
+	if err != nil {
+		return usecasedto.SubmitLyricResult{}, err
+	}
+	if alreadySubmitted {
+		return usecasedto.SubmitLyricResult{}, domainerrs.Conflict("lyric already submitted for this encounter")
+	}
+
+	res, err := u.lyricRepo.SubmitEntry(ctx, user.ID, input.EncounterID, input.Content)
+	if err != nil {
+		return usecasedto.SubmitLyricResult{}, err
+	}
+
+	return usecasedto.SubmitLyricResult{
+		Entry: usecasedto.LyricEntryDTO{
+			ID:          res.Entry.ID,
+			ChainID:     res.Entry.ChainID,
+			SequenceNum: res.Entry.SequenceNum,
+			Content:     res.Entry.Content,
+			CreatedAt:   res.Entry.CreatedAt,
+		},
+		Chain: usecasedto.LyricChainDTO{
+			ID:               res.Chain.ID,
+			ParticipantCount: res.Chain.ParticipantCount,
+			Threshold:        res.Chain.Threshold,
+			Status:           res.Chain.Status,
+		},
+	}, nil
+}
+
+func (u *lyricUsecase) GetChainDetail(ctx context.Context, chainID string) (usecasedto.ChainDetailResult, error) {
+	detail, err := u.lyricRepo.GetChainWithDetails(ctx, chainID)
+	if err != nil {
+		return usecasedto.ChainDetailResult{}, err
+	}
+
+	entries := make([]usecasedto.LyricEntryWithUserDTO, 0, len(detail.Entries))
+	for _, e := range detail.Entries {
+		entries = append(entries, usecasedto.LyricEntryWithUserDTO{
+			SequenceNum: e.Entry.SequenceNum,
+			Content:     e.Entry.Content,
+			UserID:      e.User.ID,
+			DisplayName: e.User.Name,
+			AvatarURL:   e.User.AvatarURL,
+		})
+	}
+
+	result := usecasedto.ChainDetailResult{
+		Chain: usecasedto.ChainDetailDTO{
+			ID:               detail.Chain.ID,
+			Status:           detail.Chain.Status,
+			ParticipantCount: detail.Chain.ParticipantCount,
+			Threshold:        detail.Chain.Threshold,
+			CreatedAt:        detail.Chain.CreatedAt,
+			CompletedAt:      detail.Chain.CompletedAt,
+		},
+		Entries: entries,
+	}
+
+	if detail.Song != nil {
+		result.Song = &usecasedto.GeneratedSongDTO{
+			ID:          detail.Song.ID,
+			Title:       detail.Song.Title,
+			AudioURL:    detail.Song.AudioURL,
+			DurationSec: detail.Song.DurationSec,
+			Mood:        detail.Song.Mood,
+		}
+	}
+
+	return result, nil
+}

@@ -13,7 +13,8 @@ struct DeleteAccountView: View {
     var body: some View {
         AppScaffold(
             title: "アカウント削除",
-            subtitle: "削除前の最終確認"
+            subtitle: "削除前の最終確認",
+            showsBackButton: true
         ) {
             VStack(alignment: .leading, spacing: 28) {
                 SectionCard {

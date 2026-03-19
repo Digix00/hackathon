@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -99,4 +100,62 @@ func (h *muteHandler) deleteMute(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusNoContent)
+}
+
+// listMutes godoc
+// @ID           listMutes
+// @Summary      ミュート一覧取得
+// @Description  認証済みユーザーがミュートしているユーザーの一覧をカーソルページネーションで取得する
+// @Tags         mutes
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit   query     int     false  "取得件数（省略時 20、最大 50）"
+// @Param        cursor  query     string  false  "ページネーションカーソル"
+// @Success      200  {object}  schemares.MuteListResponse
+// @Failure      400  {object}  errorResponse
+// @Failure      401  {object}  errorResponse
+// @Failure      500  {object}  errorResponse
+// @Router       /api/v1/users/me/mutes [get]
+func (h *muteHandler) listMutes(c echo.Context) error {
+	ctx := c.Request().Context()
+	authUID, ok := middleware.UserIDFromContext(c)
+	if !ok {
+		return errUnauthorized()
+	}
+
+	limit := 20
+	if l := c.QueryParam("limit"); l != "" {
+		parsed, err := strconv.Atoi(l)
+		if err != nil || parsed <= 0 {
+			return errBadRequest("limit must be a positive integer")
+		}
+		limit = parsed
+	}
+
+	var cursor *string
+	if raw := c.QueryParam("cursor"); raw != "" {
+		cursor = &raw
+	}
+
+	result, err := h.usecase.ListMutes(ctx, authUID, limit, cursor)
+	if err != nil {
+		return err
+	}
+
+	mutes := make([]schemares.Mute, len(result.Mutes))
+	for i, m := range result.Mutes {
+		mutes[i] = schemares.Mute{
+			ID:           m.ID,
+			TargetUserID: m.TargetUserID,
+			CreatedAt:    m.CreatedAt.UTC().Format(time.RFC3339),
+		}
+	}
+
+	return c.JSON(http.StatusOK, schemares.MuteListResponse{
+		Mutes: mutes,
+		Pagination: schemares.MuteListPagination{
+			NextCursor: result.NextCursor,
+			HasMore:    result.HasMore,
+		},
+	})
 }

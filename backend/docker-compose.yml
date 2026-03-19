@@ -66,8 +66,7 @@ services:
       - .env.development
     volumes:
       - ./:/app
-    command: >
-      air -c .air.worker.toml
+    command: sleep infinity
     depends_on:
       firebase-emulator:
         condition: service_healthy

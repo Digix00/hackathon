@@ -10,6 +10,7 @@ import kotlinx.serialization.Serializable
 import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchemaRequestCreateEncounterRequest
 import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchemaResponseEncounterDetailResponse
 import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchemaResponseEncounterListResponse
+import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchemaResponseEncounterReadResponse
 import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchemaResponseEncounterResponse
 import com.digix00.musicswapping.generated.models.InternalHandlererrorResponse
 
@@ -65,5 +66,20 @@ interface EncountersApi {
      */
     @GET("api/v1/encounters")
     suspend fun listEncounters(@Query("limit") limit: kotlin.Int? = null, @Query("cursor") cursor: kotlin.String? = null): Response<HackathonInternalHandlerSchemaResponseEncounterListResponse>
+
+    /**
+     * エンカウントを既読にする
+     * 指定したエンカウントを既読マークする（冪等）
+     * Responses:
+     *  - 200: OK
+     *  - 401: Unauthorized
+     *  - 404: Not Found
+     *  - 500: Internal Server Error
+     *
+     * @param id 対象エンカウント ID
+     * @return [HackathonInternalHandlerSchemaResponseEncounterReadResponse]
+     */
+    @PATCH("api/v1/encounters/{id}/read")
+    suspend fun markEncounterAsRead(@Path("id") id: kotlin.String): Response<HackathonInternalHandlerSchemaResponseEncounterReadResponse>
 
 }

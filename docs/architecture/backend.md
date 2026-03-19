@@ -226,6 +226,22 @@ BLE 交換成立
 - worker のバッチ処理で期限切れトークンを定期削除（Cloud SQL の WHERE valid_to < NOW()）
 - クライアントは起動時またはトークン期限切れ時に新しい ID を取得
 
+## worker の実行形式
+
+worker は **oneshot 型**（実行して即終了）。ループ常駐型ではない。
+
+### 本番環境
+
+Cloud Scheduler が Cloud Run Jobs を定期キック（10〜20 分間隔）。
+
+### 開発環境（docker-compose）
+
+worker コンテナは `sleep infinity` で常駐するだけで自動実行されない。手動で実行する場合は以下のコマンドを使う。
+
+```bash
+docker compose exec worker go run ./cmd/worker
+```
+
 ## レート制限
 
 - Cloud SQL の UPSERT + SELECT FOR UPDATE で実装
