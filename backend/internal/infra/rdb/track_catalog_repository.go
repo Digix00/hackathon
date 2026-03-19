@@ -61,6 +61,14 @@ func (r *trackCatalogRepository) FindByProviderAndExternalID(ctx context.Context
 	return modelTrackToEntity(row), nil
 }
 
+func (r *trackCatalogRepository) FindByID(ctx context.Context, id string) (entity.TrackInfo, error) {
+	provider, externalID, err := splitTrackID(id)
+	if err != nil {
+		return entity.TrackInfo{}, err
+	}
+	return r.FindByProviderAndExternalID(ctx, provider, externalID)
+}
+
 func modelTrackToEntity(track model.Track) entity.TrackInfo {
 	return entity.TrackInfo{
 		ID:         track.Provider + ":track:" + track.ExternalID,

@@ -172,6 +172,8 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 		}
 	}
 
+	userTrackRepo := rdb.NewUserTrackRepository(db)
+
 	e := echo.New()
 	RegisterRoutes(e, Dependencies{
 		AuthTokenVerifier:   testTokenVerifier{uid: authUID},
@@ -188,6 +190,7 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 		MusicUsecase:        usecase.NewMusicUsecase(userRepo, musicConnectionRepo, trackCatalogRepo, providers, "test-state-secret", "digix"),
 		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
 		CommentUsecase:      usecase.NewCommentUsecase(userRepo, commentRepo, encounterRepo),
+		UserTrackUsecase:    usecase.NewUserTrackUsecase(userRepo, userTrackRepo, trackRepo, trackCatalogRepo),
 	})
 	return e
 }
