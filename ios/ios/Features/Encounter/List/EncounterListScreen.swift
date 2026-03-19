@@ -73,18 +73,13 @@ struct EncounterListView: View {
             let topPadding = geometry.safeAreaInsets.top
 
             if encounters.isEmpty {
-                VStack(spacing: 16) {
-                    Spacer()
-                    Text("まだすれ違いがありません")
-                        .font(PrototypeTheme.Typography.font(size: 22, weight: .black, role: .primary))
-                        .foregroundStyle(PrototypeTheme.textPrimary)
-                    Text(bleCoordinator.encounterErrorMessage ?? "BLE をオンにして街ですれ違うと、ここに履歴が表示されます。")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(PrototypeTheme.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
-                    Spacer()
-                }
+                EncounterEmptyStateView(
+                    errorMessage: bleCoordinator.encounterErrorMessage,
+                    isLoading: bleCoordinator.isLoadingEncounters,
+                    onRefresh: {
+                        bleCoordinator.refreshEncounters()
+                    }
+                )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
 
