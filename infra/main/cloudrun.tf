@@ -1,6 +1,7 @@
 locals {
-  image_server = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/server:${var.server_image_tag}"
-  image_worker = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/worker:${var.worker_image_tag}"
+  image_server  = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/server:${var.server_image_tag}"
+  image_worker  = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/worker:${var.worker_image_tag}"
+  image_migrate = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/migrate:${var.migrate_image_tag}"
 }
 
 # Cloud Run Service（API サーバー）
@@ -249,7 +250,7 @@ resource "google_cloud_run_v2_job" "migrate" {
       }
 
       containers {
-        image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/migrate:${var.migrate_image_tag}"
+        image = local.image_migrate
 
         resources {
           limits = {

@@ -51,12 +51,22 @@ openapi-generator       → Android リポジトリに PR を自動作成
 `develop` → `main` への PR がマージされると自動的に prod デプロイが実行される。
 
 ```
-terraform apply（environments/prod）
+terraform apply（infra/main）          ← infra/main/** 変更時
     ↓
 docker build → Artifact Registry プッシュ
     ↓
-Cloud Run（prod）デプロイ
+Cloud Run（prod）デプロイ              ← backend/** 変更時
+    ↓
+migrate Job ビルド・プッシュ・実行     ← model/** / migrate.go 変更時
 ```
+
+### ワークフロー一覧
+
+| ワークフロー | トリガーパス | 内容 |
+|---|---|---|
+| `tf-apply.yml` | `infra/main/**` | Terraform apply（インフラ変更） |
+| `deploy.yml` | `backend/**` | API・Worker イメージビルド & Cloud Run 更新 |
+| `migrate.yml` | `backend/internal/infra/rdb/model/**`, `backend/cmd/migrate/**` | migrate イメージビルド & DB マイグレーション実行 |
 
 ## GCP 認証（Workload Identity Federation）
 
