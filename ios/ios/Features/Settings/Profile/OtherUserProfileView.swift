@@ -48,8 +48,8 @@ struct OtherUserProfileView: View {
                         onBlock: {
                             viewModel.block()
                         },
-                        isMuteDisabled: viewModel.isMuting,
-                        isBlockDisabled: viewModel.isBlocking
+                        isMuteDisabled: viewModel.isActionInProgress,
+                        isBlockDisabled: viewModel.isActionInProgress
                     )
 
                     if let actionMessage = viewModel.actionMessage {

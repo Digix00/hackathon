@@ -60,7 +60,8 @@ final class OtherUserProfileViewModel: ObservableObject {
             actionMessage = nil
             return
         }
-        guard !isMuting else { return }
+        guard !isActionInProgress else { return }
+        isMuting = true
         Task { await performMute(userID: user.id) }
     }
 
@@ -70,12 +71,12 @@ final class OtherUserProfileViewModel: ObservableObject {
             actionMessage = nil
             return
         }
-        guard !isBlocking else { return }
+        guard !isActionInProgress else { return }
+        isBlocking = true
         Task { await performBlock(userID: user.id) }
     }
 
     private func performMute(userID: String) async {
-        isMuting = true
         actionMessage = nil
         actionErrorMessage = nil
         do {
@@ -88,7 +89,6 @@ final class OtherUserProfileViewModel: ObservableObject {
     }
 
     private func performBlock(userID: String) async {
-        isBlocking = true
         actionMessage = nil
         actionErrorMessage = nil
         do {
@@ -98,6 +98,10 @@ final class OtherUserProfileViewModel: ObservableObject {
             actionErrorMessage = "ブロックに失敗しました"
         }
         isBlocking = false
+    }
+
+    var isActionInProgress: Bool {
+        isMuting || isBlocking
     }
 
     private func paletteColor(for key: String) -> Color {
