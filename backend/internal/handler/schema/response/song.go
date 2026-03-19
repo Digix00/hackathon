@@ -12,6 +12,7 @@ type UserSong struct {
 	ParticipantCount int     `json:"participant_count"`
 	MyLyric          string  `json:"my_lyric"`
 	GeneratedAt      *string `json:"generated_at,omitempty"`
+	ChainID          *string `json:"chain_id,omitempty"`
 }
 
 type SongPagination struct {

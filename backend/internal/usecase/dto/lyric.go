@@ -67,6 +67,7 @@ type UserSongDTO struct {
 	ParticipantCount int
 	MyLyric          string
 	GeneratedAt      *string
+	ChainID          *string
 }
 
 type ListUserSongsResult struct {

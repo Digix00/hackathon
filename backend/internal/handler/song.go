@@ -53,6 +53,7 @@ func (h *songHandler) listMySongs(c echo.Context) error {
 			ParticipantCount: s.ParticipantCount,
 			MyLyric:          s.MyLyric,
 			GeneratedAt:      s.GeneratedAt,
+			ChainID:          s.ChainID,
 		})
 	}
 

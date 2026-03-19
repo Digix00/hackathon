@@ -45,6 +45,7 @@ func (u *songUsecase) ListMySongs(ctx context.Context, authUID string, cursor st
 			formatted := s.Song.GeneratedAt.UTC().Format(time.RFC3339)
 			generatedAt = &formatted
 		}
+		chainID := s.Song.ChainID
 		dtos = append(dtos, usecasedto.UserSongDTO{
 			ID:               s.Song.ID,
 			Title:            s.Song.Title,
@@ -52,6 +53,7 @@ func (u *songUsecase) ListMySongs(ctx context.Context, authUID string, cursor st
 			ParticipantCount: s.ParticipantCount,
 			MyLyric:          s.MyLyric,
 			GeneratedAt:      generatedAt,
+			ChainID:          &chainID,
 		})
 	}
 
