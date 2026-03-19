@@ -203,7 +203,7 @@ final class UserSettingsViewModel: ObservableObject {
             if Task.isCancelled { return }
             applySettings(settings, updating: request)
             if request.notificationEnabled != nil {
-                await pushManager.applyNotificationPreference(isEnabled: settings.notificationEnabled)
+                Task { await pushManager.applyNotificationPreference(isEnabled: settings.notificationEnabled) }
             }
         } catch {
             if Task.isCancelled { return }
