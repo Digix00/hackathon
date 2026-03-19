@@ -29,9 +29,9 @@ final class GeneratedSongDetailViewModel: ObservableObject {
                         isProcessingLike = false
                     }
                 } else {
-                    let response = try await client.likeSong(id: songId)
+                    try await client.likeSong(id: songId)
                     await MainActor.run {
-                        isLiked = response.liked
+                        isLiked = true
                         isProcessingLike = false
                     }
                 }
