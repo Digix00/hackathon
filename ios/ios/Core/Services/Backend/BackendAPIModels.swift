@@ -462,6 +462,7 @@ nonisolated struct UpdateUserSettingsRequest: Encodable {
         case announcementNotificationEnabled = "announcement_notification_enabled"
         case themeMode = "theme_mode"
     }
+
 }
 
 nonisolated struct CreatePushTokenRequest: Encodable {
