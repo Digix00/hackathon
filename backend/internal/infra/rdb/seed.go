@@ -199,10 +199,7 @@ func seedDemoData(db *gorm.DB) error {
 			{ID: settingsIDB, UserID: userB.ID},
 			{ID: settingsIDC, UserID: userC.ID},
 		}
-		if err := tx.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "user_id"}},
-			DoNothing: true,
-		}).Create(&settings).Error; err != nil {
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&settings).Error; err != nil {
 			return err
 		}
 
@@ -229,10 +226,7 @@ func seedDemoData(db *gorm.DB) error {
 				ArtistName: "Loop Sisters",
 			},
 		}
-		if err := tx.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "external_id"}, {Name: "provider"}},
-			DoNothing: true,
-		}).Create(&tracks).Error; err != nil {
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&tracks).Error; err != nil {
 			return err
 		}
 
@@ -247,19 +241,7 @@ func seedDemoData(db *gorm.DB) error {
 			return err
 		}
 
-		if err := tx.Clauses(clause.OnConflict{
-			Columns: []clause.Column{
-				{Name: "encounter_id"},
-				{Name: "track_id"},
-				{Name: "source_user_id"},
-			},
-			TargetWhere: clause.Where{
-				Exprs: []clause.Expression{
-					clause.Expr{SQL: "deleted_at IS NULL"},
-				},
-			},
-			DoNothing: true,
-		}).Create(&model.EncounterTrack{
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&model.EncounterTrack{
 			ID:           encounterTrackID,
 			EncounterID:  encounterID,
 			TrackID:      trackIDA,
@@ -288,18 +270,7 @@ func seedDemoData(db *gorm.DB) error {
 			{ID: userTrackIDB, UserID: userA.ID, TrackID: trackIDB},
 			{ID: userTrackIDC, UserID: userB.ID, TrackID: trackIDC},
 		}
-		if err := tx.Clauses(clause.OnConflict{
-			Columns: []clause.Column{
-				{Name: "user_id"},
-				{Name: "track_id"},
-			},
-			TargetWhere: clause.Where{
-				Exprs: []clause.Expression{
-					clause.Expr{SQL: "deleted_at IS NULL"},
-				},
-			},
-			DoNothing: true,
-		}).Create(&userTracks).Error; err != nil {
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&userTracks).Error; err != nil {
 			return err
 		}
 
@@ -307,10 +278,7 @@ func seedDemoData(db *gorm.DB) error {
 			{ID: currentTrackIDA, UserID: userA.ID, TrackID: trackIDB},
 			{ID: currentTrackIDB, UserID: userB.ID, TrackID: trackIDC},
 		}
-		if err := tx.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "user_id"}},
-			DoNothing: true,
-		}).Create(&currentTracks).Error; err != nil {
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&currentTracks).Error; err != nil {
 			return err
 		}
 
@@ -329,54 +297,21 @@ func seedDemoData(db *gorm.DB) error {
 			{ID: playlistTrackIDB, PlaylistID: playlistIDA, TrackID: trackIDB, SortOrder: 2},
 			{ID: playlistTrackIDC, PlaylistID: playlistIDB, TrackID: trackIDC, SortOrder: 1},
 		}
-		if err := tx.Clauses(clause.OnConflict{
-			Columns: []clause.Column{
-				{Name: "playlist_id"},
-				{Name: "track_id"},
-			},
-			TargetWhere: clause.Where{
-				Exprs: []clause.Expression{
-					clause.Expr{SQL: "deleted_at IS NULL"},
-				},
-			},
-			DoNothing: true,
-		}).Create(&playlistTracks).Error; err != nil {
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&playlistTracks).Error; err != nil {
 			return err
 		}
 
 		trackFavorites := []model.TrackFavorite{
 			{ID: trackFavoriteIDA, UserID: userA.ID, TrackID: trackIDC},
 		}
-		if err := tx.Clauses(clause.OnConflict{
-			Columns: []clause.Column{
-				{Name: "user_id"},
-				{Name: "track_id"},
-			},
-			TargetWhere: clause.Where{
-				Exprs: []clause.Expression{
-					clause.Expr{SQL: "deleted_at IS NULL"},
-				},
-			},
-			DoNothing: true,
-		}).Create(&trackFavorites).Error; err != nil {
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&trackFavorites).Error; err != nil {
 			return err
 		}
 
 		playlistFavorites := []model.PlaylistFavorite{
 			{ID: playlistFavIDA, UserID: userA.ID, PlaylistID: playlistIDB},
 		}
-		if err := tx.Clauses(clause.OnConflict{
-			Columns: []clause.Column{
-				{Name: "user_id"},
-				{Name: "playlist_id"},
-			},
-			TargetWhere: clause.Where{
-				Exprs: []clause.Expression{
-					clause.Expr{SQL: "deleted_at IS NULL"},
-				},
-			},
-			DoNothing: true,
-		}).Create(&playlistFavorites).Error; err != nil {
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&playlistFavorites).Error; err != nil {
 			return err
 		}
 
@@ -399,10 +334,7 @@ func seedDemoData(db *gorm.DB) error {
 		// Keep demo data resilient to resets by ensuring a BLE token exists for the demo user.
 		validFrom := time.Now().UTC().Add(-10 * time.Minute)
 		validTo := time.Now().UTC().Add(24 * time.Hour)
-		if err := tx.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "token"}},
-			DoNothing: true,
-		}).Create(&model.BleToken{
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&model.BleToken{
 			ID:        "seed-ble-token-01",
 			UserID:    userB.ID,
 			Token:     "0123456789abcdef",
@@ -423,14 +355,7 @@ func seedDemoData(db *gorm.DB) error {
 				Enabled:     true,
 			},
 		}
-		if err := tx.Clauses(clause.OnConflict{
-			Columns: []clause.Column{
-				{Name: "user_id"},
-				{Name: "platform"},
-				{Name: "device_id"},
-			},
-			DoNothing: true,
-		}).Create(&devices).Error; err != nil {
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&devices).Error; err != nil {
 			return err
 		}
 
@@ -438,18 +363,7 @@ func seedDemoData(db *gorm.DB) error {
 			return err
 		}
 
-		if err := tx.Clauses(clause.OnConflict{
-			Columns: []clause.Column{
-				{Name: "blocker_user_id"},
-				{Name: "blocked_user_id"},
-			},
-			TargetWhere: clause.Where{
-				Exprs: []clause.Expression{
-					clause.Expr{SQL: "deleted_at IS NULL"},
-				},
-			},
-			DoNothing: true,
-		}).Create(&model.Block{
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&model.Block{
 			ID:            blockIDA,
 			BlockerUserID: userA.ID,
 			BlockedUserID: userC.ID,
@@ -457,18 +371,7 @@ func seedDemoData(db *gorm.DB) error {
 			return err
 		}
 
-		if err := tx.Clauses(clause.OnConflict{
-			Columns: []clause.Column{
-				{Name: "user_id"},
-				{Name: "target_user_id"},
-			},
-			TargetWhere: clause.Where{
-				Exprs: []clause.Expression{
-					clause.Expr{SQL: "deleted_at IS NULL"},
-				},
-			},
-			DoNothing: true,
-		}).Create(&model.Mute{
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&model.Mute{
 			ID:           muteIDA,
 			UserID:       userB.ID,
 			TargetUserID: userC.ID,
@@ -476,20 +379,7 @@ func seedDemoData(db *gorm.DB) error {
 			return err
 		}
 
-		if err := tx.Clauses(clause.OnConflict{
-			Columns: []clause.Column{
-				{Name: "reporter_user_id"},
-				{Name: "reported_user_id"},
-				{Name: "report_type"},
-				{Name: "target_comment_id"},
-			},
-			TargetWhere: clause.Where{
-				Exprs: []clause.Expression{
-					clause.Expr{SQL: "deleted_at IS NULL"},
-				},
-			},
-			DoNothing: true,
-		}).Create(&[]model.Report{
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&[]model.Report{
 			{
 				ID:             reportUserIDA,
 				ReporterUserID: userA.ID,
@@ -537,10 +427,7 @@ func seedMusicConnections(tx *gorm.DB, id, userID string) error {
 	expiresAt := time.Now().UTC().Add(48 * time.Hour)
 	username := "demo_spotify_user"
 
-	return tx.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "user_id"}, {Name: "provider"}},
-		DoNothing: true,
-	}).Create(&model.MusicConnection{
+	return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&model.MusicConnection{
 		ID:               id,
 		UserID:           userID,
 		Provider:         "spotify",
@@ -611,25 +498,11 @@ func seedLyricData(tx *gorm.DB, userAID, userBID, userCID, encounterAID, encount
 			GeneratedAt: ptrTime(now.Add(-70 * time.Minute)),
 		},
 	}
-	if err := tx.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "chain_id"}},
-		DoNothing: true,
-	}).Create(&songs).Error; err != nil {
+	if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&songs).Error; err != nil {
 		return err
 	}
 
-	if err := tx.Clauses(clause.OnConflict{
-		Columns: []clause.Column{
-			{Name: "song_id"},
-			{Name: "user_id"},
-		},
-		TargetWhere: clause.Where{
-			Exprs: []clause.Expression{
-				clause.Expr{SQL: "deleted_at IS NULL"},
-			},
-		},
-		DoNothing: true,
-	}).Create(&model.SongLike{
+	if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&model.SongLike{
 		ID:     songLikeIDA,
 		SongID: generatedSongIDA,
 		UserID: userAID,
