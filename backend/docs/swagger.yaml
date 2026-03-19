@@ -103,6 +103,17 @@ definitions:
         - no-answer
         type: string
     type: object
+  hackathon_internal_handler_schema_request.PostLocationRequest:
+    properties:
+      accuracy_m:
+        type: number
+      lat:
+        type: number
+      lng:
+        type: number
+      recorded_at:
+        type: string
+    type: object
   hackathon_internal_handler_schema_request.SubmitLyricRequest:
     properties:
       content:
@@ -458,6 +469,15 @@ definitions:
       songs:
         items:
           $ref: '#/definitions/hackathon_internal_handler_schema_response.UserSong'
+        type: array
+    type: object
+  hackathon_internal_handler_schema_response.LocationResponse:
+    properties:
+      encounter_count:
+        type: integer
+      encounters:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterSummary'
         type: array
     type: object
   hackathon_internal_handler_schema_response.MusicAuthorizeResponse:
@@ -1289,6 +1309,43 @@ paths:
       summary: コメント作成
       tags:
       - comments
+  /api/v1/locations:
+    post:
+      consumes:
+      - application/json
+      description: 現在位置をサーバーに送信し、近くにいるユーザーとのエンカウントを判定・作成する
+      operationId: postLocation
+      parameters:
+      - description: 位置情報リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.PostLocationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.LocationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 現在位置送信・エンカウント判定
+      tags:
+      - locations
   /api/v1/lyrics:
     post:
       consumes:

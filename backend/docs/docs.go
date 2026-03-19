@@ -552,6 +552,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/locations": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "現在位置をサーバーに送信し、近くにいるユーザーとのエンカウントを判定・作成する",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "locations"
+                ],
+                "summary": "現在位置送信・エンカウント判定",
+                "operationId": "postLocation",
+                "parameters": [
+                    {
+                        "description": "位置情報リクエスト",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_request.PostLocationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.LocationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/lyrics": {
             "post": {
                 "security": [
@@ -3229,6 +3287,23 @@ const docTemplate = `{
                 }
             }
         },
+        "hackathon_internal_handler_schema_request.PostLocationRequest": {
+            "type": "object",
+            "properties": {
+                "accuracy_m": {
+                    "type": "number"
+                },
+                "lat": {
+                    "type": "number"
+                },
+                "lng": {
+                    "type": "number"
+                },
+                "recorded_at": {
+                    "type": "string"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_request.SubmitLyricRequest": {
             "type": "object",
             "properties": {
@@ -3769,6 +3844,20 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/hackathon_internal_handler_schema_response.UserSong"
+                    }
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.LocationResponse": {
+            "type": "object",
+            "properties": {
+                "encounter_count": {
+                    "type": "integer"
+                },
+                "encounters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.EncounterSummary"
                     }
                 }
             }
