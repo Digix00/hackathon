@@ -216,7 +216,7 @@ BLE 交換成立
 [cmd/worker] が Outbox を定期スキャン・集約して APNs / FCM に通知送信
 ```
 
-- Cloud Scheduler が worker を 10〜20 分間隔でキック（Cloud Run Jobs）
+- Cloud Scheduler が worker を 10 分間隔で HTTP POST でキック（Cloud Run Service）
 - 通知の集約（まとめて「N人とすれ違いました」）は worker 内で制御
 - 配信失敗時は Outbox レコードを pending に戻してリトライ（最大 3 回。超過後は failed に遷移し、アラートを発報）
 
@@ -228,18 +228,18 @@ BLE 交換成立
 
 ## worker の実行形式
 
-worker は **oneshot 型**（実行して即終了）。ループ常駐型ではない。
+worker は **HTTP サーバー型**。Cloud Scheduler からの POST リクエストを受けて処理を実行し、完了後に HTTP 200 を返す。スケールゼロ対応（リクエストがない間はインスタンス数 0）。
 
 ### 本番環境
 
-Cloud Scheduler が Cloud Run Jobs を定期キック（10〜20 分間隔）。
+Cloud Scheduler が Cloud Run Service（worker）に 10 分間隔で HTTP POST を送信。OIDC トークンで認証し、scheduler SA のみ呼び出し可能。
 
 ### 開発環境（docker-compose）
 
-worker コンテナは `sleep infinity` で常駐するだけで自動実行されない。手動で実行する場合は以下のコマンドを使う。
+worker コンテナは HTTP サーバーとして起動する。手動でトリガーする場合は以下のコマンドを使う。
 
 ```bash
-docker compose exec worker go run ./cmd/worker
+curl -X POST http://localhost:8080/
 ```
 
 ## レート制限
