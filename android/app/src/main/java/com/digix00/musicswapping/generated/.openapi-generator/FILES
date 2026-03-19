@@ -2,6 +2,7 @@ docs/BleTokensApi.md
 docs/BlocksApi.md
 docs/CommentsApi.md
 docs/EncountersApi.md
+docs/FavoritesApi.md
 docs/HackathonInternalHandlerSchemaRequestAddPlaylistTrackRequest.md
 docs/HackathonInternalHandlerSchemaRequestAddUserTrackRequest.md
 docs/HackathonInternalHandlerSchemaRequestCreateBlockRequest.md
@@ -57,6 +58,7 @@ docs/HackathonInternalHandlerSchemaResponseNotificationItem.md
 docs/HackathonInternalHandlerSchemaResponseNotificationListResponse.md
 docs/HackathonInternalHandlerSchemaResponsePagination.md
 docs/HackathonInternalHandlerSchemaResponsePlaylist.md
+docs/HackathonInternalHandlerSchemaResponsePlaylistFavoriteListResponse.md
 docs/HackathonInternalHandlerSchemaResponsePlaylistListResponse.md
 docs/HackathonInternalHandlerSchemaResponsePlaylistResponse.md
 docs/HackathonInternalHandlerSchemaResponsePlaylistSummary.md
@@ -76,6 +78,9 @@ docs/HackathonInternalHandlerSchemaResponseSubmitLyricChain.md
 docs/HackathonInternalHandlerSchemaResponseSubmitLyricEntry.md
 docs/HackathonInternalHandlerSchemaResponseSubmitLyricResponse.md
 docs/HackathonInternalHandlerSchemaResponseTrack.md
+docs/HackathonInternalHandlerSchemaResponseTrackFavorite.md
+docs/HackathonInternalHandlerSchemaResponseTrackFavoriteListResponse.md
+docs/HackathonInternalHandlerSchemaResponseTrackFavoriteResponse.md
 docs/HackathonInternalHandlerSchemaResponseTrackResponse.md
 docs/HackathonInternalHandlerSchemaResponseTrackSearchPagination.md
 docs/HackathonInternalHandlerSchemaResponseTrackSearchResponse.md
@@ -106,6 +111,7 @@ src/main/kotlin/com/digix00/musicswapping/generated/apis/BleTokensApi.kt
 src/main/kotlin/com/digix00/musicswapping/generated/apis/BlocksApi.kt
 src/main/kotlin/com/digix00/musicswapping/generated/apis/CommentsApi.kt
 src/main/kotlin/com/digix00/musicswapping/generated/apis/EncountersApi.kt
+src/main/kotlin/com/digix00/musicswapping/generated/apis/FavoritesApi.kt
 src/main/kotlin/com/digix00/musicswapping/generated/apis/HealthApi.kt
 src/main/kotlin/com/digix00/musicswapping/generated/apis/LocationsApi.kt
 src/main/kotlin/com/digix00/musicswapping/generated/apis/LyricsApi.kt
@@ -193,6 +199,7 @@ src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHand
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseNotificationListResponse.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponsePagination.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponsePlaylist.kt
+src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponsePlaylistFavoriteListResponse.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponsePlaylistListResponse.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponsePlaylistResponse.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponsePlaylistSummary.kt
@@ -212,6 +219,9 @@ src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHand
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseSubmitLyricEntry.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseSubmitLyricResponse.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseTrack.kt
+src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseTrackFavorite.kt
+src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseTrackFavoriteListResponse.kt
+src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseTrackFavoriteResponse.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseTrackResponse.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseTrackSearchPagination.kt
 src/main/kotlin/com/digix00/musicswapping/generated/models/HackathonInternalHandlerSchemaResponseTrackSearchResponse.kt
