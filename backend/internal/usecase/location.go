@@ -65,14 +65,21 @@ func (u *locationUsecase) PostLocation(ctx context.Context, authUID string, inpu
 		return usecasedto.LocationResultDTO{}, err
 	}
 
-	// リクエスタの detection_distance を取得（未設定の場合はデフォルト 50 を使用）
+	// リクエスタの設定を取得（未設定の場合はデフォルト値を使用）
 	requesterDistance := 50
+	locationEnabled := true
 	settings, err := u.settingsRepo.FindByUserID(ctx, requester.ID)
 	if err != nil && !errors.Is(err, domainerrs.ErrNotFound) {
 		return usecasedto.LocationResultDTO{}, err
 	}
 	if err == nil {
 		requesterDistance = settings.DetectionDistance
+		locationEnabled = settings.LocationEnabled
+	}
+
+	// リクエスタが location_enabled = false の場合はエンカウント判定をスキップ
+	if !locationEnabled {
+		return usecasedto.LocationResultDTO{Encounters: []usecasedto.EncounterSummaryDTO{}}, nil
 	}
 
 	now := u.clock.Now().UTC()
