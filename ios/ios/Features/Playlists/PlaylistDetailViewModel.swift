@@ -148,6 +148,17 @@ final class PlaylistDetailViewModel: ObservableObject {
                 try await client.addPlaylistFavorite(id: playlistId)
                 isFavorite = true
             }
+        } catch let error as BackendAPIClient.BackendError {
+            switch error {
+            case .unexpectedStatus(let code, _) where code == 409:
+                isFavorite = true
+                return
+            case .unexpectedStatus(let code, _) where code == 404:
+                isFavorite = false
+                return
+            default:
+                errorMessage = "お気に入りの更新に失敗しました"
+            }
         } catch {
             errorMessage = "お気に入りの更新に失敗しました"
         }
