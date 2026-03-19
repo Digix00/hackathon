@@ -22,6 +22,12 @@ resource "google_project_iam_member" "cloudrun_cloudsql_client" {
   member  = "serviceAccount:${google_service_account.cloudrun.email}"
 }
 
+resource "google_project_iam_member" "cloudrun_firebase_auth_admin" {
+  project = var.project_id
+  role    = "roles/firebaseauth.admin"
+  member  = "serviceAccount:${google_service_account.cloudrun.email}"
+}
+
 # Worker 用サービスアカウント
 resource "google_service_account" "worker" {
   account_id   = "worker-sa"
@@ -83,6 +89,7 @@ locals {
     "roles/serviceusage.serviceUsageAdmin",
     "roles/storage.admin",
     "roles/logging.admin",
+    "roles/identitytoolkit.admin",
   ]
 }
 
