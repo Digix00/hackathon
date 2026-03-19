@@ -109,17 +109,38 @@ final class PushNotificationManager: NSObject, ObservableObject {
             return
         }
 
-        do {
-            _ = try await apiClient.patchPushToken(
-                id: backendId,
-                request: UpdatePushTokenRequest(
-                    pushToken: nil,
-                    enabled: enabled,
-                    appVersion: Self.appVersion
+        if enabled {
+            do {
+                _ = try await apiClient.patchPushToken(
+                    id: backendId,
+                    request: UpdatePushTokenRequest(
+                        pushToken: nil,
+                        enabled: true,
+                        appVersion: Self.appVersion
+                    )
                 )
-            )
+            } catch {
+                lastErrorMessage = "通知設定の同期に失敗しました。"
+            }
+            return
+        }
+
+        do {
+            try await apiClient.deletePushToken(id: backendId)
+            store.backendDeviceId = nil
         } catch {
-            lastErrorMessage = "通知設定の同期に失敗しました。"
+            do {
+                _ = try await apiClient.patchPushToken(
+                    id: backendId,
+                    request: UpdatePushTokenRequest(
+                        pushToken: nil,
+                        enabled: false,
+                        appVersion: Self.appVersion
+                    )
+                )
+            } catch {
+                lastErrorMessage = "通知設定の同期に失敗しました。"
+            }
         }
     }
 
