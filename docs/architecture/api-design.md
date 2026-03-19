@@ -1425,7 +1425,7 @@ API の `reported_user_id` は DB スキーマ上の `reports.reported_user_id` 
 }
 ```
 
-### POST /blocks
+### POST /users/me/blocks
 
 指定ユーザーをブロックする。
 ブロックの効果はアカウント削除まで持続する。
@@ -1453,15 +1453,15 @@ API の `reported_user_id` は DB スキーマ上の `reports.reported_user_id` 
 }
 ```
 
-### DELETE /blocks/{target_user_id}
+### DELETE /users/me/blocks/{blocked_user_id}
 
-`{target_user_id}` はアンブロック対象ユーザーの ID。
+`{blocked_user_id}` はアンブロック対象ユーザーの ID。
 
 **Response (204)**
 
 レスポンスボディなし。
 
-### GET /blocks
+### GET /users/me/blocks
 
 **Query**: `limit`, `cursor`
 
@@ -1482,7 +1482,7 @@ API の `reported_user_id` は DB スキーマ上の `reports.reported_user_id` 
 }
 ```
 
-### POST /mutes
+### POST /users/me/mutes
 
 指定ユーザーをミュートする。
 ブロックと異なりエンカウントは通常通り発生するが、ミュートしたユーザーのエンカウント・コメントが自分のフィード上に表示されなくなる（フィルタリングはサーバーサイドで実施）。
@@ -1508,7 +1508,7 @@ API の `reported_user_id` は DB スキーマ上の `reports.reported_user_id` 
 }
 ```
 
-### DELETE /mutes/{target_user_id}
+### DELETE /users/me/mutes/{target_user_id}
 
 `{target_user_id}` はアンミュート対象ユーザーの ID。
 
@@ -1516,7 +1516,7 @@ API の `reported_user_id` は DB スキーマ上の `reports.reported_user_id` 
 
 レスポンスボディなし。
 
-### GET /mutes
+### GET /users/me/mutes
 
 **Query**: `limit`, `cursor`
 
