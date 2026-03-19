@@ -68,6 +68,25 @@ nonisolated struct BackendPublicTrack: Decodable, Equatable {
     }
 }
 
+nonisolated struct BackendTrackResponse: Decodable {
+    let track: BackendPublicTrack?
+}
+
+nonisolated struct BackendTrackSearchPagination: Decodable, Equatable {
+    let nextCursor: String?
+    let hasMore: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case nextCursor = "next_cursor"
+        case hasMore = "has_more"
+    }
+}
+
+nonisolated struct BackendTrackSearchResponse: Decodable {
+    let pagination: BackendTrackSearchPagination?
+    let tracks: [BackendPublicTrack]?
+}
+
 nonisolated struct BackendUserResponse: Decodable {
     let user: BackendUser
 }

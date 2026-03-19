@@ -10,6 +10,7 @@ struct OtherUserProfileCard: View {
     var onReport: () -> Void = {}
     var isMuteDisabled: Bool = false
     var isBlockDisabled: Bool = false
+    var isReportDisabled: Bool = false
 
     var body: some View {
         SectionCard {
@@ -41,6 +42,7 @@ struct OtherUserProfileCard: View {
                     SecondaryButton(title: "通報", systemImage: "flag.fill") {
                         onReport()
                     }
+                    .disabled(isReportDisabled)
                 }
             }
             .frame(maxWidth: .infinity)
