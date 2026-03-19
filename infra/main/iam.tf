@@ -145,6 +145,14 @@ resource "google_service_account_iam_member" "terraform_ci_wif" {
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_repo}"
 }
 
+# terraform_ci SA の自己 IDトークン発行権限
+# WIF 経由で認証した状態から --impersonate-service-account で IDトークンを取得するために必要
+resource "google_service_account_iam_member" "terraform_ci_token_creator_self" {
+  service_account_id = google_service_account.terraform_ci.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${google_service_account.terraform_ci.email}"
+}
+
 # Terraform CI SA → cloudrun-sa / worker-sa の actAs 権限
 # Cloud Run Service/Job 作成時に service_account を指定するには
 # デプロイ主体が対象 SA に対して iam.serviceaccounts.actAs を持つ必要がある
