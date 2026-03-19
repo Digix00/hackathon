@@ -19,10 +19,6 @@ struct InsightsBackground: View {
             PrismaticSweepView(timelineInterval: timelineInterval, accentColor: palette[0])
 
             ConstellationView(colors: palette)
-
-            DotGridBackground()
-                .opacity(0.08)
-                .blendMode(.overlay)
         }
     }
 
