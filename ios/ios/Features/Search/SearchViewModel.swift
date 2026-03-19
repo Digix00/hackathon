@@ -43,14 +43,19 @@ final class SearchViewModel: ObservableObject {
     }
 
     private func fetchTrackDetail(id: String, fallback: Track) async {
+        let requestedId = id
         isSelecting = true
         errorMessage = nil
         do {
             let track = try await client.getTrack(id: id)
-            selectedTrack = mapTrack(track)
+            if selectedTrack?.backendId == requestedId {
+                selectedTrack = mapTrack(track)
+            }
         } catch {
-            selectedTrack = fallback
-            errorMessage = "楽曲情報の取得に失敗しました"
+            if selectedTrack?.backendId == requestedId {
+                selectedTrack = fallback
+                errorMessage = "楽曲情報の取得に失敗しました"
+            }
         }
         isSelecting = false
     }
