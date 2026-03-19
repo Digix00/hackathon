@@ -1,5 +1,6 @@
 .PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean reset-db init-db \
-		generate-docs generate-docs-ci generate-android generate-ios generate-code generate-code-ci
+	vet lint \
+	generate-docs generate-docs-ci generate-android generate-ios generate-code generate-code-ci
 
 # ==============================================================================
 # Docker Compose Commands
@@ -38,6 +39,12 @@ tidy:
 
 fmt:
 	$(MAKE) -C backend fmt
+
+vet:
+	$(MAKE) -C backend vet
+
+lint:
+	$(MAKE) -C backend lint
 
 # ==============================================================================
 # Code Generation
