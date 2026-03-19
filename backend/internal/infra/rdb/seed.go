@@ -2,11 +2,13 @@ package rdb
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
+	"hackathon/internal/infra/crypto"
 	"hackathon/internal/infra/rdb/model"
 )
 
@@ -21,6 +23,21 @@ func Seed(db *gorm.DB) error {
 	}
 	return nil
 }
+
+const (
+	lyricChainIDA = "seed-lyric-chain-01"
+	lyricChainIDB = "seed-lyric-chain-02"
+
+	lyricEntryIDA = "seed-lyric-entry-01"
+	lyricEntryIDB = "seed-lyric-entry-02"
+	lyricEntryIDC = "seed-lyric-entry-03"
+	lyricEntryIDD = "seed-lyric-entry-04"
+
+	generatedSongIDA = "seed-generated-song-01"
+	generatedSongIDB = "seed-generated-song-02"
+
+	songLikeIDA = "seed-song-like-01"
+)
 
 func seedPrefectures(db *gorm.DB) error {
 	prefectures := []model.Prefecture{
@@ -124,6 +141,16 @@ func seedDemoData(db *gorm.DB) error {
 
 			notificationIDA = "seed-notification-01"
 			notificationIDB = "seed-notification-02"
+
+			deviceIDA = "seed-device-01"
+
+			musicConnectionIDA = "seed-music-conn-01"
+
+			blockIDA = "seed-block-01"
+			muteIDA  = "seed-mute-01"
+
+			reportUserIDA    = "seed-report-user-01"
+			reportCommentIDA = "seed-report-comment-01"
 		)
 
 		nameA := "Aoi"
@@ -363,7 +390,7 @@ func seedDemoData(db *gorm.DB) error {
 
 		notifications := []model.OutboxNotification{
 			{ID: notificationIDA, UserID: userA.ID, EncounterID: encounterID, Status: "sent"},
-			{ID: notificationIDB, UserID: userA.ID, EncounterID: encounterIDB, Status: "sent"},
+			{ID: notificationIDB, UserID: userA.ID, EncounterID: encounterIDB, Status: "sent", ReadAt: ptrTime(time.Now().UTC().Add(-1 * time.Hour))},
 		}
 		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&notifications).Error; err != nil {
 			return err
@@ -385,6 +412,242 @@ func seedDemoData(db *gorm.DB) error {
 			return err
 		}
 
+		devices := []model.UserDevice{
+			{
+				ID:          deviceIDA,
+				UserID:      userA.ID,
+				Platform:    "ios",
+				DeviceID:    "demo-device-01",
+				DeviceToken: "demo-push-token-01",
+				AppVersion:  ptrString("1.0.0"),
+				Enabled:     true,
+			},
+		}
+		if err := tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{
+				{Name: "user_id"},
+				{Name: "platform"},
+				{Name: "device_id"},
+			},
+			DoNothing: true,
+		}).Create(&devices).Error; err != nil {
+			return err
+		}
+
+		if err := seedMusicConnections(tx, musicConnectionIDA, userA.ID); err != nil {
+			return err
+		}
+
+		if err := tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{
+				{Name: "blocker_user_id"},
+				{Name: "blocked_user_id"},
+			},
+			TargetWhere: clause.Where{
+				Exprs: []clause.Expression{
+					clause.Expr{SQL: "deleted_at IS NULL"},
+				},
+			},
+			DoNothing: true,
+		}).Create(&model.Block{
+			ID:            blockIDA,
+			BlockerUserID: userA.ID,
+			BlockedUserID: userC.ID,
+		}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{
+				{Name: "user_id"},
+				{Name: "target_user_id"},
+			},
+			TargetWhere: clause.Where{
+				Exprs: []clause.Expression{
+					clause.Expr{SQL: "deleted_at IS NULL"},
+				},
+			},
+			DoNothing: true,
+		}).Create(&model.Mute{
+			ID:           muteIDA,
+			UserID:       userB.ID,
+			TargetUserID: userC.ID,
+		}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{
+				{Name: "reporter_user_id"},
+				{Name: "reported_user_id"},
+				{Name: "report_type"},
+				{Name: "target_comment_id"},
+			},
+			TargetWhere: clause.Where{
+				Exprs: []clause.Expression{
+					clause.Expr{SQL: "deleted_at IS NULL"},
+				},
+			},
+			DoNothing: true,
+		}).Create(&[]model.Report{
+			{
+				ID:             reportUserIDA,
+				ReporterUserID: userA.ID,
+				ReportedUserID: userC.ID,
+				ReportType:     "user",
+				Reason:         "迷惑行為の報告",
+			},
+			{
+				ID:              reportCommentIDA,
+				ReporterUserID:  userB.ID,
+				ReportedUserID:  userA.ID,
+				ReportType:      "comment",
+				TargetCommentID: ptrString(commentIDA),
+				Reason:          "不適切なコメント",
+			},
+		}).Error; err != nil {
+			return err
+		}
+
+		if err := seedLyricData(tx, userA.ID, userB.ID, userC.ID, encounterID, encounterIDB); err != nil {
+			return err
+		}
+
 		return nil
 	})
+}
+
+func seedMusicConnections(tx *gorm.DB, id, userID string) error {
+	key := os.Getenv("MUSIC_TOKEN_ENCRYPTION_KEY")
+	if key == "" {
+		return fmt.Errorf("MUSIC_TOKEN_ENCRYPTION_KEY is required to seed music connections")
+	}
+	encrypter, err := crypto.NewTokenEncrypter(key)
+	if err != nil {
+		return err
+	}
+	accessToken, err := encrypter.Encrypt("demo-access-token")
+	if err != nil {
+		return err
+	}
+	refreshToken, err := encrypter.Encrypt("demo-refresh-token")
+	if err != nil {
+		return err
+	}
+	expiresAt := time.Now().UTC().Add(48 * time.Hour)
+	username := "demo_spotify_user"
+
+	return tx.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "provider"}},
+		DoNothing: true,
+	}).Create(&model.MusicConnection{
+		ID:               id,
+		UserID:           userID,
+		Provider:         "spotify",
+		ProviderUserID:   "spotify-demo-user",
+		ProviderUsername: &username,
+		AccessToken:      accessToken,
+		RefreshToken:     &refreshToken,
+		ExpiresAt:        &expiresAt,
+	}).Error
+}
+
+func seedLyricData(tx *gorm.DB, userAID, userBID, userCID, encounterAID, encounterBID string) error {
+	now := time.Now().UTC()
+	completedAt := now.Add(-90 * time.Minute)
+	chains := []model.LyricChain{
+		{
+			ID:               lyricChainIDA,
+			Status:           "completed",
+			ParticipantCount: 2,
+			Threshold:        2,
+			CreatedAt:        now.Add(-2 * time.Hour),
+			CompletedAt:      &completedAt,
+		},
+		{
+			ID:               lyricChainIDB,
+			Status:           "completed",
+			ParticipantCount: 2,
+			Threshold:        2,
+			CreatedAt:        now.Add(-3 * time.Hour),
+			CompletedAt:      &completedAt,
+		},
+	}
+	if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&chains).Error; err != nil {
+		return err
+	}
+
+	entries := []model.LyricEntry{
+		{ID: lyricEntryIDA, ChainID: lyricChainIDA, UserID: userAID, EncounterID: encounterAID, Content: "夜明けのメロディが流れる", SequenceNum: 1},
+		{ID: lyricEntryIDB, ChainID: lyricChainIDA, UserID: userBID, EncounterID: encounterAID, Content: "街角の光をつなげて", SequenceNum: 2},
+		{ID: lyricEntryIDC, ChainID: lyricChainIDB, UserID: userAID, EncounterID: encounterBID, Content: "静かな波のリズムで", SequenceNum: 1},
+		{ID: lyricEntryIDD, ChainID: lyricChainIDB, UserID: userCID, EncounterID: encounterBID, Content: "星空に声を重ねる", SequenceNum: 2},
+	}
+	if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&entries).Error; err != nil {
+		return err
+	}
+
+	songs := []model.GeneratedSong{
+		{
+			ID:          generatedSongIDA,
+			ChainID:     lyricChainIDA,
+			Title:       ptrString("Dawn Echoes"),
+			AudioURL:    ptrString("https://example.com/audio/dawn-echoes.mp3"),
+			DurationSec: ptrInt(182),
+			Mood:        ptrString("Calm"),
+			Genre:       ptrString("Ambient"),
+			Status:      "completed",
+			GeneratedAt: ptrTime(now.Add(-80 * time.Minute)),
+		},
+		{
+			ID:          generatedSongIDB,
+			ChainID:     lyricChainIDB,
+			Title:       ptrString("Starlit Waves"),
+			AudioURL:    ptrString("https://example.com/audio/starlit-waves.mp3"),
+			DurationSec: ptrInt(205),
+			Mood:        ptrString("Dreamy"),
+			Genre:       ptrString("Chill"),
+			Status:      "completed",
+			GeneratedAt: ptrTime(now.Add(-70 * time.Minute)),
+		},
+	}
+	if err := tx.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "chain_id"}},
+		DoNothing: true,
+	}).Create(&songs).Error; err != nil {
+		return err
+	}
+
+	if err := tx.Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "song_id"},
+			{Name: "user_id"},
+		},
+		TargetWhere: clause.Where{
+			Exprs: []clause.Expression{
+				clause.Expr{SQL: "deleted_at IS NULL"},
+			},
+		},
+		DoNothing: true,
+	}).Create(&model.SongLike{
+		ID:     songLikeIDA,
+		SongID: generatedSongIDA,
+		UserID: userAID,
+	}).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ptrString(s string) *string {
+	return &s
+}
+
+func ptrInt(v int) *int {
+	return &v
+}
+
+func ptrTime(t time.Time) *time.Time {
+	return &t
 }
