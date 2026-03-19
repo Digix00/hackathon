@@ -188,6 +188,7 @@ func (r *playlistRepository) ListFavoritesByUserID(ctx context.Context, userID s
 	}
 
 	query := r.db.WithContext(ctx).
+		Select("playlist_favorites.*").
 		Model(&model.PlaylistFavorite{}).
 		Joins("JOIN playlists ON playlists.id = playlist_favorites.playlist_id AND playlists.deleted_at IS NULL").
 		Where("playlist_favorites.user_id = ? AND playlist_favorites.deleted_at IS NULL", userID).
