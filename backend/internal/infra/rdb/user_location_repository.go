@@ -53,7 +53,7 @@ func (r *userLocationRepository) FindRecentlyActive(ctx context.Context, request
 		Table("user_locations").
 		Select("user_locations.user_id, user_locations.latitude, user_locations.longitude, COALESCE(user_settings.detection_distance, 50) AS detection_distance").
 		Joins("LEFT JOIN user_settings ON user_settings.user_id = user_locations.user_id").
-		Where("user_locations.user_id != ? AND user_locations.updated_at >= ?", requesterID, since).
+		Where("user_locations.user_id != ? AND user_locations.updated_at >= ? AND COALESCE(user_settings.location_enabled, true) = true", requesterID, since).
 		Scan(&rows).Error
 	if err != nil {
 		return nil, err
