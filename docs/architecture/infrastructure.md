@@ -38,6 +38,7 @@ infra/
     ├── artifact_registry.tf   # Artifact Registry リポジトリ
     ├── cloudrun.tf            # Cloud Run service（API）+ Cloud Run Jobs（worker）
     ├── cloudsql.tf            # Cloud SQL インスタンス・DB・ユーザー
+    ├── firebase.tf            # Firebase Authentication（Identity Platform）設定
     ├── scheduler.tf           # Cloud Scheduler ジョブ
     ├── secret_manager.tf      # Secret Manager シークレット
     └── storage.tf             # Cloud Storage バケット（生成楽曲保存）
@@ -88,7 +89,8 @@ terraform {
 
 | リソース | 管理方法 | 理由 |
 |---|---|---|
-| Firebase Auth プロバイダ設定 | Firebase Console / CLI | Terraform サポートが限定的 |
+| Firebase Auth 初期化・基本設定 | Terraform（`firebase.tf`） | `google_identity_platform_config` で管理 |
+| Firebase Auth サインインプロバイダ詳細設定 | Firebase Console | クライアント ID 等の秘匿情報を State に持たせないため |
 | FCM 設定 | Firebase Console | Terraform 非対応 |
 | APNs 証明書 | Firebase Console | 同上 |
 

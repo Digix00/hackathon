@@ -218,7 +218,6 @@ final class BLEAppCoordinator: ObservableObject {
 
         await MainActor.run {
             isLoadingEncounters = true
-            encounterErrorMessage = nil
         }
 
         do {
@@ -226,6 +225,7 @@ final class BLEAppCoordinator: ObservableObject {
             let mappedEncounters = response.encounters.map(Self.makeEncounter(from:))
             await MainActor.run {
                 encounters = mappedEncounters
+                encounterErrorMessage = nil
                 isLoadingEncounters = false
             }
         } catch {
