@@ -92,4 +92,49 @@ open class BlocksAPI {
 
         return localVariableRequestBuilder.init(method: "DELETE", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true)
     }
+
+    /**
+     ブロック一覧取得
+     
+     - parameter limit: (query) 取得件数（省略時 20、最大 50） (optional)
+     - parameter cursor: (query) ページネーションカーソル (optional)
+     - returns: HackathonInternalHandlerSchemaResponseBlockListResponse
+     */
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    open class func listBlocks(limit: Int? = nil, cursor: String? = nil) async throws -> HackathonInternalHandlerSchemaResponseBlockListResponse {
+        return try await listBlocksWithRequestBuilder(limit: limit, cursor: cursor).execute().body
+    }
+
+    /**
+     ブロック一覧取得
+     - GET /api/v1/users/me/blocks
+     - 認証済みユーザーがブロックしているユーザーの一覧をカーソルページネーションで取得する
+     - API Key:
+       - type: apiKey Authorization (HEADER)
+       - name: BearerAuth
+     - parameter limit: (query) 取得件数（省略時 20、最大 50） (optional)
+     - parameter cursor: (query) ページネーションカーソル (optional)
+     - returns: RequestBuilder<HackathonInternalHandlerSchemaResponseBlockListResponse> 
+     */
+    open class func listBlocksWithRequestBuilder(limit: Int? = nil, cursor: String? = nil) -> RequestBuilder<HackathonInternalHandlerSchemaResponseBlockListResponse> {
+        let localVariablePath = "/api/v1/users/me/blocks"
+        let localVariableURLString = OpenAPIClientAPI.basePath + localVariablePath
+        let localVariableParameters: [String: Any]? = nil
+
+        var localVariableUrlComponents = URLComponents(string: localVariableURLString)
+        localVariableUrlComponents?.queryItems = APIHelper.mapValuesToQueryItems([
+            "limit": (wrappedValue: limit?.encodeToJSON(), isExplode: false),
+            "cursor": (wrappedValue: cursor?.encodeToJSON(), isExplode: false),
+        ])
+
+        let localVariableNillableHeaders: [String: Any?] = [
+            :
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<HackathonInternalHandlerSchemaResponseBlockListResponse>.Type = OpenAPIClientAPI.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "GET", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true)
+    }
 }

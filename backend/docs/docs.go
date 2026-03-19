@@ -2028,6 +2028,62 @@ const docTemplate = `{
             }
         },
         "/api/v1/users/me/blocks": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証済みユーザーがブロックしているユーザーの一覧をカーソルページネーションで取得する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blocks"
+                ],
+                "summary": "ブロック一覧取得",
+                "operationId": "listBlocks",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "取得件数（省略時 20、最大 50）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ページネーションカーソル",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.BlockListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -2249,6 +2305,62 @@ const docTemplate = `{
             }
         },
         "/api/v1/users/me/mutes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証済みユーザーがミュートしているユーザーの一覧をカーソルページネーションで取得する",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mutes"
+                ],
+                "summary": "ミュート一覧取得",
+                "operationId": "listMutes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "取得件数（省略時 20、最大 50）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ページネーションカーソル",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.MuteListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -3793,6 +3905,31 @@ const docTemplate = `{
                 }
             }
         },
+        "hackathon_internal_handler_schema_response.BlockListPagination": {
+            "type": "object",
+            "properties": {
+                "has_more": {
+                    "type": "boolean"
+                },
+                "next_cursor": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.BlockListResponse": {
+            "type": "object",
+            "properties": {
+                "blocks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.Block"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.BlockListPagination"
+                }
+            }
+        },
         "hackathon_internal_handler_schema_response.BlockResponse": {
             "type": "object",
             "properties": {
@@ -4214,6 +4351,31 @@ const docTemplate = `{
                 },
                 "target_user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.MuteListPagination": {
+            "type": "object",
+            "properties": {
+                "has_more": {
+                    "type": "boolean"
+                },
+                "next_cursor": {
+                    "type": "string"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.MuteListResponse": {
+            "type": "object",
+            "properties": {
+                "mutes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hackathon_internal_handler_schema_response.Mute"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.MuteListPagination"
                 }
             }
         },
