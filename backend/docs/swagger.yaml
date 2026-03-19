@@ -7,6 +7,11 @@ definitions:
     required:
     - track_id
     type: object
+  hackathon_internal_handler_schema_request.AddUserTrackRequest:
+    properties:
+      track_id:
+        type: string
+    type: object
   hackathon_internal_handler_schema_request.CreateBlockRequest:
     properties:
       blocked_user_id:
@@ -183,6 +188,11 @@ definitions:
         - female
         - other
         - no-answer
+        type: string
+    type: object
+  hackathon_internal_handler_schema_request.UpsertSharedTrackRequest:
+    properties:
+      track_id:
         type: string
     type: object
   hackathon_internal_handler_schema_response.BleToken:
@@ -665,6 +675,26 @@ definitions:
       settings:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.Settings'
     type: object
+  hackathon_internal_handler_schema_response.SharedTrack:
+    properties:
+      artist_name:
+        type: string
+      artwork_url:
+        type: string
+      id:
+        type: string
+      preview_url:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.SharedTrackResponse:
+    properties:
+      shared_track:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.SharedTrack'
+    type: object
   hackathon_internal_handler_schema_response.Track:
     properties:
       album_name:
@@ -739,6 +769,27 @@ definitions:
     properties:
       user:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.User'
+    type: object
+  hackathon_internal_handler_schema_response.UserTrackListResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.UserTrackPagination'
+      tracks:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.PublicTrack'
+        type: array
+    type: object
+  hackathon_internal_handler_schema_response.UserTrackPagination:
+    properties:
+      has_more:
+        type: boolean
+      next_cursor:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.UserTrackResponse:
+    properties:
+      track:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.PublicTrack'
     type: object
   internal_handler.errorBody:
     properties:
@@ -2321,6 +2372,208 @@ paths:
       summary: 自分の設定更新
       tags:
       - settings
+  /api/v1/users/me/shared-track:
+    delete:
+      description: 認証済みユーザーのシェア中の楽曲を解除する
+      operationId: deleteSharedTrack
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: シェア中の楽曲解除
+      tags:
+      - shared-track
+    get:
+      description: '認証済みユーザーが現在シェア中の楽曲を取得する。未設定の場合は shared_track: null を返す。'
+      operationId: getSharedTrack
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.SharedTrackResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: シェア中の楽曲取得
+      tags:
+      - shared-track
+    put:
+      consumes:
+      - application/json
+      description: 認証済みユーザーのシェア中の楽曲を設定または更新する。初回設定時は 201、更新時は 200。
+      operationId: upsertSharedTrack
+      parameters:
+      - description: シェアトラック設定リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.UpsertSharedTrackRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.SharedTrackResponse'
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.SharedTrackResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: シェア中の楽曲設定・更新
+      tags:
+      - shared-track
+  /api/v1/users/me/tracks:
+    get:
+      description: 認証済みユーザーのマイトラック一覧をカーソルページネーションで取得する
+      operationId: listUserTracks
+      parameters:
+      - description: 取得件数（省略時 20、最大 50）
+        in: query
+        name: limit
+        type: integer
+      - description: ページネーションカーソル
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.UserTrackListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: マイトラック一覧取得
+      tags:
+      - user-tracks
+    post:
+      consumes:
+      - application/json
+      description: 認証済みユーザーのマイトラックに楽曲を追加する。既に登録済みの場合は 200 を返す。
+      operationId: addUserTrack
+      parameters:
+      - description: トラック追加リクエスト
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hackathon_internal_handler_schema_request.AddUserTrackRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.UserTrackResponse'
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.UserTrackResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: マイトラックに楽曲追加
+      tags:
+      - user-tracks
+  /api/v1/users/me/tracks/{id}:
+    delete:
+      description: 認証済みユーザーのマイトラックから楽曲を削除する
+      operationId: deleteUserTrack
+      parameters:
+      - description: 'トラックID（例: spotify:track:123）'
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: マイトラックから楽曲削除
+      tags:
+      - user-tracks
   /healthz:
     get:
       description: サーバーが起動しているか確認する
