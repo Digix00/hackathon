@@ -3,8 +3,14 @@ name: Codegen Check
 on:
   push:
     branches: [ main, develop ]
+    paths:
+      - backend/**
+      - .github/workflows/codegen-check.yml
   pull_request:
     branches: [ main, develop ]
+    paths:
+      - backend/**
+      - .github/workflows/codegen-check.yml
 
 jobs:
   check:
