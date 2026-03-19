@@ -56,7 +56,10 @@ jobs:
             --region asia-northeast1 \
             --project ${{ vars.TF_PROJECT_ID }} \
             --format='value(status.url)')
-          TOKEN=$(gcloud auth print-identity-token --audiences="$MIGRATE_URL")
+          # WIF 認証では --audiences 単独指定が使えないため SA を明示的に impersonate してIDトークンを取得
+          TOKEN=$(gcloud auth print-identity-token \
+            --impersonate-service-account=${{ secrets.GCP_TERRAFORM_SA }} \
+            --audiences="$MIGRATE_URL")
           curl -sf -X POST \
             -H "Authorization: Bearer $TOKEN" \
             "$MIGRATE_URL/"
