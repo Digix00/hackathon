@@ -1432,7 +1432,7 @@ API の `reported_user_id` は DB スキーマ上の `reports.reported_user_id` 
 
 - ブロックされたユーザーからの BLE トークン逆引き（`GET /ble-tokens/{token}/user`）は 404 を返す。
 - ブロック中の2ユーザー間ではエンカウントが生成されない（位置・BLE 両方）。
-- 既にブロック済みの場合は 409 Conflict を返す（ブロック操作はべき等エラーでなく UI 上に「既にブロックしています」と明示するため。`POST /mutes` も同様）。
+- 既にブロック済みの場合は 409 Conflict を返す（ブロック操作はべき等エラーでなく UI 上に「既にブロックしています」と明示するため。`POST /users/me/mutes` も同様）。
 
 **Request**
 
