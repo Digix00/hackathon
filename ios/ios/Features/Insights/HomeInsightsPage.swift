@@ -7,6 +7,10 @@ struct HomeInsightsPage: View {
         TrackInsight.build(from: state.recentEncounters)
     }
 
+    private var artistInsights: [ArtistInsight] {
+        ArtistInsight.build(from: state.recentEncounters)
+    }
+
     private var topTrack: TrackInsight? {
         trackInsights.first
     }
@@ -37,6 +41,10 @@ struct HomeInsightsPage: View {
                     heroInsightSection(trackInsight: topTrack)
                 }
 
+                if !artistInsights.isEmpty {
+                    connectedArtistsSection
+                }
+
                 if !trackInsights.isEmpty {
                     connectedTracksSection
                 }
@@ -51,6 +59,51 @@ struct HomeInsightsPage: View {
             }
             .padding(.top, 24)
             .padding(.bottom, 120)
+        }
+    }
+
+    private var connectedArtistsSection: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            sectionEyebrow("MOST CONNECTED ARTISTS")
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 32) {
+                    ForEach(artistInsights.prefix(5)) { insight in
+                        VStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(insight.representativeColor.opacity(0.15))
+                                    .frame(width: 90, height: 90)
+
+                                MockArtworkView(
+                                    color: insight.representativeColor,
+                                    symbol: "person.fill",
+                                    size: 80,
+                                    artwork: nil
+                                )
+                                .clipShape(Circle())
+                                .shadow(color: insight.representativeColor.opacity(0.15), radius: 15, x: 0, y: 8)
+                            }
+
+                            VStack(spacing: 6) {
+                                Text(insight.name)
+                                    .font(.system(size: 14, weight: .black))
+                                    .foregroundStyle(PrototypeTheme.textPrimary)
+                                    .lineLimit(1)
+
+                                Text("\(insight.encounterCount) CONNECTS")
+                                    .prototypeFont(size: 9, weight: .black, role: .data)
+                                    .foregroundStyle(PrototypeTheme.textSecondary)
+                                    .kerning(1.2)
+                            }
+                        }
+                        .frame(width: 100)
+                    }
+                }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 10)
+            }
+            .padding(.horizontal, -4)
         }
     }
 
@@ -435,5 +488,29 @@ private enum TimeBucket: String, CaseIterable {
             return .earlier
         }
         return .recent
+    }
+}
+
+private struct ArtistInsight: Identifiable {
+    let name: String
+    let encounterCount: Int
+    let representativeColor: Color
+    let uniqueTracks: Int
+
+    var id: String { name }
+
+    static func build(from encounters: [Encounter]) -> [ArtistInsight] {
+        let grouped = Dictionary(grouping: encounters, by: { $0.track.artist })
+        
+        return grouped.map { name, artistEncounters in
+            let trackIds = Set(artistEncounters.map { $0.track.id })
+            return ArtistInsight(
+                name: name,
+                encounterCount: artistEncounters.count,
+                representativeColor: artistEncounters.first?.track.color ?? PrototypeTheme.accent,
+                uniqueTracks: trackIds.count
+            )
+        }
+        .sorted { $0.encounterCount > $1.encounterCount }
     }
 }
