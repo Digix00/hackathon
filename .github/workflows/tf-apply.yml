@@ -38,16 +38,20 @@ jobs:
 
       - name: Get current image tags
         run: |
+          # gcloud が失敗しても awk が exit 0 を返すため || フォールバックは機能しない。
+          # ${VAR:-latest} で空文字列も含めて latest にフォールバックする。
           SERVER_TAG=$(gcloud run services describe api \
             --region asia-northeast1 \
             --project ${{ vars.TF_PROJECT_ID }} \
             --format='value(spec.template.spec.containers[0].image)' 2>/dev/null \
-            | awk -F: '{print $NF}' || echo "latest")
+            | awk -F: '{print $NF}')
+          SERVER_TAG=${SERVER_TAG:-latest}
           WORKER_TAG=$(gcloud run services describe worker \
             --region asia-northeast1 \
             --project ${{ vars.TF_PROJECT_ID }} \
             --format='value(spec.template.spec.containers[0].image)' 2>/dev/null \
-            | awk -F: '{print $NF}' || echo "latest")
+            | awk -F: '{print $NF}')
+          WORKER_TAG=${WORKER_TAG:-latest}
           echo "TF_VAR_server_image_tag=$SERVER_TAG" >> $GITHUB_ENV
           echo "TF_VAR_worker_image_tag=$WORKER_TAG" >> $GITHUB_ENV
 
