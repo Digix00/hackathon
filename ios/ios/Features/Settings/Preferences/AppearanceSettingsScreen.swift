@@ -9,26 +9,28 @@ struct AppearanceSettingsView: View {
             subtitle: "VISUAL INTERFACE",
             showsBackButton: true
         ) {
-            VStack(alignment: .leading, spacing: 32) {
-                VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 56) {
+                VStack(alignment: .leading, spacing: 32) {
                     HStack {
                         Text("INTERFACE THEME")
                             .prototypeFont(size: 11, weight: .black, role: .data)
-                            .kerning(2.0)
-                            .foregroundStyle(PrototypeTheme.textSecondary)
+                            .kerning(2.5)
+                            .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
                         Spacer()
                         Text("UI-MODE")
                             .prototypeFont(size: 9, weight: .black, role: .data)
-                            .foregroundStyle(PrototypeTheme.textTertiary.opacity(0.6))
+                            .foregroundStyle(PrototypeTheme.textTertiary.opacity(0.5))
                     }
                     .padding(.horizontal, 4)
 
-                    HStack(spacing: 16) {
-                        themeCard(for: .light, fullWidth: false)
-                        themeCard(for: .dark, fullWidth: false)
-                    }
+                    VStack(spacing: 20) {
+                        HStack(spacing: 20) {
+                            themeCard(for: .light, fullWidth: true)
+                            themeCard(for: .dark, fullWidth: true)
+                        }
 
-                    themeCard(for: .system, fullWidth: true)
+                        themeCard(for: .system, fullWidth: true)
+                    }
                 }
 
                 if settingsViewModel.isLoading || settingsViewModel.isSaving || settingsViewModel.errorMessage != nil {
@@ -37,26 +39,31 @@ struct AppearanceSettingsView: View {
                         isSaving: settingsViewModel.isSaving,
                         errorMessage: settingsViewModel.errorMessage
                     )
+                    .padding(.horizontal, 8)
                 }
 
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 20) {
+                    HStack(spacing: 12) {
                         Image(systemName: "paintbrush.fill")
-                            .font(.system(size: 12))
-                            .foregroundStyle(PrototypeTheme.accent)
+                            .font(.system(size: 14))
+                            .foregroundStyle(PrototypeTheme.accent.opacity(0.5))
                         Text("DESIGN GUIDELINE")
-                            .prototypeFont(size: 9, weight: .black, role: .data)
-                            .foregroundStyle(PrototypeTheme.textSecondary)
+                            .prototypeFont(size: 10, weight: .black, role: .data)
+                            .kerning(2.5)
+                            .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
                     }
 
                     Text("Urban Serendipity は、時間帯や周囲の環境に合わせた動的な背景演出を採用しています。システム設定に従うことで、より没入感のある体験が可能です。")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(PrototypeTheme.textTertiary)
-                        .lineSpacing(4)
+                        .lineSpacing(6)
                 }
-                .padding(20)
-                .background(PrototypeTheme.surfaceMuted.opacity(0.5))
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .padding(32)
+                .background(
+                    RoundedRectangle(cornerRadius: 32, style: .continuous)
+                        .fill(PrototypeTheme.surfaceMuted.opacity(0.2))
+                )
+                .padding(.bottom, 60)
             }
             .disabled(settingsViewModel.isSaving)
             .onAppear { settingsViewModel.loadIfNeeded() }
@@ -67,29 +74,36 @@ struct AppearanceSettingsView: View {
         let isSelected = settingsViewModel.themeMode == mode
 
         return Button {
-            settingsViewModel.setThemeMode(mode)
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                settingsViewModel.setThemeMode(mode)
+            }
         } label: {
-            VStack(spacing: 12) {
-                Image(systemName: iconName(for: mode))
-                    .font(.system(size: 24))
-                    .foregroundStyle(isSelected ? .white : PrototypeTheme.accent)
+            VStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(isSelected ? .white.opacity(0.2) : PrototypeTheme.surfaceMuted.opacity(0.5))
+                        .frame(width: 56, height: 56)
+                    
+                    Image(systemName: iconName(for: mode))
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(isSelected ? .white : PrototypeTheme.accent)
+                }
 
                 Text(title(for: mode))
-                    .prototypeFont(size: 10, weight: .black, role: .data)
+                    .prototypeFont(size: 11, weight: .black, role: .data)
                     .kerning(1.5)
                     .foregroundStyle(isSelected ? .white : PrototypeTheme.textSecondary)
             }
             .frame(maxWidth: fullWidth ? .infinity : nil)
-            .padding(.vertical, 24)
-            .padding(.horizontal, 20)
+            .padding(.vertical, 32)
             .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(isSelected ? PrototypeTheme.accent : PrototypeTheme.surface)
-                    .shadow(color: Color.black.opacity(isSelected ? 0.2 : 0.05), radius: 10, x: 0, y: 5)
+                RoundedRectangle(cornerRadius: 32, style: .continuous)
+                    .fill(isSelected ? PrototypeTheme.accent : PrototypeTheme.surface.opacity(0.4))
+                    .shadow(color: Color.black.opacity(isSelected ? 0.15 : 0.02), radius: 20, x: 0, y: 10)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(PrototypeTheme.border, lineWidth: isSelected ? 0 : 1)
+                RoundedRectangle(cornerRadius: 32, style: .continuous)
+                    .stroke(PrototypeTheme.border.opacity(isSelected ? 0 : 0.3), lineWidth: 1)
             )
         }
         .buttonStyle(ScaleButtonStyle())
@@ -102,7 +116,7 @@ struct AppearanceSettingsView: View {
         case .dark:
             return "DARK"
         case .system:
-            return "SYSTEM DEFAULT (AUTO)"
+            return "AUTO"
         }
     }
 
