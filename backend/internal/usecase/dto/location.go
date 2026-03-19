@@ -6,7 +6,7 @@ import "time"
 type PostLocationInput struct {
 	Lat        float64
 	Lng        float64
-	AccuracyM  float64
+	AccuracyM  *float64
 	RecordedAt time.Time
 }
 
