@@ -98,7 +98,7 @@ BLE / 位置情報によるすれ違い検知と曲交換の実装。
 ### 3.5.2 プレイリスト API
 
 - [ ] **Backend** `POST /playlists` - プレイリスト作成
-- [ ] **Backend** `GET /playlists` - プレイリスト一覧取得
+- [ ] **Backend** `GET /playlists/me` - プレイリスト一覧取得
 - [ ] **Backend** `GET /playlists/:id` - プレイリスト詳細取得
 - [ ] **Backend** `PATCH /playlists/:id` - プレイリスト更新
 - [ ] **Backend** `DELETE /playlists/:id` - プレイリスト削除
