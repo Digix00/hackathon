@@ -32,9 +32,7 @@ struct Encounter: Identifiable, Hashable {
             return true
         }
 
-        return relativeTime != "今日" &&
-            relativeTime != "昨日" &&
-            !relativeTime.contains("前")
+        return relativeTime == "不明"
     }
 }
 

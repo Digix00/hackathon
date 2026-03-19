@@ -41,6 +41,14 @@ final class EncounterModelTests: XCTestCase {
         XCTAssertFalse(encounter.happenedYesterday)
     }
 
+    func testEncounterUnknownTimeIsTreatedAsEarlier() {
+        let encounter = makeEncounter(relativeTime: "時刻不明")
+
+        XCTAssertTrue(encounter.happenedEarlier)
+        XCTAssertFalse(encounter.happenedToday)
+        XCTAssertFalse(encounter.happenedYesterday)
+    }
+
     func testEncounterSectionsIncludeExpectedEncounters() {
         let today = makeEncounter(relativeTime: "5分前")
         let yesterday = makeEncounter(relativeTime: "昨日")
