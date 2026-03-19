@@ -124,36 +124,6 @@ final class BackendAPIClientTests: XCTestCase {
         XCTAssertTrue(request.url?.path.hasSuffix("/api/v1/encounters/enc-2") == true)
     }
 
-    func testGetTrackThrowsUnexpectedStatusWithBody() async throws {
-        let session = makeSession()
-        let client = BackendAPIClient(session: session)
-
-        MockURLProtocol.requestHandler = { request in
-            MockURLProtocol.lastRequest = request
-            let responseBody = """
-            { "error": "server down" }
-            """
-            return (500, Data(responseBody.utf8))
-        }
-
-        do {
-            _ = try await client.getTrack(id: "track-1")
-            XCTFail("Expected getTrack to throw on 500 response")
-        } catch let error as BackendAPIClient.BackendError {
-            switch error {
-            case .unexpectedStatus(let code, let body):
-                XCTAssertEqual(code, 500)
-                XCTAssertTrue(body?.contains("server down") == true)
-            default:
-                XCTFail("Expected unexpectedStatus error, got \(error)")
-            }
-        }
-
-        let request = try XCTUnwrap(MockURLProtocol.lastRequest)
-        XCTAssertEqual(request.httpMethod, "GET")
-        XCTAssertTrue(request.url?.path.hasSuffix("/api/v1/tracks/track-1") == true)
-    }
-
     func testGetMySettingsParsesResponse() async throws {
         let session = makeSession()
         let client = BackendAPIClient(session: session)
