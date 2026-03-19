@@ -118,7 +118,9 @@ func (r *lyricRepository) SubmitEntry(ctx context.Context, userID, encounterID, 
 func (r *lyricRepository) GetChainWithDetails(ctx context.Context, chainID string) (repository.ChainDetailResult, error) {
 	var chain model.LyricChain
 	err := r.db.WithContext(ctx).
-		Preload("Entries").
+		Preload("Entries", func(db *gorm.DB) *gorm.DB {
+			return db.Order("sequence_num ASC")
+		}).
 		Preload("GeneratedSong").
 		First(&chain, "id = ?", chainID).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -309,7 +311,13 @@ func (r *lyricRepository) CreateSongLike(ctx context.Context, like entity.SongLi
 		SongID: like.SongID,
 		UserID: like.UserID,
 	}
-	return r.db.WithContext(ctx).Create(&m).Error
+	if err := r.db.WithContext(ctx).Create(&m).Error; err != nil {
+		if isUniqueConstraintViolation(err) {
+			return domainerrs.Conflict("already liked")
+		}
+		return err
+	}
+	return nil
 }
 
 func (r *lyricRepository) DeleteSongLike(ctx context.Context, userID, songID string) error {
