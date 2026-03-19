@@ -62,171 +62,78 @@ struct SettingsHubView: View {
             title: "Settings",
             subtitle: "PREFERENCES & SYSTEM"
         ) {
-            VStack(alignment: .leading, spacing: 44) {
-                HStack {
-                    HStack(spacing: 8) {
-                        Circle()
-                            .fill(PrototypeTheme.success)
-                            .frame(width: 8, height: 8)
-                            .opacity(isBeating ? 1.0 : 0.3)
-                            .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: isBeating)
+            VStack(alignment: .leading, spacing: 56) {
+                // Compact Horizontal Profile Header
+                NavigationLink {
+                    ProfileEditView()
+                } label: {
+                    HStack(spacing: 20) {
+                        UserAvatarView(
+                            avatarURL: profileViewModel.user?.avatarURL,
+                            size: 72, // Compact but clear
+                            iconSize: 32
+                        )
+                        .shadow(color: Color.black.opacity(0.06), radius: 15, x: 0, y: 8)
+                        .overlay(
+                            Circle()
+                                .stroke(PrototypeTheme.border.opacity(0.1), lineWidth: 1)
+                        )
 
-                        Text("BEACON ACTIVE")
-                            .prototypeFont(size: 10, weight: .black, role: .data)
-                            .kerning(1.5)
-                            .foregroundStyle(PrototypeTheme.textPrimary)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(PrototypeTheme.success.opacity(0.1))
-                    .clipShape(Capsule())
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(profileViewModel.user?.displayName ?? "読み込み中...")
+                                .font(.system(size: 22, weight: .black))
+                                .tracking(-0.5)
+                                .foregroundStyle(PrototypeTheme.textPrimary)
 
-                    Spacer()
-
-                    Text("35.6586° N, 139.7454° E")
-                        .prototypeFont(size: 10, weight: .medium, role: .data)
-                        .foregroundStyle(PrototypeTheme.textTertiary)
-                }
-                .padding(.top, -10)
-                .onAppear { isBeating = true }
-
-                GlassmorphicCard {
-                    VStack(spacing: 24) {
-                        HStack(spacing: 20) {
-                            ZStack {
-                                Circle()
-                                    .stroke(PrototypeTheme.accent.opacity(0.2), lineWidth: 2)
-                                    .frame(width: 84, height: 84)
-                                    .scaleEffect(isBeating ? 1.2 : 1.0)
-                                    .opacity(isBeating ? 0.0 : 0.5)
-                                    .animation(.easeOut(duration: 2.0).repeatForever(autoreverses: false), value: isBeating)
-
-                                UserAvatarView(
-                                    avatarURL: profileViewModel.user?.avatarURL,
-                                    size: 84,
-                                    iconSize: 38
-                                )
-                                .shadow(color: Color.black.opacity(0.1), radius: 15, x: 0, y: 8)
-
-                                Circle()
-                                    .fill(PrototypeTheme.success)
-                                    .frame(width: 14, height: 14)
-                                    .overlay(Circle().stroke(Color.white, lineWidth: 2))
-                                    .offset(x: 28, y: 28)
-                            }
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(profileViewModel.user?.displayName ?? "読み込み中...")
-                                    .font(.system(size: 28, weight: .bold))
-                                    .tracking(-1.0)
-
-                                let bio = profileViewModel.user?.bio?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                                Text(bio.isEmpty ? "ひとこと未設定" : bio)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundStyle(PrototypeTheme.textSecondary)
-
-                                if let errorMessage = profileViewModel.errorMessage {
-                                    Text(errorMessage)
-                                        .font(.system(size: 12, weight: .medium))
-                                        .foregroundStyle(PrototypeTheme.error)
-                                        .padding(.top, 4)
-                                }
-                            }
-
-                            Spacer()
+                            let bio = profileViewModel.user?.bio?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                            Text(bio.isEmpty ? "ひとこと未設定" : bio)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.textSecondary)
+                                .lineLimit(1)
                         }
 
-                        NavigationLink {
-                            ProfileEditView()
-                        } label: {
-                            HStack {
-                                Text("MODIFY PROTOCOL")
-                                    .prototypeFont(size: 10, weight: .black, role: .data)
-                                    .kerning(2.0)
-                                Spacer()
-                                Image(systemName: "arrow.right")
-                                    .font(.system(size: 10, weight: .bold))
-                            }
-                            .foregroundStyle(Color.white)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 14)
-                            .background(
-                                Capsule()
-                                    .fill(PrototypeTheme.accent)
-                                    .shadow(color: PrototypeTheme.accent.opacity(0.3), radius: 10, x: 0, y: 5)
-                            )
-                        }
-                        .buttonStyle(ScaleButtonStyle())
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(PrototypeTheme.textTertiary.opacity(0.4))
                     }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 20)
+                    .background(
+                        RoundedRectangle(cornerRadius: 28, style: .continuous)
+                            .fill(PrototypeTheme.surface.opacity(0.4))
+                    )
+                }
+                .buttonStyle(ScaleButtonStyle())
+                .padding(.top, 8)
+
+                VStack(spacing: 48) {
+                    settingsSection(title: "ACCOUNT", items: appSettings)
+                    settingsSection(title: "PRIVACY", items: privacySettings)
+                    settingsSection(title: "SERVICES", items: linkedServices)
+                    settingsSection(title: "DEVELOPER", items: prototypeEntries)
                 }
 
-                VStack(spacing: 32) {
-                    settingsSection(title: "CORE CONFIGURATION", code: "SYS-01", items: appSettings)
-                    settingsSection(title: "PRIVACY PROTOCOLS", code: "PRV-02", items: privacySettings)
-                    settingsSection(title: "SERVICE INTEGRATION", code: "SRV-03", items: linkedServices)
-                    settingsSection(title: "EXPERIMENTAL MODULES", code: "EXP-04", items: prototypeEntries)
-                }
+                // Simplified Footer
+                VStack(spacing: 24) {
+                    Divider()
+                        .background(PrototypeTheme.border.opacity(0.3))
 
-                VStack(spacing: 16) {
-                    HStack(spacing: 12) {
-                        Rectangle()
-                            .fill(PrototypeTheme.border)
-                            .frame(height: 1)
-
-                        Text("DIAGNOSTIC SUMMARY")
+                    VStack(spacing: 8) {
+                        Text("URBAN SERENDIPITY")
                             .prototypeFont(size: 10, weight: .black, role: .data)
                             .kerning(2.0)
+                            .foregroundStyle(PrototypeTheme.textSecondary)
+                        
+                        Text("v0.1.0-RELEASE")
+                            .prototypeFont(size: 9, weight: .medium, role: .data)
                             .foregroundStyle(PrototypeTheme.textTertiary)
-
-                        Rectangle()
-                            .fill(PrototypeTheme.border)
-                            .frame(height: 1)
                     }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("STATUS:")
-                                .prototypeFont(size: 9, weight: .black, role: .data)
-                                .foregroundStyle(PrototypeTheme.textSecondary)
-                            Text("ALL SYSTEMS OPTIMAL")
-                                .prototypeFont(size: 9, weight: .medium, role: .data)
-                                .foregroundStyle(PrototypeTheme.success)
-                            Spacer()
-                            Text("uptime: 14:22:01")
-                                .prototypeFont(size: 9, weight: .medium, role: .data)
-                                .foregroundStyle(PrototypeTheme.textTertiary)
-                        }
-
-                        HStack {
-                            Text("KERNEL:")
-                                .prototypeFont(size: 9, weight: .black, role: .data)
-                                .foregroundStyle(PrototypeTheme.textSecondary)
-                            Text("SERENDIPITY-OS v0.1.0-RELEASE")
-                                .prototypeFont(size: 9, weight: .medium, role: .data)
-                                .foregroundStyle(PrototypeTheme.textTertiary)
-                        }
-
-                        HStack {
-                            Text("LOCALITY:")
-                                .prototypeFont(size: 9, weight: .black, role: .data)
-                                .foregroundStyle(PrototypeTheme.textSecondary)
-                            Text("TOKYO-DISTRICT-03")
-                                .prototypeFont(size: 9, weight: .medium, role: .data)
-                                .foregroundStyle(PrototypeTheme.textTertiary)
-                        }
-                    }
-                    .padding(16)
-                    .background(PrototypeTheme.surfaceMuted.opacity(0.4))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                    Text("© 2026 URBAN SERENDIPITY PROJECT · NO RIGHTS RESERVED")
-                        .prototypeFont(size: 8, weight: .black, role: .data)
-                        .kerning(1.0)
-                        .foregroundStyle(PrototypeTheme.textTertiary.opacity(0.6))
-                        .padding(.top, 10)
                 }
                 .padding(.top, 20)
                 .padding(.bottom, 60)
+                .frame(maxWidth: .infinity)
             }
         }
         .onAppear {
@@ -235,21 +142,13 @@ struct SettingsHubView: View {
         }
     }
 
-    private func settingsSection(title: String, code: String, items: [SettingsDestination]) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(title)
-                    .prototypeFont(size: 11, weight: .black, role: .data)
-                    .kerning(2.0)
-                    .foregroundStyle(PrototypeTheme.textSecondary)
-
-                Spacer()
-
-                Text(code)
-                    .prototypeFont(size: 9, weight: .black, role: .data)
-                    .foregroundStyle(PrototypeTheme.textTertiary.opacity(0.6))
-            }
-            .padding(.horizontal, 4)
+    private func settingsSection(title: String, items: [SettingsDestination]) -> some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text(title)
+                .prototypeFont(size: 11, weight: .black, role: .data)
+                .kerning(1.8)
+                .foregroundStyle(PrototypeTheme.textSecondary)
+                .padding(.horizontal, 8)
 
             VStack(spacing: 0) {
                 ForEach(Array(items.enumerated()), id: \.offset) { index, item in
@@ -257,27 +156,42 @@ struct SettingsHubView: View {
                         item.destination()
                     } label: {
                         VStack(spacing: 0) {
-                            SettingRow(icon: item.icon, title: item.title)
-                                .padding(.vertical, 18)
-                                .padding(.horizontal, 20)
+                            HStack(spacing: 16) {
+                                Image(systemName: item.icon)
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundStyle(PrototypeTheme.textSecondary)
+                                    .frame(width: 24)
+                                
+                                Text(item.title)
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundStyle(PrototypeTheme.textPrimary)
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundStyle(PrototypeTheme.textTertiary.opacity(0.5))
+                            }
+                            .padding(.vertical, 20)
+                            .padding(.horizontal, 24)
 
                             if index < items.count - 1 {
                                 Divider()
-                                    .background(PrototypeTheme.border.opacity(0.5))
-                                    .padding(.horizontal, 20)
+                                    .background(PrototypeTheme.border.opacity(0.3))
+                                    .padding(.leading, 64) // Offset divider
+                                    .padding(.trailing, 24)
                             }
                         }
-                        .background(PrototypeTheme.surface.opacity(0.7))
+                        .background(PrototypeTheme.surface.opacity(0.5))
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(PrototypeTheme.border.opacity(0.5), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .stroke(PrototypeTheme.border.opacity(0.3), lineWidth: 1)
             )
-            .shadow(color: Color.black.opacity(0.03), radius: 15, x: 0, y: 8)
         }
     }
 }
