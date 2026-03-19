@@ -233,65 +233,69 @@ resource "google_cloud_run_v2_service" "worker" {
   ]
 }
 
-# Cloud Run Job（DB マイグレーション）
-resource "google_cloud_run_v2_job" "migrate" {
+# Cloud Run Service（DB マイグレーション）
+# CI/CD から HTTP POST でトリガーされる。worker と同一パターン。
+resource "google_cloud_run_v2_service" "migrate" {
   name     = "migrate"
   location = var.region
 
   deletion_protection = false
 
   template {
-    template {
-      max_retries     = 0      # マイグレーションは失敗時に即停止（自動リトライ禁止）
-      timeout         = "300s" # 最大 5 分
-      service_account = google_service_account.worker.email
+    service_account = google_service_account.worker.email
 
-      volumes {
-        name = "cloudsql"
-        cloud_sql_instance {
-          instances = [google_sql_database_instance.main.connection_name]
+    volumes {
+      name = "cloudsql"
+      cloud_sql_instance {
+        instances = [google_sql_database_instance.main.connection_name]
+      }
+    }
+
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 1
+    }
+
+    containers {
+      image = local.image_migrate
+
+      resources {
+        limits = {
+          cpu    = "1"
+          memory = "512Mi"
+        }
+        cpu_idle          = true
+        startup_cpu_boost = false
+      }
+
+      env {
+        name  = "DB_USER"
+        value = google_sql_user.app.name
+      }
+
+      env {
+        name  = "DB_NAME"
+        value = google_sql_database.app.name
+      }
+
+      env {
+        name  = "DB_CONNECTION_NAME"
+        value = google_sql_database_instance.main.connection_name
+      }
+
+      env {
+        name = "DB_PASSWORD"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.db_password.secret_id
+            version = "latest"
+          }
         }
       }
 
-      containers {
-        image = local.image_migrate
-
-        resources {
-          limits = {
-            cpu    = "1"
-            memory = "512Mi"
-          }
-        }
-
-        env {
-          name  = "DB_USER"
-          value = google_sql_user.app.name
-        }
-
-        env {
-          name  = "DB_NAME"
-          value = google_sql_database.app.name
-        }
-
-        env {
-          name  = "DB_CONNECTION_NAME"
-          value = google_sql_database_instance.main.connection_name
-        }
-
-        env {
-          name = "DB_PASSWORD"
-          value_source {
-            secret_key_ref {
-              secret  = google_secret_manager_secret.db_password.secret_id
-              version = "latest"
-            }
-          }
-        }
-
-        volume_mounts {
-          name       = "cloudsql"
-          mount_path = "/cloudsql"
-        }
+      volume_mounts {
+        name       = "cloudsql"
+        mount_path = "/cloudsql"
       }
     }
   }
@@ -310,4 +314,9 @@ output "api_url" {
 output "worker_url" {
   value       = google_cloud_run_v2_service.worker.uri
   description = "Worker Function の URL（Cloud Scheduler がトリガー）"
+}
+
+output "migrate_url" {
+  value       = google_cloud_run_v2_service.migrate.uri
+  description = "Migrate Function の URL（CI/CD が HTTP POST でトリガー）"
 }

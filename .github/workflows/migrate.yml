@@ -43,16 +43,20 @@ jobs:
           docker push $IMAGE:${{ github.sha }}
           docker push $IMAGE:latest
 
-      - name: Update migrate Job image
+      - name: Deploy migrate Service
         run: |
-          gcloud run jobs update migrate \
+          gcloud run services update migrate \
             --image asia-northeast1-docker.pkg.dev/${{ vars.TF_PROJECT_ID }}/app/migrate:${{ github.sha }} \
             --region asia-northeast1 \
             --project ${{ vars.TF_PROJECT_ID }}
 
       - name: Run DB migration
         run: |
-          gcloud run jobs execute migrate \
+          MIGRATE_URL=$(gcloud run services describe migrate \
             --region asia-northeast1 \
             --project ${{ vars.TF_PROJECT_ID }} \
-            --wait
+            --format='value(status.url)')
+          TOKEN=$(gcloud auth print-identity-token --audiences="$MIGRATE_URL")
+          curl -sf -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            "$MIGRATE_URL/"

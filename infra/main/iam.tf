@@ -73,6 +73,15 @@ resource "google_cloud_run_v2_service_iam_member" "scheduler_worker_invoker" {
   member   = "serviceAccount:${google_service_account.scheduler.email}"
 }
 
+# Terraform CI/CD SA に migrate Service の invoker 権限を付与（CI からマイグレーション実行用）
+resource "google_cloud_run_v2_service_iam_member" "terraform_ci_migrate_invoker" {
+  project  = var.project_id
+  location = google_cloud_run_v2_service.migrate.location
+  name     = google_cloud_run_v2_service.migrate.name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.terraform_ci.email}"
+}
+
 # Terraform CI/CD 用サービスアカウント（GitHub Actions WIF）
 resource "google_service_account" "terraform_ci" {
   account_id   = "terraform-ci-sa"
