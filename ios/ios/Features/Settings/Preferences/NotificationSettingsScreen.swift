@@ -2,11 +2,13 @@ import SwiftUI
 
 struct NotificationSettingsView: View {
     @EnvironmentObject private var settingsViewModel: UserSettingsViewModel
+    @EnvironmentObject private var pushManager: PushNotificationManager
 
     var body: some View {
         AppScaffold(
             title: "通知設定",
-            subtitle: "COMMS & ALERTS"
+            subtitle: "COMMS & ALERTS",
+            showsBackButton: true
         ) {
             VStack(alignment: .leading, spacing: 32) {
                 VStack(alignment: .leading, spacing: 16) {
@@ -24,6 +26,20 @@ struct NotificationSettingsView: View {
 
                     GlassmorphicCard {
                         VStack(spacing: 0) {
+                            toggleRow(
+                                title: "プッシュ通知",
+                                subtitle: "システム通知を受け取る",
+                                code: "NTF-ROOT",
+                                isOn: Binding(
+                                    get: { settingsViewModel.notificationEnabled },
+                                    set: { settingsViewModel.setNotificationEnabled($0) }
+                                )
+                            )
+
+                            Divider()
+                                .background(PrototypeTheme.border.opacity(0.5))
+                                .padding(.vertical, 16)
+
                             toggleRow(
                                 title: "すれ違い検知",
                                 subtitle: "近くで誰かを見つけた時に通知",
@@ -48,6 +64,13 @@ struct NotificationSettingsView: View {
                                 )
                             )
                         }
+                    }
+
+                    if let warning = notificationWarningMessage {
+                        Text(warning)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(PrototypeTheme.warning)
+                            .padding(.horizontal, 4)
                     }
                 }
 
@@ -110,5 +133,16 @@ struct NotificationSettingsView: View {
                 .tint(PrototypeTheme.accent)
                 .labelsHidden()
         }
+    }
+
+    private var notificationWarningMessage: String? {
+        guard settingsViewModel.notificationEnabled else { return nil }
+        if pushManager.authorizationStatus == .denied {
+            return "通知が許可されていません。設定アプリから通知を許可してください。"
+        }
+        if let message = pushManager.lastErrorMessage {
+            return message
+        }
+        return nil
     }
 }

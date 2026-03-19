@@ -6,7 +6,8 @@ struct BlockMuteListView: View {
     var body: some View {
         AppScaffold(
             title: "ブロック / ミュート",
-            subtitle: "公開範囲を調整"
+            subtitle: "公開範囲を調整",
+            showsBackButton: true
         ) {
             VStack(spacing: 24) {
                 SectionCard(title: "ブロック") {

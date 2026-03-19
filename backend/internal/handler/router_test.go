@@ -6,14 +6,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 
 	firebaseauth "firebase.google.com/go/v4/auth"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"hackathon/internal/infra/crypto"
@@ -50,37 +48,16 @@ func (testAuthUserManager) DeleteUser(_ context.Context, _ string) error { retur
 func newTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
-	dsn := os.Getenv("PG_TEST_DATABASE_URL")
-	if dsn == "" {
-		dsn = "postgres://postgres:postgres@127.0.0.1:5432/hackathon?sslmode=disable"
+	if sharedTestDB == nil {
+		t.Skip("skip postgres-backed router test: postgres not available")
 	}
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		t.Skipf("skip postgres-backed router test: postgres is not reachable (%v)", err)
-	}
-
-	sqlDB, err := db.DB()
-	if err != nil {
-		t.Fatalf("get sql.DB: %v", err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	if err := sqlDB.PingContext(ctx); err != nil {
-		t.Skipf("skip postgres-backed router test: postgres ping failed (%v)", err)
-	}
-
-	if err := rdb.Migrate(db); err != nil {
-		t.Fatalf("migrate postgres: %v", err)
-	}
-
-	cleanupPostgresTestDataForRouter(t, db)
+	cleanupPostgresTestDataForRouter(t, sharedTestDB)
 	t.Cleanup(func() {
-		cleanupPostgresTestDataForRouter(t, db)
+		cleanupPostgresTestDataForRouter(t, sharedTestDB)
 	})
 
-	return db
+	return sharedTestDB
 }
 
 func cleanupPostgresTestDataForRouter(t *testing.T, db *gorm.DB) {

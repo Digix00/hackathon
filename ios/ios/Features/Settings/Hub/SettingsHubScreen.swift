@@ -116,29 +116,14 @@ struct SettingsHubView: View {
                             }
 
                             VStack(alignment: .leading, spacing: 4) {
-                                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                    Text(profileViewModel.user?.displayName ?? "読み込み中...")
-                                        .font(.system(size: 28, weight: .bold))
-                                        .tracking(-1.0)
-
-                                    Text("USR-82A1")
-                                        .prototypeFont(size: 9, weight: .black, role: .data)
-                                        .foregroundStyle(PrototypeTheme.accent)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(PrototypeTheme.accent.opacity(0.1))
-                                        .clipShape(RoundedRectangle(cornerRadius: 4))
-                                }
+                                Text(profileViewModel.user?.displayName ?? "読み込み中...")
+                                    .font(.system(size: 28, weight: .bold))
+                                    .tracking(-1.0)
 
                                 let bio = profileViewModel.user?.bio?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                                 Text(bio.isEmpty ? "ひとこと未設定" : bio)
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundStyle(PrototypeTheme.textSecondary)
-
-                                Text("LEVEL 12 · 428 ENCOUNTERS")
-                                    .prototypeFont(size: 9, weight: .black, role: .data)
-                                    .foregroundStyle(PrototypeTheme.textTertiary)
-                                    .padding(.top, 4)
 
                                 if let errorMessage = profileViewModel.errorMessage {
                                     Text(errorMessage)

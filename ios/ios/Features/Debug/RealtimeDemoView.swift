@@ -6,7 +6,8 @@ struct RealtimeDemoView: View {
     var body: some View {
         AppScaffold(
             title: "リアルタイム演出",
-            subtitle: "状態変化の見え方を確認"
+            subtitle: "状態変化の見え方を確認",
+            showsBackButton: true
         ) {
             VStack(alignment: .leading, spacing: 24) {
                 Picker("状態", selection: $scenario) {
@@ -84,4 +85,3 @@ struct RealtimeDemoView: View {
         }
     }
 }
-

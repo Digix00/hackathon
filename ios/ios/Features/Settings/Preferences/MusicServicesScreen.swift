@@ -9,7 +9,8 @@ struct MusicServicesView: View {
     var body: some View {
         AppScaffold(
             title: "音楽サービス連携",
-            subtitle: "接続中のサービス"
+            subtitle: "接続中のサービス",
+            showsBackButton: true
         ) {
             VStack(spacing: 20) {
                 SectionCard {

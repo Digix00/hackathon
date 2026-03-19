@@ -8,6 +8,7 @@ final class UserSettingsViewModel: ObservableObject {
         case profileVisible
         case encounterNotification
         case batchNotification
+        case notificationEnabled
         case themeMode
     }
 
@@ -45,6 +46,7 @@ final class UserSettingsViewModel: ObservableObject {
     @Published var isProfileVisible = true
     @Published var encounterNotificationEnabled = true
     @Published var batchNotificationEnabled = true
+    @Published var notificationEnabled = true
     @Published var themeMode: ThemeMode = .system
 
     @Published private(set) var isLoading = false
@@ -53,14 +55,18 @@ final class UserSettingsViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     private let client: BackendAPIClient
+    private let pushManager: PushNotificationManager
     private var confirmedDetectionDistance: Double = 50
-    private var notificationEnabled = true
     private var loadTask: Task<Void, Never>?
     private var saveTasks: [SaveField: Task<Void, Never>] = [:]
     private var activeSaveCount = 0
 
-    init(client: BackendAPIClient = BackendAPIClient()) {
+    init(
+        client: BackendAPIClient = BackendAPIClient(),
+        pushManager: PushNotificationManager = .shared
+    ) {
         self.client = client
+        self.pushManager = pushManager
     }
 
     func loadIfNeeded() {
@@ -130,6 +136,18 @@ final class UserSettingsViewModel: ObservableObject {
         )
     }
 
+    func setNotificationEnabled(_ isEnabled: Bool) {
+        let previous = notificationEnabled
+
+        notificationEnabled = isEnabled
+
+        submitUpdate(
+            UpdateUserSettingsRequest(notificationEnabled: isEnabled),
+            field: .notificationEnabled,
+            revert: { self.notificationEnabled = previous }
+        )
+    }
+
     func setThemeMode(_ mode: ThemeMode) {
         let previous = themeMode
         themeMode = mode
@@ -184,6 +202,9 @@ final class UserSettingsViewModel: ObservableObject {
             let settings = try await client.patchMySettings(request)
             if Task.isCancelled { return }
             applySettings(settings, updating: request)
+            if request.notificationEnabled != nil {
+                Task { await pushManager.applyNotificationPreference(isEnabled: settings.notificationEnabled) }
+            }
         } catch {
             if Task.isCancelled { return }
             errorMessage = "設定の更新に失敗しました"
@@ -200,6 +221,7 @@ final class UserSettingsViewModel: ObservableObject {
         notificationEnabled = settings.notificationEnabled
         themeMode = ThemeMode(rawValue: settings.themeMode) ?? .system
         hasLoaded = true
+        Task { await pushManager.syncFromSettings(notificationEnabled: settings.notificationEnabled) }
     }
 
     private func applySettings(_ settings: BackendUserSettings, updating request: UpdateUserSettingsRequest) {

@@ -68,6 +68,32 @@ nonisolated struct BackendPublicTrack: Decodable, Equatable {
     }
 }
 
+nonisolated struct BackendSharedTrack: Decodable, Equatable {
+    let id: String
+    let title: String
+    let artistName: String
+    let artworkURL: String?
+    let previewURL: String?
+    let updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case artistName = "artist_name"
+        case artworkURL = "artwork_url"
+        case previewURL = "preview_url"
+        case updatedAt = "updated_at"
+    }
+}
+
+nonisolated struct BackendSharedTrackResponse: Decodable {
+    let sharedTrack: BackendSharedTrack?
+
+    enum CodingKeys: String, CodingKey {
+        case sharedTrack = "shared_track"
+    }
+}
+
 nonisolated struct BackendTrackResponse: Decodable {
     let track: BackendPublicTrack?
 }
@@ -85,6 +111,25 @@ nonisolated struct BackendTrackSearchPagination: Decodable, Equatable {
 nonisolated struct BackendTrackSearchResponse: Decodable {
     let pagination: BackendTrackSearchPagination?
     let tracks: [BackendPublicTrack]?
+}
+
+nonisolated struct BackendUserTrackPagination: Decodable, Equatable {
+    let nextCursor: String?
+    let hasMore: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case nextCursor = "next_cursor"
+        case hasMore = "has_more"
+    }
+}
+
+nonisolated struct BackendUserTrackListResponse: Decodable {
+    let pagination: BackendUserTrackPagination?
+    let tracks: [BackendPublicTrack]?
+}
+
+nonisolated struct BackendUserTrackResponse: Decodable {
+    let track: BackendPublicTrack?
 }
 
 nonisolated struct BackendUserResponse: Decodable {
@@ -730,6 +775,22 @@ nonisolated struct UpdatePlaylistRequest: Encodable {
 }
 
 nonisolated struct AddPlaylistTrackRequest: Encodable {
+    let trackId: String
+
+    enum CodingKeys: String, CodingKey {
+        case trackId = "track_id"
+    }
+}
+
+nonisolated struct AddUserTrackRequest: Encodable {
+    let trackId: String
+
+    enum CodingKeys: String, CodingKey {
+        case trackId = "track_id"
+    }
+}
+
+nonisolated struct UpsertSharedTrackRequest: Encodable {
     let trackId: String
 
     enum CodingKeys: String, CodingKey {
