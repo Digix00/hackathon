@@ -27,7 +27,7 @@ let package = Package(
         .target(
             name: "OpenAPIClient",
             dependencies: ["AnyCodable", ],
-            path: "Sources/OpenAPIClient"
+            path: "OpenAPIClient/Classes"
         ),
     ]
 )
