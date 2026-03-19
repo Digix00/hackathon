@@ -38,16 +38,21 @@ jobs:
 
       - name: Get current image tags
         run: |
+          # GitHub Actions は pipefail が有効なため、gcloud 失敗時にパイプライン全体が
+          # 非ゼロを返してステップが終了する。|| true で失敗を吸収してから
+          # ${VAR:-latest} で空文字列も含めて latest にフォールバックする。
           SERVER_TAG=$(gcloud run services describe api \
             --region asia-northeast1 \
             --project ${{ vars.TF_PROJECT_ID }} \
             --format='value(spec.template.spec.containers[0].image)' 2>/dev/null \
-            | awk -F: '{print $NF}' || echo "latest")
+            | awk -F: '{print $NF}' || true)
+          SERVER_TAG=${SERVER_TAG:-latest}
           WORKER_TAG=$(gcloud run services describe worker \
             --region asia-northeast1 \
             --project ${{ vars.TF_PROJECT_ID }} \
             --format='value(spec.template.spec.containers[0].image)' 2>/dev/null \
-            | awk -F: '{print $NF}' || echo "latest")
+            | awk -F: '{print $NF}' || true)
+          WORKER_TAG=${WORKER_TAG:-latest}
           echo "TF_VAR_server_image_tag=$SERVER_TAG" >> $GITHUB_ENV
           echo "TF_VAR_worker_image_tag=$WORKER_TAG" >> $GITHUB_ENV
 
