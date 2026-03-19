@@ -124,6 +124,14 @@ func seedDemoData(db *gorm.DB) error {
 
 			notificationIDA = "seed-notification-01"
 			notificationIDB = "seed-notification-02"
+
+			lyricChainIDA = "seed-lyric-chain-01"
+			lyricEntryIDA = "seed-lyric-entry-01"
+			lyricEntryIDB = "seed-lyric-entry-02"
+
+			generatedSongIDA = "seed-generated-song-01"
+			songLikeIDA      = "seed-song-like-01"
+			lyriaJobIDA      = "seed-lyria-job-01"
 		)
 
 		nameA := "Aoi"
@@ -381,6 +389,78 @@ func seedDemoData(db *gorm.DB) error {
 			Token:     "0123456789abcdef",
 			ValidFrom: validFrom,
 			ValidTo:   validTo,
+		}).Error; err != nil {
+			return err
+		}
+
+		lyricChainCreatedAt := time.Now().UTC().Add(-48 * time.Hour)
+		lyricChainCompletedAt := time.Now().UTC().Add(-36 * time.Hour)
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&model.LyricChain{
+			ID:               lyricChainIDA,
+			Status:           "completed",
+			ParticipantCount: 2,
+			Threshold:        4,
+			CreatedAt:        lyricChainCreatedAt,
+			CompletedAt:      &lyricChainCompletedAt,
+		}).Error; err != nil {
+			return err
+		}
+
+		lyricEntries := []model.LyricEntry{
+			{
+				ID:          lyricEntryIDA,
+				ChainID:     lyricChainIDA,
+				UserID:      userA.ID,
+				EncounterID: encounterID,
+				Content:     "また会えたら続きを歌おう。",
+				SequenceNum: 1,
+			},
+			{
+				ID:          lyricEntryIDB,
+				ChainID:     lyricChainIDA,
+				UserID:      userB.ID,
+				EncounterID: encounterID,
+				Content:     "夜風に溶けるメロディ。",
+				SequenceNum: 2,
+			},
+		}
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&lyricEntries).Error; err != nil {
+			return err
+		}
+
+		songTitle := "Echoes of Tokyo"
+		songAudioURL := "https://example.com/audio/echoes-of-tokyo.mp3"
+		songMood := "nostalgic"
+		songGenre := "city-pop"
+		songDuration := 196
+		songGeneratedAt := time.Now().UTC().Add(-35 * time.Hour)
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&model.GeneratedSong{
+			ID:          generatedSongIDA,
+			ChainID:     lyricChainIDA,
+			Title:       &songTitle,
+			AudioURL:    &songAudioURL,
+			DurationSec: &songDuration,
+			Mood:        &songMood,
+			Genre:       &songGenre,
+			Status:      "completed",
+			GeneratedAt: &songGeneratedAt,
+		}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&model.SongLike{
+			ID:     songLikeIDA,
+			SongID: generatedSongIDA,
+			UserID: userA.ID,
+		}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&model.OutboxLyriaJob{
+			ID:        lyriaJobIDA,
+			ChainID:   lyricChainIDA,
+			Status:    "completed",
+			CreatedAt: lyricChainCreatedAt,
 		}).Error; err != nil {
 			return err
 		}
