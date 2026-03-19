@@ -96,6 +96,23 @@ curl -v http://127.0.0.1:8000/healthz/postgres
 
 iOS から動作確認する場合は `ios/README.md` の Firebase Auth Emulator 手順を参照してください。
 
+### 5) 開発用認証バイパス（DEV_AUTH_TOKEN）
+
+開発中のみ Firebase 検証をスキップできるトークンを利用できます（`GO_ENV=development` のみ有効）。
+
+- `Authorization: Bearer <DEV_AUTH_TOKEN>` を送ると Firebase 検証を行わず通過します
+- `DEV_AUTH_UID` を指定すると固定 UID で動作します（未指定なら `dev-user`）
+
+設定例:
+
+```
+DEV_AUTH_TOKEN=dev-auth-token
+DEV_AUTH_UID=demo-user-1
+```
+
+無効化したい場合は `backend/.env.development` から `DEV_AUTH_TOKEN`, `DEV_AUTH_UID` を削除し、
+`docs/architecture/backend.md` の「削除手順」に従ってコード側を削除してください。
+
 ## 停止
 
 ```bash

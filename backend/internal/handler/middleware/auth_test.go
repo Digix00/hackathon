@@ -29,7 +29,7 @@ func TestFirebaseAuthRejectsMissingBearerToken(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	h := FirebaseAuth(fakeVerifier{token: &firebaseauth.Token{UID: "u1"}})(func(c echo.Context) error {
+	h := FirebaseAuth(fakeVerifier{token: &firebaseauth.Token{UID: "u1"}}, DevAuthConfig{})(func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	})
 
@@ -51,7 +51,7 @@ func TestFirebaseAuthSetsUserIDOnSuccess(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	h := FirebaseAuth(fakeVerifier{token: &firebaseauth.Token{UID: "u1"}})(func(c echo.Context) error {
+	h := FirebaseAuth(fakeVerifier{token: &firebaseauth.Token{UID: "u1"}}, DevAuthConfig{})(func(c echo.Context) error {
 		uid, ok := UserIDFromContext(c)
 		if !ok || uid != "u1" {
 			t.Fatalf("expected uid u1, got %q, ok=%v", uid, ok)
@@ -71,7 +71,7 @@ func TestFirebaseAuthRejectsInvalidToken(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	h := FirebaseAuth(fakeVerifier{err: errors.New("invalid")})(func(c echo.Context) error {
+	h := FirebaseAuth(fakeVerifier{err: errors.New("invalid")}, DevAuthConfig{})(func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	})
 
@@ -83,5 +83,29 @@ func TestFirebaseAuthRejectsInvalidToken(t *testing.T) {
 	httpErr, ok := err.(*echo.HTTPError)
 	if !ok || httpErr.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401 http error, got %#v", err)
+	}
+}
+
+func TestFirebaseAuthAllowsDevBypassToken(t *testing.T) {
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer dev-token")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	h := FirebaseAuth(fakeVerifier{err: errors.New("invalid")}, DevAuthConfig{
+		Enabled: true,
+		Token:   "dev-token",
+		UID:     "dev-user-1",
+	})(func(c echo.Context) error {
+		uid, ok := UserIDFromContext(c)
+		if !ok || uid != "dev-user-1" {
+			t.Fatalf("expected uid dev-user-1, got %q, ok=%v", uid, ok)
+		}
+		return c.NoContent(http.StatusOK)
+	})
+
+	if err := h(c); err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
