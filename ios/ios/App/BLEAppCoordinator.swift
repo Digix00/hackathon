@@ -247,6 +247,9 @@ final class BLEAppCoordinator: ObservableObject {
                     }
                 )
                 let mergedEncounters = mappedEncounters.map { encounter in
+                    if !encounter.lyric.isEmpty {
+                        return encounter
+                    }
                     guard let lyric = existingLyrics[encounter.id] else { return encounter }
                     return Encounter(
                         id: encounter.id,
@@ -324,7 +327,7 @@ final class BLEAppCoordinator: ObservableObject {
             userName: item.user.displayName,
             track: track,
             relativeTime: relativeTimeText(from: item.occurredAt),
-            lyric: ""
+            lyric: item.lyric ?? ""
         )
     }
 

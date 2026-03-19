@@ -95,7 +95,8 @@ final class GeneratedSongsViewModel: ObservableObject {
             generatedAt: song.generatedAt,
             myLyric: song.myLyric.isEmpty ? nil : song.myLyric,
             audioURL: song.audioURL,
-            chainId: nil
+            chainId: song.chainId,
+            isLiked: song.liked ?? false
         )
     }
 

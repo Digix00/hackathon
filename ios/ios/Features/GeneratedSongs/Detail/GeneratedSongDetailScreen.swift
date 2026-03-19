@@ -10,6 +10,16 @@ struct GeneratedSongDetailView: View {
     }
 
     private var lyricEntries: [LyricEntryList.Row] {
+        if !viewModel.lyricEntries.isEmpty {
+            return viewModel.lyricEntries.map {
+                LyricEntryList.Row(
+                    id: $0.id,
+                    content: $0.content,
+                    userName: $0.userName,
+                    sequenceNum: $0.sequenceNum
+                )
+            }
+        }
         if let lyric = song.myLyric, !lyric.isEmpty {
             return [
                 LyricEntryList.Row(
@@ -60,12 +70,21 @@ struct GeneratedSongDetailView: View {
 
                 SectionCard(title: "参加した歌詞") {
                     VStack(alignment: .leading, spacing: 20) {
-                        if lyricEntries.isEmpty {
+                        if viewModel.isLoadingLyrics {
+                            ProgressView("読み込み中")
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        } else if lyricEntries.isEmpty {
                             Text("まだ歌詞が登録されていません")
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundStyle(PrototypeTheme.textSecondary)
                         } else {
                             LyricEntryList(entries: lyricEntries)
+                        }
+
+                        if let lyricsErrorMessage = viewModel.lyricsErrorMessage {
+                            Text(lyricsErrorMessage)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.error)
                         }
                     }
                 }
@@ -90,6 +109,9 @@ struct GeneratedSongDetailView: View {
                 }
                 .frame(maxWidth: .infinity)
             }
+        }
+        .task {
+            viewModel.loadLyricsIfNeeded()
         }
     }
 }

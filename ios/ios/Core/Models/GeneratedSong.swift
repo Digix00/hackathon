@@ -10,4 +10,5 @@ struct GeneratedSong: Identifiable, Hashable {
     let myLyric: String?
     let audioURL: String?
     let chainId: String?
+    let isLiked: Bool
 }

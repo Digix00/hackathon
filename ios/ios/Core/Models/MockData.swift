@@ -42,7 +42,8 @@ enum MockData {
             generatedAt: Calendar.current.date(from: DateComponents(year: 2024, month: 3, day: 15)),
             myLyric: "夜風の隙間に落ちた言葉",
             audioURL: nil,
-            chainId: nil
+            chainId: nil,
+            isLiked: false
         ),
         GeneratedSong(
             id: "generated-mock-2",
@@ -53,7 +54,8 @@ enum MockData {
             generatedAt: Calendar.current.date(from: DateComponents(year: 2024, month: 3, day: 14)),
             myLyric: "薄明かりに揺れた余韻",
             audioURL: nil,
-            chainId: nil
+            chainId: nil,
+            isLiked: true
         ),
         GeneratedSong(
             id: "generated-mock-3",
@@ -64,7 +66,8 @@ enum MockData {
             generatedAt: Calendar.current.date(from: DateComponents(year: 2024, month: 3, day: 13)),
             myLyric: "通り過ぎた音が残る",
             audioURL: nil,
-            chainId: nil
+            chainId: nil,
+            isLiked: false
         )
     ]
 

@@ -343,6 +343,7 @@ nonisolated struct BackendEncounterListItem: Decodable, Equatable {
     let isRead: Bool
     let tracks: [BackendEncounterTrack]
     let occurredAt: Date?
+    let lyric: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -351,6 +352,7 @@ nonisolated struct BackendEncounterListItem: Decodable, Equatable {
         case isRead = "is_read"
         case tracks
         case occurredAt = "occurred_at"
+        case lyric
     }
 }
 
@@ -627,6 +629,8 @@ nonisolated struct BackendUserSong: Decodable, Equatable {
     let generatedAt: Date?
     let participantCount: Int
     let myLyric: String
+    let chainId: String?
+    let liked: Bool?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -635,6 +639,8 @@ nonisolated struct BackendUserSong: Decodable, Equatable {
         case generatedAt = "generated_at"
         case participantCount = "participant_count"
         case myLyric = "my_lyric"
+        case chainId = "chain_id"
+        case liked
     }
 }
 
