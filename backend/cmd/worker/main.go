@@ -1,9 +1,14 @@
 package main
 
 import (
-	"log"
-	"os"
+	"context"
 	"time"
+
+	"go.uber.org/zap"
+
+	"hackathon/config"
+	"hackathon/internal/infra/rdb"
+	applogger "hackathon/logger"
 )
 
 func main() {
@@ -13,15 +18,33 @@ func main() {
 	}
 	time.Local = loc
 
-	interval := 30 * time.Second
-	if os.Getenv("WORKER_ONESHOT") == "true" {
-		log.Println("worker oneshot: boot ok")
-		return
+	cfg, err := config.Load()
+	if err != nil {
+		panic("config load failed: " + err.Error())
 	}
 
-	log.Printf("worker started: tick interval=%s", interval)
-	for {
-		log.Println("worker heartbeat")
-		time.Sleep(interval)
+	log, err := applogger.New(cfg.GoEnv)
+	if err != nil {
+		panic("logger init failed: " + err.Error())
 	}
+	defer log.Sync() //nolint:errcheck
+
+	db, err := rdb.Open(cfg.DatabaseURL, cfg.GoEnv)
+	if err != nil {
+		log.Fatal("db open failed", zap.Error(err))
+	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatal("db get sql.DB failed", zap.Error(err))
+	}
+	defer sqlDB.Close()
+
+	workerUsecase := buildDependencies(db)
+
+	deleted, err := workerUsecase.DeleteExpiredBleTokens(context.Background())
+	if err != nil {
+		log.Fatal("delete expired ble tokens failed", zap.Error(err))
+	}
+	log.Info("deleted expired ble tokens", zap.Int64("count", deleted))
 }
