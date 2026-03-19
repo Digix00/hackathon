@@ -654,7 +654,19 @@ nonisolated struct BackendListUserSongsResponse: Decodable {
 }
 
 nonisolated struct BackendLikeSongResponse: Decodable {
+    let like: BackendLikeSongDetail
+}
+
+nonisolated struct BackendLikeSongDetail: Decodable {
+    let songId: String?
     let liked: Bool
+    let createdAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case songId = "song_id"
+        case liked
+        case createdAt = "created_at"
+    }
 }
 
 // MARK: - Requests
