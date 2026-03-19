@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct OtherUserProfileView: View {
+    @StateObject private var viewModel = OtherUserProfileViewModel()
+    @State private var userID = ""
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 32) {
@@ -9,40 +12,45 @@ struct OtherUserProfileView: View {
                     .frame(width: 40, height: 5)
                     .padding(.top, 12)
 
-                VStack(spacing: 20) {
-                    ZStack {
-                        Circle()
-                            .fill(PrototypeTheme.surfaceElevated)
-                            .frame(width: 100, height: 100)
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 44))
-                            .foregroundStyle(PrototypeTheme.textTertiary)
-                    }
-                    
-                    VStack(spacing: 8) {
-                        Text("Airi")
-                            .font(.system(size: 28, weight: .black))
-                        
-                        Text("夜の散歩とシティポップが好き")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(PrototypeTheme.textSecondary)
-                            .multilineTextAlignment(.center)
+                SectionCard(title: "ユーザーID") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        TextField("取得したいユーザーID", text: $userID)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .padding(14)
+                            .background(PrototypeTheme.surfaceMuted)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+
+                        PrimaryButton(
+                            title: viewModel.isLoading ? "読み込み中..." : "プロフィールを表示",
+                            isDisabled: userID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || viewModel.isLoading
+                        ) {
+                            viewModel.load(userID: userID)
+                        }
                     }
                 }
 
-                SectionCard(title: "いまシェアしている曲") {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Label("現在のシェア曲", systemImage: "music.note")
-                            .font(.system(size: 14, weight: .black))
-                            .foregroundStyle(PrototypeTheme.accent)
-                        
-                        TrackSelectionRow(track: MockData.previewSharedTrack)
-                    }
+                if let errorMessage = viewModel.errorMessage {
+                    Text(errorMessage)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(PrototypeTheme.error)
                 }
 
-                HStack(spacing: 16) {
-                    SecondaryButton(title: "ミュート", systemImage: "speaker.slash.fill") {}
-                    SecondaryButton(title: "通報", systemImage: "flag.fill") {}
+                if let user = viewModel.user {
+                    OtherUserProfileCard(
+                        displayName: user.displayName,
+                        bio: user.bio ?? "ひとこと未設定",
+                        avatarURL: user.avatarURL,
+                        sharedTrack: viewModel.sharedTrack
+                    )
+                } else if viewModel.isLoading {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                } else {
+                    Text("ユーザーIDを入力してプロフィールを取得してください。")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(PrototypeTheme.textSecondary)
+                        .multilineTextAlignment(.center)
                 }
 
                 Spacer()
@@ -53,4 +61,3 @@ struct OtherUserProfileView: View {
         .presentationDetents([.medium, .large])
     }
 }
-

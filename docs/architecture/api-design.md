@@ -327,6 +327,7 @@ Firebase Auth のアカウントも同時に削除する。
 
 ユーザー設定を取得する。
 `detection_distance` は位置情報エンカウントの判定距離（メートル）で、許容範囲は 10〜100。
+`notification_enabled` はマスタースイッチではなく独立フラグとして扱う。
 
 **Response (200)**
 

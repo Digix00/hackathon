@@ -18,8 +18,8 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Generate Code
-        # ルートの Makefile から backend/Makefile を呼び出す
-        run: make generate-code
+        # ルートの Makefile から backend/Makefile を呼び出す（CI向け: docker compose run を使用）
+        run: make generate-code-ci
 
       - name: Check for differences
         run: |

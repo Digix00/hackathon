@@ -27,7 +27,11 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	api.GET("/music-connections/:provider/callback", musicHandler.callback)
 
 	protected := api.Group("")
-	protected.Use(middleware.FirebaseAuth(deps.AuthTokenVerifier))
+	protected.Use(middleware.FirebaseAuth(deps.AuthTokenVerifier, middleware.DevAuthConfig{
+		Enabled: deps.GoEnv == "development" && deps.DevAuthToken != "",
+		Token:   deps.DevAuthToken,
+		UID:     deps.DevAuthUID,
+	}))
 
 	protected.POST("/users", userHandler.createUser)
 	protected.GET("/users/me", userHandler.getMe)

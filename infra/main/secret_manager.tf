@@ -56,3 +56,23 @@ resource "google_secret_manager_secret" "apns_key" {
 
   depends_on = [google_project_service.apis]
 }
+
+resource "google_secret_manager_secret" "music_state_secret" {
+  secret_id = "music-state-secret"
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_secret_manager_secret" "music_token_encryption_key" {
+  secret_id = "music-token-encryption-key"
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.apis]
+}

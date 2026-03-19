@@ -55,6 +55,9 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config
 	return handler.Dependencies{
 		AuthTokenVerifier:   authClient,
 		AuthUserManager:     authClient,
+		GoEnv:               cfg.GoEnv,
+		DevAuthToken:        cfg.DevAuthToken,
+		DevAuthUID:          cfg.DevAuthUID,
 		UserUsecase:         usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
 		SettingsUsecase:     usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
 		PushTokenUsecase:    usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),

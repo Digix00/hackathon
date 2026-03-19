@@ -179,6 +179,31 @@ func (h *handler) handlerFunc(c echo.Context) error {
 3. `internal/handler/middleware/auth.go` が Firebase Admin SDK で検証 → UID をコンテキストに格納
 4. 以降のハンドラは UID をコンテキストから取り出して処理
 
+## 開発用認証バイパス（DEV_AUTH_TOKEN）
+
+開発中の検証を速めるため、**development 環境のみ** Firebase 検証をバイパスできる仕組みを用意する。
+
+- 有効条件: `GO_ENV=development` かつ `DEV_AUTH_TOKEN` が設定されていること
+- 使い方: `Authorization: Bearer <DEV_AUTH_TOKEN>` を送ると Firebase 検証を行わず通過する
+- UID: `DEV_AUTH_UID` を使って固定する（未指定なら `dev-user`）
+
+### 設定例（開発環境）
+
+```
+DEV_AUTH_TOKEN=dev-auth-token
+DEV_AUTH_UID=demo-user-1
+```
+
+### 削除手順（開発後に無効化する場合）
+
+以下を削除・巻き戻せば完全に無効化できる。
+
+- 環境変数: `DEV_AUTH_TOKEN`, `DEV_AUTH_UID`（`backend/.env.development` から削除）
+- ミドルウェア拡張: `internal/handler/middleware/auth.go` の `DevAuthConfig` と dev バイパス分岐
+- DI 受け渡し: `internal/handler/di.go`, `cmd/server/wire.go`
+- ルーティング適用: `internal/handler/router.go`
+- テスト: `internal/handler/middleware/auth_test.go` の dev バイパス用テスト
+
 ## 定期実行交換処理
 
 BLE 交換イベントの書き込みと通知送信を非同期に分離する設計。
