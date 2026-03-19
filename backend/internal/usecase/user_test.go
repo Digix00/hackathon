@@ -83,6 +83,9 @@ func (r *stubBlockRepo) ListBlockedUserIDs(_ context.Context, _ string, _ []stri
 	}
 	return map[string]bool{}, nil
 }
+func (r *stubBlockRepo) ListByBlockerUserID(_ context.Context, _ string, _ int, _ *repository.BlockCursor) ([]entity.Block, *repository.BlockCursor, bool, error) {
+	return nil, nil, false, nil
+}
 
 type stubEncounterRepo struct {
 	count int64

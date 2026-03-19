@@ -31,6 +31,7 @@ Class | Method | HTTP request | Description
 *BleTokensAPI* | [**getUserByBleToken**](docs/BleTokensAPI.md#getuserbybletoken) | **GET** /api/v1/ble-tokens/{token}/user | BLE トークンからユーザー情報取得
 *BlocksAPI* | [**createBlock**](docs/BlocksAPI.md#createblock) | **POST** /api/v1/users/me/blocks | ブロック作成
 *BlocksAPI* | [**deleteBlock**](docs/BlocksAPI.md#deleteblock) | **DELETE** /api/v1/users/me/blocks/{blocked_user_id} | ブロック解除
+*BlocksAPI* | [**listBlocks**](docs/BlocksAPI.md#listblocks) | **GET** /api/v1/users/me/blocks | ブロック一覧取得
 *CommentsAPI* | [**createComment**](docs/CommentsAPI.md#createcomment) | **POST** /api/v1/encounters/{id}/comments | コメント作成
 *CommentsAPI* | [**deleteComment**](docs/CommentsAPI.md#deletecomment) | **DELETE** /api/v1/comments/{id} | コメント削除
 *CommentsAPI* | [**listComments**](docs/CommentsAPI.md#listcomments) | **GET** /api/v1/encounters/{id}/comments | コメント一覧取得
@@ -53,6 +54,7 @@ Class | Method | HTTP request | Description
 *MusicConnectionsAPI* | [**listMusicConnections**](docs/MusicConnectionsAPI.md#listmusicconnections) | **GET** /api/v1/users/me/music-connections | 自分の音楽連携一覧を取得
 *MutesAPI* | [**createMute**](docs/MutesAPI.md#createmute) | **POST** /api/v1/users/me/mutes | ミュート作成
 *MutesAPI* | [**deleteMute**](docs/MutesAPI.md#deletemute) | **DELETE** /api/v1/users/me/mutes/{target_user_id} | ミュート解除
+*MutesAPI* | [**listMutes**](docs/MutesAPI.md#listmutes) | **GET** /api/v1/users/me/mutes | ミュート一覧取得
 *NotificationsAPI* | [**deleteNotification**](docs/NotificationsAPI.md#deletenotification) | **DELETE** /api/v1/users/me/notifications/{id} | 通知削除
 *NotificationsAPI* | [**listNotifications**](docs/NotificationsAPI.md#listnotifications) | **GET** /api/v1/users/me/notifications | 通知一覧取得
 *NotificationsAPI* | [**markNotificationAsRead**](docs/NotificationsAPI.md#marknotificationasread) | **PATCH** /api/v1/users/me/notifications/{id}/read | 通知を既読にする
@@ -113,6 +115,8 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseBleTokenUser](docs/HackathonInternalHandlerSchemaResponseBleTokenUser.md)
  - [HackathonInternalHandlerSchemaResponseBleTokenUserResponse](docs/HackathonInternalHandlerSchemaResponseBleTokenUserResponse.md)
  - [HackathonInternalHandlerSchemaResponseBlock](docs/HackathonInternalHandlerSchemaResponseBlock.md)
+ - [HackathonInternalHandlerSchemaResponseBlockListPagination](docs/HackathonInternalHandlerSchemaResponseBlockListPagination.md)
+ - [HackathonInternalHandlerSchemaResponseBlockListResponse](docs/HackathonInternalHandlerSchemaResponseBlockListResponse.md)
  - [HackathonInternalHandlerSchemaResponseBlockResponse](docs/HackathonInternalHandlerSchemaResponseBlockResponse.md)
  - [HackathonInternalHandlerSchemaResponseChainDetail](docs/HackathonInternalHandlerSchemaResponseChainDetail.md)
  - [HackathonInternalHandlerSchemaResponseChainDetailResponse](docs/HackathonInternalHandlerSchemaResponseChainDetailResponse.md)
@@ -141,6 +145,8 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseMusicConnection](docs/HackathonInternalHandlerSchemaResponseMusicConnection.md)
  - [HackathonInternalHandlerSchemaResponseMusicConnectionsResponse](docs/HackathonInternalHandlerSchemaResponseMusicConnectionsResponse.md)
  - [HackathonInternalHandlerSchemaResponseMute](docs/HackathonInternalHandlerSchemaResponseMute.md)
+ - [HackathonInternalHandlerSchemaResponseMuteListPagination](docs/HackathonInternalHandlerSchemaResponseMuteListPagination.md)
+ - [HackathonInternalHandlerSchemaResponseMuteListResponse](docs/HackathonInternalHandlerSchemaResponseMuteListResponse.md)
  - [HackathonInternalHandlerSchemaResponseMuteResponse](docs/HackathonInternalHandlerSchemaResponseMuteResponse.md)
  - [HackathonInternalHandlerSchemaResponseNotificationItem](docs/HackathonInternalHandlerSchemaResponseNotificationItem.md)
  - [HackathonInternalHandlerSchemaResponseNotificationListResponse](docs/HackathonInternalHandlerSchemaResponseNotificationListResponse.md)

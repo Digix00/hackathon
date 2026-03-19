@@ -258,6 +258,22 @@ definitions:
       id:
         type: string
     type: object
+  hackathon_internal_handler_schema_response.BlockListPagination:
+    properties:
+      has_more:
+        type: boolean
+      next_cursor:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.BlockListResponse:
+    properties:
+      blocks:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.Block'
+        type: array
+      pagination:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.BlockListPagination'
+    type: object
   hackathon_internal_handler_schema_response.BlockResponse:
     properties:
       block:
@@ -532,6 +548,22 @@ definitions:
         type: string
       target_user_id:
         type: string
+    type: object
+  hackathon_internal_handler_schema_response.MuteListPagination:
+    properties:
+      has_more:
+        type: boolean
+      next_cursor:
+        type: string
+    type: object
+  hackathon_internal_handler_schema_response.MuteListResponse:
+    properties:
+      mutes:
+        items:
+          $ref: '#/definitions/hackathon_internal_handler_schema_response.Mute'
+        type: array
+      pagination:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.MuteListPagination'
     type: object
   hackathon_internal_handler_schema_response.MuteResponse:
     properties:
@@ -2352,6 +2384,42 @@ paths:
       tags:
       - users
   /api/v1/users/me/blocks:
+    get:
+      description: 認証済みユーザーがブロックしているユーザーの一覧をカーソルページネーションで取得する
+      operationId: listBlocks
+      parameters:
+      - description: 取得件数（省略時 20、最大 50）
+        in: query
+        name: limit
+        type: integer
+      - description: ページネーションカーソル
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.BlockListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: ブロック一覧取得
+      tags:
+      - blocks
     post:
       consumes:
       - application/json
@@ -2494,6 +2562,42 @@ paths:
       tags:
       - music-connections
   /api/v1/users/me/mutes:
+    get:
+      description: 認証済みユーザーがミュートしているユーザーの一覧をカーソルページネーションで取得する
+      operationId: listMutes
+      parameters:
+      - description: 取得件数（省略時 20、最大 50）
+        in: query
+        name: limit
+        type: integer
+      - description: ページネーションカーソル
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.MuteListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: ミュート一覧取得
+      tags:
+      - mutes
     post:
       consumes:
       - application/json
