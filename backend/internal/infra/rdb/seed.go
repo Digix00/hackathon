@@ -84,21 +84,51 @@ func seedDemoData(db *gorm.DB) error {
 
 			userIDA = "seed-user-01"
 			userIDB = "seed-user-02"
+			userIDC = "seed-user-03"
 
 			providerUserIDA = "demo-user-1"
 			providerUserIDB = "demo-user-2"
+			providerUserIDC = "demo-user-3"
 
 			settingsIDA = "seed-user-settings-01"
 			settingsIDB = "seed-user-settings-02"
+			settingsIDC = "seed-user-settings-03"
 
-			trackID = "seed-track-01"
+			trackIDA = "seed-track-01"
+			trackIDB = "seed-track-02"
+			trackIDC = "seed-track-03"
 
 			encounterID      = "seed-encounter-01"
 			encounterTrackID = "seed-encounter-track-01"
+			encounterIDB     = "seed-encounter-02"
+
+			userTrackIDA = "seed-user-track-01"
+			userTrackIDB = "seed-user-track-02"
+			userTrackIDC = "seed-user-track-03"
+
+			currentTrackIDA = "seed-user-current-track-01"
+			currentTrackIDB = "seed-user-current-track-02"
+
+			playlistIDA = "seed-playlist-01"
+			playlistIDB = "seed-playlist-02"
+
+			playlistTrackIDA = "seed-playlist-track-01"
+			playlistTrackIDB = "seed-playlist-track-02"
+			playlistTrackIDC = "seed-playlist-track-03"
+
+			trackFavoriteIDA = "seed-track-favorite-01"
+			playlistFavIDA   = "seed-playlist-favorite-01"
+
+			commentIDA = "seed-comment-01"
+			commentIDB = "seed-comment-02"
+
+			notificationIDA = "seed-notification-01"
+			notificationIDB = "seed-notification-02"
 		)
 
 		nameA := "Aoi"
 		nameB := "Ren"
+		nameC := "Mio"
 
 		ensureDemoUser := func(userID, providerUserID, name string) (model.User, error) {
 			user := model.User{
@@ -132,10 +162,15 @@ func seedDemoData(db *gorm.DB) error {
 		if err != nil {
 			return err
 		}
+		userC, err := ensureDemoUser(userIDC, providerUserIDC, nameC)
+		if err != nil {
+			return err
+		}
 
 		settings := []model.UserSettings{
 			{ID: settingsIDA, UserID: userA.ID},
 			{ID: settingsIDB, UserID: userB.ID},
+			{ID: settingsIDC, UserID: userC.ID},
 		}
 		if err := tx.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "user_id"}},
@@ -146,11 +181,25 @@ func seedDemoData(db *gorm.DB) error {
 
 		tracks := []model.Track{
 			{
-				ID:         trackID,
+				ID:         trackIDA,
 				ExternalID: "demo-track-1",
 				Provider:   "spotify",
 				Title:      "City Lights",
 				ArtistName: "Night Echoes",
+			},
+			{
+				ID:         trackIDB,
+				ExternalID: "demo-track-2",
+				Provider:   "spotify",
+				Title:      "Sunrise Avenue",
+				ArtistName: "Harborline",
+			},
+			{
+				ID:         trackIDC,
+				ExternalID: "demo-track-3",
+				Provider:   "spotify",
+				Title:      "Midnight Metro",
+				ArtistName: "Loop Sisters",
 			},
 		}
 		if err := tx.Clauses(clause.OnConflict{
@@ -186,9 +235,137 @@ func seedDemoData(db *gorm.DB) error {
 		}).Create(&model.EncounterTrack{
 			ID:           encounterTrackID,
 			EncounterID:  encounterID,
-			TrackID:      trackID,
+			TrackID:      trackIDA,
 			SourceUserID: userB.ID,
 		}).Error; err != nil {
+			return err
+		}
+
+		locationEncounteredAt := time.Now().UTC().Add(-26 * time.Hour)
+		lat := 35.681236
+		lng := 139.767125
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&model.Encounter{
+			ID:            encounterIDB,
+			UserID1:       userA.ID,
+			UserID2:       userC.ID,
+			EncounteredAt: locationEncounteredAt,
+			EncounterType: "location",
+			Latitude:      &lat,
+			Longitude:     &lng,
+		}).Error; err != nil {
+			return err
+		}
+
+		userTracks := []model.UserTrack{
+			{ID: userTrackIDA, UserID: userA.ID, TrackID: trackIDA},
+			{ID: userTrackIDB, UserID: userA.ID, TrackID: trackIDB},
+			{ID: userTrackIDC, UserID: userB.ID, TrackID: trackIDC},
+		}
+		if err := tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{
+				{Name: "user_id"},
+				{Name: "track_id"},
+			},
+			TargetWhere: clause.Where{
+				Exprs: []clause.Expression{
+					clause.Expr{SQL: "deleted_at IS NULL"},
+				},
+			},
+			DoNothing: true,
+		}).Create(&userTracks).Error; err != nil {
+			return err
+		}
+
+		currentTracks := []model.UserCurrentTrack{
+			{ID: currentTrackIDA, UserID: userA.ID, TrackID: trackIDB},
+			{ID: currentTrackIDB, UserID: userB.ID, TrackID: trackIDC},
+		}
+		if err := tx.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "user_id"}},
+			DoNothing: true,
+		}).Create(&currentTracks).Error; err != nil {
+			return err
+		}
+
+		playlistDescA := "朝の通勤向けプレイリスト"
+		playlistDescB := "夜に聴きたい曲まとめ"
+		playlists := []model.Playlist{
+			{ID: playlistIDA, UserID: userA.ID, Name: "Morning Walk", Description: &playlistDescA, IsPublic: true},
+			{ID: playlistIDB, UserID: userB.ID, Name: "Night Drive", Description: &playlistDescB, IsPublic: true},
+		}
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&playlists).Error; err != nil {
+			return err
+		}
+
+		playlistTracks := []model.PlaylistTrack{
+			{ID: playlistTrackIDA, PlaylistID: playlistIDA, TrackID: trackIDA, SortOrder: 1},
+			{ID: playlistTrackIDB, PlaylistID: playlistIDA, TrackID: trackIDB, SortOrder: 2},
+			{ID: playlistTrackIDC, PlaylistID: playlistIDB, TrackID: trackIDC, SortOrder: 1},
+		}
+		if err := tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{
+				{Name: "playlist_id"},
+				{Name: "track_id"},
+			},
+			TargetWhere: clause.Where{
+				Exprs: []clause.Expression{
+					clause.Expr{SQL: "deleted_at IS NULL"},
+				},
+			},
+			DoNothing: true,
+		}).Create(&playlistTracks).Error; err != nil {
+			return err
+		}
+
+		trackFavorites := []model.TrackFavorite{
+			{ID: trackFavoriteIDA, UserID: userA.ID, TrackID: trackIDC},
+		}
+		if err := tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{
+				{Name: "user_id"},
+				{Name: "track_id"},
+			},
+			TargetWhere: clause.Where{
+				Exprs: []clause.Expression{
+					clause.Expr{SQL: "deleted_at IS NULL"},
+				},
+			},
+			DoNothing: true,
+		}).Create(&trackFavorites).Error; err != nil {
+			return err
+		}
+
+		playlistFavorites := []model.PlaylistFavorite{
+			{ID: playlistFavIDA, UserID: userA.ID, PlaylistID: playlistIDB},
+		}
+		if err := tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{
+				{Name: "user_id"},
+				{Name: "playlist_id"},
+			},
+			TargetWhere: clause.Where{
+				Exprs: []clause.Expression{
+					clause.Expr{SQL: "deleted_at IS NULL"},
+				},
+			},
+			DoNothing: true,
+		}).Create(&playlistFavorites).Error; err != nil {
+			return err
+		}
+
+		comments := []model.Comment{
+			{ID: commentIDA, EncounterID: encounterID, CommenterUserID: userA.ID, Content: "今日はいい音楽だったね！"},
+			{ID: commentIDB, EncounterID: encounterID, CommenterUserID: userB.ID, Content: "おすすめありがとう！"},
+		}
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&comments).Error; err != nil {
+			return err
+		}
+
+		notifications := []model.OutboxNotification{
+			{ID: notificationIDA, UserID: userA.ID, EncounterID: encounterID, Status: "sent"},
+			{ID: notificationIDB, UserID: userA.ID, EncounterID: encounterIDB, Status: "sent"},
+		}
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&notifications).Error; err != nil {
 			return err
 		}
 
