@@ -84,8 +84,18 @@ func TestLikeSong_Success(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
-	if body["liked"].(bool) != true {
+	like, ok := body["like"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected like object, got %T", body["like"])
+	}
+	if like["liked"].(bool) != true {
 		t.Fatal("expected liked true")
+	}
+	if like["song_id"].(string) != songID {
+		t.Fatalf("expected song_id %s, got %v", songID, like["song_id"])
+	}
+	if _, exists := like["created_at"]; exists {
+		t.Fatal("expected created_at to be omitted")
 	}
 
 	var count int64

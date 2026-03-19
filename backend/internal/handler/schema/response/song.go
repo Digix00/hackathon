@@ -20,5 +20,11 @@ type SongPagination struct {
 }
 
 type LikeSongResponse struct {
-	Liked bool `json:"liked"`
+	Like LikeSongDetail `json:"like"`
+}
+
+type LikeSongDetail struct {
+	SongID    *string `json:"song_id,omitempty"`
+	Liked     bool    `json:"liked"`
+	CreatedAt *string `json:"created_at,omitempty"`
 }

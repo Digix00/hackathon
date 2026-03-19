@@ -95,7 +95,13 @@ func (h *songHandler) likeSong(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusCreated, schemares.LikeSongResponse{Liked: true})
+	songIDCopy := songID
+	return c.JSON(http.StatusCreated, schemares.LikeSongResponse{
+		Like: schemares.LikeSongDetail{
+			SongID: &songIDCopy,
+			Liked:  true,
+		},
+	})
 }
 
 // unlikeSong godoc
