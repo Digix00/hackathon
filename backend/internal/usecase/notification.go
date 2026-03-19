@@ -12,7 +12,6 @@ import (
 type NotificationUsecase interface {
 	ListNotifications(ctx context.Context, authUID string, limit, offset int) (dto.NotificationListOutput, error)
 	MarkNotificationAsRead(ctx context.Context, authUID, id string) error
-	DeleteNotification(ctx context.Context, authUID, id string) error
 }
 
 type notificationUsecase struct {
@@ -77,19 +76,6 @@ func (u *notificationUsecase) MarkNotificationAsRead(ctx context.Context, authUI
 	}
 
 	err = u.notificationRepo.MarkAsRead(ctx, id, user.ID)
-	if errors.Is(err, domainerrs.ErrNotFound) {
-		return domainerrs.NotFound("Notification was not found")
-	}
-	return err
-}
-
-func (u *notificationUsecase) DeleteNotification(ctx context.Context, authUID, id string) error {
-	user, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, firebaseProvider, authUID)
-	if err != nil {
-		return err
-	}
-
-	err = u.notificationRepo.DeleteByIDAndUserID(ctx, id, user.ID)
 	if errors.Is(err, domainerrs.ErrNotFound) {
 		return domainerrs.NotFound("Notification was not found")
 	}

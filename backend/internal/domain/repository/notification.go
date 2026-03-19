@@ -12,5 +12,4 @@ type NotificationRepository interface {
 	CountUnreadByUserID(ctx context.Context, userID string) (int64, error)
 	FindByIDAndUserID(ctx context.Context, id, userID string) (entity.Notification, error)
 	MarkAsRead(ctx context.Context, id, userID string) error
-	DeleteByIDAndUserID(ctx context.Context, id, userID string) error
 }

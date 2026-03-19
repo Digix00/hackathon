@@ -75,8 +75,6 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 
 	protected.GET("/users/me/notifications", notificationHandler.listNotifications)
 	protected.PATCH("/users/me/notifications/:id/read", notificationHandler.markNotificationAsRead)
-	protected.DELETE("/users/me/notifications/:id", notificationHandler.deleteNotification)
-
 	protected.GET("/music-connections/:provider/authorize", musicHandler.authorize)
 	protected.GET("/users/me/music-connections", musicHandler.listConnections)
 	protected.DELETE("/users/me/music-connections/:provider", musicHandler.deleteConnection)

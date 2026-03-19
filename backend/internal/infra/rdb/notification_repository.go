@@ -93,19 +93,6 @@ func (r *notificationRepository) MarkAsRead(ctx context.Context, id, userID stri
 	return nil
 }
 
-func (r *notificationRepository) DeleteByIDAndUserID(ctx context.Context, id, userID string) error {
-	result := r.db.WithContext(ctx).
-		Where("id = ? AND user_id = ? AND status = 'sent'", id, userID).
-		Delete(&model.OutboxNotification{})
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return domainerrs.NotFound("Notification was not found")
-	}
-	return nil
-}
-
 func toNotificationEntity(rec model.OutboxNotification) entity.Notification {
 	return entity.Notification{
 		ID:          rec.ID,

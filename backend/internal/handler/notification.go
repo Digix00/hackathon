@@ -96,36 +96,6 @@ func (h *notificationHandler) markNotificationAsRead(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
-// deleteNotification godoc
-// @ID           deleteNotification
-// @Summary      通知削除
-// @Description  指定した通知を削除する
-// @Tags         notifications
-// @Param        id  path  string  true  "通知 ID"
-// @Success      204
-// @Failure      401  {object}  errorResponse
-// @Failure      404  {object}  errorResponse
-// @Failure      500  {object}  errorResponse
-// @Security     BearerAuth
-// @Router       /api/v1/users/me/notifications/{id} [delete]
-func (h *notificationHandler) deleteNotification(c echo.Context) error {
-	uid, ok := middleware.UserIDFromContext(c)
-	if !ok {
-		return errUnauthorized()
-	}
-
-	id := c.Param("id")
-	if id == "" {
-		return errBadRequest("id path param is required")
-	}
-
-	if err := h.notificationUsecase.DeleteNotification(c.Request().Context(), uid, id); err != nil {
-		return err
-	}
-
-	return c.NoContent(http.StatusNoContent)
-}
-
 func toNotificationItems(notifications []usecasedto.NotificationOutput) []schemares.NotificationItem {
 	items := make([]schemares.NotificationItem, len(notifications))
 	for i, n := range notifications {
