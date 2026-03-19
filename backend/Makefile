@@ -1,7 +1,8 @@
 .PHONY: run-dev stop-dev logs restart-dev db-shell tidy fmt clean reset-db init-db \
-	test test-integration \
-	generate-docs generate-android generate-ios generate-code \
-        _generate-android-only _generate-ios-only
+	test test-integration test-integration-ci \
+	vet lint \
+	generate-docs generate-docs-ci generate-android generate-ios generate-code generate-code-ci \
+  _generate-android-only _generate-ios-only
 
 # ==============================================================================
 # Docker Compose Commands
@@ -50,19 +51,31 @@ db-shell:
 
 # Goパッケージの依存関係を整理
 tidy:
-	go mod tidy
+	docker compose exec server go mod tidy
 
 # Goコードのフォーマット
 fmt:
-	go fmt ./...
+	docker compose exec server go fmt ./...
+
+# go vet で静的解析を実行
+vet:
+	docker compose exec server go vet ./...
+
+# golangci-lint でリントを実行（ワークフローと同じ設定）
+lint:
+	docker compose exec server golangci-lint run --timeout=5m
 
 # ユニット/通常テストを実行
 test:
-	go test ./...
+	docker compose exec server go test ./...
 
 # PostgreSQL コンテナを使う統合テストを実行（Docker 起動後に実行）
 # 必要に応じて PG_TEST_DATABASE_URL を上書き可能
 test-integration:
+	docker compose exec -e PG_TEST_DATABASE_URL=postgres://postgres:postgres@postgres:5432/hackathon?sslmode=disable server go test -tags=integration ./internal/handler -run PostgresIntegration
+
+# CI 向け: ホストの Go を直接使用（GitHub Actions サービスコンテナの PostgreSQL を利用）
+test-integration-ci:
 	go test -tags=integration ./internal/handler -run PostgresIntegration
 
 # ==============================================================================
@@ -77,12 +90,19 @@ ANDROID_OUT := $(abspath ../android/app/src/main/java/com/digix00/musicswapping/
 IOS_OUT     := $(abspath ../ios/ios/Generated)
 
 # Go アノテーションから swagger.json / docs パッケージを生成する
-# server コンテナ内の swag を使うため、コンテナが起動していなくても動作するよう
-# --no-deps で依存サービス（postgres / firebase-emulator）を起動しない
 # --parseDependency: internal/ 配下の別パッケージ（schema 等）も解析対象にする
 # --parseInternal:   internal パッケージのコメントも走査する
 generate-docs:
-	docker compose build server
+	docker compose exec server \
+		swag init \
+			--generalInfo cmd/server/main.go \
+			--output docs \
+			--parseDependency \
+			--parseInternal
+	@echo "==> docs/swagger.json を生成しました"
+
+# CI 向け: コンテナ起動不要で swag を実行する
+generate-docs-ci:
 	docker compose run --rm --no-deps server \
 		swag init \
 			--generalInfo cmd/server/main.go \
@@ -94,7 +114,6 @@ generate-docs:
 # swagger.json から Android (Kotlin + Retrofit2) クライアントだけを生成する内部ターゲット
 # generate-code から呼ぶ際に generate-docs の二重実行を避けるために使用する
 _generate-android-only:
-	@mkdir -p $(ANDROID_OUT)
 	docker run --rm \
 		-v $(CURDIR)/docs/swagger.json:/local/swagger.json \
 		-v $(ANDROID_OUT):/local/out \
@@ -110,7 +129,6 @@ _generate-android-only:
 
 # swagger.json から iOS (Swift 5 + async/await) クライアントだけを生成する内部ターゲット
 _generate-ios-only:
-	@mkdir -p $(IOS_OUT)
 	docker run --rm \
 		-v $(CURDIR)/docs/swagger.json:/local/swagger.json \
 		-v $(IOS_OUT):/local/out \
@@ -132,5 +150,11 @@ generate-ios: generate-docs _generate-ios-only
 # generate-docs を1回だけ実行してから両クライアントを生成する
 generate-code:
 	$(MAKE) generate-docs
+	$(MAKE) _generate-android-only _generate-ios-only
+	@echo "==> 全コード生成が完了しました"
+
+# CI 向け: generate-docs-ci を使って全コードを生成する
+generate-code-ci:
+	$(MAKE) generate-docs-ci
 	$(MAKE) _generate-android-only _generate-ios-only
 	@echo "==> 全コード生成が完了しました"

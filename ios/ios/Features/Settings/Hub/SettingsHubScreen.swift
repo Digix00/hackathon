@@ -2,13 +2,30 @@ import SwiftUI
 
 struct SettingsHubView: View {
     let restartOnboarding: () -> Void
+    @StateObject private var settingsViewModel = UserSettingsViewModel()
+    @StateObject private var profileViewModel = CurrentUserProfileViewModel()
 
     private var appSettings: [SettingsDestination] {
         [
             SettingsDestination(id: "share-track", icon: "music.note", title: "シェアする曲", destination: AnyView(SearchView())),
-            SettingsDestination(id: "encounter-settings", icon: "location.fill", title: "すれ違い設定", destination: AnyView(EncounterSettingsView())),
-            SettingsDestination(id: "notification-settings", icon: "bell.fill", title: "通知設定", destination: AnyView(NotificationSettingsView())),
-            SettingsDestination(id: "appearance-settings", icon: "paintbrush.fill", title: "外観", destination: AnyView(AppearanceSettingsView()))
+            SettingsDestination(
+                id: "encounter-settings",
+                icon: "location.fill",
+                title: "すれ違い設定",
+                destination: AnyView(EncounterSettingsView().environmentObject(settingsViewModel))
+            ),
+            SettingsDestination(
+                id: "notification-settings",
+                icon: "bell.fill",
+                title: "通知設定",
+                destination: AnyView(NotificationSettingsView().environmentObject(settingsViewModel))
+            ),
+            SettingsDestination(
+                id: "appearance-settings",
+                icon: "paintbrush.fill",
+                title: "外観",
+                destination: AnyView(AppearanceSettingsView().environmentObject(settingsViewModel))
+            )
         ]
     }
 
@@ -30,7 +47,12 @@ struct SettingsHubView: View {
             SettingsDestination(id: "empty-states", icon: "rectangle.stack.fill", title: "空状態・エラー状態", destination: AnyView(EmptyStatesGalleryView())),
             SettingsDestination(id: "realtime-demo", icon: "dot.radiowaves.left.and.right", title: "リアルタイム演出", destination: AnyView(RealtimeDemoView())),
             SettingsDestination(id: "restart-onboarding", icon: "sparkles", title: "オンボーディングをやり直す", destination: AnyView(RestartOnboardingView(restartOnboarding: restartOnboarding))),
-            SettingsDestination(id: "delete-account", icon: "trash.fill", title: "アカウント削除", destination: AnyView(DeleteAccountView()))
+            SettingsDestination(
+                id: "delete-account",
+                icon: "trash.fill",
+                title: "アカウント削除",
+                destination: AnyView(DeleteAccountView(onAccountDeleted: restartOnboarding))
+            )
         ]
     }
 
@@ -43,23 +65,29 @@ struct SettingsHubView: View {
                 // Profile Header
                 SectionCard {
                     VStack(spacing: 20) {
-                        ZStack {
-                            Circle()
-                                .fill(PrototypeTheme.surfaceElevated)
-                                .frame(width: 80, height: 80)
-                            Image(systemName: "person.fill")
-                                .font(.system(size: 36))
-                                .foregroundStyle(PrototypeTheme.textTertiary)
-                        }
-                        
+                        UserAvatarView(
+                            avatarURL: profileViewModel.user?.avatarURL,
+                            size: 80,
+                            iconSize: 36
+                        )
+
                         VStack(spacing: 6) {
-                            Text("Miyu")
+                            Text(profileViewModel.user?.displayName ?? "読み込み中...")
                                 .font(.system(size: 24, weight: .bold))
-                            Text("音楽で街の空気を集めたい")
+
+                            let bio = profileViewModel.user?.bio?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                            Text(bio.isEmpty ? "ひとこと未設定" : bio)
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundStyle(PrototypeTheme.textSecondary)
+                                .multilineTextAlignment(.center)
                         }
-                        
+
+                        if let errorMessage = profileViewModel.errorMessage {
+                            Text(errorMessage)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.error)
+                        }
+
                         NavigationLink {
                             ProfileEditView()
                         } label: {
@@ -92,6 +120,10 @@ struct SettingsHubView: View {
                 .padding(.vertical, 20)
             }
         }
+        .onAppear {
+            settingsViewModel.loadIfNeeded()
+            profileViewModel.refresh()
+        }
     }
 
     private func settingsGroup(title: String, items: [SettingsDestination]) -> some View {
@@ -105,6 +137,38 @@ struct SettingsHubView: View {
                     }
                     .buttonStyle(.plain)
                 }
+            }
+        }
+    }
+}
+
+private struct UserAvatarView: View {
+    let avatarURL: String?
+    let size: CGFloat
+    let iconSize: CGFloat
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(PrototypeTheme.surfaceElevated)
+                .frame(width: size, height: size)
+
+            if let avatarURL, let url = URL(string: avatarURL) {
+                AsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                } placeholder: {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: iconSize))
+                        .foregroundStyle(PrototypeTheme.textTertiary)
+                }
+                .frame(width: size, height: size)
+                .clipShape(Circle())
+            } else {
+                Image(systemName: "person.fill")
+                    .font(.system(size: iconSize))
+                    .foregroundStyle(PrototypeTheme.textTertiary)
             }
         }
     }

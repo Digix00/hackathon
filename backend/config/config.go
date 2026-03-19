@@ -21,6 +21,8 @@ type Config struct {
 
 	FirebaseProjectID        string `envconfig:"FIREBASE_PROJECT_ID" required:"true"`
 	FirebaseAuthEmulatorHost string `envconfig:"FIREBASE_AUTH_EMULATOR_HOST"`
+	DevAuthToken             string `envconfig:"DEV_AUTH_TOKEN"`
+	DevAuthUID               string `envconfig:"DEV_AUTH_UID" default:"dev-user"`
 
 	AppDeepLinkScheme string `envconfig:"APP_DEEP_LINK_SCHEME" default:"digix"`
 	MusicStateSecret  string `envconfig:"MUSIC_STATE_SECRET" required:"true"`

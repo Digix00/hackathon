@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - User
 
-struct BackendUser: Decodable, Equatable {
+nonisolated struct BackendUser: Decodable, Equatable {
     let id: String
     let displayName: String
     let avatarURL: String?
@@ -28,7 +28,7 @@ struct BackendUser: Decodable, Equatable {
     }
 }
 
-struct BackendPublicUser: Decodable, Equatable {
+nonisolated struct BackendPublicUser: Decodable, Equatable {
     let id: String
     let displayName: String
     let avatarURL: String?
@@ -52,7 +52,7 @@ struct BackendPublicUser: Decodable, Equatable {
     }
 }
 
-struct BackendPublicTrack: Decodable, Equatable {
+nonisolated struct BackendPublicTrack: Decodable, Equatable {
     let id: String
     let title: String
     let artistName: String
@@ -68,17 +68,17 @@ struct BackendPublicTrack: Decodable, Equatable {
     }
 }
 
-struct BackendUserResponse: Decodable {
+nonisolated struct BackendUserResponse: Decodable {
     let user: BackendUser
 }
 
-struct BackendPublicUserResponse: Decodable {
+nonisolated struct BackendPublicUserResponse: Decodable {
     let user: BackendPublicUser
 }
 
 // MARK: - User Settings
 
-struct BackendUserSettings: Decodable, Equatable {
+nonisolated struct BackendUserSettings: Decodable, Equatable {
     let bleEnabled: Bool
     let locationEnabled: Bool
     let detectionDistance: Int
@@ -118,13 +118,13 @@ struct BackendUserSettings: Decodable, Equatable {
     }
 }
 
-struct BackendUserSettingsResponse: Decodable {
+nonisolated struct BackendUserSettingsResponse: Decodable {
     let settings: BackendUserSettings
 }
 
 // MARK: - Push Tokens
 
-struct BackendDevice: Decodable, Equatable {
+nonisolated struct BackendDevice: Decodable, Equatable {
     let id: String
     let platform: String
     let deviceId: String
@@ -140,13 +140,13 @@ struct BackendDevice: Decodable, Equatable {
     }
 }
 
-struct BackendDeviceResponse: Decodable {
+nonisolated struct BackendDeviceResponse: Decodable {
     let device: BackendDevice
 }
 
 // MARK: - Notifications
 
-struct BackendNotificationItem: Decodable, Equatable {
+nonisolated struct BackendNotificationItem: Decodable, Equatable {
     let id: String
     let encounterId: String
     let status: String
@@ -162,7 +162,7 @@ struct BackendNotificationItem: Decodable, Equatable {
     }
 }
 
-struct BackendNotificationListResponse: Decodable {
+nonisolated struct BackendNotificationListResponse: Decodable {
     let notifications: [BackendNotificationItem]
     let unreadCount: Int64
     let total: Int64
@@ -176,7 +176,7 @@ struct BackendNotificationListResponse: Decodable {
 
 // MARK: - Reports
 
-struct BackendReport: Decodable, Equatable {
+nonisolated struct BackendReport: Decodable, Equatable {
     let id: String
     let reportType: String
     let reportedUserId: String
@@ -194,7 +194,7 @@ struct BackendReport: Decodable, Equatable {
     }
 }
 
-struct BackendReportResponse: Decodable {
+nonisolated struct BackendReportResponse: Decodable {
     let report: BackendReport
 }
 
@@ -205,7 +205,7 @@ typealias BackendEncounterUser = BackendPublicUser
 
 typealias BackendEncounterTrack = BackendPublicTrack
 
-enum BackendEncounterType: Decodable, Equatable {
+nonisolated enum BackendEncounterType: Decodable, Equatable {
     case ble
     case location
     case unknown(String)
@@ -224,11 +224,11 @@ enum BackendEncounterType: Decodable, Equatable {
     }
 }
 
-enum BackendEncounterCreateType: String, Encodable, Equatable {
+nonisolated enum BackendEncounterCreateType: String, Encodable, Equatable {
     case ble
 }
 
-struct BackendEncounterSummary: Decodable, Equatable {
+nonisolated struct BackendEncounterSummary: Decodable, Equatable {
     let id: String
     let type: BackendEncounterType
     let user: BackendEncounterUser
@@ -242,7 +242,7 @@ struct BackendEncounterSummary: Decodable, Equatable {
     }
 }
 
-struct BackendEncounterListItem: Decodable, Equatable {
+nonisolated struct BackendEncounterListItem: Decodable, Equatable {
     let id: String
     let type: BackendEncounterType
     let user: BackendEncounterUser
@@ -260,7 +260,7 @@ struct BackendEncounterListItem: Decodable, Equatable {
     }
 }
 
-struct BackendEncounterDetail: Decodable, Equatable {
+nonisolated struct BackendEncounterDetail: Decodable, Equatable {
     let id: String
     let type: BackendEncounterType
     let user: BackendEncounterUser
@@ -276,15 +276,15 @@ struct BackendEncounterDetail: Decodable, Equatable {
     }
 }
 
-struct BackendEncounterResponse: Decodable {
+nonisolated struct BackendEncounterResponse: Decodable {
     let encounter: BackendEncounterSummary
 }
 
-struct BackendEncounterDetailResponse: Decodable {
+nonisolated struct BackendEncounterDetailResponse: Decodable {
     let encounter: BackendEncounterDetail
 }
 
-struct BackendEncounterPagination: Decodable, Equatable {
+nonisolated struct BackendEncounterPagination: Decodable, Equatable {
     let nextCursor: String?
     let hasMore: Bool
 
@@ -294,14 +294,63 @@ struct BackendEncounterPagination: Decodable, Equatable {
     }
 }
 
-struct BackendEncounterListResponse: Decodable {
+nonisolated struct BackendEncounterListResponse: Decodable {
     let encounters: [BackendEncounterListItem]
     let pagination: BackendEncounterPagination
 }
 
+// MARK: - Comments
+
+struct BackendCommentUser: Decodable, Equatable {
+    let id: String?
+    let displayName: String?
+    let avatarURL: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case displayName = "display_name"
+        case avatarURL = "avatar_url"
+    }
+}
+
+struct BackendComment: Decodable, Equatable {
+    let id: String?
+    let encounterId: String?
+    let content: String?
+    let createdAt: Date?
+    let user: BackendCommentUser?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case encounterId = "encounter_id"
+        case content
+        case createdAt = "created_at"
+        case user
+    }
+}
+
+struct BackendCommentPagination: Decodable, Equatable {
+    let nextCursor: String?
+    let hasMore: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case nextCursor = "next_cursor"
+        case hasMore = "has_more"
+    }
+}
+
+struct BackendCommentResponse: Decodable {
+    let comment: BackendComment?
+}
+
+struct BackendCommentListResponse: Decodable {
+    let comments: [BackendComment]?
+    let pagination: BackendCommentPagination?
+}
+
 // MARK: - Requests
 
-struct CreateUserRequest: Encodable {
+nonisolated struct CreateUserRequest: Encodable {
     let displayName: String
     let avatarURL: String?
     let bio: String?
@@ -321,7 +370,7 @@ struct CreateUserRequest: Encodable {
     }
 }
 
-struct UpdateUserRequest: Encodable {
+nonisolated struct UpdateUserRequest: Encodable {
     let displayName: String?
     let avatarURL: String?
     let bio: String?
@@ -341,7 +390,7 @@ struct UpdateUserRequest: Encodable {
     }
 }
 
-struct UpdateUserSettingsRequest: Encodable {
+nonisolated struct UpdateUserSettingsRequest: Encodable {
     let bleEnabled: Bool?
     let locationEnabled: Bool?
     let detectionDistance: Int?
@@ -358,6 +407,42 @@ struct UpdateUserSettingsRequest: Encodable {
     let likeNotificationEnabled: Bool?
     let announcementNotificationEnabled: Bool?
     let themeMode: String?
+
+    init(
+        bleEnabled: Bool? = nil,
+        locationEnabled: Bool? = nil,
+        detectionDistance: Int? = nil,
+        scheduleEnabled: Bool? = nil,
+        scheduleStartTime: String? = nil,
+        scheduleEndTime: String? = nil,
+        profileVisible: Bool? = nil,
+        trackVisible: Bool? = nil,
+        notificationEnabled: Bool? = nil,
+        encounterNotificationEnabled: Bool? = nil,
+        batchNotificationEnabled: Bool? = nil,
+        notificationFrequency: String? = nil,
+        commentNotificationEnabled: Bool? = nil,
+        likeNotificationEnabled: Bool? = nil,
+        announcementNotificationEnabled: Bool? = nil,
+        themeMode: String? = nil
+    ) {
+        self.bleEnabled = bleEnabled
+        self.locationEnabled = locationEnabled
+        self.detectionDistance = detectionDistance
+        self.scheduleEnabled = scheduleEnabled
+        self.scheduleStartTime = scheduleStartTime
+        self.scheduleEndTime = scheduleEndTime
+        self.profileVisible = profileVisible
+        self.trackVisible = trackVisible
+        self.notificationEnabled = notificationEnabled
+        self.encounterNotificationEnabled = encounterNotificationEnabled
+        self.batchNotificationEnabled = batchNotificationEnabled
+        self.notificationFrequency = notificationFrequency
+        self.commentNotificationEnabled = commentNotificationEnabled
+        self.likeNotificationEnabled = likeNotificationEnabled
+        self.announcementNotificationEnabled = announcementNotificationEnabled
+        self.themeMode = themeMode
+    }
 
     enum CodingKeys: String, CodingKey {
         case bleEnabled = "ble_enabled"
@@ -377,9 +462,10 @@ struct UpdateUserSettingsRequest: Encodable {
         case announcementNotificationEnabled = "announcement_notification_enabled"
         case themeMode = "theme_mode"
     }
+
 }
 
-struct CreatePushTokenRequest: Encodable {
+nonisolated struct CreatePushTokenRequest: Encodable {
     let platform: String
     let deviceId: String
     let pushToken: String
@@ -393,7 +479,7 @@ struct CreatePushTokenRequest: Encodable {
     }
 }
 
-struct UpdatePushTokenRequest: Encodable {
+nonisolated struct UpdatePushTokenRequest: Encodable {
     let pushToken: String?
     let enabled: Bool?
     let appVersion: String?
@@ -405,7 +491,7 @@ struct UpdatePushTokenRequest: Encodable {
     }
 }
 
-struct CreateReportRequest: Encodable {
+nonisolated struct CreateReportRequest: Encodable {
     let reportType: String
     let reportedUserId: String
     let targetCommentId: String?
@@ -419,7 +505,7 @@ struct CreateReportRequest: Encodable {
     }
 }
 
-struct CreateEncounterRequest: Encodable {
+nonisolated struct CreateEncounterRequest: Encodable {
     let targetBleToken: String
     let type: BackendEncounterCreateType
     let rssi: Int
@@ -431,4 +517,8 @@ struct CreateEncounterRequest: Encodable {
         case rssi
         case occurredAt = "occurred_at"
     }
+}
+
+struct CreateCommentRequest: Encodable {
+    let content: String
 }
