@@ -24,11 +24,17 @@ struct Encounter: Identifiable, Hashable {
     }
 
     var happenedEarlier: Bool {
-        relativeTime == "以前" ||
-        relativeTime.hasSuffix("日前") ||
-        relativeTime.hasSuffix("週間前") ||
-        relativeTime.hasSuffix("か月前") ||
-        relativeTime.hasSuffix("年前")
+        if relativeTime == "以前" ||
+            relativeTime.hasSuffix("日前") ||
+            relativeTime.hasSuffix("週間前") ||
+            relativeTime.hasSuffix("か月前") ||
+            relativeTime.hasSuffix("年前") {
+            return true
+        }
+
+        return relativeTime != "今日" &&
+            relativeTime != "昨日" &&
+            !relativeTime.contains("前")
     }
 }
 

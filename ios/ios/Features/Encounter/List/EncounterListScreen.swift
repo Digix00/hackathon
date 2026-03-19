@@ -56,6 +56,11 @@ struct EncounterListView: View {
             syncDetailPresentationState()
         }
         .onChange(of: bleCoordinator.encounters.map(\.id)) { _, ids in
+            if let target = scrollTargetID, !ids.contains(target) {
+                scrollTargetID = ids.first
+            } else if scrollTargetID == nil {
+                scrollTargetID = ids.first
+            }
             guard let selectedEncounterID, !ids.contains(selectedEncounterID) else { return }
             self.selectedEncounterID = nil
         }
@@ -153,7 +158,7 @@ struct EncounterListView: View {
             }
         }
         .task {
-            if bleCoordinator.encounters.isEmpty {
+            if bleCoordinator.encounters.isEmpty && !bleCoordinator.isLoadingEncounters {
                 bleCoordinator.refreshEncounters()
             }
         }

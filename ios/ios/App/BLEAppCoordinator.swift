@@ -9,6 +9,8 @@ final class BLEAppCoordinator: ObservableObject {
     @Published private(set) var bleEnabled = true
     @Published private(set) var detectionDistance = 30
     @Published private(set) var profileVisible = true
+    @Published private(set) var isUpdatingBLE = false
+    @Published private(set) var isUpdatingEncounterSettings = false
     @Published private(set) var isLoadingEncounters = false
     @Published private(set) var isLoadingSettings = false
     @Published private(set) var encounterErrorMessage: String?
@@ -18,6 +20,10 @@ final class BLEAppCoordinator: ObservableObject {
     private let apiClient: BackendAPIClient
     private var hasStartedBLE = false
     private var tokenRefreshTask: Task<Void, Never>?
+    private var bleSettingsUpdateTask: Task<Void, Never>?
+    private var encounterSettingsUpdateTask: Task<Void, Never>?
+    private var bleSettingsRequestVersion = 0
+    private var encounterSettingsRequestVersion = 0
     private var detectionSubscription: AnyCancellable?
     private var currentScenePhase: ScenePhase = .active
 
@@ -35,6 +41,8 @@ final class BLEAppCoordinator: ObservableObject {
 
     deinit {
         tokenRefreshTask?.cancel()
+        bleSettingsUpdateTask?.cancel()
+        encounterSettingsUpdateTask?.cancel()
         detectionSubscription?.cancel()
     }
 
@@ -63,36 +71,60 @@ final class BLEAppCoordinator: ObservableObject {
     }
 
     func setBLEEnabled(_ isEnabled: Bool) {
+        bleSettingsUpdateTask?.cancel()
+        bleSettingsRequestVersion += 1
+        let currentVersion = bleSettingsRequestVersion
         let previousValue = bleEnabled
+
         bleEnabled = isEnabled
         applyBLEState()
+        isUpdatingBLE = true
+        settingsErrorMessage = nil
 
-        Task { [weak self] in
+        bleSettingsUpdateTask = Task { [weak self] in
             guard let self else { return }
             do {
                 let settings = try await apiClient.patchMySettings(
                     UpdateUserSettingsRequest(bleEnabled: isEnabled)
                 )
                 await MainActor.run {
+                    guard self.bleSettingsRequestVersion == currentVersion else { return }
                     self.applySettings(settings)
+                    self.isUpdatingBLE = false
+                    self.bleSettingsUpdateTask = nil
+                }
+            } catch is CancellationError {
+                await MainActor.run {
+                    guard self.bleSettingsRequestVersion == currentVersion else { return }
+                    self.isUpdatingBLE = false
+                    self.bleSettingsUpdateTask = nil
                 }
             } catch {
                 await MainActor.run {
+                    guard self.bleSettingsRequestVersion == currentVersion else { return }
                     self.settingsErrorMessage = "BLE設定の更新に失敗しました。"
                     self.bleEnabled = previousValue
                     self.applyBLEState()
+                    self.isUpdatingBLE = false
+                    self.bleSettingsUpdateTask = nil
                 }
             }
         }
     }
 
     func updateEncounterSettings(detectionDistance: Int, profileVisible: Bool) {
+        encounterSettingsUpdateTask?.cancel()
+        encounterSettingsRequestVersion += 1
+        let currentVersion = encounterSettingsRequestVersion
         let previousDistance = self.detectionDistance
         let previousVisibility = self.profileVisible
+
         self.detectionDistance = detectionDistance
         self.profileVisible = profileVisible
+        self.isUpdatingEncounterSettings = true
+        self.settingsErrorMessage = nil
 
-        Task { [weak self] in
+        encounterSettingsUpdateTask = Task { [weak self] in
             guard let self else { return }
             do {
                 let settings = try await apiClient.patchMySettings(
@@ -102,13 +134,25 @@ final class BLEAppCoordinator: ObservableObject {
                     )
                 )
                 await MainActor.run {
+                    guard self.encounterSettingsRequestVersion == currentVersion else { return }
                     self.applySettings(settings)
+                    self.isUpdatingEncounterSettings = false
+                    self.encounterSettingsUpdateTask = nil
+                }
+            } catch is CancellationError {
+                await MainActor.run {
+                    guard self.encounterSettingsRequestVersion == currentVersion else { return }
+                    self.isUpdatingEncounterSettings = false
+                    self.encounterSettingsUpdateTask = nil
                 }
             } catch {
                 await MainActor.run {
+                    guard self.encounterSettingsRequestVersion == currentVersion else { return }
                     self.settingsErrorMessage = "すれ違い設定の更新に失敗しました。"
                     self.detectionDistance = previousDistance
                     self.profileVisible = previousVisibility
+                    self.isUpdatingEncounterSettings = false
+                    self.encounterSettingsUpdateTask = nil
                 }
             }
         }
@@ -168,6 +212,10 @@ final class BLEAppCoordinator: ObservableObject {
     }
 
     private func loadEncounters() async {
+        if isLoadingEncounters {
+            return
+        }
+
         await MainActor.run {
             isLoadingEncounters = true
             encounterErrorMessage = nil

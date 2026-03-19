@@ -48,6 +48,7 @@ struct EncounterSettingsView: View {
                             }
                         }
                         .tint(PrototypeTheme.success)
+                        .disabled(bleCoordinator.isUpdatingBLE)
                     }
                 }
 
@@ -65,6 +66,7 @@ struct EncounterSettingsView: View {
                         Slider(value: $detectionDistance, in: 5...100, step: 5)
                             .tint(PrototypeTheme.accent)
                     }
+                    .disabled(bleCoordinator.isUpdatingEncounterSettings)
                 }
 
                 SectionCard {
@@ -73,6 +75,7 @@ struct EncounterSettingsView: View {
                             .font(.system(size: 16, weight: .bold))
                     }
                     .tint(PrototypeTheme.success)
+                    .disabled(bleCoordinator.isUpdatingEncounterSettings)
                 }
 
                 Button {
@@ -90,6 +93,8 @@ struct EncounterSettingsView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
                 .buttonStyle(.plain)
+                .disabled(bleCoordinator.isUpdatingEncounterSettings)
+                .opacity(bleCoordinator.isUpdatingEncounterSettings ? 0.6 : 1)
 
                 if let message = bleCoordinator.settingsErrorMessage {
                     Text(message)
