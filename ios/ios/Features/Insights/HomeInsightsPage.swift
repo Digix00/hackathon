@@ -30,7 +30,7 @@ struct HomeInsightsPage: View {
             subtitle: "都市に漂う音楽の断片",
             customBackground: AnyView(InsightsBackground(colors: backgroundColors))
         ) {
-            VStack(alignment: .leading, spacing: 36) {
+            VStack(alignment: .leading, spacing: 56) { // Increased spacing
                 jacketHistorySection
 
                 if let topTrack {
@@ -49,12 +49,13 @@ struct HomeInsightsPage: View {
                     timeMapSection
                 }
             }
+            .padding(.top, 24)
             .padding(.bottom, 120)
         }
     }
 
     private var jacketHistorySection: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 20) { // Increased spacing
             sectionEyebrow("JACKET HISTORY")
             HeroJacketCollageView(tracks: state.weeklyTracks)
                 .padding(.horizontal, -24)
@@ -62,199 +63,169 @@ struct HomeInsightsPage: View {
     }
 
     private func heroInsightSection(trackInsight: TrackInsight) -> some View {
-        SectionCard {
-            VStack(alignment: .leading, spacing: 24) {
-                HStack(alignment: .top, spacing: 20) {
-                    MockArtworkView(
-                        color: trackInsight.track.color,
-                        symbol: "music.note",
-                        size: 96,
-                        artwork: trackInsight.track.artwork
-                    )
-                    .shadow(color: trackInsight.track.color.opacity(0.22), radius: 22, x: 0, y: 12)
+        VStack(alignment: .leading, spacing: 32) {
+            sectionEyebrow("MOST CONNECTIVE TRACK")
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("MOST CONNECTIVE TRACK")
-                            .prototypeFont(size: 10, weight: .black, role: .data)
-                            .foregroundStyle(PrototypeTheme.textSecondary)
-                            .kerning(1.8)
+            VStack(alignment: .center, spacing: 28) {
+                MockArtworkView(
+                    color: trackInsight.track.color,
+                    symbol: "music.note",
+                    size: 180, // Larger artwork
+                    artwork: trackInsight.track.artwork
+                )
+                .shadow(color: trackInsight.track.color.opacity(0.2), radius: 30, x: 0, y: 15)
+                .rotationEffect(.degrees(-3))
 
-                        Text(trackInsight.track.title)
-                            .font(PrototypeTheme.Typography.font(size: 26, weight: .black, role: .primary))
-                            .foregroundStyle(PrototypeTheme.textPrimary)
+                VStack(spacing: 8) {
+                    Text(trackInsight.track.title)
+                        .font(PrototypeTheme.Typography.font(size: 32, weight: .black, role: .primary))
+                        .foregroundStyle(PrototypeTheme.textPrimary)
+                        .multilineTextAlignment(.center)
 
-                        Text(trackInsight.track.artist)
-                            .font(PrototypeTheme.Typography.font(size: 13, weight: .black, role: .data))
-                            .foregroundStyle(PrototypeTheme.textSecondary)
-                            .kerning(1.4)
-
-                        if let person = trackInsight.topPerson {
-                            Text(person)
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(trackInsight.track.color)
-                                .padding(.top, 2)
-                        }
-                    }
+                    Text(trackInsight.track.artist)
+                        .font(PrototypeTheme.Typography.font(size: 14, weight: .black, role: .data))
+                        .foregroundStyle(PrototypeTheme.textSecondary)
+                        .kerning(1.6)
                 }
 
-                HStack(spacing: 12) {
-                    insightMetricCard(
-                        title: "ENCOUNTERS",
-                        value: "\(trackInsight.encounterCount)",
-                        tint: trackInsight.track.color
-                    )
-                    insightMetricCard(
-                        title: "PEOPLE",
-                        value: "\(trackInsight.uniquePeopleCount)",
-                        tint: PrototypeTheme.info
-                    )
-                    insightMetricCard(
-                        title: "REPEATS",
-                        value: "\(trackInsight.repeatCount)",
-                        tint: PrototypeTheme.success
-                    )
-                }
-
-                if !trackInsight.people.isEmpty {
-                    HStack(spacing: 8) {
-                        ForEach(Array(trackInsight.people.prefix(4).enumerated()), id: \.offset) { index, person in
-                            Text(person)
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(PrototypeTheme.textPrimary)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 9)
-                                .background(chipBackgroundColor(at: index, track: trackInsight.track))
-                                .clipShape(Capsule())
-                        }
-                    }
+                HStack(spacing: 32) {
+                    metricValueOnly(title: "ENCOUNTERS", value: "\(trackInsight.encounterCount)", color: trackInsight.track.color)
+                    metricValueOnly(title: "PEOPLE", value: "\(trackInsight.uniquePeopleCount)", color: PrototypeTheme.info)
                 }
             }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 40)
+            .background(
+                RoundedRectangle(cornerRadius: 32, style: .continuous)
+                    .fill(PrototypeTheme.surface.opacity(0.6))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 32, style: .continuous)
+                            .stroke(trackInsight.track.color.opacity(0.1), lineWidth: 1)
+                    )
+            )
+        }
+    }
+
+    private func metricValueOnly(title: String, value: String, color: Color) -> some View {
+        VStack(spacing: 6) {
+            Text(value)
+                .font(.system(size: 36, weight: .black))
+                .foregroundStyle(color)
+            Text(title)
+                .prototypeFont(size: 9, weight: .black, role: .data)
+                .foregroundStyle(PrototypeTheme.textTertiary)
+                .kerning(1.2)
         }
     }
 
     private var connectedTracksSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 24) {
             sectionEyebrow("MOST CONNECTED TRACKS")
 
-            VStack(spacing: 14) {
+            VStack(spacing: 20) {
                 ForEach(Array(trackInsights.prefix(3).enumerated()), id: \.element.id) { index, insight in
-                    SectionCard {
-                        HStack(alignment: .center, spacing: 16) {
-                            MockArtworkView(
-                                color: insight.track.color,
-                                symbol: "music.note",
-                                size: 72,
-                                artwork: insight.track.artwork
-                            )
-                            .rotationEffect(.degrees(index.isMultiple(of: 2) ? -3 : 3))
+                    HStack(spacing: 20) {
+                        MockArtworkView(
+                            color: insight.track.color,
+                            symbol: "music.note",
+                            size: 64,
+                            artwork: insight.track.artwork
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(insight.track.title)
-                                    .font(.system(size: 20, weight: .black))
-                                    .foregroundStyle(PrototypeTheme.textPrimary)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(insight.track.title)
+                                .font(.system(size: 18, weight: .black))
+                                .foregroundStyle(PrototypeTheme.textPrimary)
 
-                                Text(insight.track.artist)
-                                    .font(PrototypeTheme.Typography.font(size: 11, weight: .black, role: .data))
-                                    .foregroundStyle(PrototypeTheme.textSecondary)
-                                    .kerning(1.3)
-
-                                Text(relationshipLabel(for: insight))
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundStyle(insight.track.color)
-                            }
-
-                            Spacer()
+                            Text(insight.track.artist)
+                                .font(PrototypeTheme.Typography.font(size: 11, weight: .black, role: .data))
+                                .foregroundStyle(PrototypeTheme.textSecondary)
                         }
+
+                        Spacer()
+
+                        Text("\(insight.uniquePeopleCount)")
+                            .font(.system(size: 20, weight: .black))
+                            .foregroundStyle(insight.track.color)
                     }
+                    .padding(16)
+                    .background(PrototypeTheme.surface.opacity(0.4))
+                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 }
             }
         }
     }
 
     private var repeatTracksSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 24) {
             sectionEyebrow("REPEAT TRACKS")
 
-            VStack(spacing: 14) {
-                ForEach(Array(repeatTrackInsights.prefix(3).enumerated()), id: \.element.id) { _, insight in
-                    SectionCard {
-                        VStack(alignment: .leading, spacing: 18) {
-                            HStack(spacing: 14) {
-                                MockArtworkView(
-                                    color: insight.track.color,
-                                    symbol: "waveform",
-                                    size: 64,
-                                    artwork: insight.track.artwork
-                                )
+            HStack(spacing: 16) {
+                ForEach(Array(repeatTrackInsights.prefix(2).enumerated()), id: \.element.id) { _, insight in
+                    VStack(alignment: .leading, spacing: 16) {
+                        MockArtworkView(
+                            color: insight.track.color,
+                            symbol: "waveform",
+                            size: 60,
+                            artwork: insight.track.artwork
+                        )
 
-                                VStack(alignment: .leading, spacing: 5) {
-                                    Text(insight.track.title)
-                                        .font(.system(size: 19, weight: .black))
-                                        .foregroundStyle(PrototypeTheme.textPrimary)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(insight.track.title)
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundStyle(PrototypeTheme.textPrimary)
+                                .lineLimit(1)
 
-                                    Text("\(insight.repeatCount) REPEATS")
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundStyle(PrototypeTheme.textSecondary)
-                                }
-
-                                Spacer()
-                            }
-
-                            if let person = insight.topPerson {
-                                Text(person)
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundStyle(insight.track.color)
-                            }
+                            Text("\(insight.repeatCount) REPEATS")
+                                .font(.system(size: 11, weight: .black))
+                                .foregroundStyle(insight.track.color)
                         }
                     }
+                    .padding(20)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(PrototypeTheme.surface.opacity(0.4))
+                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 }
             }
         }
     }
 
     private var timeMapSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 24) {
             sectionEyebrow("TRACK TIME MAP")
 
-            VStack(spacing: 14) {
+            VStack(spacing: 12) {
                 ForEach(timeBuckets) { bucket in
-                    SectionCard {
-                        VStack(alignment: .leading, spacing: 18) {
-                            HStack {
-                                Text(bucket.label.uppercased())
-                                    .prototypeFont(size: 11, weight: .black, role: .data)
+                    HStack(spacing: 16) {
+                        Text(bucket.label.uppercased())
+                            .prototypeFont(size: 10, weight: .black, role: .data)
+                            .foregroundStyle(PrototypeTheme.textSecondary)
+                            .frame(width: 80, alignment: .leading)
+
+                        if let leadTrack = bucket.topTrack {
+                            HStack(spacing: 12) {
+                                Circle()
+                                    .fill(leadTrack.track.color)
+                                    .frame(width: 8, height: 8)
+
+                                Text(leadTrack.track.title)
+                                    .font(.system(size: 14, weight: .bold))
                                     .foregroundStyle(PrototypeTheme.textPrimary)
-                                    .kerning(1.8)
-
-                                Spacer()
-
-                                Text("\(bucket.encounterCount) ENCOUNTERS")
-                                    .prototypeFont(size: 10, weight: .black, role: .data)
-                                    .foregroundStyle(PrototypeTheme.textSecondary)
-                            }
-
-                            if let leadTrack = bucket.topTrack {
-                                HStack(spacing: 14) {
-                                    MockArtworkView(
-                                        color: leadTrack.track.color,
-                                        symbol: "clock",
-                                        size: 58,
-                                        artwork: leadTrack.track.artwork
-                                    )
-
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(leadTrack.track.title)
-                                            .font(.system(size: 18, weight: .bold))
-                                            .foregroundStyle(PrototypeTheme.textPrimary)
-
-                                        Text(bucket.descriptionPrefix)
-                                            .font(.system(size: 12, weight: .semibold))
-                                            .foregroundStyle(PrototypeTheme.textSecondary)
-                                    }
-                                }
+                                    .lineLimit(1)
                             }
                         }
+
+                        Spacer()
+
+                        Text("\(bucket.encounterCount)")
+                            .font(.system(size: 14, weight: .black))
+                            .foregroundStyle(PrototypeTheme.textPrimary)
                     }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 20)
+                    .background(PrototypeTheme.surface.opacity(0.3))
+                    .clipShape(Capsule())
                 }
             }
         }
