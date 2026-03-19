@@ -37,7 +37,7 @@ resource "google_cloud_run_v2_service" "api" {
           cpu    = "1"
           memory = "256Mi"
         }
-        cpu_idle          = true  # リクエスト処理中のみ CPU 割当（無料枠内に収める）
+        cpu_idle          = true # リクエスト処理中のみ CPU 割当（無料枠内に収める）
         startup_cpu_boost = false
       }
 
@@ -170,10 +170,10 @@ resource "google_cloud_run_v2_job" "worker" {
   deletion_protection = false
 
   template {
-    max_retries = 1  # デフォルト3から削減。無限リトライによる課金を防ぐ
+    max_retries = 1 # デフォルト3から削減。無限リトライによる課金を防ぐ
 
     template {
-      timeout         = "60s"  # タスク最大実行時間 1 分
+      timeout         = "60s" # タスク最大実行時間 1 分
       service_account = google_service_account.worker.email
 
       volumes {
