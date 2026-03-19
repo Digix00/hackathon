@@ -43,10 +43,10 @@ jobs:
             --project ${{ vars.TF_PROJECT_ID }} \
             --format='value(spec.template.spec.containers[0].image)' 2>/dev/null \
             | awk -F: '{print $NF}' || echo "latest")
-          WORKER_TAG=$(gcloud run jobs describe worker \
+          WORKER_TAG=$(gcloud run services describe worker \
             --region asia-northeast1 \
             --project ${{ vars.TF_PROJECT_ID }} \
-            --format='value(spec.template.spec.template.spec.containers[0].image)' 2>/dev/null \
+            --format='value(spec.template.spec.containers[0].image)' 2>/dev/null \
             | awk -F: '{print $NF}' || echo "latest")
           MIGRATE_TAG=$(gcloud run jobs describe migrate \
             --region asia-northeast1 \
