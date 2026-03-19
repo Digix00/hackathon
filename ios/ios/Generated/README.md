@@ -37,6 +37,7 @@ Class | Method | HTTP request | Description
 *EncountersAPI* | [**createEncounter**](docs/EncountersAPI.md#createencounter) | **POST** /api/v1/encounters | すれ違い登録
 *EncountersAPI* | [**getEncounterByID**](docs/EncountersAPI.md#getencounterbyid) | **GET** /api/v1/encounters/{id} | すれ違い詳細取得
 *EncountersAPI* | [**listEncounters**](docs/EncountersAPI.md#listencounters) | **GET** /api/v1/encounters | すれ違い履歴一覧取得
+*EncountersAPI* | [**markEncounterAsRead**](docs/EncountersAPI.md#markencounterasread) | **PATCH** /api/v1/encounters/{id}/read | エンカウントを既読にする
 *HealthAPI* | [**healthz**](docs/HealthAPI.md#healthz) | **GET** /healthz | ヘルスチェック
 *HealthAPI* | [**healthzPostgres**](docs/HealthAPI.md#healthzpostgres) | **GET** /healthz/postgres | PostgreSQL ヘルスチェック
 *LocationsAPI* | [**postLocation**](docs/LocationsAPI.md#postlocation) | **POST** /api/v1/locations | 現在位置送信・エンカウント判定
@@ -121,6 +122,8 @@ Class | Method | HTTP request | Description
  - [HackathonInternalHandlerSchemaResponseEncounterDetailResponse](docs/HackathonInternalHandlerSchemaResponseEncounterDetailResponse.md)
  - [HackathonInternalHandlerSchemaResponseEncounterListItem](docs/HackathonInternalHandlerSchemaResponseEncounterListItem.md)
  - [HackathonInternalHandlerSchemaResponseEncounterListResponse](docs/HackathonInternalHandlerSchemaResponseEncounterListResponse.md)
+ - [HackathonInternalHandlerSchemaResponseEncounterReadResponse](docs/HackathonInternalHandlerSchemaResponseEncounterReadResponse.md)
+ - [HackathonInternalHandlerSchemaResponseEncounterReadResult](docs/HackathonInternalHandlerSchemaResponseEncounterReadResult.md)
  - [HackathonInternalHandlerSchemaResponseEncounterResponse](docs/HackathonInternalHandlerSchemaResponseEncounterResponse.md)
  - [HackathonInternalHandlerSchemaResponseEncounterSummary](docs/HackathonInternalHandlerSchemaResponseEncounterSummary.md)
  - [HackathonInternalHandlerSchemaResponseEncounterTrack](docs/HackathonInternalHandlerSchemaResponseEncounterTrack.md)

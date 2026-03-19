@@ -296,6 +296,57 @@ func (r *encounterRepository) ExistsByIDAndParticipant(ctx context.Context, enco
 	return count > 0, nil
 }
 
+func (r *encounterRepository) MarkAsRead(ctx context.Context, encounterID, userID string) (entity.EncounterRead, error) {
+	exists, err := r.ExistsByIDAndParticipant(ctx, encounterID, userID)
+	if err != nil {
+		return entity.EncounterRead{}, err
+	}
+	if !exists {
+		return entity.EncounterRead{}, domainerrs.NotFound("Encounter was not found")
+	}
+
+	var existing model.EncounterRead
+	err = r.db.WithContext(ctx).
+		Where("encounter_id = ? AND user_id = ?", encounterID, userID).
+		First(&existing).Error
+	if err == nil {
+		return entity.EncounterRead{
+			ID:          existing.ID,
+			UserID:      existing.UserID,
+			EncounterID: existing.EncounterID,
+			ReadAt:      existing.ReadAt,
+		}, nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return entity.EncounterRead{}, err
+	}
+
+	record := model.EncounterRead{
+		ID:          uuid.NewString(),
+		UserID:      userID,
+		EncounterID: encounterID,
+	}
+	if err := r.db.WithContext(ctx).
+		Clauses(clause.OnConflict{DoNothing: true}).
+		Create(&record).Error; err != nil {
+		return entity.EncounterRead{}, err
+	}
+
+	// Re-fetch to get the actual ReadAt (in case of race with DoNothing)
+	if err := r.db.WithContext(ctx).
+		Where("encounter_id = ? AND user_id = ?", encounterID, userID).
+		First(&record).Error; err != nil {
+		return entity.EncounterRead{}, err
+	}
+
+	return entity.EncounterRead{
+		ID:          record.ID,
+		UserID:      record.UserID,
+		EncounterID: record.EncounterID,
+		ReadAt:      record.ReadAt,
+	}, nil
+}
+
 func (r *encounterRepository) IncrementDailyCountWithLimit(ctx context.Context, userID string, date time.Time, limit int) (int, error) {
 	var count int
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {

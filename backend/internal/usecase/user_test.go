@@ -140,6 +140,10 @@ func (r *stubEncounterRepo) ExistsByIDAndParticipant(_ context.Context, _, _ str
 	return false, nil
 }
 
+func (r *stubEncounterRepo) MarkAsRead(_ context.Context, _, _ string) (entity.EncounterRead, error) {
+	return entity.EncounterRead{}, nil
+}
+
 type stubTrackRepo struct {
 	track entity.TrackInfo
 	found bool

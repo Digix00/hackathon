@@ -546,6 +546,59 @@
                 }
             }
         },
+        "/api/v1/encounters/{id}/read": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したエンカウントを既読マークする（冪等）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "encounters"
+                ],
+                "summary": "エンカウントを既読にする",
+                "operationId": "markEncounterAsRead",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "対象エンカウント ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/hackathon_internal_handler_schema_response.EncounterReadResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/locations": {
             "post": {
                 "security": [
@@ -3726,6 +3779,28 @@
                 },
                 "pagination": {
                     "$ref": "#/definitions/hackathon_internal_handler_schema_response.Pagination"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.EncounterReadResponse": {
+            "type": "object",
+            "properties": {
+                "encounter": {
+                    "$ref": "#/definitions/hackathon_internal_handler_schema_response.EncounterReadResult"
+                }
+            }
+        },
+        "hackathon_internal_handler_schema_response.EncounterReadResult": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "is_read": {
+                    "type": "boolean"
+                },
+                "read_at": {
+                    "type": "string"
                 }
             }
         },
