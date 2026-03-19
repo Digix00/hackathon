@@ -479,7 +479,7 @@ actor BackendAPIClient {
     func likeSong(id: String) async throws -> BackendLikeSongResponse {
         let escapedId = escapePathComponent(id)
         let result = try await send(path: "songs/\(escapedId)/likes", method: "POST")
-        guard result.response.statusCode == 201 else {
+        guard result.response.statusCode == 201 || result.response.statusCode == 200 else {
             throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
         }
         return try decoder.decode(BackendLikeSongResponse.self, from: result.data)
