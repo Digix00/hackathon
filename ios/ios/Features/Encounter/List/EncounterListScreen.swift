@@ -97,7 +97,7 @@ struct EncounterListView: View {
             }
             syncDetailPresentationState()
         }
-        .onChange(of: selectedEncounterID) { _ in
+        .onChange(of: selectedEncounterID) {
             syncDetailPresentationState()
         }
         .onChange(of: bleCoordinator.encounters.map(\.id)) { _, ids in

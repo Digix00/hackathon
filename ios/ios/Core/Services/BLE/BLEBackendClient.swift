@@ -53,7 +53,9 @@ actor BLEBackendClient {
 
         self.pendingEncounters = Self.loadPendingEncounters()
         self.failedEncounters = Self.loadFailedEncounters()
-        self.startQueueDrainIfNeeded()
+        Task {
+            await self.startQueueDrainIfNeeded()
+        }
     }
 
     func fetchOrIssueCurrentToken() async throws -> BLEAdvertisingToken {
@@ -71,13 +73,11 @@ actor BLEBackendClient {
     }
 
     func postEncounter(targetBLEToken: String, rssi: Int, occurredAt: Date) async throws {
-        let request = EncounterCreateRequest(
+        let body = try Self.encodeEncounterCreateRequest(
             targetBleToken: targetBLEToken,
-            type: "ble",
             rssi: rssi,
             occurredAt: occurredAt
         )
-        let body = try encoder.encode(request)
         let result = try await send(path: "encounters", method: "POST", body: body)
 
         guard result.response.statusCode == 200 || result.response.statusCode == 201 else {
@@ -93,12 +93,7 @@ actor BLEBackendClient {
             throw BackendError.unexpectedStatus(result.response.statusCode)
         }
 
-        let envelope = try decoder.decode(BLEUserEnvelope.self, from: result.data)
-        return BLEPublicUser(
-            id: envelope.user.id,
-            displayName: envelope.user.displayName,
-            avatarURL: envelope.user.avatarURL
-        )
+        return try Self.parseUser(from: result.data)
     }
 
     func enqueueEncounter(targetBLEToken: String, rssi: Int, occurredAt: Date) {
@@ -125,14 +120,23 @@ actor BLEBackendClient {
     }
 
     private func parseToken(from data: Data) throws -> BLEAdvertisingToken {
-        let envelope = try decoder.decode(BLETokenEnvelope.self, from: data)
-        let token = envelope.bleToken.token.trimmingCharacters(in: .whitespacesAndNewlines)
+        let payload = try Self.decodeJSONObject(from: data)
+        guard
+            let bleToken = payload["ble_token"] as? [String: Any],
+            let rawToken = bleToken["token"] as? String,
+            let expiresAtRaw = bleToken["expires_at"] as? String,
+            let expiresAt = Self.decodeISO8601Date(from: expiresAtRaw)
+        else {
+            throw BackendError.invalidTokenPayload
+        }
+
+        let token = rawToken.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !token.isEmpty else {
             throw BackendError.invalidTokenPayload
         }
 
-        return BLEAdvertisingToken(token: token, expiresAt: envelope.bleToken.expiresAt)
+        return BLEAdvertisingToken(token: token, expiresAt: expiresAt)
     }
 
     private func send(path: String, method: String, body: Data? = nil) async throws -> (data: Data, response: HTTPURLResponse) {
@@ -270,6 +274,54 @@ actor BLEBackendClient {
             .filter { !$0.isEmpty }
     }
 
+    private static func encodeEncounterCreateRequest(
+        targetBleToken: String,
+        rssi: Int,
+        occurredAt: Date
+    ) throws -> Data {
+        let formatter = ISO8601DateFormatter()
+        let payload: [String: Any] = [
+            "target_ble_token": targetBleToken,
+            "type": "ble",
+            "rssi": rssi,
+            "occurred_at": formatter.string(from: occurredAt)
+        ]
+        return try JSONSerialization.data(withJSONObject: payload)
+    }
+
+    private static func parseUser(from data: Data) throws -> BLEPublicUser {
+        let payload = try decodeJSONObject(from: data)
+        guard
+            let user = payload["user"] as? [String: Any],
+            let id = user["id"] as? String,
+            let displayName = user["display_name"] as? String
+        else {
+            throw BackendError.invalidResponse
+        }
+
+        return BLEPublicUser(
+            id: id,
+            displayName: displayName,
+            avatarURL: user["avatar_url"] as? String
+        )
+    }
+
+    private static func decodeJSONObject(from data: Data) throws -> [String: Any] {
+        guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw BackendError.invalidResponse
+        }
+        return object
+    }
+
+    private static func decodeISO8601Date(from raw: String) -> Date? {
+        let formatterWithFractionalSeconds = ISO8601DateFormatter()
+        formatterWithFractionalSeconds.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatterWithFractionalSeconds.date(from: raw) {
+            return date
+        }
+        return ISO8601DateFormatter().date(from: raw)
+    }
+
     private func startQueueDrainIfNeeded() {
         guard !isDrainingQueue, !pendingEncounters.isEmpty else { return }
 
@@ -349,33 +401,35 @@ actor BLEBackendClient {
     }
 
     private func persistPendingEncounters() {
-        guard let data = try? JSONEncoder().encode(pendingEncounters) else { return }
+        let payload = pendingEncounters.map { $0.dictionaryValue }
+        guard let data = try? JSONSerialization.data(withJSONObject: payload) else { return }
         KeychainStore.write(data: data, key: Self.pendingEncounterStorageKey)
     }
 
     private static func loadPendingEncounters() -> [PendingEncounter] {
         guard
             let data = KeychainStore.readData(key: pendingEncounterStorageKey),
-            let decoded = try? JSONDecoder().decode([PendingEncounter].self, from: data)
+            let rawArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
         else {
             return []
         }
-        return decoded
+        return rawArray.compactMap { PendingEncounter(dictionary: $0) }
     }
 
     private func persistFailedEncounters() {
-        guard let data = try? JSONEncoder().encode(failedEncounters) else { return }
+        let payload = failedEncounters.map { $0.dictionaryValue }
+        guard let data = try? JSONSerialization.data(withJSONObject: payload) else { return }
         KeychainStore.write(data: data, key: Self.failedEncounterStorageKey)
     }
 
     private static func loadFailedEncounters() -> [FailedEncounter] {
         guard
             let data = KeychainStore.readData(key: failedEncounterStorageKey),
-            let decoded = try? JSONDecoder().decode([FailedEncounter].self, from: data)
+            let rawArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
         else {
             return []
         }
-        return decoded
+        return rawArray.compactMap { FailedEncounter(dictionary: $0) }
     }
 
     private static func isPermanentHTTPFailure(_ statusCode: Int) -> Bool {
@@ -389,62 +443,69 @@ actor BLEBackendClient {
     }
 }
 
-private struct BLETokenEnvelope: Decodable {
-    let bleToken: BLETokenPayload
-
-    enum CodingKeys: String, CodingKey {
-        case bleToken = "ble_token"
-    }
-}
-
-private struct BLEUserEnvelope: Decodable {
-    let user: BLEUserPayload
-}
-
-private struct BLEUserPayload: Decodable {
-    let id: String
-    let displayName: String
-    let avatarURL: String?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case displayName = "display_name"
-        case avatarURL = "avatar_url"
-    }
-}
-
-private struct BLETokenPayload: Decodable {
-    let token: String
-    let expiresAt: Date
-
-    enum CodingKeys: String, CodingKey {
-        case token
-        case expiresAt = "expires_at"
-    }
-}
-
-private struct EncounterCreateRequest: Encodable {
-    let targetBleToken: String
-    let type: String
-    let rssi: Int
-    let occurredAt: Date
-
-    enum CodingKeys: String, CodingKey {
-        case targetBleToken = "target_ble_token"
-        case type
-        case rssi
-        case occurredAt = "occurred_at"
-    }
-}
-
-private struct PendingEncounter: Codable {
+private struct PendingEncounter {
     let targetBLEToken: String
     let rssi: Int
     let occurredAtEpochMs: Int64
     var attempts: Int
+
+    nonisolated init(targetBLEToken: String, rssi: Int, occurredAtEpochMs: Int64, attempts: Int) {
+        self.targetBLEToken = targetBLEToken
+        self.rssi = rssi
+        self.occurredAtEpochMs = occurredAtEpochMs
+        self.attempts = attempts
+    }
+
+    nonisolated var dictionaryValue: [String: Any] {
+        [
+            "target_ble_token": targetBLEToken,
+            "rssi": rssi,
+            "occurred_at_epoch_ms": occurredAtEpochMs,
+            "attempts": attempts
+        ]
+    }
+
+    nonisolated init?(dictionary: [String: Any]) {
+        guard
+            let targetBLEToken = dictionary["target_ble_token"] as? String,
+            let rssi = Self.intValue(from: dictionary["rssi"]),
+            let occurredAtEpochMs = Self.int64Value(from: dictionary["occurred_at_epoch_ms"]),
+            let attempts = Self.intValue(from: dictionary["attempts"])
+        else {
+            return nil
+        }
+
+        self.targetBLEToken = targetBLEToken
+        self.rssi = rssi
+        self.occurredAtEpochMs = occurredAtEpochMs
+        self.attempts = attempts
+    }
+
+    nonisolated static func intValue(from raw: Any?) -> Int? {
+        if let value = raw as? Int {
+            return value
+        }
+        if let number = raw as? NSNumber {
+            return number.intValue
+        }
+        return nil
+    }
+
+    nonisolated static func int64Value(from raw: Any?) -> Int64? {
+        if let value = raw as? Int64 {
+            return value
+        }
+        if let value = raw as? Int {
+            return Int64(value)
+        }
+        if let number = raw as? NSNumber {
+            return number.int64Value
+        }
+        return nil
+    }
 }
 
-private struct FailedEncounter: Codable {
+private struct FailedEncounter {
     let targetBLEToken: String
     let rssi: Int
     let occurredAtEpochMs: Int64
@@ -452,12 +513,63 @@ private struct FailedEncounter: Codable {
     let failedAtEpochMs: Int64
     let statusCode: Int?
     let reason: String
+
+    nonisolated init(
+        targetBLEToken: String,
+        rssi: Int,
+        occurredAtEpochMs: Int64,
+        attempts: Int,
+        failedAtEpochMs: Int64,
+        statusCode: Int?,
+        reason: String
+    ) {
+        self.targetBLEToken = targetBLEToken
+        self.rssi = rssi
+        self.occurredAtEpochMs = occurredAtEpochMs
+        self.attempts = attempts
+        self.failedAtEpochMs = failedAtEpochMs
+        self.statusCode = statusCode
+        self.reason = reason
+    }
+
+    nonisolated var dictionaryValue: [String: Any] {
+        [
+            "target_ble_token": targetBLEToken,
+            "rssi": rssi,
+            "occurred_at_epoch_ms": occurredAtEpochMs,
+            "attempts": attempts,
+            "failed_at_epoch_ms": failedAtEpochMs,
+            "status_code": statusCode as Any,
+            "reason": reason
+        ]
+    }
+
+    nonisolated init?(dictionary: [String: Any]) {
+        guard
+            let targetBLEToken = dictionary["target_ble_token"] as? String,
+            let rssi = PendingEncounter.intValue(from: dictionary["rssi"]),
+            let occurredAtEpochMs = PendingEncounter.int64Value(from: dictionary["occurred_at_epoch_ms"]),
+            let attempts = PendingEncounter.intValue(from: dictionary["attempts"]),
+            let failedAtEpochMs = PendingEncounter.int64Value(from: dictionary["failed_at_epoch_ms"]),
+            let reason = dictionary["reason"] as? String
+        else {
+            return nil
+        }
+
+        self.targetBLEToken = targetBLEToken
+        self.rssi = rssi
+        self.occurredAtEpochMs = occurredAtEpochMs
+        self.attempts = attempts
+        self.failedAtEpochMs = failedAtEpochMs
+        self.statusCode = PendingEncounter.intValue(from: dictionary["status_code"])
+        self.reason = reason
+    }
 }
 
 private enum KeychainStore {
-    private static let service = Bundle.main.bundleIdentifier ?? "com.digix00.musicswapping.ble"
+    nonisolated private static let service = Bundle.main.bundleIdentifier ?? "com.digix00.musicswapping.ble"
 
-    static func write(data: Data, key: String) {
+    nonisolated static func write(data: Data, key: String) {
         let baseQuery: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: service,
@@ -480,7 +592,7 @@ private enum KeychainStore {
         SecItemAdd(addQuery as CFDictionary, nil)
     }
 
-    static func readData(key: String) -> Data? {
+    nonisolated static func readData(key: String) -> Data? {
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: service,
