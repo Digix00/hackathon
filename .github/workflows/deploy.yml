@@ -53,20 +53,16 @@ jobs:
           docker push $IMAGE:${{ github.sha }}
           docker push $IMAGE:latest
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "~1.9"
-
-      - name: Terraform Init
-        working-directory: infra/main
-        run: terraform init
-
-      - name: Terraform Apply (image タグを更新)
-        working-directory: infra/main
+      - name: Deploy Cloud Run Service (api)
         run: |
-          terraform apply -auto-approve \
-            -var="project_id=${{ vars.TF_PROJECT_ID }}" \
-            -var="github_repo=${{ vars.TF_GITHUB_REPO }}" \
-            -var="server_image_tag=${{ github.sha }}" \
-            -var="worker_image_tag=${{ github.sha }}"
+          gcloud run deploy api \
+            --image asia-northeast1-docker.pkg.dev/${{ vars.TF_PROJECT_ID }}/app/server:${{ github.sha }} \
+            --region asia-northeast1 \
+            --project ${{ vars.TF_PROJECT_ID }}
+
+      - name: Deploy Cloud Run Job (worker)
+        run: |
+          gcloud run jobs update worker \
+            --image asia-northeast1-docker.pkg.dev/${{ vars.TF_PROJECT_ID }}/app/worker:${{ github.sha }} \
+            --region asia-northeast1 \
+            --project ${{ vars.TF_PROJECT_ID }}
