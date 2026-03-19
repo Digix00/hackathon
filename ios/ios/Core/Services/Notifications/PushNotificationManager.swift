@@ -75,6 +75,8 @@ final class PushNotificationManager: NSObject, ObservableObject {
         if isAuthorized(authorizationStatus) {
             UIApplication.shared.registerForRemoteNotifications()
             await updateEnabledState(true)
+        } else {
+            await updateEnabledState(false)
         }
     }
 
