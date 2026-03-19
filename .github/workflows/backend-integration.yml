@@ -54,4 +54,4 @@ jobs:
         run: go mod download
 
       - name: Run PostgreSQL integration tests
-        run: make test-integration
+        run: make test-integration-ci
