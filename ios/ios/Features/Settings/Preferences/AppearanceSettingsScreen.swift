@@ -6,7 +6,8 @@ struct AppearanceSettingsView: View {
     var body: some View {
         AppScaffold(
             title: "外観",
-            subtitle: "VISUAL INTERFACE"
+            subtitle: "VISUAL INTERFACE",
+            showsBackButton: true
         ) {
             VStack(alignment: .leading, spacing: 32) {
                 VStack(alignment: .leading, spacing: 16) {

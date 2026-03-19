@@ -34,7 +34,8 @@ struct EncounterSettingsView: View {
     var body: some View {
         AppScaffold(
             title: "すれ違い設定",
-            subtitle: "PROXIMITY PROTOCOL"
+            subtitle: "PROXIMITY PROTOCOL",
+            showsBackButton: true
         ) {
             VStack(alignment: .leading, spacing: 32) {
                 VStack(alignment: .leading, spacing: 16) {
@@ -193,4 +194,3 @@ struct EncounterSettingsView: View {
         }
     }
 }
-

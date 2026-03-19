@@ -7,7 +7,8 @@ struct NotificationSettingsView: View {
     var body: some View {
         AppScaffold(
             title: "通知設定",
-            subtitle: "COMMS & ALERTS"
+            subtitle: "COMMS & ALERTS",
+            showsBackButton: true
         ) {
             VStack(alignment: .leading, spacing: 32) {
                 VStack(alignment: .leading, spacing: 16) {
