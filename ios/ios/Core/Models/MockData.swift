@@ -33,9 +33,39 @@ enum MockData {
     ]
 
     static let generatedSongs: [GeneratedSong] = [
-        GeneratedSong(title: "夜明けの詩", subtitle: "4人で作成・3/15", color: .purple),
-        GeneratedSong(title: "街角の記憶", subtitle: "5人で作成・3/14", color: .blue),
-        GeneratedSong(title: "Transit Echo", subtitle: "6人で作成・3/13", color: .mint)
+        GeneratedSong(
+            id: "generated-mock-1",
+            title: "夜明けの詩",
+            subtitle: "4人で作成・3/15",
+            color: .purple,
+            participantCount: 4,
+            generatedAt: Calendar.current.date(from: DateComponents(year: 2024, month: 3, day: 15)),
+            myLyric: "夜風の隙間に落ちた言葉",
+            audioURL: nil,
+            chainId: nil
+        ),
+        GeneratedSong(
+            id: "generated-mock-2",
+            title: "街角の記憶",
+            subtitle: "5人で作成・3/14",
+            color: .blue,
+            participantCount: 5,
+            generatedAt: Calendar.current.date(from: DateComponents(year: 2024, month: 3, day: 14)),
+            myLyric: "薄明かりに揺れた余韻",
+            audioURL: nil,
+            chainId: nil
+        ),
+        GeneratedSong(
+            id: "generated-mock-3",
+            title: "Transit Echo",
+            subtitle: "6人で作成・3/13",
+            color: .mint,
+            participantCount: 6,
+            generatedAt: Calendar.current.date(from: DateComponents(year: 2024, month: 3, day: 13)),
+            myLyric: "通り過ぎた音が残る",
+            audioURL: nil,
+            chainId: nil
+        )
     ]
 
     static let home = HomeScreenState(

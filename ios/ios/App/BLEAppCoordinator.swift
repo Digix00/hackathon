@@ -15,6 +15,7 @@ final class BLEAppCoordinator: ObservableObject {
     @Published private(set) var isLoadingSettings = false
     @Published private(set) var encounterErrorMessage: String?
     @Published private(set) var settingsErrorMessage: String?
+    @Published private(set) var latestLyricChain: BackendLyricChainSummary?
 
     private let backendClient: BLEBackendClient
     private let apiClient: BackendAPIClient
@@ -68,6 +69,22 @@ final class BLEAppCoordinator: ObservableObject {
         Task { [weak self] in
             await self?.loadEncounters()
         }
+    }
+
+    func submitLyric(encounterId: String, content: String) async throws -> BackendLyricSubmitResponse {
+        let response = try await apiClient.submitLyric(encounterId: encounterId, content: content)
+        if let index = encounters.firstIndex(where: { $0.id == encounterId }) {
+            let encounter = encounters[index]
+            encounters[index] = Encounter(
+                id: encounter.id,
+                userName: encounter.userName,
+                track: encounter.track,
+                relativeTime: encounter.relativeTime,
+                lyric: content
+            )
+        }
+        latestLyricChain = response.chain
+        return response
     }
 
     func setBLEEnabled(_ isEnabled: Bool) {

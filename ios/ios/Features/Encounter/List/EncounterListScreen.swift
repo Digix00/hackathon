@@ -11,6 +11,7 @@ struct EncounterListView: View {
     @Binding private var isDetailPresented: Bool
     @State private var selectedEncounterID: String?
     @State private var showDetailContent = false
+    @State private var lyricComposerEncounter: Encounter?
     @SceneStorage("encounter.list.scrollTargetID") private var scrollTargetID: String?
     @EnvironmentObject private var bleCoordinator: BLEAppCoordinator
     
@@ -63,6 +64,10 @@ struct EncounterListView: View {
             }
             guard let selectedEncounterID, !ids.contains(selectedEncounterID) else { return }
             self.selectedEncounterID = nil
+        }
+        .sheet(item: $lyricComposerEncounter) { encounter in
+            LyricComposerSheet(encounter: encounter)
+                .environmentObject(bleCoordinator)
         }
     }
 
@@ -290,7 +295,9 @@ struct EncounterListView: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if showDetailContent {
-                EncounterPrimaryActions(encounter: encounter) {}
+                EncounterPrimaryActions(encounter: encounter) {
+                    lyricComposerEncounter = encounter
+                }
                     .padding(.horizontal, 32)
                     .padding(.top, DetailLayout.bottomActionsTopPadding)
                     .padding(.bottom, DetailLayout.bottomActionsInset)

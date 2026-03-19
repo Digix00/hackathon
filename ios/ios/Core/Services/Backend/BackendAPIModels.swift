@@ -514,6 +514,149 @@ nonisolated struct BackendPlaylistResponse: Decodable {
     let playlist: BackendPlaylist
 }
 
+// MARK: - Lyrics & Songs
+
+nonisolated struct BackendLyricChainSummary: Decodable, Equatable {
+    let id: String
+    let participantCount: Int
+    let status: String
+    let threshold: Int
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case participantCount = "participant_count"
+        case status
+        case threshold
+    }
+}
+
+nonisolated struct BackendLyricEntrySummary: Decodable, Equatable {
+    let id: String
+    let chainId: String
+    let content: String
+    let sequenceNum: Int
+    let createdAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case chainId = "chain_id"
+        case content
+        case sequenceNum = "sequence_num"
+        case createdAt = "created_at"
+    }
+}
+
+nonisolated struct BackendLyricSubmitResponse: Decodable {
+    let chain: BackendLyricChainSummary
+    let lyricEntry: BackendLyricEntrySummary
+
+    enum CodingKeys: String, CodingKey {
+        case chain
+        case lyricEntry = "lyric_entry"
+    }
+}
+
+nonisolated struct BackendChainDetail: Decodable, Equatable {
+    let id: String
+    let status: String
+    let participantCount: Int
+    let threshold: Int
+    let createdAt: Date?
+    let completedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case status
+        case participantCount = "participant_count"
+        case threshold
+        case createdAt = "created_at"
+        case completedAt = "completed_at"
+    }
+}
+
+nonisolated struct BackendChainEntryUser: Decodable, Equatable {
+    let id: String
+    let displayName: String
+    let avatarURL: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case displayName = "display_name"
+        case avatarURL = "avatar_url"
+    }
+}
+
+nonisolated struct BackendChainEntryDetail: Decodable, Equatable {
+    let content: String
+    let sequenceNum: Int
+    let user: BackendChainEntryUser
+
+    enum CodingKeys: String, CodingKey {
+        case content
+        case sequenceNum = "sequence_num"
+        case user
+    }
+}
+
+nonisolated struct BackendSongDetail: Decodable, Equatable {
+    let id: String
+    let title: String?
+    let audioURL: String?
+    let durationSec: Int?
+    let mood: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case audioURL = "audio_url"
+        case durationSec = "duration_sec"
+        case mood
+    }
+}
+
+nonisolated struct BackendChainDetailResponse: Decodable {
+    let chain: BackendChainDetail
+    let entries: [BackendChainEntryDetail]
+    let song: BackendSongDetail?
+}
+
+nonisolated struct BackendUserSong: Decodable, Equatable {
+    let id: String
+    let title: String?
+    let audioURL: String?
+    let generatedAt: Date?
+    let participantCount: Int
+    let myLyric: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case audioURL = "audio_url"
+        case generatedAt = "generated_at"
+        case participantCount = "participant_count"
+        case myLyric = "my_lyric"
+    }
+}
+
+nonisolated struct BackendSongPagination: Decodable, Equatable {
+    let nextCursor: String?
+    let hasMore: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case nextCursor = "next_cursor"
+        case hasMore = "has_more"
+    }
+}
+
+nonisolated struct BackendListUserSongsResponse: Decodable {
+    let songs: [BackendUserSong]
+    let pagination: BackendSongPagination
+}
+
+nonisolated struct BackendLikeSongResponse: Decodable {
+    let liked: Bool
+}
+
 // MARK: - Requests
 
 nonisolated struct CreateUserRequest: Encodable {
@@ -698,6 +841,16 @@ nonisolated struct CreateEncounterRequest: Encodable {
         case type
         case rssi
         case occurredAt = "occurred_at"
+    }
+}
+
+nonisolated struct SubmitLyricRequest: Encodable {
+    let encounterId: String
+    let content: String
+
+    enum CodingKeys: String, CodingKey {
+        case encounterId = "encounter_id"
+        case content
     }
 }
 
