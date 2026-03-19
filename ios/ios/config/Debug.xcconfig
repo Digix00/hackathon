@@ -2,4 +2,6 @@ PRODUCT_BUNDLE_IDENTIFIER = com.digix.ios.dev
 APP_DISPLAY_NAME = ios Dev
 API_BASE_URL = https:/$()/dev-api.example.com
 INFOPLIST_KEY_API_BASE_URL = $(API_BASE_URL)
+APP_DEEPLINK_SCHEME = digix
+INFOPLIST_KEY_CFBundleURLTypes = ( { CFBundleURLSchemes = ( $(APP_DEEPLINK_SCHEME) ); } );
 APP_ENV = debug
