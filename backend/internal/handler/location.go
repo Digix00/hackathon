@@ -46,10 +46,16 @@ func (h *locationHandler) postLocation(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return errBadRequest("Invalid request body")
 	}
-	if req.Lat < -90 || req.Lat > 90 {
+	if req.Lat == nil {
+		return errBadRequest("lat is required")
+	}
+	if req.Lng == nil {
+		return errBadRequest("lng is required")
+	}
+	if *req.Lat < -90 || *req.Lat > 90 {
 		return errBadRequest("lat must be between -90 and 90")
 	}
-	if req.Lng < -180 || req.Lng > 180 {
+	if *req.Lng < -180 || *req.Lng > 180 {
 		return errBadRequest("lng must be between -180 and 180")
 	}
 	if req.RecordedAt == "" {
@@ -61,8 +67,8 @@ func (h *locationHandler) postLocation(c echo.Context) error {
 	}
 
 	out, err := h.usecase.PostLocation(ctx, authUID, usecasedto.PostLocationInput{
-		Lat:        req.Lat,
-		Lng:        req.Lng,
+		Lat:        *req.Lat,
+		Lng:        *req.Lng,
 		AccuracyM:  req.AccuracyM,
 		RecordedAt: recordedAt,
 	})

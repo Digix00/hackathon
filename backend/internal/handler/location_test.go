@@ -297,6 +297,48 @@ func TestPostLocationRequiresRecordedAt(t *testing.T) {
 	}
 }
 
+func TestPostLocationRequiresLat(t *testing.T) {
+	db := newTestDB(t)
+	seedTestUser(t, db, "firebase-uid-loc-no-lat")
+	e := newTestServer(t, db, "firebase-uid-loc-no-lat")
+
+	req, err := authRequest(http.MethodPost, "/api/v1/locations", map[string]any{
+		"lng":         139.7671,
+		"accuracy_m":  20.0,
+		"recorded_at": time.Now().UTC().Format(time.RFC3339),
+	})
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestPostLocationRequiresLng(t *testing.T) {
+	db := newTestDB(t)
+	seedTestUser(t, db, "firebase-uid-loc-no-lng")
+	e := newTestServer(t, db, "firebase-uid-loc-no-lng")
+
+	req, err := authRequest(http.MethodPost, "/api/v1/locations", map[string]any{
+		"lat":         35.6812,
+		"accuracy_m":  20.0,
+		"recorded_at": time.Now().UTC().Format(time.RFC3339),
+	})
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
 func TestPostLocationUpdatesExistingLocation(t *testing.T) {
 	db := newTestDB(t)
 	requester := seedTestUser(t, db, "firebase-uid-loc-upsert")
