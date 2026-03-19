@@ -18,7 +18,7 @@ func main() {
 	}
 	time.Local = loc
 
-	cfg, err := config.Load()
+	cfg, err := config.LoadWorker()
 	if err != nil {
 		panic("config load failed: " + err.Error())
 	}
