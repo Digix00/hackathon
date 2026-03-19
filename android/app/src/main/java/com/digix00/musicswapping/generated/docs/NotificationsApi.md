@@ -4,49 +4,9 @@ All URIs are relative to *http://localhost:8000*
 
 | Method | HTTP request | Description |
 | ------------- | ------------- | ------------- |
-| [**deleteNotification**](NotificationsApi.md#deleteNotification) | **DELETE** api/v1/users/me/notifications/{id} | 通知削除 |
 | [**listNotifications**](NotificationsApi.md#listNotifications) | **GET** api/v1/users/me/notifications | 通知一覧取得 |
 | [**markNotificationAsRead**](NotificationsApi.md#markNotificationAsRead) | **PATCH** api/v1/users/me/notifications/{id}/read | 通知を既読にする |
 
-
-
-通知削除
-
-指定した通知を削除する
-
-### Example
-```kotlin
-// Import classes:
-//import com.digix00.musicswapping.generated.*
-//import com.digix00.musicswapping.generated.infrastructure.*
-//import com.digix00.musicswapping.generated.models.*
-
-val apiClient = ApiClient()
-val webService = apiClient.createWebservice(NotificationsApi::class.java)
-val id : kotlin.String = id_example // kotlin.String | 通知 ID
-
-launch(Dispatchers.IO) {
-    webService.deleteNotification(id)
-}
-```
-
-### Parameters
-| Name | Type | Description  | Notes |
-| ------------- | ------------- | ------------- | ------------- |
-| **id** | **kotlin.String**| 通知 ID | |
-
-### Return type
-
-null (empty response body)
-
-### Authorization
-
-
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: */*
 
 
 通知一覧取得

@@ -1987,53 +1987,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/users/me/notifications/{id}": {
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "指定した通知を削除する",
-                "tags": [
-                    "notifications"
-                ],
-                "summary": "通知削除",
-                "operationId": "deleteNotification",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "通知 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handler.errorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handler.errorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handler.errorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/users/me/notifications/{id}/read": {
             "patch": {
                 "security": [

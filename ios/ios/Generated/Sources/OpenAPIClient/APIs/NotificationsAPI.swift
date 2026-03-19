@@ -13,48 +13,6 @@ import AnyCodable
 open class NotificationsAPI {
 
     /**
-     通知削除
-     
-     - parameter id: (path) 通知 ID 
-     - returns: Void
-     */
-    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-    open class func deleteNotification(id: String) async throws {
-        return try await deleteNotificationWithRequestBuilder(id: id).execute().body
-    }
-
-    /**
-     通知削除
-     - DELETE /api/v1/users/me/notifications/{id}
-     - 指定した通知を削除する
-     - API Key:
-       - type: apiKey Authorization (HEADER)
-       - name: BearerAuth
-     - parameter id: (path) 通知 ID 
-     - returns: RequestBuilder<Void> 
-     */
-    open class func deleteNotificationWithRequestBuilder(id: String) -> RequestBuilder<Void> {
-        var localVariablePath = "/api/v1/users/me/notifications/{id}"
-        let idPreEscape = "\(APIHelper.mapValueToPathItem(id))"
-        let idPostEscape = idPreEscape.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
-        localVariablePath = localVariablePath.replacingOccurrences(of: "{id}", with: idPostEscape, options: .literal, range: nil)
-        let localVariableURLString = OpenAPIClientAPI.basePath + localVariablePath
-        let localVariableParameters: [String: Any]? = nil
-
-        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
-
-        let localVariableNillableHeaders: [String: Any?] = [
-            :
-        ]
-
-        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
-
-        let localVariableRequestBuilder: RequestBuilder<Void>.Type = OpenAPIClientAPI.requestBuilderFactory.getNonDecodableBuilder()
-
-        return localVariableRequestBuilder.init(method: "DELETE", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true)
-    }
-
-    /**
      通知一覧取得
      
      - parameter limit: (query) 取得件数（デフォルト: 20, 最大: 100） (optional)

@@ -12,21 +12,6 @@ import com.digix00.musicswapping.generated.models.InternalHandlererrorResponse
 
 interface NotificationsApi {
     /**
-     * 通知削除
-     * 指定した通知を削除する
-     * Responses:
-     *  - 204: No Content
-     *  - 401: Unauthorized
-     *  - 404: Not Found
-     *  - 500: Internal Server Error
-     *
-     * @param id 通知 ID
-     * @return [Unit]
-     */
-    @DELETE("api/v1/users/me/notifications/{id}")
-    suspend fun deleteNotification(@Path("id") id: kotlin.String): Response<Unit>
-
-    /**
      * 通知一覧取得
      * 現在ログインしているユーザーの通知一覧を取得する
      * Responses:
