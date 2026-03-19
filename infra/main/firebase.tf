@@ -6,12 +6,12 @@ resource "google_identity_platform_config" "auth" {
     allow_duplicate_emails = false
 
     anonymous {
-      enabled = true
+      enabled = false
     }
 
     email {
-      enabled           = true
-      password_required = true
+      enabled           = false
+      password_required = false
     }
   }
 
