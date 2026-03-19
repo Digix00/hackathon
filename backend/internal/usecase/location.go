@@ -116,7 +116,7 @@ func (u *locationUsecase) PostLocation(ctx context.Context, authUID string, inpu
 		userID1, userID2 := normalizeUserPair(requester.ID, candidate.UserID)
 
 		// 5 分以内の重複エンカウントはスキップ
-		_, found, err := u.encounterRepo.FindRecentByUsersAndType(ctx, userID1, userID2, vo.EncounterTypeLocation, now, encounterDedupeWindow)
+		_, found, err := u.encounterRepo.FindRecentByUsersAndType(ctx, userID1, userID2, vo.EncounterTypeLocation, input.RecordedAt, encounterDedupeWindow)
 		if err != nil {
 			return usecasedto.LocationResultDTO{}, err
 		}
