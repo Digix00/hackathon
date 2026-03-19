@@ -47,3 +47,10 @@ type EncounterDetailDTO struct {
 	OccurredAt time.Time
 	Tracks     []EncounterTrackDTO
 }
+
+type EncounterReadDTO struct {
+	ID          string
+	EncounterID string
+	IsRead      bool
+	ReadAt      time.Time
+}

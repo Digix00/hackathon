@@ -46,4 +46,6 @@ type EncounterRepository interface {
 	CreateWithRateLimit(ctx context.Context, encounter entity.Encounter, userIDsForTracks []string, dailyLimitUserID string, date time.Time, userLimit int, pairLimit int) (entity.Encounter, error)
 
 	ExistsByIDAndParticipant(ctx context.Context, encounterID, userID string) (bool, error)
+
+	MarkAsRead(ctx context.Context, encounterID, userID string) (entity.EncounterRead, error)
 }

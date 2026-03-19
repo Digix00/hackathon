@@ -398,6 +398,20 @@ definitions:
       pagination:
         $ref: '#/definitions/hackathon_internal_handler_schema_response.Pagination'
     type: object
+  hackathon_internal_handler_schema_response.EncounterReadResponse:
+    properties:
+      encounter:
+        $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterReadResult'
+    type: object
+  hackathon_internal_handler_schema_response.EncounterReadResult:
+    properties:
+      id:
+        type: string
+      is_read:
+        type: boolean
+      read_at:
+        type: string
+    type: object
   hackathon_internal_handler_schema_response.EncounterResponse:
     properties:
       encounter:
@@ -1309,6 +1323,40 @@ paths:
       summary: コメント作成
       tags:
       - comments
+  /api/v1/encounters/{id}/read:
+    patch:
+      description: 指定したエンカウントを既読マークする（冪等）
+      operationId: markEncounterAsRead
+      parameters:
+      - description: 対象エンカウント ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hackathon_internal_handler_schema_response.EncounterReadResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: エンカウントを既読にする
+      tags:
+      - encounters
   /api/v1/locations:
     post:
       consumes:

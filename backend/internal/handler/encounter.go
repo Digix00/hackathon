@@ -158,6 +158,45 @@ func (h *encounterHandler) listEncounters(c echo.Context) error {
 	})
 }
 
+// markEncounterAsRead godoc
+// @ID           markEncounterAsRead
+// @Summary      エンカウントを既読にする
+// @Description  指定したエンカウントを既読マークする（冪等）
+// @Tags         encounters
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      string  true  "対象エンカウント ID"
+// @Success      200  {object}  schemares.EncounterReadResponse
+// @Failure      401  {object}  errorResponse
+// @Failure      404  {object}  errorResponse
+// @Failure      500  {object}  errorResponse
+// @Router       /api/v1/encounters/{id}/read [patch]
+func (h *encounterHandler) markEncounterAsRead(c echo.Context) error {
+	ctx := c.Request().Context()
+	authUID, ok := middleware.UserIDFromContext(c)
+	if !ok {
+		return errUnauthorized()
+	}
+
+	encounterID := c.Param("id")
+	if encounterID == "" {
+		return errBadRequest("id path param is required")
+	}
+
+	dto, err := h.usecase.MarkEncounterAsRead(ctx, authUID, encounterID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, schemares.EncounterReadResponse{
+		Encounter: schemares.EncounterReadResult{
+			ID:     dto.EncounterID,
+			IsRead: dto.IsRead,
+			ReadAt: dto.ReadAt.UTC().Format(time.RFC3339),
+		},
+	})
+}
+
 // getEncounterByID godoc
 // @ID           getEncounterByID
 // @Summary      すれ違い詳細取得

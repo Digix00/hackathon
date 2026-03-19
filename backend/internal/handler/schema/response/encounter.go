@@ -58,3 +58,15 @@ type EncounterTrack struct {
 	ArtworkURL *string `json:"artwork_url"`
 	PreviewURL *string `json:"preview_url"`
 }
+
+// @name EncounterReadResponse
+type EncounterReadResponse struct {
+	Encounter EncounterReadResult `json:"encounter"`
+}
+
+// @name EncounterReadResult
+type EncounterReadResult struct {
+	ID     string `json:"id"`
+	IsRead bool   `json:"is_read"`
+	ReadAt string `json:"read_at"`
+}

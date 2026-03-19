@@ -70,6 +70,7 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	protected.POST("/encounters", encounterHandler.createEncounter)
 	protected.GET("/encounters", encounterHandler.listEncounters)
 	protected.GET("/encounters/:id", encounterHandler.getEncounterByID)
+	protected.PATCH("/encounters/:id/read", encounterHandler.markEncounterAsRead)
 
 	protected.POST("/reports", reportHandler.createReport)
 
