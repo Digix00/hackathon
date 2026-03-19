@@ -171,8 +171,8 @@ resource "google_cloud_run_v2_job" "worker" {
 
   template {
     template {
-      max_retries     = 1     # デフォルト3から削減。無限リトライによる課金を防ぐ
-      timeout         = "60s" # タスク最大実行時間 1 分
+      max_retries     = 0     # リトライなし。失敗時の二重課金を防ぐ
+      timeout         = "10s" # タスク最大実行時間 10 秒（現行と同じ）
       service_account = google_service_account.worker.email
 
       volumes {
