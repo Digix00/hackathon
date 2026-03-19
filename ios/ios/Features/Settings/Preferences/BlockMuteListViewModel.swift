@@ -27,7 +27,8 @@ final class BlockMuteListViewModel: ObservableObject {
             blockMessage = nil
             return
         }
-        guard !isBlocking else { return }
+        guard !isBlockActionInProgress else { return }
+        isBlocking = true
         Task { await performBlock(userID: trimmed) }
     }
 
@@ -38,7 +39,8 @@ final class BlockMuteListViewModel: ObservableObject {
             blockMessage = nil
             return
         }
-        guard !isUnblocking else { return }
+        guard !isBlockActionInProgress else { return }
+        isUnblocking = true
         Task { await performUnblock(userID: trimmed) }
     }
 
@@ -49,7 +51,8 @@ final class BlockMuteListViewModel: ObservableObject {
             muteMessage = nil
             return
         }
-        guard !isMuting else { return }
+        guard !isMuteActionInProgress else { return }
+        isMuting = true
         Task { await performMute(userID: trimmed) }
     }
 
@@ -60,12 +63,12 @@ final class BlockMuteListViewModel: ObservableObject {
             muteMessage = nil
             return
         }
-        guard !isUnmuting else { return }
+        guard !isMuteActionInProgress else { return }
+        isUnmuting = true
         Task { await performUnmute(userID: trimmed) }
     }
 
     private func performBlock(userID: String) async {
-        isBlocking = true
         blockMessage = nil
         blockErrorMessage = nil
         do {
@@ -78,7 +81,6 @@ final class BlockMuteListViewModel: ObservableObject {
     }
 
     private func performUnblock(userID: String) async {
-        isUnblocking = true
         blockMessage = nil
         blockErrorMessage = nil
         do {
@@ -91,7 +93,6 @@ final class BlockMuteListViewModel: ObservableObject {
     }
 
     private func performMute(userID: String) async {
-        isMuting = true
         muteMessage = nil
         muteErrorMessage = nil
         do {
@@ -104,15 +105,22 @@ final class BlockMuteListViewModel: ObservableObject {
     }
 
     private func performUnmute(userID: String) async {
-        isUnmuting = true
         muteMessage = nil
         muteErrorMessage = nil
         do {
             try await client.deleteMute(targetUserId: userID)
             muteMessage = "ミュートを解除しました"
         } catch {
-            muteErrorMessage = "ミュート解除に失敗しました"
+        muteErrorMessage = "ミュート解除に失敗しました"
         }
         isUnmuting = false
+    }
+
+    var isBlockActionInProgress: Bool {
+        isBlocking || isUnblocking
+    }
+
+    var isMuteActionInProgress: Bool {
+        isMuting || isUnmuting
     }
 }

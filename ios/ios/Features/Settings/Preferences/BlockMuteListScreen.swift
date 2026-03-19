@@ -22,7 +22,7 @@ struct BlockMuteListView: View {
                             PrimaryButton(
                                 title: viewModel.isBlocking ? "ブロック中..." : "ブロック",
                                 systemImage: "hand.raised.fill",
-                                isDisabled: viewModel.isBlocking || viewModel.blockUserID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                                isDisabled: viewModel.isBlockActionInProgress || viewModel.blockUserID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                             ) {
                                 viewModel.block()
                             }
@@ -33,7 +33,7 @@ struct BlockMuteListView: View {
                             ) {
                                 viewModel.unblock()
                             }
-                            .disabled(viewModel.isUnblocking || viewModel.blockUserID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            .disabled(viewModel.isBlockActionInProgress || viewModel.blockUserID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         }
 
                         if let blockMessage = viewModel.blockMessage {
@@ -62,7 +62,7 @@ struct BlockMuteListView: View {
                             PrimaryButton(
                                 title: viewModel.isMuting ? "ミュート中..." : "ミュート",
                                 systemImage: "speaker.slash.fill",
-                                isDisabled: viewModel.isMuting || viewModel.muteUserID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                                isDisabled: viewModel.isMuteActionInProgress || viewModel.muteUserID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                             ) {
                                 viewModel.mute()
                             }
@@ -73,7 +73,7 @@ struct BlockMuteListView: View {
                             ) {
                                 viewModel.unmute()
                             }
-                            .disabled(viewModel.isUnmuting || viewModel.muteUserID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            .disabled(viewModel.isMuteActionInProgress || viewModel.muteUserID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         }
 
                         if let muteMessage = viewModel.muteMessage {
