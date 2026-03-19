@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 
+	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
 	usecasedto "hackathon/internal/usecase/dto"
 )
@@ -13,14 +14,16 @@ type LyricUsecase interface {
 }
 
 type lyricUsecase struct {
-	userRepo  repository.UserRepository
-	lyricRepo repository.LyricRepository
+	userRepo     repository.UserRepository
+	encounterRepo repository.EncounterRepository
+	lyricRepo    repository.LyricRepository
 }
 
-func NewLyricUsecase(userRepo repository.UserRepository, lyricRepo repository.LyricRepository) LyricUsecase {
+func NewLyricUsecase(userRepo repository.UserRepository, encounterRepo repository.EncounterRepository, lyricRepo repository.LyricRepository) LyricUsecase {
 	return &lyricUsecase{
-		userRepo:  userRepo,
-		lyricRepo: lyricRepo,
+		userRepo:     userRepo,
+		encounterRepo: encounterRepo,
+		lyricRepo:    lyricRepo,
 	}
 }
 
@@ -28,6 +31,14 @@ func (u *lyricUsecase) SubmitLyric(ctx context.Context, authUID string, input us
 	user, err := u.userRepo.FindByAuthProviderAndProviderUserID(ctx, firebaseProvider, authUID)
 	if err != nil {
 		return usecasedto.SubmitLyricResult{}, err
+	}
+
+	exists, err := u.encounterRepo.ExistsByIDAndParticipant(ctx, input.EncounterID, user.ID)
+	if err != nil {
+		return usecasedto.SubmitLyricResult{}, err
+	}
+	if !exists {
+		return usecasedto.SubmitLyricResult{}, domainerrs.NotFound("encounter not found")
 	}
 
 	res, err := u.lyricRepo.SubmitEntry(ctx, user.ID, input.EncounterID, input.Content)

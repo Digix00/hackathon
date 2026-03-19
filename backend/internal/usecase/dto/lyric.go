@@ -1,6 +1,8 @@
 package dto
 
-import "time"
+import (
+	"time"
+)
 
 type SubmitLyricInput struct {
 	EncounterID string
@@ -64,7 +66,7 @@ type UserSongDTO struct {
 	AudioURL         *string
 	ParticipantCount int
 	MyLyric          string
-	GeneratedAt      *time.Time
+	GeneratedAt      *string
 }
 
 type ListUserSongsResult struct {

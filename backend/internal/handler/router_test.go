@@ -191,7 +191,7 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 		MusicUsecase:        usecase.NewMusicUsecase(userRepo, musicConnectionRepo, trackCatalogRepo, providers, "test-state-secret", "digix"),
 		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
 		CommentUsecase:      usecase.NewCommentUsecase(userRepo, commentRepo, encounterRepo),
-		LyricUsecase:        usecase.NewLyricUsecase(userRepo, lyricRepo),
+		LyricUsecase:        usecase.NewLyricUsecase(userRepo, encounterRepo, lyricRepo),
 		SongUsecase:         usecase.NewSongUsecase(userRepo, lyricRepo),
 		UserTrackUsecase:    usecase.NewUserTrackUsecase(userRepo, userTrackRepo, trackRepo, trackCatalogRepo),
 	})

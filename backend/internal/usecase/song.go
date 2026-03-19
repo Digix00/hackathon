@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"time"
 
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
@@ -40,13 +41,18 @@ func (u *songUsecase) ListMySongs(ctx context.Context, authUID string, cursor st
 
 	dtos := make([]usecasedto.UserSongDTO, 0, len(songs))
 	for _, s := range songs {
+		var generatedAt *string
+		if s.Song.GeneratedAt != nil {
+			formatted := s.Song.GeneratedAt.UTC().Format(time.RFC3339)
+			generatedAt = &formatted
+		}
 		dtos = append(dtos, usecasedto.UserSongDTO{
 			ID:               s.Song.ID,
 			Title:            s.Song.Title,
 			AudioURL:         s.Song.AudioURL,
 			ParticipantCount: s.ParticipantCount,
 			MyLyric:          s.MyLyric,
-			GeneratedAt:      s.Song.GeneratedAt,
+			GeneratedAt:      generatedAt,
 		})
 	}
 
