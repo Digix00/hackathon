@@ -32,15 +32,6 @@ resource "google_cloud_run_v2_service" "api" {
     containers {
       image = local.image_placeholder
 
-      resources {
-        limits = {
-          cpu    = "1"
-          memory = "256Mi"
-        }
-        cpu_idle          = true # リクエスト処理中のみ CPU 割当（無料枠内に収める）
-        startup_cpu_boost = false
-      }
-
       env {
         name  = "DB_USER"
         value = google_sql_user.app.name
@@ -144,7 +135,7 @@ resource "google_cloud_run_v2_service" "api" {
   }
 
   lifecycle {
-    ignore_changes = [template[0].containers[0].image]
+    ignore_changes = [template]
   }
 
   depends_on = [
