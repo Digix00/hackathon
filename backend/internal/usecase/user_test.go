@@ -149,6 +149,18 @@ func (r *stubTrackRepo) FindCurrentByUserID(_ context.Context, _ string) (entity
 	return r.track, r.found, nil
 }
 
+func (r *stubTrackRepo) FindCurrentWithTimestampByUserID(_ context.Context, _ string) (entity.UserCurrentTrack, bool, error) {
+	return entity.UserCurrentTrack{}, false, nil
+}
+
+func (r *stubTrackRepo) Upsert(_ context.Context, _, _ string) (entity.UserCurrentTrack, bool, error) {
+	return entity.UserCurrentTrack{}, false, nil
+}
+
+func (r *stubTrackRepo) DeleteByUserID(_ context.Context, _ string) error {
+	return nil
+}
+
 // ─── userCalcAgeRange ────────────────────────────────────────────────────────
 
 func TestUserCalcAgeRange(t *testing.T) {

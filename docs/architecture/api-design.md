@@ -1417,14 +1417,14 @@ API の `reported_user_id` は DB スキーマ上の `reports.reported_user_id` 
 }
 ```
 
-### POST /blocks
+### POST /users/me/blocks
 
 指定ユーザーをブロックする。
 ブロックの効果はアカウント削除まで持続する。
 
 - ブロックされたユーザーからの BLE トークン逆引き（`GET /ble-tokens/{token}/user`）は 404 を返す。
 - ブロック中の2ユーザー間ではエンカウントが生成されない（位置・BLE 両方）。
-- 既にブロック済みの場合は 409 Conflict を返す（ブロック操作はべき等エラーでなく UI 上に「既にブロックしています」と明示するため。`POST /mutes` も同様）。
+- 既にブロック済みの場合は 409 Conflict を返す（ブロック操作はべき等エラーでなく UI 上に「既にブロックしています」と明示するため。`POST /users/me/mutes` も同様）。
 
 **Request**
 
@@ -1445,15 +1445,15 @@ API の `reported_user_id` は DB スキーマ上の `reports.reported_user_id` 
 }
 ```
 
-### DELETE /blocks/{target_user_id}
+### DELETE /users/me/blocks/{blocked_user_id}
 
-`{target_user_id}` はアンブロック対象ユーザーの ID。
+`{blocked_user_id}` はアンブロック対象ユーザーの ID。
 
 **Response (204)**
 
 レスポンスボディなし。
 
-### GET /blocks
+### GET /users/me/blocks
 
 **Query**: `limit`, `cursor`
 
@@ -1474,7 +1474,7 @@ API の `reported_user_id` は DB スキーマ上の `reports.reported_user_id` 
 }
 ```
 
-### POST /mutes
+### POST /users/me/mutes
 
 指定ユーザーをミュートする。
 ブロックと異なりエンカウントは通常通り発生するが、ミュートしたユーザーのエンカウント・コメントが自分のフィード上に表示されなくなる（フィルタリングはサーバーサイドで実施）。
@@ -1500,7 +1500,7 @@ API の `reported_user_id` は DB スキーマ上の `reports.reported_user_id` 
 }
 ```
 
-### DELETE /mutes/{target_user_id}
+### DELETE /users/me/mutes/{target_user_id}
 
 `{target_user_id}` はアンミュート対象ユーザーの ID。
 
@@ -1508,7 +1508,7 @@ API の `reported_user_id` は DB スキーマ上の `reports.reported_user_id` 
 
 レスポンスボディなし。
 
-### GET /mutes
+### GET /users/me/mutes
 
 **Query**: `limit`, `cursor`
 
