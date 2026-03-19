@@ -151,8 +151,23 @@ func TestLikeSong_DuplicateLike(t *testing.T) {
 	rec := httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
 
-	if rec.Code != http.StatusConflict {
-		t.Fatalf("expected 409, got %d: %s", rec.Code, rec.Body.String())
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var body map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	like, ok := body["like"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected like object, got %T", body["like"])
+	}
+	if like["liked"].(bool) != true {
+		t.Fatal("expected liked true")
+	}
+	if like["song_id"].(string) != songID {
+		t.Fatalf("expected song_id %s, got %v", songID, like["song_id"])
 	}
 }
 

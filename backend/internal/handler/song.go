@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 
+	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/handler/middleware"
 	schemares "hackathon/internal/handler/schema/response"
 	"hackathon/internal/usecase"
@@ -69,11 +71,12 @@ func (h *songHandler) listMySongs(c echo.Context) error {
 // likeSong godoc
 // @ID           likeSong
 // @Summary      楽曲にいいね
-// @Description  指定した楽曲にいいねする。すでにいいね済みの場合はエラー。
+// @Description  指定した楽曲にいいねする。すでにいいね済みの場合は既存状態を返す。
 // @Tags         songs
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id  path  string  true  "楽曲ID"
+// @Success      200  {object}  schemares.LikeSongResponse
 // @Success      201  {object}  schemares.LikeSongResponse
 // @Failure      401  {object}  errorResponse
 // @Failure      404  {object}  errorResponse
@@ -92,12 +95,16 @@ func (h *songHandler) likeSong(c echo.Context) error {
 		return errBadRequest("id is required")
 	}
 
+	status := http.StatusCreated
 	if err := h.usecase.LikeSong(ctx, authUID, songID); err != nil {
-		return err
+		if !errors.Is(err, domainerrs.ErrConflict) {
+			return err
+		}
+		status = http.StatusOK
 	}
 
 	songIDCopy := songID
-	return c.JSON(http.StatusCreated, schemares.LikeSongResponse{
+	return c.JSON(status, schemares.LikeSongResponse{
 		Like: schemares.LikeSongDetail{
 			SongID: &songIDCopy,
 			Liked:  true,
