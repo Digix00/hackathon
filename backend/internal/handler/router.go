@@ -21,6 +21,8 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	notificationHandler := newNotificationHandler(deps.NotificationUsecase)
 	musicHandler := newMusicHandler(deps.MusicUsecase)
 	commentHandler := newCommentHandler(deps.CommentUsecase)
+	lyricHandler := newLyricHandler(deps.LyricUsecase)
+	songHandler := newSongHandler(deps.SongUsecase)
 
 	api := e.Group("/api/v1")
 	api.GET("/music-connections/:provider/callback", musicHandler.callback)
@@ -86,4 +88,10 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	protected.POST("/encounters/:id/comments", commentHandler.createComment)
 	protected.GET("/encounters/:id/comments", commentHandler.listComments)
 	protected.DELETE("/comments/:id", commentHandler.deleteComment)
+
+	protected.POST("/lyrics", lyricHandler.submitLyric)
+	protected.GET("/lyrics/chains/:chain_id", lyricHandler.getChainDetail)
+	protected.GET("/users/me/songs", songHandler.listMySongs)
+	protected.POST("/songs/:id/likes", songHandler.likeSong)
+	protected.DELETE("/songs/:id/likes", songHandler.unlikeSong)
 }

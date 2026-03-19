@@ -103,6 +103,7 @@ func newPostgresIntegrationServer(t *testing.T, db *gorm.DB, authUID string) *ec
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
 	reportRepo := rdb.NewReportRepository(db)
 	notificationRepo := rdb.NewNotificationRepository(db)
+	lyricRepo := rdb.NewLyricRepository(db)
 
 	e := echo.New()
 	RegisterRoutes(e, Dependencies{
@@ -115,6 +116,8 @@ func newPostgresIntegrationServer(t *testing.T, db *gorm.DB, authUID string) *ec
 		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
 		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
 		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
+		LyricUsecase:        usecase.NewLyricUsecase(userRepo, lyricRepo),
+		SongUsecase:         usecase.NewSongUsecase(userRepo, lyricRepo),
 	})
 	return e
 }
