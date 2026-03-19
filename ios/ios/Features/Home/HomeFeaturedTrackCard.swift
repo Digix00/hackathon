@@ -1,6 +1,12 @@
 import SwiftUI
 
 struct HomeFeaturedTrackCard: View {
+    private enum Layout {
+        static let artworkSize: CGFloat = 240
+        static let rippleBaseSize: CGFloat = 260
+        static let rippleExpandedScale: CGFloat = 1.6
+    }
+
     let track: Track?
     let motionX: CGFloat
     let motionY: CGFloat
@@ -13,12 +19,13 @@ struct HomeFeaturedTrackCard: View {
             if let track {
                 VStack(spacing: 48) {
                     ZStack {
-                        // Soft Ripple Animation - very subtle, not "glimmering"
+                        // Keep ripple and artwork in the same coordinate space
+                        // without inflating the layout width on narrow devices.
                         ForEach(0..<2) { i in
                             Circle()
                                 .stroke(track.color.opacity(0.12), lineWidth: 1.0)
-                                .frame(width: 260, height: 260)
-                                .scaleEffect(isAnimating ? 1.6 : 1.0)
+                                .frame(width: Layout.rippleBaseSize, height: Layout.rippleBaseSize)
+                                .scaleEffect(isAnimating ? Layout.rippleExpandedScale : 1.0)
                                 .opacity(isAnimating ? 0 : 1)
                                 .animation(
                                     .easeOut(duration: 5)
@@ -31,16 +38,18 @@ struct HomeFeaturedTrackCard: View {
                         MockArtworkView(
                             color: track.color,
                             symbol: "music.note",
-                            size: 240,
+                            size: Layout.artworkSize,
                             artwork: track.artwork,
-                            shadowColor: track.color.opacity(0.15),
-                            shadowRadius: 40,
+                            shadowColor: track.color.opacity(0.28),
+                            shadowRadius: 56,
                             shadowX: 0,
-                            shadowY: 20
+                            shadowY: 24
                         )
-                        .offset(x: motionX, y: motionY)
                         .matchedGeometryEffect(id: "home_artwork_\(track.id)", in: homeNamespace)
                     }
+                    .frame(width: Layout.rippleBaseSize, height: Layout.rippleBaseSize)
+                    .contentShape(Rectangle())
+                    .offset(x: motionX, y: motionY)
                     .onAppear {
                         isAnimating = true
                     }
