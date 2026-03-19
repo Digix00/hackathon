@@ -32,10 +32,16 @@ final class ChainProgressViewModel: ObservableObject {
 
     var statusTitle: String {
         guard let chain else { return "歌詞チェーン" }
-        if chain.status.lowercased() == "completed" {
+        switch chain.status.lowercased() {
+        case "completed":
             return "歌詞チェーンが完成しました"
+        case "generating":
+            return "楽曲を生成中です"
+        case "failed":
+            return "楽曲生成に失敗しました"
+        default:
+            return "歌詞を集めています"
         }
-        return "歌詞を集めています"
     }
 
     func loadIfNeeded() {

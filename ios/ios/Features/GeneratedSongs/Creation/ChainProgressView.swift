@@ -27,18 +27,28 @@ struct ChainProgressView: View {
                                 }
                             }
 
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(viewModel.progressText)
-                                    .font(.system(size: 12, weight: .black))
-                                    .foregroundStyle(PrototypeTheme.textSecondary)
+                        let status = chain.status.lowercased()
+                        let isPending = status == "pending"
+                        let isRecruiting = isPending && chain.participantCount < chain.threshold
 
-                                Text(chain.status.lowercased() == "completed"
-                                    ? "歌詞が揃いました。"
-                                    : "あと\(max(chain.threshold - chain.participantCount, 0))人で曲が完成します。")
-                                    .font(.system(size: 20, weight: .bold))
-                                    .foregroundStyle(PrototypeTheme.textPrimary)
-                            }
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(viewModel.progressText)
+                                .font(.system(size: 12, weight: .black))
+                                .foregroundStyle(PrototypeTheme.textSecondary)
+
+                            Text(status == "completed"
+                                ? "歌詞が揃いました。"
+                                : isPending
+                                    ? "あと\(max(chain.threshold - chain.participantCount, 0))人で曲が完成します。"
+                                    : status == "generating"
+                                        ? "楽曲を生成中です。"
+                                        : status == "failed"
+                                            ? "楽曲生成に失敗しました。"
+                                            : "歌詞を集めています。")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundStyle(PrototypeTheme.textPrimary)
                         }
+                    }
                     }
 
                     SectionCard(title: "集まった歌詞") {
@@ -52,9 +62,9 @@ struct ChainProgressView: View {
                                         sequenceNum: $0.sequenceNum
                                     )
                                 },
-                                waitingLine: chain.status.lowercased() == "completed"
-                                    ? nil
-                                    : "\(chain.participantCount + 1). 最後のひとりを待っています..."
+                                waitingLine: isRecruiting
+                                    ? "\(chain.participantCount + 1). 最後のひとりを待っています..."
+                                    : nil
                             )
                         }
                     }
