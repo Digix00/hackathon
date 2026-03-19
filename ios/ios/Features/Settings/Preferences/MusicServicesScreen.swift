@@ -240,7 +240,6 @@ final class MusicServicesViewModel: ObservableObject {
     private func loadConnections() async {
         isLoading = true
         errorMessage = nil
-        defer { isLoading = false }
 
         do {
             let response = try await client.listMusicConnections()
@@ -254,10 +253,12 @@ final class MusicServicesViewModel: ObservableObject {
             }
             connections = mapped
             hasLoaded = true
+            isLoading = false
         } catch {
             if Task.isCancelled { return }
             errorMessage = "連携状況の取得に失敗しました"
             hasLoaded = false
+            isLoading = false
         }
     }
 }
