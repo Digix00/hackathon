@@ -159,7 +159,7 @@ struct SearchView: View {
                     VStack(alignment: .leading, spacing: 20) {
                         if let selectedTrack = viewModel.selectedTrack {
                             HStack(spacing: 16) {
-                                MockArtworkView(color: selectedTrack.color, symbol: "music.note", size: 52, artwork: selectedTrack.artwork)
+                                ArtworkPlaceholderView(color: selectedTrack.color, symbol: "music.note", size: 52, artwork: selectedTrack.artwork)
                                     .shadow(color: selectedTrack.color.opacity(0.15), radius: 8, x: 0, y: 4)
                                     .matchedGeometryEffect(id: "home_artwork_\(selectedTrack.id)", in: homeNamespace)
                                 

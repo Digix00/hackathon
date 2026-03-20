@@ -75,7 +75,7 @@ struct HomeInsightsPage: View {
                                     .fill(insight.representativeColor.opacity(0.15))
                                     .frame(width: 90, height: 90)
 
-                                MockArtworkView(
+                                ArtworkPlaceholderView(
                                     color: insight.representativeColor,
                                     symbol: "person.fill",
                                     size: 80,
@@ -120,7 +120,7 @@ struct HomeInsightsPage: View {
             sectionEyebrow("MOST CONNECTIVE TRACK")
 
             VStack(alignment: .center, spacing: 28) {
-                MockArtworkView(
+                ArtworkPlaceholderView(
                     color: trackInsight.track.color,
                     symbol: "music.note",
                     size: 180, // Larger artwork
@@ -178,7 +178,7 @@ struct HomeInsightsPage: View {
             VStack(spacing: 20) {
                 ForEach(Array(trackInsights.prefix(3).enumerated()), id: \.element.id) { index, insight in
                     HStack(spacing: 20) {
-                        MockArtworkView(
+                        ArtworkPlaceholderView(
                             color: insight.track.color,
                             symbol: "music.note",
                             size: 64,
@@ -217,7 +217,7 @@ struct HomeInsightsPage: View {
             HStack(spacing: 16) {
                 ForEach(Array(repeatTrackInsights.prefix(2).enumerated()), id: \.element.id) { _, insight in
                     VStack(alignment: .leading, spacing: 16) {
-                        MockArtworkView(
+                        ArtworkPlaceholderView(
                             color: insight.track.color,
                             symbol: "waveform",
                             size: 60,
@@ -335,7 +335,7 @@ private struct HeroJacketCollageView: View {
                 HStack(spacing: -24) {
                     ForEach(Array(tracks.prefix(8).enumerated()), id: \.offset) { index, track in
                         VStack(alignment: .leading, spacing: 20) {
-                            MockArtworkView(color: track.color, symbol: "music.note", size: 260, artwork: track.artwork)
+                            ArtworkPlaceholderView(color: track.color, symbol: "music.note", size: 260, artwork: track.artwork)
                                 .shadow(color: Color.black.opacity(0.12), radius: 30, x: 0, y: 20)
                                 .shadow(color: track.color.opacity(0.15), radius: 40, x: 0, y: 30)
                                 .rotationEffect(.degrees(Double(index.isMultiple(of: 2) ? -4 : 4)))
