@@ -83,12 +83,21 @@ final class BLEManagerMinimalTests: XCTestCase {
         XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -90), now: now))
     }
 
-    func test_shouldEmitDetection_requiresTwoDetectionsWithinWindow() {
+    func test_shouldEmitDetection_inBackgroundUsesStricterRSSIThreshold() {
         let token = "0011223344556677"
         let now = Date(timeIntervalSince1970: 0)
 
-        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
-        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now.addingTimeInterval(1)))
+        sut.updateAppForegroundState(false)
+
+        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -81), now: now))
+        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -80), now: now))
+    }
+
+    func test_shouldEmitDetection_inForegroundRequiresSingleDetection() {
+        let token = "0011223344556677"
+        let now = Date(timeIntervalSince1970: 0)
+
+        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
     }
 
     func test_shouldEmitDetection_inBackgroundRequiresSingleDetection() {
@@ -104,7 +113,7 @@ final class BLEManagerMinimalTests: XCTestCase {
         let token = "0011223344556677"
         let now = Date(timeIntervalSince1970: 0)
 
-        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
+        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
         XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now.addingTimeInterval(31)))
     }
 
@@ -112,28 +121,36 @@ final class BLEManagerMinimalTests: XCTestCase {
         let token = "0011223344556677"
         let now = Date(timeIntervalSince1970: 0)
 
-        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
-        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now.addingTimeInterval(1)))
+        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
 
         let debounceStart = now.addingTimeInterval(5)
         XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: debounceStart))
         XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: debounceStart.addingTimeInterval(1)))
     }
 
+    func test_shouldEmitDetection_inBackgroundIgnoresDebounceButKeepsCooldown() {
+        let token = "0011223344556677"
+        let now = Date(timeIntervalSince1970: 0)
+
+        sut.updateAppForegroundState(false)
+
+        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
+        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now.addingTimeInterval(5)))
+    }
+
     func test_shouldEmitDetection_appliesCooldown() {
         let token = "0011223344556677"
         let now = Date(timeIntervalSince1970: 0)
 
-        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
-        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now.addingTimeInterval(1)))
+        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
 
         let withinCooldown = now.addingTimeInterval(60)
         XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: withinCooldown))
         XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: withinCooldown.addingTimeInterval(1)))
 
         let afterCooldown = now.addingTimeInterval(301)
-        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: afterCooldown))
-        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: afterCooldown.addingTimeInterval(1)))
+        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: afterCooldown))
+        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: afterCooldown.addingTimeInterval(1)))
     }
 }
 
