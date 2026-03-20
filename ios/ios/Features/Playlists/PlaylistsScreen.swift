@@ -188,7 +188,7 @@ private struct PlaylistRowView: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            MockArtworkView(color: playlist.accentColor, symbol: "music.note.list", size: 52)
+            ArtworkPlaceholderView(color: playlist.accentColor, symbol: "music.note.list", size: 52)
                 .shadow(color: playlist.accentColor.opacity(0.2), radius: 8, x: 0, y: 4)
 
             VStack(alignment: .leading, spacing: 6) {
@@ -229,7 +229,7 @@ private struct MyTrackRow: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            MockArtworkView(color: track.color, symbol: "music.note", size: 52, artwork: track.artwork)
+            ArtworkPlaceholderView(color: track.color, symbol: "music.note", size: 52, artwork: track.artwork)
                 .shadow(color: track.color.opacity(0.2), radius: 8, x: 0, y: 4)
 
             VStack(alignment: .leading, spacing: 4) {

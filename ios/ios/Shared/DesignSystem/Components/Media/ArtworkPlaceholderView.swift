@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct MockArtworkView: View {
+struct ArtworkPlaceholderView: View {
     let color: Color
     let symbol: String
     let size: CGFloat

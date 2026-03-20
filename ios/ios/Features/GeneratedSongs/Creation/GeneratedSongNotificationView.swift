@@ -30,7 +30,7 @@ struct GeneratedSongNotificationView: View {
                             .blur(radius: 30)
                             .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
 
-                        MockArtworkView(color: song.color, symbol: "sparkles", size: 120)
+                        ArtworkPlaceholderView(color: song.color, symbol: "sparkles", size: 120)
                             .shadow(color: song.color.opacity(0.8), radius: isAnimating ? 40 : 20, x: 0, y: 15)
                             .rotationEffect(.degrees(isAnimating ? 8 : -8))
                             .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: isAnimating)

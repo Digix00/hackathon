@@ -43,7 +43,7 @@ struct SettingsHubView: View {
         [
             SettingsDestination(id: "empty-states", icon: "rectangle.stack.fill", title: "空状態・エラー状態", destination: { lockedDestination(EmptyStatesGalleryView()) }),
             SettingsDestination(id: "realtime-demo", icon: "dot.radiowaves.left.and.right", title: "リアルタイム演出", destination: { lockedDestination(RealtimeDemoView()) }),
-            SettingsDestination(id: "generated-song-mocks", icon: "music.note.tv.fill", title: "生成曲モック画面", destination: { lockedDestination(GeneratedSongMockGalleryView()) }),
+            SettingsDestination(id: "generated-song-previews", icon: "music.note.tv.fill", title: "生成曲プレビュー画面", destination: { lockedDestination(GeneratedSongPreviewGalleryView()) }),
             SettingsDestination(id: "restart-onboarding", icon: "sparkles", title: "オンボーディングをやり直す", destination: { lockedDestination(RestartOnboardingView(restartOnboarding: restartOnboarding)) }),
             SettingsDestination(
                 id: "delete-account",

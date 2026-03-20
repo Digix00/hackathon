@@ -125,7 +125,7 @@ struct ChainProgressView: View {
                         .frame(maxWidth: .infinity)
 
                         if viewModel.canAppendDemoLyric {
-                            SecondaryButton(title: "モックで共鳴を進める", systemImage: "plus.circle") {
+                            SecondaryButton(title: "サンプルで共鳴を進める", systemImage: "plus.circle") {
                                 viewModel.appendDemoLyric()
                             }
                             .frame(maxWidth: sectionWidth)

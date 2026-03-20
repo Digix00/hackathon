@@ -14,7 +14,7 @@ struct TrackSelectionRow: View {
                     .frame(width: 64, height: 64)
                     .blur(radius: 12)
 
-                MockArtworkView(color: track.color, symbol: "music.note", size: 54, artwork: track.artwork)
+                ArtworkPlaceholderView(color: track.color, symbol: "music.note", size: 54, artwork: track.artwork)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .shadow(color: track.color.opacity(0.18), radius: 10, x: 0, y: 6)
             }

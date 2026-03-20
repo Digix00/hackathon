@@ -26,7 +26,7 @@ struct EncounterMatchedArtworkView: View {
     }
 
     private var artworkView: some View {
-        MockArtworkView(
+        ArtworkPlaceholderView(
             color: encounter.track.color,
             symbol: "music.note",
             size: size,
