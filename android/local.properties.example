@@ -1,8 +1,12 @@
-# local.properties – このファイルは .gitignore で除外してください
-# Firebase / API の秘密情報を環境別に記入します
+# local.properties - this file should stay out of git
+# Copy this file to android/local.properties and replace placeholder values.
 
-# prod 環境 API ベース URL
+# Development
+dev.google.web_client_id=YOUR_DEV_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com
+
+# Production
 prod.api.base_url=https://api.example.com/
+prod.google.web_client_id=YOUR_PROD_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com
 
 # Release 署名（release ビルド時に必須）
 release.signing.store_file=/path/to/release-keystore.jks
