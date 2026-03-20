@@ -20,11 +20,11 @@ const userIDContextKey = "user_id"
 //   - user_id: Firebase認証済みリクエストの場合のみ
 //   - error: ハンドラーがエラーを返した場合のみ
 //
-// ログレベルはステータスコードとエラー有無で自動選択する:
+// ログレベルはステータスコードで自動選択する:
 //
-//	5xx またはハンドラーエラー → Error
-//	4xx                       → Warn
-//	それ以外                  → Info
+//	5xx → Error
+//	4xx → Warn
+//	それ以外 → Info
 func RequestLogger(log *zap.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -32,6 +32,14 @@ func RequestLogger(log *zap.Logger) echo.MiddlewareFunc {
 			req := c.Request()
 
 			err := next(c)
+
+			// Echo v4 では HTTPErrorHandler がミドルウェアチェーンの外側（ServeHTTP）から呼ばれる。
+			// next(c) 直後は res.Status がまだ確定していないため、ここで c.Error(err) を呼び出して
+			// エラーハンドラを先に実行し、レスポンスに正しいステータスコードを書き込む。
+			// その後 nil を返すことで Echo による二重処理を防ぐ。
+			if err != nil {
+				c.Error(err)
+			}
 
 			res := c.Response()
 			latency := time.Since(start)
@@ -56,7 +64,7 @@ func RequestLogger(log *zap.Logger) echo.MiddlewareFunc {
 			}
 
 			switch {
-			case err != nil || res.Status >= 500:
+			case res.Status >= 500:
 				log.Error("request", fields...)
 			case res.Status >= 400:
 				log.Warn("request", fields...)
@@ -64,7 +72,7 @@ func RequestLogger(log *zap.Logger) echo.MiddlewareFunc {
 				log.Info("request", fields...)
 			}
 
-			return err
+			return nil // c.Error(err) で処理済みのため nil を返す
 		}
 	}
 }
