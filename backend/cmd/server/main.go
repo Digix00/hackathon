@@ -80,7 +80,7 @@ func main() {
 	e.HideBanner = true
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
-	e.Use(middleware.Logger())
+	e.Use(applogger.RequestLogger(log))
 
 	// Swagger UI は development / test 環境のみ公開する（Seed と同じ allowlist 方式）
 	if cfg.GoEnv == "development" || cfg.GoEnv == "test" {
@@ -91,7 +91,7 @@ func main() {
 	e.GET("/healthz", healthzHandler)
 	e.GET("/healthz/postgres", healthzPostgresHandler(sqlDB))
 
-	handler.RegisterRoutes(e, buildDependencies(db, authClient, cfg))
+	handler.RegisterRoutes(e, buildDependencies(db, authClient, cfg, log))
 
 	log.Info("server starting", zap.String("port", cfg.Port))
 

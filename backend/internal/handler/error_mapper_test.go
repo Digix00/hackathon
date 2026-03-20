@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	domainerrs "hackathon/internal/domain/errs"
 )
@@ -41,7 +42,7 @@ func TestMapErrorFromHTTPErrorWithExplicitBody(t *testing.T) {
 
 func TestInstallHTTPErrorHandlerWritesUnifiedJSON(t *testing.T) {
 	e := echo.New()
-	InstallHTTPErrorHandler(e)
+	InstallHTTPErrorHandler(e, zap.NewNop())
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()

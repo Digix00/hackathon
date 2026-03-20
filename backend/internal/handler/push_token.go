@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	schemareq "hackathon/internal/handler/schema/request"
@@ -13,11 +14,12 @@ import (
 )
 
 type pushTokenHandler struct {
+	log              *zap.Logger
 	pushTokenUsecase usecase.PushTokenUsecase
 }
 
-func newPushTokenHandler(pushTokenUsecase usecase.PushTokenUsecase) *pushTokenHandler {
-	return &pushTokenHandler{pushTokenUsecase: pushTokenUsecase}
+func newPushTokenHandler(log *zap.Logger, pushTokenUsecase usecase.PushTokenUsecase) *pushTokenHandler {
+	return &pushTokenHandler{log: log, pushTokenUsecase: pushTokenUsecase}
 }
 
 // createPushToken godoc

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
@@ -42,15 +43,18 @@ type PlaylistUsecase interface {
 }
 
 type playlistUsecase struct {
+	log          *zap.Logger
 	playlistRepo repository.PlaylistRepository
 	userRepo     repository.UserRepository
 }
 
 func NewPlaylistUsecase(
+	log *zap.Logger,
 	playlistRepo repository.PlaylistRepository,
 	userRepo repository.UserRepository,
 ) PlaylistUsecase {
 	return &playlistUsecase{
+		log:          log,
 		playlistRepo: playlistRepo,
 		userRepo:     userRepo,
 	}

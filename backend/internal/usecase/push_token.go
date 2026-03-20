@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
@@ -20,12 +21,13 @@ type PushTokenUsecase interface {
 }
 
 type pushTokenUsecase struct {
+	log            *zap.Logger
 	userRepo       repository.UserRepository
 	userDeviceRepo repository.UserDeviceRepository
 }
 
-func NewPushTokenUsecase(userRepo repository.UserRepository, userDeviceRepo repository.UserDeviceRepository) PushTokenUsecase {
-	return &pushTokenUsecase{userRepo: userRepo, userDeviceRepo: userDeviceRepo}
+func NewPushTokenUsecase(log *zap.Logger, userRepo repository.UserRepository, userDeviceRepo repository.UserDeviceRepository) PushTokenUsecase {
+	return &pushTokenUsecase{log: log, userRepo: userRepo, userDeviceRepo: userDeviceRepo}
 }
 
 func (u *pushTokenUsecase) CreatePushToken(ctx context.Context, authUID string, input dto.CreatePushTokenInput) (dto.Device, bool, error) {

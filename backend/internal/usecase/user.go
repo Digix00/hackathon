@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
@@ -25,6 +26,7 @@ type UserUsecase interface {
 }
 
 type userUsecase struct {
+	log              *zap.Logger
 	userRepo         repository.UserRepository
 	userSettingsRepo repository.UserSettingsRepository
 	blockRepo        repository.BlockRepository
@@ -35,6 +37,7 @@ type userUsecase struct {
 // NewUserUsecase は UserUsecase を生成する。
 // Firebase ユーザー削除は Firebase 固有のエラー型が必要なため handler 層で行い、ここでは注入しない。
 func NewUserUsecase(
+	log *zap.Logger,
 	userRepo repository.UserRepository,
 	userSettingsRepo repository.UserSettingsRepository,
 	blockRepo repository.BlockRepository,
@@ -42,6 +45,7 @@ func NewUserUsecase(
 	trackRepo repository.UserCurrentTrackRepository,
 ) UserUsecase {
 	return &userUsecase{
+		log:              log,
 		userRepo:         userRepo,
 		userSettingsRepo: userSettingsRepo,
 		blockRepo:        blockRepo,

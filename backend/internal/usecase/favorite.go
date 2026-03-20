@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"go.uber.org/zap"
+
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
 	usecasedto "hackathon/internal/usecase/dto"
@@ -27,6 +29,7 @@ type FavoriteUsecase interface {
 }
 
 type favoriteUsecase struct {
+	log               *zap.Logger
 	userRepo          repository.UserRepository
 	trackFavoriteRepo repository.TrackFavoriteRepository
 	playlistRepo      repository.PlaylistRepository
@@ -34,12 +37,14 @@ type favoriteUsecase struct {
 }
 
 func NewFavoriteUsecase(
+	log *zap.Logger,
 	userRepo repository.UserRepository,
 	trackFavoriteRepo repository.TrackFavoriteRepository,
 	playlistRepo repository.PlaylistRepository,
 	trackCatalogRepo repository.TrackCatalogRepository,
 ) FavoriteUsecase {
 	return &favoriteUsecase{
+		log:               log,
 		userRepo:          userRepo,
 		trackFavoriteRepo: trackFavoriteRepo,
 		playlistRepo:      playlistRepo,

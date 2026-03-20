@@ -3,6 +3,8 @@ package usecase
 import (
 	"context"
 
+	"go.uber.org/zap"
+
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
@@ -16,17 +18,20 @@ type CommentUsecase interface {
 }
 
 type commentUsecase struct {
+	log           *zap.Logger
 	userRepo      repository.UserRepository
 	commentRepo   repository.CommentRepository
 	encounterRepo repository.EncounterRepository
 }
 
 func NewCommentUsecase(
+	log *zap.Logger,
 	userRepo repository.UserRepository,
 	commentRepo repository.CommentRepository,
 	encounterRepo repository.EncounterRepository,
 ) CommentUsecase {
 	return &commentUsecase{
+		log:           log,
 		userRepo:      userRepo,
 		commentRepo:   commentRepo,
 		encounterRepo: encounterRepo,

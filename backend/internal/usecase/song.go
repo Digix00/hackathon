@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"go.uber.org/zap"
+
 	"hackathon/internal/domain/entity"
 	"hackathon/internal/domain/repository"
 	usecasedto "hackathon/internal/usecase/dto"
@@ -16,12 +18,14 @@ type SongUsecase interface {
 }
 
 type songUsecase struct {
+	log       *zap.Logger
 	userRepo  repository.UserRepository
 	lyricRepo repository.LyricRepository
 }
 
-func NewSongUsecase(userRepo repository.UserRepository, lyricRepo repository.LyricRepository) SongUsecase {
+func NewSongUsecase(log *zap.Logger, userRepo repository.UserRepository, lyricRepo repository.LyricRepository) SongUsecase {
 	return &songUsecase{
+		log:       log,
 		userRepo:  userRepo,
 		lyricRepo: lyricRepo,
 	}
