@@ -225,16 +225,6 @@ struct SearchView: View {
             }
         }
         .contentShape(Rectangle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 20, coordinateSpace: .local)
-                .onEnded { value in
-                    let fromLeadingEdge = value.startLocation.x < 32
-                    let isBackSwipe = value.translation.width > 90 && abs(value.translation.height) < 80
-                    if fromLeadingEdge && isBackSwipe {
-                        dismiss()
-                    }
-                }
-        )
         .onAppear {
             if viewModel.query.isEmpty {
                 viewModel.query = defaultQuery
@@ -244,6 +234,12 @@ struct SearchView: View {
             if mode == .shareTrack {
                 viewModel.loadSharedTrack()
             }
+        }
+        .if(mode == .shareTrack) { view in
+            view.lockLibraryPageSwipe()
+        }
+        .if(mode == .shareTrack) { view in
+            view.disableInteractivePopGesture(true)
         }
     }
 }

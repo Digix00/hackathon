@@ -113,5 +113,11 @@ struct AppScaffold<Content: View>: View {
             .background(Color.clear)
             .ignoresSafeArea()
         }
+        .if(showsBackButton) { view in
+            view.lockLibraryPageSwipe()
+        }
+        .if(showsBackButton) { view in
+            view.disableInteractivePopGesture(true)
+        }
     }
 }
