@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -18,11 +19,12 @@ import (
 )
 
 type encounterRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
-func NewEncounterRepository(db *gorm.DB) repository.EncounterRepository {
-	return &encounterRepository{db: db}
+func NewEncounterRepository(log *zap.Logger, db *gorm.DB) repository.EncounterRepository {
+	return &encounterRepository{log: log, db: db}
 }
 
 func (r *encounterRepository) CountByUserID(ctx context.Context, userID string) (int64, error) {

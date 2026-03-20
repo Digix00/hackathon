@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
@@ -21,6 +22,7 @@ type EncounterUsecase interface {
 }
 
 type encounterUsecase struct {
+	log           *zap.Logger
 	userRepo      repository.UserRepository
 	bleTokenRepo  repository.BleTokenRepository
 	encounterRepo repository.EncounterRepository
@@ -39,6 +41,7 @@ func WithEncounterClock(clock Clock) EncounterUsecaseOption {
 }
 
 func NewEncounterUsecase(
+	log *zap.Logger,
 	userRepo repository.UserRepository,
 	bleTokenRepo repository.BleTokenRepository,
 	encounterRepo repository.EncounterRepository,
@@ -46,6 +49,7 @@ func NewEncounterUsecase(
 	opts ...EncounterUsecaseOption,
 ) EncounterUsecase {
 	u := &encounterUsecase{
+		log:           log,
 		userRepo:      userRepo,
 		bleTokenRepo:  bleTokenRepo,
 		encounterRepo: encounterRepo,

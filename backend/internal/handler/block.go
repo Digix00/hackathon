@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	schemareq "hackathon/internal/handler/schema/request"
@@ -15,11 +16,12 @@ import (
 )
 
 type blockHandler struct {
+	log     *zap.Logger
 	usecase usecase.BlockUsecase
 }
 
-func newBlockHandler(u usecase.BlockUsecase) *blockHandler {
-	return &blockHandler{usecase: u}
+func newBlockHandler(log *zap.Logger, u usecase.BlockUsecase) *blockHandler {
+	return &blockHandler{log: log, usecase: u}
 }
 
 // createBlock godoc

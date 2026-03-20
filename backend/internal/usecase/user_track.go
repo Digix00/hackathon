@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"go.uber.org/zap"
+
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
@@ -35,6 +37,7 @@ type UserTrackUsecase interface {
 }
 
 type userTrackUsecase struct {
+	log              *zap.Logger
 	userRepo         repository.UserRepository
 	userTrackRepo    repository.UserTrackRepository
 	sharedTrackRepo  repository.UserCurrentTrackRepository
@@ -42,12 +45,14 @@ type userTrackUsecase struct {
 }
 
 func NewUserTrackUsecase(
+	log *zap.Logger,
 	userRepo repository.UserRepository,
 	userTrackRepo repository.UserTrackRepository,
 	sharedTrackRepo repository.UserCurrentTrackRepository,
 	trackCatalogRepo repository.TrackCatalogRepository,
 ) UserTrackUsecase {
 	return &userTrackUsecase{
+		log:              log,
 		userRepo:         userRepo,
 		userTrackRepo:    userTrackRepo,
 		sharedTrackRepo:  sharedTrackRepo,

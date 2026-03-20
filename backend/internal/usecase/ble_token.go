@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"go.uber.org/zap"
+
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
@@ -22,17 +24,20 @@ type BleTokenUsecase interface {
 }
 
 type bleTokenUsecase struct {
+	log          *zap.Logger
 	bleTokenRepo repository.BleTokenRepository
 	userRepo     repository.UserRepository
 	blockRepo    repository.BlockRepository
 }
 
 func NewBleTokenUsecase(
+	log *zap.Logger,
 	bleTokenRepo repository.BleTokenRepository,
 	userRepo repository.UserRepository,
 	blockRepo repository.BlockRepository,
 ) BleTokenUsecase {
 	return &bleTokenUsecase{
+		log:          log,
 		bleTokenRepo: bleTokenRepo,
 		userRepo:     userRepo,
 		blockRepo:    blockRepo,

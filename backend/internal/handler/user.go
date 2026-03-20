@@ -6,6 +6,7 @@ import (
 
 	firebaseauth "firebase.google.com/go/v4/auth"
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	schemareq "hackathon/internal/handler/schema/request"
@@ -15,12 +16,14 @@ import (
 )
 
 type userHandler struct {
+	log             *zap.Logger
 	authUserManager FirebaseUserManager
 	userUsecase     usecase.UserUsecase
 }
 
-func newUserHandler(authUserManager FirebaseUserManager, userUsecase usecase.UserUsecase) *userHandler {
+func newUserHandler(log *zap.Logger, authUserManager FirebaseUserManager, userUsecase usecase.UserUsecase) *userHandler {
 	return &userHandler{
+		log:             log,
 		authUserManager: authUserManager,
 		userUsecase:     userUsecase,
 	}
@@ -238,7 +241,10 @@ func (h *userHandler) deleteMe(c echo.Context) error {
 	// Firebase 削除に失敗してもクライアントには成功を返しエラーをログに残す。
 	// 孤立した Firebase アカウントは DB レコードを持たないため再ログインしても即 404 になる。
 	if err := h.authUserManager.DeleteUser(c.Request().Context(), uid); err != nil && !firebaseauth.IsUserNotFound(err) {
-		c.Logger().Errorf("deleteMe: firebase user deletion failed (uid=%s): %v", uid, err)
+		h.log.Error("deleteMe: firebase user deletion failed",
+			zap.String("uid", uid),
+			zap.Error(err),
+		)
 	}
 
 	return c.NoContent(http.StatusNoContent)

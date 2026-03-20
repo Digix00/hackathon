@@ -2,11 +2,11 @@ package handler
 
 import (
 	"errors"
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/handler/middleware"
@@ -15,11 +15,12 @@ import (
 )
 
 type musicHandler struct {
+	log          *zap.Logger
 	musicUsecase usecase.MusicUsecase
 }
 
-func newMusicHandler(musicUsecase usecase.MusicUsecase) *musicHandler {
-	return &musicHandler{musicUsecase: musicUsecase}
+func newMusicHandler(log *zap.Logger, musicUsecase usecase.MusicUsecase) *musicHandler {
+	return &musicHandler{log: log, musicUsecase: musicUsecase}
 }
 
 // authorize godoc
@@ -71,7 +72,11 @@ func (h *musicHandler) callback(c echo.Context) error {
 	if err := h.musicUsecase.HandleCallback(c.Request().Context(), provider, code, state); err != nil {
 		result = "error"
 		errorCode = domainErrorCode(err)
-		log.Printf("[SPOTIFY_CALLBACK_ERROR] provider=%s code=%s error=%v", provider, code, err)
+		h.log.Error("music OAuth callback failed",
+			zap.String("provider", provider),
+			zap.String("error_code", errorCode),
+			zap.Error(err),
+		)
 	}
 	return c.Redirect(http.StatusFound, h.musicUsecase.CallbackRedirectURL(provider, result, errorCode))
 }
