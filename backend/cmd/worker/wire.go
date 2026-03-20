@@ -71,6 +71,7 @@ func buildDependencies(ctx context.Context, db *gorm.DB, cfg *config.WorkerConfi
 		lyriaClient,
 		songUploader,
 		cfg.LyriaDefaultDuration,
+		cfg.LyriaTimeoutSec,
 	), cleanup
 }
 

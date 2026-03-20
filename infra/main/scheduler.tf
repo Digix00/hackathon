@@ -20,10 +20,11 @@ resource "google_cloud_scheduler_job" "worker_kick" {
 # Lyria 楽曲生成ジョブを定期実行する Scheduler
 # lyria-worker の /lyria エンドポイントを叩き、OutboxLyriaJob を処理する
 resource "google_cloud_scheduler_job" "lyria_worker_kick" {
-  name      = "lyria-worker-kick"
-  region    = var.region
-  schedule  = "*/10 * * * *"
-  time_zone = "Asia/Tokyo"
+  name             = "lyria-worker-kick"
+  region           = var.region
+  schedule         = "*/10 * * * *"
+  time_zone        = "Asia/Tokyo"
+  attempt_deadline = "900s"
 
   http_target {
     http_method = "POST"

@@ -33,12 +33,13 @@ type WorkerUsecase interface {
 }
 
 type workerUsecase struct {
-	bleTokenRepo  repository.BleTokenRepository
-	lyriaJobRepo  repository.LyriaJobRepository
-	geminiClient  port.GeminiClient
-	lyriaClient   port.LyriaClient
-	songUploader  SongUploader
-	defaultDurSec int
+	bleTokenRepo    repository.BleTokenRepository
+	lyriaJobRepo    repository.LyriaJobRepository
+	geminiClient    port.GeminiClient
+	lyriaClient     port.LyriaClient
+	songUploader    SongUploader
+	defaultDurSec   int
+	lyriaTimeoutSec int
 }
 
 // NewWorkerUsecase は WorkerUsecase を初期化する
@@ -49,17 +50,22 @@ func NewWorkerUsecase(
 	lyriaClient port.LyriaClient,
 	songUploader SongUploader,
 	defaultDurSec int,
+	lyriaTimeoutSec int,
 ) WorkerUsecase {
 	if defaultDurSec <= 0 {
 		defaultDurSec = 45
 	}
+	if lyriaTimeoutSec <= 0 {
+		lyriaTimeoutSec = 300
+	}
 	return &workerUsecase{
-		bleTokenRepo:  bleTokenRepo,
-		lyriaJobRepo:  lyriaJobRepo,
-		geminiClient:  geminiClient,
-		lyriaClient:   lyriaClient,
-		songUploader:  songUploader,
-		defaultDurSec: defaultDurSec,
+		bleTokenRepo:    bleTokenRepo,
+		lyriaJobRepo:    lyriaJobRepo,
+		geminiClient:    geminiClient,
+		lyriaClient:     lyriaClient,
+		songUploader:    songUploader,
+		defaultDurSec:   defaultDurSec,
+		lyriaTimeoutSec: lyriaTimeoutSec,
 	}
 }
 
@@ -120,8 +126,10 @@ func (u *workerUsecase) processJob(ctx context.Context, job repository.OutboxLyr
 		}
 	}
 
-	// Lyria で楽曲生成
-	lyriaResp, err := u.lyriaClient.GenerateSong(ctx, &port.LyriaRequest{
+	// Lyria で楽曲生成（LYRIA_TIMEOUT_SEC で設定した秒数でタイムアウト）
+	lyriaCtx, lyriaCancel := context.WithTimeout(ctx, time.Duration(u.lyriaTimeoutSec)*time.Second)
+	defer lyriaCancel()
+	lyriaResp, err := u.lyriaClient.GenerateSong(lyriaCtx, &port.LyriaRequest{
 		Lyrics:      lyrics,
 		Mood:        analysis.Mood,
 		Genre:       analysis.Genre,

@@ -84,12 +84,12 @@ func LoadWorker() (*WorkerConfig, error) {
 			cfg.DBConnectionName,
 		)
 	}
-	if cfg.GoEnv != "development" {
-		if cfg.VertexAIProjectID == "" {
-			return nil, fmt.Errorf("VERTEX_AI_PROJECT_ID は本番環境で必須です")
-		}
+	// VertexAIProjectID 未設定時は wire.go の分岐でモッククライアントにフォールバックするため、
+	// AUDIO_BUCKET_NAME のチェックは VertexAIProjectID が設定されている場合のみ行う。
+	// これにより Lyria 不使用の既存 worker サービスが VERTEX_AI_PROJECT_ID なしで起動できる。
+	if cfg.GoEnv != "development" && cfg.VertexAIProjectID != "" {
 		if cfg.AudioBucketName == "" {
-			return nil, fmt.Errorf("AUDIO_BUCKET_NAME は本番環境で必須です")
+			return nil, fmt.Errorf("AUDIO_BUCKET_NAME は本番環境で VERTEX_AI_PROJECT_ID が設定されている場合は必須です")
 		}
 	}
 	return &cfg, nil
