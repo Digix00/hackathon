@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -10,6 +11,10 @@ import (
 	"hackathon/internal/domain/repository"
 	"hackathon/internal/usecase/port"
 )
+
+// ErrHarmfulContent は有害コンテンツ検出による永続的エラーを示す。
+// このエラーは歌詞の内容が原因であるため、リトライしても結果は変わらない。
+var ErrHarmfulContent = errors.New("harmful content detected")
 
 // SongUploader は音声ファイルのアップロードを担うインターフェース
 type SongUploader interface {
@@ -71,8 +76,9 @@ func (u *workerUsecase) ProcessLyriaJobs(ctx context.Context) (int, error) {
 	processed := 0
 	for _, job := range jobs {
 		if err := u.processJob(ctx, job); err != nil {
-			// FailJob はリトライ管理を行うため、エラーを記録して継続
-			_ = u.lyriaJobRepo.FailJob(ctx, job.JobID, err.Error())
+			// 有害コンテンツは歌詞が不変なため即座に永続失敗とし、不要なリトライを防ぐ
+			permanent := errors.Is(err, ErrHarmfulContent)
+			_ = u.lyriaJobRepo.FailJob(ctx, job.JobID, err.Error(), permanent)
 			continue
 		}
 		processed++
@@ -91,7 +97,7 @@ func (u *workerUsecase) processJob(ctx context.Context, job repository.OutboxLyr
 		return fmt.Errorf("moderation failed: %w", err)
 	}
 	if modResult.IsHarmful {
-		return fmt.Errorf("content moderation failed: harmful content detected (categories: %v)", modResult.Categories)
+		return fmt.Errorf("%w: categories: %v", ErrHarmfulContent, modResult.Categories)
 	}
 
 	// 歌詞分析
