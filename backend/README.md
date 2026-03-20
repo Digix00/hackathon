@@ -114,7 +114,7 @@ DEV_AUTH_UID=demo-user-1
 ```
 
 無効化したい場合は `.env.development` から `DEV_AUTH_TOKEN`, `DEV_AUTH_UID` を削除し、
-`docs/architecture/backend.md` の「削除手順」に従ってコード側を削除してください。
+`../docs/architecture/backend.md` の「削除手順」に従ってコード側を削除してください。
 
 ## 停止
 
