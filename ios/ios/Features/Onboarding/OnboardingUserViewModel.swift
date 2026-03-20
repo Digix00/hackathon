@@ -115,6 +115,12 @@ final class OnboardingUserViewModel: ObservableObject {
                     errorMessage = "ユーザー作成に失敗しました"
                     isSubmitting = false
                 }
+            case .invalidBaseURL:
+                errorMessage = "API の接続先が未設定です。`Secrets.xcconfig` の `API_BASE_URL` を確認してください"
+                isSubmitting = false
+            case .missingAuthToken:
+                errorMessage = "ログイン状態を確認してください。再度ログインしてからお試しください"
+                isSubmitting = false
             default:
                 errorMessage = "接続に失敗しました。もう一度お試しください"
                 isSubmitting = false
