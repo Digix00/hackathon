@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
@@ -21,12 +22,14 @@ type SettingsUsecase interface {
 }
 
 type settingsUsecase struct {
+	log          *zap.Logger
 	userRepo     repository.UserRepository
 	settingsRepo repository.UserSettingsRepository
 }
 
-func NewSettingsUsecase(userRepo repository.UserRepository, settingsRepo repository.UserSettingsRepository) SettingsUsecase {
+func NewSettingsUsecase(log *zap.Logger, userRepo repository.UserRepository, settingsRepo repository.UserSettingsRepository) SettingsUsecase {
 	return &settingsUsecase{
+		log:          log,
 		userRepo:     userRepo,
 		settingsRepo: settingsRepo,
 	}

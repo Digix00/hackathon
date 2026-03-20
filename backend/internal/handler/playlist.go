@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	schemareq "hackathon/internal/handler/schema/request"
@@ -14,11 +15,12 @@ import (
 )
 
 type playlistHandler struct {
+	log     *zap.Logger
 	usecase usecase.PlaylistUsecase
 }
 
-func newPlaylistHandler(u usecase.PlaylistUsecase) *playlistHandler {
-	return &playlistHandler{usecase: u}
+func newPlaylistHandler(log *zap.Logger, u usecase.PlaylistUsecase) *playlistHandler {
+	return &playlistHandler{log: log, usecase: u}
 }
 
 // createPlaylist godoc

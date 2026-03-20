@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"hackathon/internal/domain/entity"
@@ -14,11 +15,12 @@ import (
 )
 
 type userSettingsRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
-func NewUserSettingsRepository(db *gorm.DB) repository.UserSettingsRepository {
-	return &userSettingsRepository{db: db}
+func NewUserSettingsRepository(log *zap.Logger, db *gorm.DB) repository.UserSettingsRepository {
+	return &userSettingsRepository{log: log, db: db}
 }
 
 func (r *userSettingsRepository) FindByUserID(ctx context.Context, userID string) (entity.UserSettings, error) {

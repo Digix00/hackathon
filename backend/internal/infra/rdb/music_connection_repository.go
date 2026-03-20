@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -17,12 +18,13 @@ import (
 )
 
 type musicConnectionRepository struct {
+	log       *zap.Logger
 	db        *gorm.DB
 	encrypter *crypto.TokenEncrypter
 }
 
-func NewMusicConnectionRepository(db *gorm.DB, encrypter *crypto.TokenEncrypter) repository.MusicConnectionRepository {
-	return &musicConnectionRepository{db: db, encrypter: encrypter}
+func NewMusicConnectionRepository(log *zap.Logger, db *gorm.DB, encrypter *crypto.TokenEncrypter) repository.MusicConnectionRepository {
+	return &musicConnectionRepository{log: log, db: db, encrypter: encrypter}
 }
 
 func (r *musicConnectionRepository) ListByUserID(ctx context.Context, userID string) ([]entity.MusicConnection, error) {

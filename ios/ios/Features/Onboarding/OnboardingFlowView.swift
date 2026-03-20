@@ -4,6 +4,7 @@ struct OnboardingFlowView: View {
     private enum Step: Int, CaseIterable {
         case welcome
         case profile
+        case musicServices
         case permissions
         case finish
 
@@ -11,6 +12,7 @@ struct OnboardingFlowView: View {
             switch self {
             case .welcome: return "はじめよう"
             case .profile: return "プロフィール"
+            case .musicServices: return "音楽連携"
             case .permissions: return "権限設定"
             case .finish: return "準備完了"
             }
@@ -20,6 +22,7 @@ struct OnboardingFlowView: View {
             switch self {
             case .welcome: return "A NEW WAY TO CONNECT"
             case .profile: return "HOW OTHERS WILL SEE YOU"
+            case .musicServices: return "PLUG IN YOUR SOUND WORLD"
             case .permissions: return "SETTING UP THE BEACON"
             case .finish: return "EVERYTHING IS SET"
             }
@@ -36,6 +39,8 @@ struct OnboardingFlowView: View {
 
     @State private var step: Step = .welcome
     @StateObject private var userViewModel = OnboardingUserViewModel()
+    @StateObject private var musicServicesViewModel = MusicServicesViewModel()
+    @Environment(\.openURL) private var openURL
     let onFinish: () -> Void
 
     var body: some View {
@@ -52,6 +57,8 @@ struct OnboardingFlowView: View {
                         onboardingWelcome
                     case .profile:
                         onboardingProfile
+                    case .musicServices:
+                        onboardingMusicServices
                     case .permissions:
                         onboardingPermissions
                     default:
@@ -96,6 +103,9 @@ struct OnboardingFlowView: View {
         }
         .onAppear {
             userViewModel.prefillIfPossible()
+        }
+        .onOpenURL { url in
+            musicServicesViewModel.handleCallbackURL(url)
         }
     }
 
@@ -331,6 +341,106 @@ struct OnboardingFlowView: View {
         }
     }
 
+    private var onboardingMusicServices: some View {
+        VStack(spacing: 22) {
+            GlassmorphicCard {
+                VStack(alignment: .leading, spacing: 18) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("SOUND PASSPORT")
+                                .font(PrototypeTheme.Typography.Onboarding.eyebrow)
+                                .foregroundStyle(PrototypeTheme.accent)
+                                .kerning(2.0)
+
+                            Text("聴いている音が、そのまま出会いの輪郭になる。")
+                                .font(PrototypeTheme.Typography.Onboarding.stepTitle)
+                                .foregroundStyle(PrototypeTheme.textPrimary)
+                                .lineSpacing(4)
+                        }
+
+                        Spacer(minLength: 16)
+
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color(red: 0.12, green: 0.72, blue: 0.41).opacity(0.18),
+                                            Color(red: 0.96, green: 0.29, blue: 0.39).opacity(0.22)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(width: 72, height: 72)
+
+                            Image(systemName: "waveform.and.person.filled")
+                                .font(.system(size: 26, weight: .semibold))
+                                .foregroundStyle(PrototypeTheme.textPrimary)
+                        }
+                    }
+
+                    Text("Spotify や Apple Music をつなぐと、あなたの最近のムードや好きな曲をもとに、より自然なすれ違い体験になります。")
+                        .font(PrototypeTheme.Typography.Onboarding.body)
+                        .foregroundStyle(PrototypeTheme.textSecondary)
+                        .lineSpacing(5)
+                }
+            }
+
+            VStack(spacing: 14) {
+                OnboardingMusicServiceCard(
+                    provider: .spotify,
+                    isConnected: musicServicesViewModel.isConnected(.spotify),
+                    username: musicServicesViewModel.connection(for: .spotify)?.providerUsername,
+                    isWorking: musicServicesViewModel.isActionInProgress(.spotify),
+                    accentColor: Color(red: 0.12, green: 0.72, blue: 0.41)
+                ) {
+                    handleMusicServiceTap(.spotify)
+                }
+
+                OnboardingMusicServiceCard(
+                    provider: .appleMusic,
+                    isConnected: musicServicesViewModel.isConnected(.appleMusic),
+                    username: musicServicesViewModel.connection(for: .appleMusic)?.providerUsername,
+                    isWorking: musicServicesViewModel.isActionInProgress(.appleMusic),
+                    accentColor: Color(red: 0.96, green: 0.29, blue: 0.39)
+                ) {
+                    handleMusicServiceTap(.appleMusic)
+                }
+            }
+
+            if musicServicesViewModel.isLoading || musicServicesViewModel.isSaving || musicServicesViewModel.errorMessage != nil {
+                SettingsStatusView(
+                    isLoading: musicServicesViewModel.isLoading,
+                    isSaving: musicServicesViewModel.isSaving,
+                    errorMessage: musicServicesViewModel.errorMessage
+                )
+            }
+
+            if let actionMessage = musicServicesViewModel.actionMessage {
+                Text(actionMessage)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(PrototypeTheme.success)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            HStack(spacing: 10) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(PrototypeTheme.accent)
+
+                Text("連携はあとから設定でも大丈夫です。まずは 1 つつなぐと体験がぐっと自然になります。")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(PrototypeTheme.textTertiary)
+                    .lineSpacing(4)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .onAppear {
+            musicServicesViewModel.loadIfNeeded()
+        }
+    }
+
     private var onboardingFinish: some View {
         VStack(spacing: 32) {
             ZStack {
@@ -358,6 +468,16 @@ struct OnboardingFlowView: View {
                     .foregroundStyle(PrototypeTheme.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(6)
+            }
+        }
+    }
+
+    private func handleMusicServiceTap(_ provider: MusicConnectionProvider) {
+        guard !musicServicesViewModel.isActionInProgress(provider), !musicServicesViewModel.isLoading else { return }
+
+        Task {
+            if let url = await musicServicesViewModel.startConnection(for: provider) {
+                openURL(url)
             }
         }
     }
@@ -413,4 +533,91 @@ private func menuPickerNoneValue<T>(for type: T.Type) -> T? {
         return "" as? T
     }
     return nil
+}
+
+private struct OnboardingMusicServiceCard: View {
+    let provider: MusicConnectionProvider
+    let isConnected: Bool
+    let username: String?
+    let isWorking: Bool
+    let accentColor: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(accentColor.opacity(0.12))
+                        .frame(width: 60, height: 60)
+
+                    Image(systemName: provider == .spotify ? "music.note.list" : "music.note.house")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(accentColor)
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 8) {
+                        Text(provider == .spotify ? "Spotify" : "Apple Music")
+                            .font(.system(size: 19, weight: .bold))
+                            .foregroundStyle(PrototypeTheme.textPrimary)
+
+                        Text(statusTitle)
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(statusColor)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(statusColor.opacity(0.12))
+                            .clipShape(Capsule())
+                    }
+
+                    Text(statusDescription)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(PrototypeTheme.textSecondary)
+                        .lineSpacing(3)
+                }
+
+                Spacer()
+
+                Image(systemName: isConnected ? "checkmark.circle.fill" : "arrow.up.right")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(isConnected ? PrototypeTheme.success : PrototypeTheme.textTertiary)
+            }
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(PrototypeTheme.surface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .stroke(accentColor.opacity(isConnected ? 0.22 : 0.1), lineWidth: 1)
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(isWorking)
+    }
+
+    private var statusTitle: String {
+        if isWorking {
+            return "CONNECTING"
+        }
+        return isConnected ? "CONNECTED" : "OPTIONAL"
+    }
+
+    private var statusDescription: String {
+        if let username, !username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return "\(username) と接続済み"
+        }
+        if isConnected {
+            return "接続済み。最近の音楽のムードを出会いに反映します。"
+        }
+        return "最近の再生や好みをもとに、より相性の良い出会いをつくります。"
+    }
+
+    private var statusColor: Color {
+        if isWorking {
+            return PrototypeTheme.accent
+        }
+        return isConnected ? PrototypeTheme.success : PrototypeTheme.textTertiary
+    }
 }

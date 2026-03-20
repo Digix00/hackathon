@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	schemares "hackathon/internal/handler/schema/response"
@@ -13,11 +14,12 @@ import (
 )
 
 type favoriteHandler struct {
+	log     *zap.Logger
 	usecase usecase.FavoriteUsecase
 }
 
-func newFavoriteHandler(u usecase.FavoriteUsecase) *favoriteHandler {
-	return &favoriteHandler{usecase: u}
+func newFavoriteHandler(log *zap.Logger, u usecase.FavoriteUsecase) *favoriteHandler {
+	return &favoriteHandler{log: log, usecase: u}
 }
 
 // addTrackFavorite godoc

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	schemareq "hackathon/internal/handler/schema/request"
@@ -15,11 +16,12 @@ import (
 )
 
 type commentHandler struct {
+	log     *zap.Logger
 	usecase usecase.CommentUsecase
 }
 
-func newCommentHandler(u usecase.CommentUsecase) *commentHandler {
-	return &commentHandler{usecase: u}
+func newCommentHandler(log *zap.Logger, u usecase.CommentUsecase) *commentHandler {
+	return &commentHandler{log: log, usecase: u}
 }
 
 // createComment godoc

@@ -3,6 +3,7 @@ package rdb
 import (
 	"context"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"hackathon/internal/domain/entity"
@@ -12,11 +13,12 @@ import (
 )
 
 type muteRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
-func NewMuteRepository(db *gorm.DB) repository.MuteRepository {
-	return &muteRepository{db: db}
+func NewMuteRepository(log *zap.Logger, db *gorm.DB) repository.MuteRepository {
+	return &muteRepository{log: log, db: db}
 }
 
 func (r *muteRepository) Create(ctx context.Context, mute entity.Mute) error {

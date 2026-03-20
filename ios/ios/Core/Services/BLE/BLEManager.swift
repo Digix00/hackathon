@@ -12,15 +12,13 @@ final class BLEManager: NSObject, ObservableObject {
         static let appServiceUUID = CBUUID(string: "00001234-0000-1000-8000-00805F9B34FB")
         static let tokenPrefixHex = "A17E1E50B1ECAFE0"
         static let rssiThreshold = -85
-        static let detectionCountThreshold = 2
+        static let foregroundDetectionCountThreshold = 2
+        static let backgroundDetectionCountThreshold = 1
         static let detectionWindow: TimeInterval = 30
         static let debounce: TimeInterval = 30
         static let cooldown: TimeInterval = 5 * 60
-        static let backgroundScanWindow: TimeInterval = 5
-        static let backgroundSleepInterval: TimeInterval = 10
-        static let longBackgroundThreshold: TimeInterval = 10 * 60
-        static let longBackgroundScanWindow: TimeInterval = 3
-        static let longBackgroundSleepInterval: TimeInterval = 30
+        static let centralRestoreIdentifier = "hackathon-ble-central"
+        static let peripheralRestoreIdentifier = "hackathon-ble-peripheral"
     }
 
     enum BLEState: Equatable {
@@ -48,8 +46,6 @@ final class BLEManager: NSObject, ObservableObject {
     private var shouldAdvertise = false
     private var shouldScan = false
     private var isForeground = true
-    private var enteredBackgroundAt: Date?
-    private var scanPolicyTask: Task<Void, Never>?
     private var lowPowerModeObserver: NSObjectProtocol?
     private var isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
     private var advertisedToken: String?
@@ -61,8 +57,16 @@ final class BLEManager: NSObject, ObservableObject {
 
     override init() {
         super.init()
-        centralManager = CBCentralManager(delegate: self, queue: .main)
-        peripheralManager = CBPeripheralManager(delegate: self, queue: .main)
+        centralManager = CBCentralManager(
+            delegate: self,
+            queue: .main,
+            options: [CBCentralManagerOptionRestoreIdentifierKey: Constants.centralRestoreIdentifier]
+        )
+        peripheralManager = CBPeripheralManager(
+            delegate: self,
+            queue: .main,
+            options: [CBPeripheralManagerOptionRestoreIdentifierKey: Constants.peripheralRestoreIdentifier]
+        )
         lowPowerModeObserver = NotificationCenter.default.addObserver(
             forName: .NSProcessInfoPowerStateDidChange,
             object: nil,
@@ -73,7 +77,6 @@ final class BLEManager: NSObject, ObservableObject {
     }
 
     deinit {
-        scanPolicyTask?.cancel()
         if let lowPowerModeObserver {
             NotificationCenter.default.removeObserver(lowPowerModeObserver)
         }
@@ -102,14 +105,11 @@ final class BLEManager: NSObject, ObservableObject {
 
     func stopScanning() {
         shouldScan = false
-        scanPolicyTask?.cancel()
-        scanPolicyTask = nil
         stopScanningRuntime()
     }
 
     func updateAppForegroundState(_ isForeground: Bool) {
         self.isForeground = isForeground
-        enteredBackgroundAt = isForeground ? nil : Date()
         reconfigureScanningPolicy()
     }
 
@@ -175,67 +175,32 @@ final class BLEManager: NSObject, ObservableObject {
         }
 
         let data: [String: Any] = [
-            CBAdvertisementDataServiceUUIDsKey: [Constants.appServiceUUID, tokenUUID],
-            CBAdvertisementDataIsConnectable: false
+            CBAdvertisementDataServiceUUIDsKey: [Constants.appServiceUUID, tokenUUID]
         ]
 
         peripheralManager.stopAdvertising()
         peripheralManager.startAdvertising(data)
-        isAdvertising = true
     }
 
     private func reconfigureScanningPolicy() {
-        scanPolicyTask?.cancel()
-        scanPolicyTask = nil
-
         guard shouldScan, !isLowPowerModeEnabled else {
             stopScanningRuntime()
             return
         }
 
-        if isForeground {
-            startScanningRuntimeIfPossible()
-            return
-        }
-
-        scanPolicyTask = Task { [weak self] in
-            await self?.runBackgroundOpportunisticLoop()
-        }
-    }
-
-    @MainActor
-    private func runBackgroundOpportunisticLoop() async {
-        while shouldScan, !isForeground, !isLowPowerModeEnabled, !Task.isCancelled {
-            let cadence = currentBackgroundCadence()
-
-            startScanningRuntimeIfPossible()
-            try? await Task.sleep(nanoseconds: UInt64(cadence.window * 1_000_000_000))
-
-            guard shouldScan, !isForeground, !isLowPowerModeEnabled, !Task.isCancelled else { break }
-            stopScanningRuntime()
-
-            try? await Task.sleep(nanoseconds: UInt64(cadence.sleep * 1_000_000_000))
-        }
-
-        if !isForeground || isLowPowerModeEnabled || !shouldScan {
-            stopScanningRuntime()
-        }
-    }
-
-    private func currentBackgroundCadence() -> (window: TimeInterval, sleep: TimeInterval) {
-        guard
-            let enteredBackgroundAt,
-            Date().timeIntervalSince(enteredBackgroundAt) >= Constants.longBackgroundThreshold
-        else {
-            return (Constants.backgroundScanWindow, Constants.backgroundSleepInterval)
-        }
-        return (Constants.longBackgroundScanWindow, Constants.longBackgroundSleepInterval)
+        startScanningRuntimeIfPossible()
     }
 
     private func handlePowerModeChange() {
         isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
         applyAdvertisingState()
         reconfigureScanningPolicy()
+    }
+
+    private func log(_ message: String) {
+        #if DEBUG
+        print("[BLEManager] \(message)")
+        #endif
     }
 
     private func makeAdvertisingPayload(token: String) -> AdvertisingPayload? {
@@ -264,10 +229,11 @@ final class BLEManager: NSObject, ObservableObject {
     }
 
     private func decodeToken(fromAdvertisementData advertisementData: [String: Any]) -> String? {
-        guard
-            let serviceUUIDs = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID],
-            serviceUUIDs.contains(Constants.appServiceUUID)
-        else {
+        let primaryUUIDs = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] ?? []
+        let overflowUUIDs = advertisementData[CBAdvertisementDataOverflowServiceUUIDsKey] as? [CBUUID] ?? []
+        let serviceUUIDs = primaryUUIDs + overflowUUIDs
+
+        guard serviceUUIDs.contains(Constants.appServiceUUID) else {
             return nil
         }
 
@@ -297,6 +263,9 @@ final class BLEManager: NSObject, ObservableObject {
         // CoreBluetooth uses 127 as a sentinel for unavailable RSSI.
         guard rssiValue != 127 else { return false }
         guard rssiValue >= Constants.rssiThreshold else { return false }
+        let detectionThreshold = isForeground
+            ? Constants.foregroundDetectionCountThreshold
+            : Constants.backgroundDetectionCountThreshold
 
         let previousCounter = detectionCountsByToken[token]
         let nextCount: Int
@@ -306,7 +275,7 @@ final class BLEManager: NSObject, ObservableObject {
             nextCount = 1
         }
         detectionCountsByToken[token] = DetectionCounter(count: nextCount, windowStartedAt: now)
-        guard nextCount >= Constants.detectionCountThreshold else { return false }
+        guard nextCount >= detectionThreshold else { return false }
 
         if let last = debounceByToken[token], now.timeIntervalSince(last) < Constants.debounce {
             return false
@@ -331,6 +300,17 @@ final class BLEManager: NSObject, ObservableObject {
 extension BLEManager: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         updateState(central.state)
+        reconfigureScanningPolicy()
+    }
+
+    func centralManager(_ central: CBCentralManager, willRestoreState dict: [String: Any]) {
+        log("Central state restored: \(dict.keys.sorted())")
+
+        if let restoredScanServices = dict[CBCentralManagerRestoredStateScanServicesKey] as? [CBUUID],
+           restoredScanServices.contains(Constants.appServiceUUID) {
+            shouldScan = true
+        }
+
         reconfigureScanningPolicy()
     }
 
@@ -362,12 +342,29 @@ private struct DetectionCounter {
 
 extension BLEManager: CBPeripheralManagerDelegate {
     func peripheralManagerDidStartAdvertising(_ peripheral: CBPeripheralManager, error: Error?) {
-        if error != nil {
+        if let error {
+            log("Advertising failed: \(error.localizedDescription)")
             isAdvertising = false
+            return
         }
+        isAdvertising = true
     }
 
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
+        applyAdvertisingState()
+    }
+
+    func peripheralManager(_ peripheral: CBPeripheralManager, willRestoreState dict: [String: Any]) {
+        log("Peripheral state restored: \(dict.keys.sorted())")
+
+        if let restoredAdvertisement = dict[CBPeripheralManagerRestoredStateAdvertisementDataKey] as? [String: Any],
+           let restoredUUIDs = restoredAdvertisement[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID],
+           let restoredTokenUUID = restoredUUIDs.first(where: { $0 != Constants.appServiceUUID }) {
+            shouldAdvertise = true
+            advertisedTokenUUID = restoredTokenUUID
+            advertisedToken = decodeBackendToken(fromTokenUUID: restoredTokenUUID)
+        }
+
         applyAdvertisingState()
     }
 }
