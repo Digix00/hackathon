@@ -13,6 +13,9 @@ struct ChainProgressView: View {
         GeometryReader { proxy in
             let globalWidth = proxy.frame(in: .global).width
             let layoutWidth = globalWidth > 0 ? min(proxy.size.width, globalWidth) : proxy.size.width
+            let horizontalPadding: CGFloat = layoutWidth < 390 ? 20 : 32
+            let readableWidth = max(layoutWidth - (horizontalPadding * 2), 0)
+            let sectionWidth = min(readableWidth, 560)
 
             ZStack {
                 DynamicBackground(baseColor: .indigo)
@@ -21,87 +24,131 @@ struct ChainProgressView: View {
                     ProgressView("接続中...")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let chain = viewModel.chain {
-                    content(chain: chain, layoutWidth: layoutWidth)
+                    content(
+                        chain: chain,
+                        layoutWidth: layoutWidth,
+                        horizontalPadding: horizontalPadding,
+                        sectionWidth: sectionWidth
+                    )
                 } else {
                     errorState
                 }
             }
-            .frame(width: layoutWidth)
-            .frame(maxWidth: .infinity, alignment: .center)
+            .frame(width: layoutWidth, height: proxy.size.height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
         .navigationBarBackButtonHidden()
         .safeAreaInset(edge: .top) {
-            HStack {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(PrototypeTheme.textPrimary)
-                        .frame(width: 44, height: 44)
-                        .background(Circle().fill(PrototypeTheme.surface.opacity(0.8)))
+            GeometryReader { proxy in
+                let globalWidth = proxy.frame(in: .global).width
+                let layoutWidth = globalWidth > 0 ? min(proxy.size.width, globalWidth) : proxy.size.width
+
+                HStack {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(PrototypeTheme.textPrimary)
+                            .frame(width: 44, height: 44)
+                            .background(Circle().fill(PrototypeTheme.surface.opacity(0.8)))
+                    }
+                    
+                    Spacer()
                 }
-                
-                Spacer()
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .frame(width: layoutWidth)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
+            .frame(height: 52)
         }
         .task {
             viewModel.loadIfNeeded()
         }
     }
 
-    private func content(chain: BackendChainDetail, layoutWidth: CGFloat) -> some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 40) {
-                progressHero(chain: chain)
-                    .padding(.top, 60)
+    @ViewBuilder
+    private func content(
+        chain: BackendChainDetail,
+        layoutWidth: CGFloat,
+        horizontalPadding: CGFloat,
+        sectionWidth: CGFloat
+    ) -> some View {
+        Group {
+            switch chain.status.lowercased() {
+            case "generating":
+                GeneratingStateView(
+                    chain: chain,
+                    entries: lyricRows(for: chain),
+                    onRefresh: viewModel.refresh,
+                    onClose: dismiss.callAsFunction
+                )
+            case "failed":
+                GenerationFailedView(
+                    chain: chain,
+                    entries: lyricRows(for: chain),
+                    onRefresh: viewModel.refresh,
+                    onClose: dismiss.callAsFunction
+                )
+            default:
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 40) {
+                        progressHero(chain: chain)
+                            .padding(.top, 60)
 
-                VStack(alignment: .leading, spacing: 24) {
-                    HStack {
-                        Text("COLLECTED FRAGMENTS")
-                            .font(PrototypeTheme.Typography.font(size: 10, weight: .black, role: .data))
-                            .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
-                            .kerning(2)
-                        
-                        Spacer()
-                        
-                        Rectangle()
-                            .fill(PrototypeTheme.border)
-                            .frame(height: 1)
-                    }
-                    .padding(.horizontal, 32)
+                        VStack(alignment: .leading, spacing: 24) {
+                            HStack {
+                                Text("COLLECTED FRAGMENTS")
+                                    .font(PrototypeTheme.Typography.font(size: 10, weight: .black, role: .data))
+                                    .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
+                                    .kerning(2)
 
-                    LyricEntryList(
-                        entries: lyricRows(for: chain),
-                        waitingLine: waitingLine(for: chain)
-                    )
-                    .padding(.horizontal, 16)
-                }
+                                Spacer()
 
-                if chain.status.lowercased() == "completed", let song = viewModel.song {
-                    NavigationLink {
-                        GeneratedSongDetailView(song: generatedSong(from: song, chain: chain))
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "play.circle.fill")
-                                .font(.system(size: 24))
-                            Text("完成した曲を聴く")
-                                .font(PrototypeTheme.Typography.font(size: 16, weight: .black))
+                                Rectangle()
+                                    .fill(PrototypeTheme.border)
+                                    .frame(height: 1)
+                            }
+
+                            LyricEntryList(
+                                entries: lyricRows(for: chain),
+                                waitingLine: waitingLine(for: chain)
+                            )
+                            .padding(.horizontal, 8)
                         }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 32)
-                        .padding(.vertical, 18)
-                        .background(Capsule().fill(Color.indigo).shadow(color: Color.indigo.opacity(0.3), radius: 20, y: 10))
-                    }
-                    .padding(.bottom, 40)
-                }
+                        .frame(maxWidth: sectionWidth)
+                        .frame(maxWidth: .infinity)
 
-                Spacer(minLength: 100)
+                        if chain.status.lowercased() == "completed", let song = viewModel.song {
+                            NavigationLink {
+                                GeneratedSongDetailView(song: generatedSong(from: song, chain: chain))
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "play.circle.fill")
+                                        .font(.system(size: 24))
+                                    Text("完成した曲を聴く")
+                                        .font(PrototypeTheme.Typography.font(size: 16, weight: .black))
+                                }
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 32)
+                                .padding(.vertical, 18)
+                                .background(Capsule().fill(Color.indigo).shadow(color: Color.indigo.opacity(0.3), radius: 20, y: 10))
+                            }
+                            .frame(maxWidth: sectionWidth)
+                            .frame(maxWidth: .infinity)
+                            .padding(.bottom, 40)
+                        }
+
+                        Spacer(minLength: 100)
+                    }
+                    .padding(.horizontal, horizontalPadding)
+                    .frame(width: layoutWidth)
+                }
             }
-            .frame(width: layoutWidth)
         }
+        .frame(width: layoutWidth)
+        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     private func progressHero(chain: BackendChainDetail) -> some View {
@@ -220,4 +267,3 @@ struct ChainProgressView: View {
         return submission.content
     }
 }
-
