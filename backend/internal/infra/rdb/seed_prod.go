@@ -94,11 +94,11 @@ const (
 	prodSeedSongLikeIDA = "prod-seed-song-like-01"
 
 	// クロスエンカウンター（2人の実ユーザー間）用 ID
-	prodSeedCrossEncounterID     = "prod-seed-cross-enc-01"
-	prodSeedCrossEncTrackIDA     = "prod-seed-cross-enc-track-01"
-	prodSeedCrossEncTrackIDB     = "prod-seed-cross-enc-track-02"
-	prodSeedCrossNotifForUser1   = "prod-seed-cross-notif-01"
-	prodSeedCrossNotifForUser2   = "prod-seed-cross-notif-02"
+	prodSeedCrossEncounterID   = "prod-seed-cross-enc-01"
+	prodSeedCrossEncTrackIDA   = "prod-seed-cross-enc-track-01"
+	prodSeedCrossEncTrackIDB   = "prod-seed-cross-enc-track-02"
+	prodSeedCrossNotifForUser1 = "prod-seed-cross-notif-01"
+	prodSeedCrossNotifForUser2 = "prod-seed-cross-notif-02"
 )
 
 func seedProdData(db *gorm.DB, target model.User) error {
