@@ -93,6 +93,8 @@ final class GeneratedSongsViewModel: ObservableObject {
             color: paletteColor(for: song.id),
             participantCount: participantCount,
             generatedAt: song.generatedAt,
+            durationSec: nil,
+            mood: nil,
             myLyric: song.myLyric.isEmpty ? nil : song.myLyric,
             audioURL: song.audioURL,
             chainId: song.chainId,

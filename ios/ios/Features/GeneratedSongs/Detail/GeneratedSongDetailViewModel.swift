@@ -16,6 +16,8 @@ final class GeneratedSongDetailViewModel: ObservableObject {
     @Published private(set) var lyricEntries: [LyricEntryRow] = []
     @Published private(set) var isLoadingLyrics = false
     @Published private(set) var lyricsErrorMessage: String?
+    @Published private(set) var durationSec: Int?
+    @Published private(set) var mood: String?
 
     private let client: BackendAPIClient
     private let songId: String
@@ -27,6 +29,8 @@ final class GeneratedSongDetailViewModel: ObservableObject {
         self.chainId = song.chainId
         self.client = client
         self.isLiked = song.isLiked
+        self.durationSec = song.durationSec
+        self.mood = song.mood
     }
 
     func toggleLike() {
@@ -101,6 +105,8 @@ final class GeneratedSongDetailViewModel: ObservableObject {
                 return
             }
             let response = try await client.getLyricChainDetail(chainId: chainId)
+            durationSec = response.song?.durationSec ?? durationSec
+            mood = response.song?.mood ?? mood
             lyricEntries = response.entries
                 .sorted { $0.sequenceNum < $1.sequenceNum }
                 .map { entry in

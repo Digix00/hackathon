@@ -2,11 +2,14 @@ import SwiftUI
 
 struct NotificationListView: View {
     @StateObject private var viewModel = NotificationListViewModel()
+    @State private var isShowingGeneratedSongNotification = false
+    @State private var notificationTargetSong: GeneratedSong?
 
     var body: some View {
         AppScaffold(
             title: "通知",
-            subtitle: viewModel.subtitleText
+            subtitle: viewModel.subtitleText,
+            showsBackButton: true
         ) {
             VStack(spacing: 24) {
                 if let message = viewModel.errorMessage {
@@ -43,6 +46,9 @@ struct NotificationListView: View {
                                 NotificationRow(
                                     notification: notification,
                                     isProcessing: viewModel.isProcessing(id: notification.id),
+                                    onOpenGeneratedSong: notification.isGeneratedSongNotification ? {
+                                        isShowingGeneratedSongNotification = true
+                                    } : nil,
                                     onMarkAsRead: {
                                         viewModel.markAsRead(id: notification.id)
                                     },
@@ -63,12 +69,37 @@ struct NotificationListView: View {
         .onAppear {
             viewModel.loadIfNeeded()
         }
+        .fullScreenCover(isPresented: $isShowingGeneratedSongNotification) {
+            NotificationGeneratedSongCover(song: $notificationTargetSong) {
+                isShowingGeneratedSongNotification = false
+                notificationTargetSong = nil
+            }
+        }
+        .navigationDestination(item: $notificationTargetSong) { song in
+            GeneratedSongDetailView(song: song)
+        }
+    }
+}
+
+private struct NotificationGeneratedSongCover: View {
+    @Binding var song: GeneratedSong?
+    let onDismiss: () -> Void
+
+    var body: some View {
+        GeneratedSongNotificationLoaderView(
+            onDismiss: onDismiss,
+            onListenNow: { loadedSong in
+                song = loadedSong
+                onDismiss()
+            }
+        )
     }
 }
 
 private struct NotificationRow: View {
     let notification: NotificationListViewModel.NotificationRowModel
     let isProcessing: Bool
+    let onOpenGeneratedSong: (() -> Void)?
     let onMarkAsRead: () -> Void
     let onDelete: () -> Void
 
@@ -106,6 +137,16 @@ private struct NotificationRow: View {
             }
 
             HStack(spacing: 12) {
+                if let onOpenGeneratedSong {
+                    NotificationActionButton(
+                        title: "開く",
+                        systemImage: "sparkles",
+                        tint: PrototypeTheme.accent,
+                        isDisabled: isProcessing,
+                        action: onOpenGeneratedSong
+                    )
+                }
+
                 if !notification.isRead {
                     NotificationActionButton(
                         title: "既読にする",

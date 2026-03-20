@@ -7,6 +7,8 @@ struct GeneratedSong: Identifiable, Hashable {
     let color: Color
     let participantCount: Int
     let generatedAt: Date?
+    let durationSec: Int?
+    let mood: String?
     let myLyric: String?
     let audioURL: String?
     let chainId: String?

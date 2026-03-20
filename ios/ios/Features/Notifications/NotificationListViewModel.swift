@@ -9,6 +9,11 @@ final class NotificationListViewModel: ObservableObject {
         let status: String
         let createdAt: Date?
         var isRead: Bool
+
+        var isGeneratedSongNotification: Bool {
+            let lowered = status.lowercased()
+            return lowered.contains("song") || lowered.contains("track") || lowered.contains("generated")
+        }
     }
 
     @Published private(set) var notifications: [NotificationRowModel] = []
