@@ -17,9 +17,7 @@ Docker Compose で以下を起動します。
 ## 起動方法
 
 ```bash
-cd backend
 make run-dev
-```
 
 起動状態確認:
 
