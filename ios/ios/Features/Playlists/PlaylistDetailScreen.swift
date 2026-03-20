@@ -162,7 +162,7 @@ private struct PlaylistTrackRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            MockArtworkView(color: track.accentColor, symbol: "music.note", size: 46, artwork: track.artworkURL)
+            ArtworkPlaceholderView(color: track.accentColor, symbol: "music.note", size: 46, artwork: track.artworkURL)
                 .shadow(color: track.accentColor.opacity(0.18), radius: 8, x: 0, y: 4)
 
             VStack(alignment: .leading, spacing: 4) {
@@ -188,4 +188,3 @@ private struct PlaylistTrackRow: View {
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
-
