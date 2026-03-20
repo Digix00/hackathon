@@ -77,9 +77,12 @@ func (u *workerUsecase) DeleteExpiredBleTokens(ctx context.Context) (int64, erro
 	return u.bleTokenRepo.DeleteExpired(ctx)
 }
 
-// ProcessLyriaJobs は pending 状態のジョブを最大 5 件処理する
+// ProcessLyriaJobs は pending 状態のジョブを最大 2 件処理する。
+// Lyria 1ジョブあたり最大 lyriaTimeoutSec(300s) + Gemini + upload 等で約 320s かかるため、
+// 2件で最大 640s となり Cloud Run timeout(900s) に対してバッファを確保できる。
+// 5件では worst case 1500s+ となり Cloud Run に途中で切られる。
 func (u *workerUsecase) ProcessLyriaJobs(ctx context.Context) (int, error) {
-	jobs, err := u.lyriaJobRepo.ClaimPendingJobs(ctx, 5)
+	jobs, err := u.lyriaJobRepo.ClaimPendingJobs(ctx, 2)
 	if err != nil {
 		return 0, fmt.Errorf("ProcessLyriaJobs: claim failed: %w", err)
 	}
