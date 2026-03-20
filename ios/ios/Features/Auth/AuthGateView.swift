@@ -281,19 +281,27 @@ final class AuthGateViewModel: ObservableObject {
     private func resolvedGoogleClientID() -> String? {
 #if canImport(FirebaseCore)
         if let clientID = FirebaseApp.app()?.options.clientID?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !clientID.isEmpty {
+           !isInvalidFirebaseInfoValue(clientID) {
             return clientID
         }
 #endif
 
         if let clientID = Bundle.main.object(forInfoDictionaryKey: "GOOGLE_CLIENT_ID") as? String {
             let trimmed = clientID.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !trimmed.isEmpty {
+            if !isInvalidFirebaseInfoValue(trimmed) {
                 return trimmed
             }
         }
 
         return nil
+    }
+
+    private func isInvalidFirebaseInfoValue(_ value: String) -> Bool {
+        if value.isEmpty || value == "demo" || value.hasPrefix("YOUR_") {
+            return true
+        }
+
+        return value.hasPrefix("$(") && value.hasSuffix(")")
     }
 
     private static func sha256(_ input: String) -> String {
