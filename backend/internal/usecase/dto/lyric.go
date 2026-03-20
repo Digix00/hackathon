@@ -64,9 +64,6 @@ type UserSongDTO struct {
 	ID               string
 	Title            *string
 	AudioURL         *string
-	ChainID          string
-	DurationSec      *int
-	Mood             *string
 	ParticipantCount int
 	MyLyric          string
 	GeneratedAt      *string
