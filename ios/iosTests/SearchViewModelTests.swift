@@ -17,7 +17,7 @@ final class SearchViewModelTests: XCTestCase {
         super.tearDown()
     }
 
-    func testSearchUpdatesStateOnSuccess() async {
+    func testSearchUpdatesStateOnSuccess() async throws {
         let session = makeSession()
         let client = BackendAPIClient(session: session)
         let viewModel = SearchViewModel(client: client)

@@ -114,6 +114,10 @@ final class BLEManager: NSObject, ObservableObject {
     }
 
     private func stopScanningRuntime() {
+        guard centralManager.state == .poweredOn else {
+            isScanning = false
+            return
+        }
         centralManager.stopScan()
         isScanning = false
     }
@@ -150,6 +154,10 @@ final class BLEManager: NSObject, ObservableObject {
     }
 
     private func stopAdvertisingRuntime() {
+        guard peripheralManager.state == .poweredOn else {
+            isAdvertising = false
+            return
+        }
         peripheralManager.stopAdvertising()
         isAdvertising = false
     }

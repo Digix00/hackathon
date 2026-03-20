@@ -97,6 +97,16 @@ resource "google_cloud_run_v2_service_iam_member" "terraform_ci_migrate_invoker"
   member   = "serviceAccount:${google_service_account.terraform_ci.email}"
 }
 
+# seed-demo は手元から gcloud auth print-identity-token で invoker できるよう
+# プロジェクトオーナー（terraform_ci SA）に権限を付与
+resource "google_cloud_run_v2_service_iam_member" "terraform_ci_seed_demo_invoker" {
+  project  = var.project_id
+  location = google_cloud_run_v2_service.seed_demo.location
+  name     = google_cloud_run_v2_service.seed_demo.name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.terraform_ci.email}"
+}
+
 # Terraform CI/CD 用サービスアカウント（GitHub Actions WIF）
 resource "google_service_account" "terraform_ci" {
   account_id   = "terraform-ci-sa"

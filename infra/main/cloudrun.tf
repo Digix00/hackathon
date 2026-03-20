@@ -1,7 +1,8 @@
 locals {
-  image_server  = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/server:${var.server_image_tag}"
-  image_worker  = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/worker:${var.worker_image_tag}"
-  image_migrate = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/migrate:${var.migrate_image_tag}"
+  image_server    = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/server:${var.server_image_tag}"
+  image_worker    = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/worker:${var.worker_image_tag}"
+  image_migrate   = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/migrate:${var.migrate_image_tag}"
+  image_seed_demo = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/seed-demo:${var.seed_demo_image_tag}"
 }
 
 # Cloud Run Service（API サーバー）
@@ -440,6 +441,103 @@ resource "google_cloud_run_v2_service" "migrate" {
   ]
 }
 
+# Cloud Run Function（デモデータ一括投入）
+# HTTP POST で起動し、DB への seed 完了後に 200 を返して終了する。
+# 手元から以下で実行する（terraform_ci SA を impersonate して IDトークンを取得）:
+#   SEED_URL=$(terraform output -raw seed_demo_url)
+#   TOKEN=$(gcloud auth print-identity-token \
+#     --impersonate-service-account=<TERRAFORM_CI_SA_EMAIL> \
+#     --audiences="$SEED_URL")
+#   curl -X POST -H "Authorization: Bearer $TOKEN" "$SEED_URL/"
+# タイムアウト上限は 3600s（60 分）。
+resource "google_cloud_run_v2_service" "seed_demo" {
+  name     = "seed-demo"
+  location = var.region
+
+  deletion_protection = false
+
+  template {
+    service_account = google_service_account.worker.email
+
+    timeout = "3600s"
+
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 1
+    }
+
+    volumes {
+      name = "cloudsql"
+      cloud_sql_instance {
+        instances = [google_sql_database_instance.main.connection_name]
+      }
+    }
+
+    containers {
+      image = local.image_seed_demo
+
+      resources {
+        limits = {
+          cpu    = "1"
+          memory = "512Mi"
+        }
+        cpu_idle          = true
+        startup_cpu_boost = false
+      }
+
+      env {
+        name  = "DB_USER"
+        value = google_sql_user.app.name
+      }
+
+      env {
+        name  = "DB_NAME"
+        value = google_sql_database.app.name
+      }
+
+      env {
+        name  = "DB_CONNECTION_NAME"
+        value = google_sql_database_instance.main.connection_name
+      }
+
+      env {
+        name = "DB_PASSWORD"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.db_password.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "MUSIC_TOKEN_ENCRYPTION_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.music_token_encryption_key.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name  = "SEED_TARGET_USER_ID"
+        value = var.seed_target_user_id
+      }
+
+      volume_mounts {
+        name       = "cloudsql"
+        mount_path = "/cloudsql"
+      }
+    }
+  }
+
+  depends_on = [
+    google_project_service.apis,
+    google_secret_manager_secret_version.db_password,
+  ]
+}
+
 output "api_url" {
   value       = google_cloud_run_v2_service.api.uri
   description = "Cloud Run Service の URL"
@@ -458,4 +556,9 @@ output "lyria_worker_url" {
 output "migrate_url" {
   value       = google_cloud_run_v2_service.migrate.uri
   description = "Migrate Function の URL（CI/CD が HTTP POST でトリガー）"
+}
+
+output "seed_demo_url" {
+  value       = google_cloud_run_v2_service.seed_demo.uri
+  description = "Seed Demo Function の URL（手元から HTTP POST でトリガー）"
 }
