@@ -60,7 +60,7 @@ func main() {
 	if err != nil {
 		log.Fatal("db get sql.DB failed", zap.Error(err))
 	}
-	defer sqlDB.Close()
+	defer func() { _ = sqlDB.Close() }()
 
 	if err := rdb.Migrate(db); err != nil {
 		log.Fatal("db migrate failed", zap.Error(err))
