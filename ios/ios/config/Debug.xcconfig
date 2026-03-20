@@ -1,6 +1,6 @@
 #include? "Secrets.xcconfig"
 
-PRODUCT_BUNDLE_IDENTIFIER = com.digix.ios
+PRODUCT_BUNDLE_IDENTIFIER = com.digix.ios.dev
 APP_DISPLAY_NAME = ios Dev
 API_BASE_URL = https:/$()/api-599474430997.asia-northeast1.run.app
 INFOPLIST_KEY_API_BASE_URL = $(API_BASE_URL)
