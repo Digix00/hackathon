@@ -55,19 +55,21 @@ struct GeneratedSongsView: View {
     private var content: some View {
         GeometryReader { geometry in
             ZStack {
-                // Background elements
-                DotGridBackground()
-                    .opacity(0.15)
-                
-                VStack(spacing: 0) {
-                    // Stats Header
-                    GeneratedSongsStatsHeader(
-                        count: viewModel.songs.count
-                    )
-                    .padding(.top, geometry.safeAreaInsets.top + 8)
-                    .padding(.bottom, 20)
+                // Layer 1: Background & Stats
+                ZStack {
+                    DotGridBackground()
+                        .opacity(0.15)
+                    
+                    VStack(alignment: .leading, spacing: 0) {
+                        GeneratedSongsStatsHeader(count: viewModel.songs.count)
+                            .padding(.top, geometry.safeAreaInsets.top + 20)
+                        Spacer()
+                    }
+                }
+                .opacity(selectedSong == nil ? 1 : 0)
 
-                    // Wheel List
+                // Layer 2: Wheel List
+                VStack(spacing: 0) {
                     GeometryReader { wheelGeometry in
                         ScrollView(.vertical, showsIndicators: false) {
                             LazyVStack(spacing: wheelItemSpacing) {
@@ -114,6 +116,7 @@ struct GeneratedSongsView: View {
                         .scrollClipDisabled()
                     }
                 }
+                .padding(.top, geometry.safeAreaInsets.top + 8)
             }
         }
     }
