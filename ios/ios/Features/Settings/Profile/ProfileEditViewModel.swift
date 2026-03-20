@@ -1,6 +1,5 @@
 import Combine
 import Foundation
-import PhotosUI
 import UIKit
 
 enum ProfileSex: String, CaseIterable, Identifiable {
@@ -98,13 +97,9 @@ final class ProfileEditViewModel: ObservableObject {
         Task { await load() }
     }
 
-    func handleSelectedItem(_ item: PhotosPickerItem?) async {
-        guard let item else { return }
-        guard let data = try? await item.loadTransferable(type: Data.self) else { return }
-        guard let uiImage = UIImage(data: data) else { return }
-        guard let jpegData = uiImage.jpegData(compressionQuality: 0.8) else { return }
-        previewImage = uiImage
-        pendingAvatarData = jpegData
+    func setAvatarData(jpeg: Data, preview: UIImage) {
+        previewImage = preview
+        pendingAvatarData = jpeg
     }
 
     func save() {

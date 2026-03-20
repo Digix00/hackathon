@@ -161,7 +161,13 @@ struct ProfileEditView: View {
             viewModel.loadIfNeeded()
         }
         .onChange(of: selectedItem) { newItem in
-            Task { await viewModel.handleSelectedItem(newItem) }
+            Task {
+                guard let newItem else { return }
+                guard let data = try? await newItem.loadTransferable(type: Data.self) else { return }
+                guard let uiImage = UIImage(data: data) else { return }
+                guard let jpegData = uiImage.jpegData(compressionQuality: 0.8) else { return }
+                viewModel.setAvatarData(jpeg: jpegData, preview: uiImage)
+            }
         }
     }
 }
