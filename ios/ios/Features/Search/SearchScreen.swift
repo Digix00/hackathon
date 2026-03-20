@@ -120,7 +120,10 @@ struct SearchView: View {
                                 Button {
                                     viewModel.select(track: track)
                                 } label: {
-                                    TrackSelectionRow(track: track)
+                                    TrackSelectionRow(
+                                        track: track,
+                                        isSelected: viewModel.selectedTrack?.id == track.id
+                                    )
                                 }
                                 .buttonStyle(.plain)
                             }
