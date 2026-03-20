@@ -5,6 +5,8 @@ struct SettingsHubView: View {
     @StateObject private var settingsViewModel = UserSettingsViewModel()
     @StateObject private var profileViewModel = CurrentUserProfileViewModel()
     @State private var isBeating = false
+    @State private var signOutErrorMessage: String?
+    @EnvironmentObject private var authSession: AuthSession
 
     private var appSettings: [SettingsDestination] {
         [
@@ -113,6 +115,15 @@ struct SettingsHubView: View {
                     settingsSection(title: "PRIVACY", items: privacySettings)
                     settingsSection(title: "SERVICES", items: linkedServices)
                     settingsSection(title: "DEVELOPER", items: prototypeEntries)
+                    settingsActionSection(
+                        title: "SESSION",
+                        message: signOutErrorMessage,
+                        isDestructive: true,
+                        isDisabled: authSession.isSigningOut,
+                        icon: "rectangle.portrait.and.arrow.right",
+                        titleText: authSession.isSigningOut ? "ログアウト中..." : "ログアウト",
+                        action: handleSignOut
+                    )
                 }
 
                 // Simplified Footer
@@ -139,6 +150,16 @@ struct SettingsHubView: View {
         .onAppear {
             settingsViewModel.loadIfNeeded()
             profileViewModel.refresh()
+        }
+    }
+
+    private func handleSignOut() {
+        signOutErrorMessage = nil
+
+        do {
+            try authSession.signOut()
+        } catch {
+            signOutErrorMessage = error.localizedDescription
         }
     }
 
@@ -191,6 +212,64 @@ struct SettingsHubView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
                     .stroke(PrototypeTheme.border.opacity(0.3), lineWidth: 1)
+            )
+        }
+    }
+
+    private func settingsActionSection(
+        title: String,
+        message: String?,
+        isDestructive: Bool = false,
+        isDisabled: Bool = false,
+        icon: String,
+        titleText: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text(title)
+                .prototypeFont(size: 11, weight: .black, role: .data)
+                .kerning(1.8)
+                .foregroundStyle(PrototypeTheme.textSecondary)
+                .padding(.horizontal, 8)
+
+            VStack(spacing: 12) {
+                if let message {
+                    Text(message)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(PrototypeTheme.error)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 20)
+                }
+
+                Button(action: action) {
+                    HStack(spacing: 16) {
+                        Image(systemName: icon)
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(isDestructive ? PrototypeTheme.error : PrototypeTheme.textSecondary)
+                            .frame(width: 24)
+
+                        Text(titleText)
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(isDestructive ? PrototypeTheme.error : PrototypeTheme.textPrimary)
+
+                        Spacer()
+                    }
+                    .padding(.vertical, 20)
+                    .padding(.horizontal, 24)
+                    .background(PrototypeTheme.surface.opacity(0.5))
+                }
+                .buttonStyle(.plain)
+                .disabled(isDisabled)
+                .opacity(isDisabled ? 0.6 : 1)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .stroke(
+                        isDestructive ? PrototypeTheme.error.opacity(0.18) : PrototypeTheme.border.opacity(0.3),
+                        lineWidth: 1
+                    )
             )
         }
     }
