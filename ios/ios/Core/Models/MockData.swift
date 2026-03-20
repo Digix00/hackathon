@@ -7,8 +7,7 @@ enum MockData {
         let song: BackendSongDetail?
     }
 
-    // Keep generated-song flows browsable until the backend endpoints are ready.
-    static let forceGeneratedSongMocks = true
+    static let forceGeneratedSongMocks = false
 
     static let featuredTrack = Track(
         title: "夜に駆ける",

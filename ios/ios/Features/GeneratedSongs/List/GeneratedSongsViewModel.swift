@@ -70,12 +70,12 @@ final class GeneratedSongsViewModel: ObservableObject {
             let response = try await client.listMySongs(cursor: nextCursor)
             let mapped = response.songs.map(Self.mapSong)
             if reset {
-                songs = mapped.isEmpty ? MockData.generatedSongs : mapped
+                songs = mapped
             } else {
                 songs.append(contentsOf: mapped)
             }
             hasLoaded = true
-            hasMore = !songs.elementsEqual(MockData.generatedSongs) && response.pagination.hasMore
+            hasMore = response.pagination.hasMore
             nextCursor = response.pagination.nextCursor
         } catch {
             songs = MockData.generatedSongs
@@ -105,8 +105,8 @@ final class GeneratedSongsViewModel: ObservableObject {
             color: paletteColor(for: song.id),
             participantCount: participantCount,
             generatedAt: song.generatedAt,
-            durationSec: nil,
-            mood: nil,
+            durationSec: song.durationSec,
+            mood: song.mood,
             myLyric: song.myLyric.isEmpty ? nil : song.myLyric,
             audioURL: song.audioURL,
             chainId: song.chainId,
