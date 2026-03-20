@@ -110,6 +110,7 @@ func TestProcessLyriaJobs_Success(t *testing.T) {
 		&stubLyriaClient{},
 		&stubSongUploader{},
 		45,
+		300,
 	)
 
 	processed, err := uc.ProcessLyriaJobs(context.Background())
@@ -140,6 +141,7 @@ func TestProcessLyriaJobs_NoPendingJobs(t *testing.T) {
 		&stubLyriaClient{},
 		&stubSongUploader{},
 		45,
+		300,
 	)
 
 	processed, err := uc.ProcessLyriaJobs(context.Background())
@@ -165,6 +167,7 @@ func TestProcessLyriaJobs_HarmfulContent(t *testing.T) {
 		&stubLyriaClient{},
 		&stubSongUploader{},
 		45,
+		300,
 	)
 
 	processed, err := uc.ProcessLyriaJobs(context.Background())
@@ -196,6 +199,7 @@ func TestProcessLyriaJobs_LyriaError(t *testing.T) {
 		&stubLyriaClient{generateErr: errors.New("vertex ai timeout")},
 		&stubSongUploader{},
 		45,
+		300,
 	)
 
 	processed, err := uc.ProcessLyriaJobs(context.Background())
@@ -228,6 +232,7 @@ func TestProcessLyriaJobs_MultipleJobs(t *testing.T) {
 		&stubLyriaClient{},
 		&stubSongUploader{},
 		45,
+		300,
 	)
 
 	processed, err := uc.ProcessLyriaJobs(context.Background())

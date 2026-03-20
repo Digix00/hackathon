@@ -9,37 +9,6 @@ final class UserSettingsViewModel: ObservableObject {
         case encounterNotification
         case batchNotification
         case notificationEnabled
-        case themeMode
-    }
-
-    enum ThemeMode: String, CaseIterable, Identifiable {
-        case system
-        case light
-        case dark
-
-        var id: String { rawValue }
-
-        var title: String {
-            switch self {
-            case .system:
-                return "システムに合わせる"
-            case .light:
-                return "ライトテーマ"
-            case .dark:
-                return "ダークテーマ"
-            }
-        }
-
-        var iconName: String {
-            switch self {
-            case .system:
-                return "circle.lefthalf.filled"
-            case .light:
-                return "sun.max.fill"
-            case .dark:
-                return "moon.fill"
-            }
-        }
     }
 
     @Published var detectionDistance: Double = 50
@@ -47,7 +16,6 @@ final class UserSettingsViewModel: ObservableObject {
     @Published var encounterNotificationEnabled = true
     @Published var batchNotificationEnabled = true
     @Published var notificationEnabled = true
-    @Published var themeMode: ThemeMode = .system
 
     @Published private(set) var isLoading = false
     @Published private(set) var isSaving = false
@@ -148,17 +116,6 @@ final class UserSettingsViewModel: ObservableObject {
         )
     }
 
-    func setThemeMode(_ mode: ThemeMode) {
-        let previous = themeMode
-        themeMode = mode
-
-        submitUpdate(
-            UpdateUserSettingsRequest(themeMode: mode.rawValue),
-            field: .themeMode,
-            revert: { self.themeMode = previous }
-        )
-    }
-
     private func loadSettings() async {
         isLoading = true
         errorMessage = nil
@@ -219,7 +176,6 @@ final class UserSettingsViewModel: ObservableObject {
         encounterNotificationEnabled = settings.encounterNotificationEnabled
         batchNotificationEnabled = settings.batchNotificationEnabled
         notificationEnabled = settings.notificationEnabled
-        themeMode = ThemeMode(rawValue: settings.themeMode) ?? .system
         hasLoaded = true
         Task { await pushManager.syncFromSettings(notificationEnabled: settings.notificationEnabled) }
     }
@@ -240,9 +196,6 @@ final class UserSettingsViewModel: ObservableObject {
         }
         if request.notificationEnabled != nil {
             notificationEnabled = settings.notificationEnabled
-        }
-        if request.themeMode != nil {
-            themeMode = ThemeMode(rawValue: settings.themeMode) ?? .system
         }
     }
 }

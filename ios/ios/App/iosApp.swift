@@ -15,6 +15,7 @@ struct iosApp: App {
         WindowGroup {
             ContentView()
                 .prototypeTypography()
+                .preferredColorScheme(.light)
                 .environmentObject(bleCoordinator)
                 .environmentObject(bleCoordinator.bleManager)
                 .environmentObject(pushManager)
