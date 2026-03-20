@@ -27,6 +27,11 @@ func NewClient(ctx context.Context, bucketName string) (*Client, error) {
 	}, nil
 }
 
+// Close は内部の gRPC 接続を閉じる
+func (c *Client) Close() error {
+	return c.gcs.Close()
+}
+
 // UploadSong は音声データを Cloud Storage にアップロードし、公開 URL を返す
 func (c *Client) UploadSong(ctx context.Context, chainID string, audioData []byte) (string, error) {
 	objectPath := fmt.Sprintf("songs/%s/original.wav", chainID)

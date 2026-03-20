@@ -43,7 +43,8 @@ func main() {
 	defer func() { _ = sqlDB.Close() }()
 
 	ctx := context.Background()
-	workerUsecase := buildDependencies(ctx, db, cfg, log)
+	workerUsecase, cleanup := buildDependencies(ctx, db, cfg, log)
+	defer cleanup()
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -62,6 +62,11 @@ func cleanJSON(s string) string {
 	return strings.TrimSpace(s)
 }
 
+// Close は内部の gRPC 接続を閉じる
+func (c *Client) Close() error {
+	return c.client.Close()
+}
+
 // AnalyzeLyrics は歌詞を分析してムード・ジャンル等を推定する
 func (c *Client) AnalyzeLyrics(ctx context.Context, lyrics string) (*port.LyricsAnalysis, error) {
 	prompt := "以下の歌詞を分析してください。\n\n" +
