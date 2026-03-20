@@ -18,7 +18,13 @@ struct ProfileEditView: View {
                     VStack(spacing: 16) {
                         PhotosPicker(selection: $selectedItem, matching: .images) {
                             ZStack {
-                                if let url = URL(string: viewModel.avatarURL), !viewModel.avatarURL.isEmpty {
+                                if let previewImage = viewModel.previewImage {
+                                    Image(uiImage: previewImage)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 110, height: 110)
+                                        .clipShape(Circle())
+                                } else if let url = URL(string: viewModel.avatarURL), !viewModel.avatarURL.isEmpty {
                                     AsyncImage(url: url) { image in
                                         image.resizable()
                                             .aspectRatio(contentMode: .fill)
@@ -155,7 +161,7 @@ struct ProfileEditView: View {
             viewModel.loadIfNeeded()
         }
         .onChange(of: selectedItem) { newItem in
-            // 本来は画像アップロードロジックが必要
+            Task { await viewModel.handleSelectedItem(newItem) }
         }
     }
 }

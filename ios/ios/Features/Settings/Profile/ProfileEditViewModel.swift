@@ -1,8 +1,7 @@
 import Combine
 import Foundation
-
-import Combine
-import Foundation
+import PhotosUI
+import UIKit
 
 enum ProfileSex: String, CaseIterable, Identifiable {
     case male, female, other, noAnswer = "no-answer"
@@ -67,6 +66,9 @@ final class ProfileEditViewModel: ObservableObject {
     @Published private(set) var isSaving = false
     @Published private(set) var errorMessage: String?
     @Published private(set) var successMessage: String?
+    @Published private(set) var previewImage: UIImage?
+
+    private var pendingAvatarData: Data?
 
     let prefectures = ProfilePrefecture.all
 
@@ -94,6 +96,15 @@ final class ProfileEditViewModel: ObservableObject {
 
     func refresh() {
         Task { await load() }
+    }
+
+    func handleSelectedItem(_ item: PhotosPickerItem?) async {
+        guard let item else { return }
+        guard let data = try? await item.loadTransferable(type: Data.self) else { return }
+        guard let uiImage = UIImage(data: data) else { return }
+        guard let jpegData = uiImage.jpegData(compressionQuality: 0.8) else { return }
+        previewImage = uiImage
+        pendingAvatarData = jpegData
     }
 
     func save() {
@@ -132,6 +143,18 @@ final class ProfileEditViewModel: ObservableObject {
         isSaving = true
         errorMessage = nil
         successMessage = nil
+
+        if let avatarData = pendingAvatarData {
+            do {
+                let uploadedURL = try await client.uploadAvatar(avatarData, mimeType: "image/jpeg")
+                avatarURL = uploadedURL
+                pendingAvatarData = nil
+            } catch {
+                errorMessage = "アバターのアップロードに失敗しました"
+                isSaving = false
+                return
+            }
+        }
 
         let trimmedName = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
         let request = UpdateUserRequest(
