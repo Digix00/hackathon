@@ -5,54 +5,56 @@ struct SettingsHubView: View {
     @StateObject private var settingsViewModel = UserSettingsViewModel()
     @StateObject private var profileViewModel = CurrentUserProfileViewModel()
     @State private var isBeating = false
+    @State private var signOutErrorMessage: String?
+    @EnvironmentObject private var authSession: AuthSession
 
     private var appSettings: [SettingsDestination] {
         [
-            SettingsDestination(id: "share-track", icon: "music.note", title: "シェアする曲", destination: { AnyView(SearchView()) }),
+            SettingsDestination(id: "share-track", icon: "music.note", title: "シェアする曲", destination: { lockedDestination(SearchView()) }),
             SettingsDestination(
                 id: "encounter-settings",
                 icon: "location.fill",
                 title: "すれ違い設定",
-                destination: { AnyView(EncounterSettingsView().environmentObject(settingsViewModel)) }
+                destination: { lockedDestination(EncounterSettingsView().environmentObject(settingsViewModel)) }
             ),
             SettingsDestination(
                 id: "notification-settings",
                 icon: "bell.fill",
                 title: "通知設定",
-                destination: { AnyView(NotificationSettingsView().environmentObject(settingsViewModel)) }
+                destination: { lockedDestination(NotificationSettingsView().environmentObject(settingsViewModel)) }
             ),
             SettingsDestination(
                 id: "appearance-settings",
                 icon: "paintbrush.fill",
                 title: "外観",
-                destination: { AnyView(AppearanceSettingsView().environmentObject(settingsViewModel)) }
+                destination: { lockedDestination(AppearanceSettingsView().environmentObject(settingsViewModel)) }
             )
         ]
     }
 
     private var privacySettings: [SettingsDestination] {
         [
-            SettingsDestination(id: "block-mute", icon: "hand.raised.fill", title: "ブロック / ミュート", destination: { AnyView(BlockMuteListView()) }),
-            SettingsDestination(id: "other-user-profile", icon: "person.wave.2.fill", title: "他ユーザープロフィール例", destination: { AnyView(OtherUserProfileStandaloneView()) })
+            SettingsDestination(id: "block-mute", icon: "hand.raised.fill", title: "ブロック / ミュート", destination: { lockedDestination(BlockMuteListView()) }),
+            SettingsDestination(id: "other-user-profile", icon: "person.wave.2.fill", title: "他ユーザープロフィール例", destination: { lockedDestination(OtherUserProfileStandaloneView()) })
         ]
     }
 
     private var linkedServices: [SettingsDestination] {
         [
-            SettingsDestination(id: "music-services", icon: "music.quarternote.3", title: "音楽サービス連携", destination: { AnyView(MusicServicesView()) })
+            SettingsDestination(id: "music-services", icon: "music.quarternote.3", title: "音楽サービス連携", destination: { lockedDestination(MusicServicesView()) })
         ]
     }
 
     private var prototypeEntries: [SettingsDestination] {
         [
-            SettingsDestination(id: "empty-states", icon: "rectangle.stack.fill", title: "空状態・エラー状態", destination: { AnyView(EmptyStatesGalleryView()) }),
-            SettingsDestination(id: "realtime-demo", icon: "dot.radiowaves.left.and.right", title: "リアルタイム演出", destination: { AnyView(RealtimeDemoView()) }),
-            SettingsDestination(id: "restart-onboarding", icon: "sparkles", title: "オンボーディングをやり直す", destination: { AnyView(RestartOnboardingView(restartOnboarding: restartOnboarding)) }),
+            SettingsDestination(id: "empty-states", icon: "rectangle.stack.fill", title: "空状態・エラー状態", destination: { lockedDestination(EmptyStatesGalleryView()) }),
+            SettingsDestination(id: "realtime-demo", icon: "dot.radiowaves.left.and.right", title: "リアルタイム演出", destination: { lockedDestination(RealtimeDemoView()) }),
+            SettingsDestination(id: "restart-onboarding", icon: "sparkles", title: "オンボーディングをやり直す", destination: { lockedDestination(RestartOnboardingView(restartOnboarding: restartOnboarding)) }),
             SettingsDestination(
                 id: "delete-account",
                 icon: "trash.fill",
                 title: "アカウント削除",
-                destination: { AnyView(DeleteAccountView(onAccountDeleted: restartOnboarding)) }
+                destination: { lockedDestination(DeleteAccountView(onAccountDeleted: restartOnboarding)) }
             )
         ]
     }
@@ -113,6 +115,15 @@ struct SettingsHubView: View {
                     settingsSection(title: "PRIVACY", items: privacySettings)
                     settingsSection(title: "SERVICES", items: linkedServices)
                     settingsSection(title: "DEVELOPER", items: prototypeEntries)
+                    settingsActionSection(
+                        title: "SESSION",
+                        message: signOutErrorMessage,
+                        isDestructive: true,
+                        isDisabled: authSession.isSigningOut,
+                        icon: "rectangle.portrait.and.arrow.right",
+                        titleText: authSession.isSigningOut ? "ログアウト中..." : "ログアウト",
+                        action: handleSignOut
+                    )
                 }
 
                 // Simplified Footer
@@ -140,6 +151,24 @@ struct SettingsHubView: View {
             settingsViewModel.loadIfNeeded()
             profileViewModel.refresh()
         }
+    }
+
+    private func handleSignOut() {
+        signOutErrorMessage = nil
+
+        do {
+            try authSession.signOut()
+        } catch {
+            signOutErrorMessage = error.localizedDescription
+        }
+    }
+
+    private func lockedDestination<Content: View>(_ view: Content) -> AnyView {
+        AnyView(
+            view
+                .lockLibraryPageSwipe()
+                .disableInteractivePopGesture(true)
+        )
     }
 
     private func settingsSection(title: String, items: [SettingsDestination]) -> some View {
@@ -191,6 +220,64 @@ struct SettingsHubView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
                     .stroke(PrototypeTheme.border.opacity(0.3), lineWidth: 1)
+            )
+        }
+    }
+
+    private func settingsActionSection(
+        title: String,
+        message: String?,
+        isDestructive: Bool = false,
+        isDisabled: Bool = false,
+        icon: String,
+        titleText: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text(title)
+                .prototypeFont(size: 11, weight: .black, role: .data)
+                .kerning(1.8)
+                .foregroundStyle(PrototypeTheme.textSecondary)
+                .padding(.horizontal, 8)
+
+            VStack(spacing: 12) {
+                if let message {
+                    Text(message)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(PrototypeTheme.error)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 20)
+                }
+
+                Button(action: action) {
+                    HStack(spacing: 16) {
+                        Image(systemName: icon)
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(isDestructive ? PrototypeTheme.error : PrototypeTheme.textSecondary)
+                            .frame(width: 24)
+
+                        Text(titleText)
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(isDestructive ? PrototypeTheme.error : PrototypeTheme.textPrimary)
+
+                        Spacer()
+                    }
+                    .padding(.vertical, 20)
+                    .padding(.horizontal, 24)
+                    .background(PrototypeTheme.surface.opacity(0.5))
+                }
+                .buttonStyle(.plain)
+                .disabled(isDisabled)
+                .opacity(isDisabled ? 0.6 : 1)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .stroke(
+                        isDestructive ? PrototypeTheme.error.opacity(0.18) : PrototypeTheme.border.opacity(0.3),
+                        lineWidth: 1
+                    )
             )
         }
     }

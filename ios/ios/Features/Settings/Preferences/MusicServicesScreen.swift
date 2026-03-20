@@ -1,5 +1,5 @@
-import SwiftUI
 import Combine
+import SwiftUI
 
 struct MusicServicesView: View {
     @StateObject private var viewModel = MusicServicesViewModel()
@@ -187,14 +187,17 @@ final class MusicServicesViewModel: ObservableObject {
         do {
             let response = try await client.getMusicAuthorizeURL(provider: provider)
             guard let urlString = response.authorizeURL, let url = URL(string: urlString) else {
-                errorMessage = "認可URLの取得に失敗しました"
+                errorMessage = "\(provider.title)の認可URLが不正です。設定を確認してください"
                 return nil
             }
             return url
+        } catch let error as BackendAPIClient.BackendError {
+            errorMessage = connectionStartErrorMessage(for: provider, error: error)
         } catch {
-            errorMessage = "認可URLの取得に失敗しました"
+            errorMessage = "\(provider.title)の認可URL取得に失敗しました"
             return nil
         }
+        return nil
     }
 
     func disconnect(_ provider: MusicConnectionProvider) async {
@@ -208,6 +211,8 @@ final class MusicServicesViewModel: ObservableObject {
             try await client.deleteMusicConnection(provider: provider)
             connections[provider] = nil
             actionMessage = "\(provider.title)の連携を解除しました"
+        } catch let error as BackendAPIClient.BackendError {
+            errorMessage = disconnectErrorMessage(for: provider, error: error)
         } catch {
             errorMessage = "\(provider.title)の連携解除に失敗しました"
         }
@@ -231,7 +236,7 @@ final class MusicServicesViewModel: ObservableObject {
         } else if result == "error" {
             actionMessage = nil
             if let errorCode, !errorCode.isEmpty {
-                errorMessage = "\(provider.title)の連携に失敗しました (\(errorCode))"
+                errorMessage = callbackErrorMessage(for: provider, errorCode: errorCode)
             } else {
                 errorMessage = "\(provider.title)の連携に失敗しました"
             }
@@ -255,12 +260,102 @@ final class MusicServicesViewModel: ObservableObject {
             connections = mapped
             hasLoaded = true
             isLoading = false
+        } catch let error as BackendAPIClient.BackendError {
+            if Task.isCancelled { return }
+            errorMessage = listConnectionsErrorMessage(error)
+            hasLoaded = false
+            isLoading = false
         } catch {
             if Task.isCancelled { return }
             errorMessage = "連携状況の取得に失敗しました"
             hasLoaded = false
             isLoading = false
         }
+    }
+
+    private func connectionStartErrorMessage(
+        for provider: MusicConnectionProvider,
+        error: BackendAPIClient.BackendError
+    ) -> String {
+        switch error {
+        case .missingAuthToken:
+            return "ログイン状態を確認してください。再度ログインしてからお試しください"
+        case .invalidBaseURL:
+            return "API の接続先が未設定です。`API_BASE_URL` を確認してください"
+        case .unexpectedStatus(let status, let body):
+            let message = backendMessage(from: body)?.lowercased() ?? ""
+            if status == 401 {
+                return "認証に失敗しました。再度ログインしてからお試しください"
+            }
+            if message.contains("oauth is not configured") {
+                return "\(provider.title)連携はまだ設定されていません。backend の OAuth 設定を確認してください"
+            }
+            return "\(provider.title)の認可URL取得に失敗しました"
+        case .invalidResponse:
+            return "\(provider.title)の認可URL取得結果が不正です"
+        }
+    }
+
+    private func disconnectErrorMessage(
+        for provider: MusicConnectionProvider,
+        error: BackendAPIClient.BackendError
+    ) -> String {
+        switch error {
+        case .missingAuthToken:
+            return "ログイン状態を確認してください。再度ログインしてからお試しください"
+        case .unexpectedStatus(let status, _):
+            if status == 404 {
+                return "\(provider.title)は未連携です"
+            }
+            if status == 401 {
+                return "認証に失敗しました。再度ログインしてからお試しください"
+            }
+            return "\(provider.title)の連携解除に失敗しました"
+        default:
+            return "\(provider.title)の連携解除に失敗しました"
+        }
+    }
+
+    private func callbackErrorMessage(for provider: MusicConnectionProvider, errorCode: String) -> String {
+        switch errorCode {
+        case "BAD_REQUEST":
+            return "\(provider.title)の連携リクエストが無効です。もう一度やり直してください"
+        case "UNAUTHORIZED":
+            return "\(provider.title)の認証に失敗しました。再度ログインしてからお試しください"
+        case "INTERNAL":
+            return "\(provider.title)連携の設定が不足しているか、サーバー側でエラーが発生しました"
+        default:
+            return "\(provider.title)の連携に失敗しました (\(errorCode))"
+        }
+    }
+
+    private func listConnectionsErrorMessage(_ error: BackendAPIClient.BackendError) -> String {
+        switch error {
+        case .missingAuthToken:
+            return "ログイン状態を確認してください。再度ログインしてからお試しください"
+        case .invalidBaseURL:
+            return "API の接続先が未設定です。`API_BASE_URL` を確認してください"
+        case .unexpectedStatus(let status, _):
+            if status == 401 {
+                return "認証に失敗しました。再度ログインしてからお試しください"
+            }
+            return "連携状況の取得に失敗しました"
+        case .invalidResponse:
+            return "連携状況の応答形式が不正です"
+        }
+    }
+
+    private func backendMessage(from body: String?) -> String? {
+        guard
+            let body,
+            let data = body.data(using: .utf8),
+            let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let message = payload["message"] as? String,
+            !message.isEmpty
+        else {
+            return nil
+        }
+        return message
     }
 }
 
