@@ -245,6 +245,9 @@ final class BLEAppCoordinator: ObservableObject {
             .compactMap { $0 }
             .sink { [backendClient] detection in
                 Task { [weak self] in
+                    #if DEBUG
+                    print("[BLEAppCoordinator] latest detection token=\(detection.token) rssi=\(detection.rssi)")
+                    #endif
                     await backendClient.enqueueEncounter(
                         targetBLEToken: detection.token,
                         rssi: detection.rssi,
@@ -254,9 +257,15 @@ final class BLEAppCoordinator: ObservableObject {
                     do {
                         let user = try await backendClient.fetchUser(forBLEToken: detection.token)
                         await MainActor.run {
+                            #if DEBUG
+                            print("[BLEAppCoordinator] resolved detected user id=\(user.id) name=\(user.displayName)")
+                            #endif
                             self?.latestDetectedUser = user
                         }
                     } catch {
+                        #if DEBUG
+                        print("[BLEAppCoordinator] failed to resolve detected user token=\(detection.token) error=\(error)")
+                        #endif
                         // Ignore lookup failures (expired token / blocked / network).
                     }
 

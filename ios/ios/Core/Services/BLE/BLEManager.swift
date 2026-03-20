@@ -14,7 +14,8 @@ final class BLEManager: NSObject, ObservableObject {
         static let tokenPrefixHex = "A17E1E50B1ECAFE0"
         static let foregroundRSSIThreshold = -85
         static let backgroundRSSIThreshold = -80
-        static let foregroundDetectionCountThreshold = 2
+        // Temporary debugging relaxation: allow a single foreground detection.
+        static let foregroundDetectionCountThreshold = 1
         static let backgroundDetectionCountThreshold = 1
         static let detectionWindow: TimeInterval = 30
         static let debounce: TimeInterval = 30
@@ -263,11 +264,17 @@ final class BLEManager: NSObject, ObservableObject {
     private func shouldEmitDetection(token: String, rssi: NSNumber, now: Date) -> Bool {
         let rssiValue = rssi.intValue
         // CoreBluetooth uses 127 as a sentinel for unavailable RSSI.
-        guard rssiValue != 127 else { return false }
+        guard rssiValue != 127 else {
+            log("ignore detection token=\(token) reason=unavailable_rssi")
+            return false
+        }
         let rssiThreshold = isForeground
             ? Constants.foregroundRSSIThreshold
             : Constants.backgroundRSSIThreshold
-        guard rssiValue >= rssiThreshold else { return false }
+        guard rssiValue >= rssiThreshold else {
+            log("ignore detection token=\(token) rssi=\(rssiValue) threshold=\(rssiThreshold) reason=weak_signal")
+            return false
+        }
 
         let detectionThreshold = isForeground
             ? Constants.foregroundDetectionCountThreshold
@@ -281,14 +288,19 @@ final class BLEManager: NSObject, ObservableObject {
             nextCount = 1
         }
         detectionCountsByToken[token] = DetectionCounter(count: nextCount, windowStartedAt: now)
-        guard nextCount >= detectionThreshold else { return false }
+        guard nextCount >= detectionThreshold else {
+            log("hold detection token=\(token) rssi=\(rssiValue) count=\(nextCount)/\(detectionThreshold)")
+            return false
+        }
 
         if isForeground {
             if let last = debounceByToken[token], now.timeIntervalSince(last) < Constants.debounce {
+                log("ignore detection token=\(token) reason=debounce")
                 return false
             }
         }
         if let last = cooldownByToken[token], now.timeIntervalSince(last) < Constants.cooldown {
+            log("ignore detection token=\(token) reason=cooldown")
             return false
         }
 
@@ -299,6 +311,7 @@ final class BLEManager: NSObject, ObservableObject {
         }
         cooldownByToken[token] = now
         detectionCountsByToken[token] = DetectionCounter(count: 0, windowStartedAt: now)
+        log("emit detection token=\(token) rssi=\(rssiValue) foreground=\(isForeground)")
         return true
     }
 
@@ -333,7 +346,10 @@ extension BLEManager: CBCentralManagerDelegate {
         rssi RSSI: NSNumber
     ) {
         guard let token = decodeToken(fromAdvertisementData: advertisementData) else { return }
-        guard token != advertisedToken else { return }
+        guard token != advertisedToken else {
+            log("ignore detection token=\(token) reason=self_token")
+            return
+        }
 
         let now = Date()
         guard shouldEmitDetection(token: token, rssi: RSSI, now: now) else { return }

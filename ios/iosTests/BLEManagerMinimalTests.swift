@@ -93,12 +93,11 @@ final class BLEManagerMinimalTests: XCTestCase {
         XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -80), now: now))
     }
 
-    func test_shouldEmitDetection_requiresTwoDetectionsWithinWindow() {
+    func test_shouldEmitDetection_inForegroundRequiresSingleDetection() {
         let token = "0011223344556677"
         let now = Date(timeIntervalSince1970: 0)
 
-        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
-        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now.addingTimeInterval(1)))
+        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
     }
 
     func test_shouldEmitDetection_inBackgroundRequiresSingleDetection() {
@@ -114,7 +113,7 @@ final class BLEManagerMinimalTests: XCTestCase {
         let token = "0011223344556677"
         let now = Date(timeIntervalSince1970: 0)
 
-        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
+        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
         XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now.addingTimeInterval(31)))
     }
 
@@ -122,8 +121,7 @@ final class BLEManagerMinimalTests: XCTestCase {
         let token = "0011223344556677"
         let now = Date(timeIntervalSince1970: 0)
 
-        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
-        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now.addingTimeInterval(1)))
+        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
 
         let debounceStart = now.addingTimeInterval(5)
         XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: debounceStart))
@@ -144,16 +142,15 @@ final class BLEManagerMinimalTests: XCTestCase {
         let token = "0011223344556677"
         let now = Date(timeIntervalSince1970: 0)
 
-        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
-        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now.addingTimeInterval(1)))
+        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
 
         let withinCooldown = now.addingTimeInterval(60)
         XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: withinCooldown))
         XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: withinCooldown.addingTimeInterval(1)))
 
         let afterCooldown = now.addingTimeInterval(301)
-        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: afterCooldown))
-        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: afterCooldown.addingTimeInterval(1)))
+        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: afterCooldown))
+        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: afterCooldown.addingTimeInterval(1)))
     }
 }
 
