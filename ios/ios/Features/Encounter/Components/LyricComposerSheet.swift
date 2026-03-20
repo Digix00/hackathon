@@ -56,9 +56,6 @@ struct LyricComposerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(toolbarTitle) {
-                        if shouldClearDraftContext {
-                            bleCoordinator.clearLatestLyricSubmission()
-                        }
                         dismiss()
                     }
                 }
@@ -90,15 +87,6 @@ struct LyricComposerSheet: View {
             return "完了"
         default:
             return "閉じる"
-        }
-    }
-
-    private var shouldClearDraftContext: Bool {
-        switch step {
-        case .success:
-            return false
-        default:
-            return true
         }
     }
 
@@ -158,7 +146,6 @@ struct LyricComposerSheet: View {
             }
 
             Button("スキップ") {
-                bleCoordinator.clearLatestLyricSubmission()
                 dismiss()
             }
             .font(.system(size: 14, weight: .bold))

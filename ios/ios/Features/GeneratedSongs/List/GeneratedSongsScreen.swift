@@ -143,6 +143,9 @@ struct GeneratedSongsView: View {
                                     }
                                     .frame(height: wheelItemHeight)
                                     .id(song.id)
+                                    .onAppear {
+                                        viewModel.loadMoreIfNeeded(currentSong: song)
+                                    }
                                 }
                                 
                                 if viewModel.isLoadingMore {

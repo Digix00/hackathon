@@ -406,7 +406,7 @@ final class GeneratedSongPlayerViewModel: ObservableObject {
     func skip(by seconds: Double) {
         guard let player else { return }
         let current = player.currentTime().seconds
-        let target = min(max(current + seconds, 0), max(durationSeconds, current + seconds))
+        let target = min(max(current + seconds, 0), durationSeconds)
         player.seek(to: CMTime(seconds: target, preferredTimescale: 600))
     }
 
