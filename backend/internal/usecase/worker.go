@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -78,7 +79,11 @@ func (u *workerUsecase) ProcessLyriaJobs(ctx context.Context) (int, error) {
 		if err := u.processJob(ctx, job); err != nil {
 			// 有害コンテンツは歌詞が不変なため即座に永続失敗とし、不要なリトライを防ぐ
 			permanent := errors.Is(err, ErrHarmfulContent)
-			_ = u.lyriaJobRepo.FailJob(ctx, job.JobID, err.Error(), permanent)
+			// ctx がキャンセル済みの場合（Cloud Run タイムアウト等）でも FailJob を確実に実行するため、
+			// デタッチドコンテキストにタイムアウトを付けて使用する。
+			failCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			_ = u.lyriaJobRepo.FailJob(failCtx, job.JobID, err.Error(), permanent)
+			cancel()
 			continue
 		}
 		processed++
