@@ -100,6 +100,7 @@ interface UsersApi {
      *  - 200: OK
      *  - 400: Bad Request
      *  - 401: Unauthorized
+     *  - 500: Internal Server Error
      *  - 503: Service Unavailable
      *
      * @param file アバター画像（JPEG または PNG、最大 5MB）

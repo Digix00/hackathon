@@ -230,6 +230,7 @@ func (h *userHandler) patchMe(c echo.Context) error {
 // @Success      200  {object}  map[string]string
 // @Failure      400  {object}  errorResponse
 // @Failure      401  {object}  errorResponse
+// @Failure      500  {object}  errorResponse
 // @Failure      503  {object}  errorResponse
 // @Router       /api/v1/users/me/avatar [post]
 func (h *userHandler) uploadAvatar(c echo.Context) error {
