@@ -252,7 +252,7 @@ func (h *userHandler) uploadAvatar(c echo.Context) error {
 	if err != nil {
 		return errBadRequest("file is required")
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	mimeType := header.Header.Get("Content-Type")
 	if mimeType != "image/jpeg" && mimeType != "image/png" {
