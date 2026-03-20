@@ -80,7 +80,7 @@ func TestIntegration_BleTokenRepository_DeleteExpired_RemovesExpiredTokens(t *te
 	expired1 := seedBleTokenRecord(t, user.ID, now.Add(-48*time.Hour), now.Add(-24*time.Hour))
 	expired2 := seedBleTokenRecord(t, user.ID, now.Add(-2*time.Hour), now.Add(-1*time.Hour))
 
-	repo := NewBleTokenRepository(sharedTestDB)
+	repo := NewBleTokenRepository(zap.NewNop(), sharedTestDB)
 	deleted, err := repo.DeleteExpired(context.Background())
 	if err != nil {
 		t.Fatalf("DeleteExpired: %v", err)
@@ -114,7 +114,7 @@ func TestIntegration_BleTokenRepository_DeleteExpired_KeepsValidTokens(t *testin
 	_ = seedBleTokenRecord(t, user.ID, now.Add(-48*time.Hour), now.Add(-24*time.Hour))    // expired
 	valid := seedBleTokenRecord(t, user.ID, now.Add(-1*time.Hour), now.Add(23*time.Hour)) // valid
 
-	repo := NewBleTokenRepository(sharedTestDB)
+	repo := NewBleTokenRepository(zap.NewNop(), sharedTestDB)
 	deleted, err := repo.DeleteExpired(context.Background())
 	if err != nil {
 		t.Fatalf("DeleteExpired: %v", err)
@@ -144,7 +144,7 @@ func TestIntegration_BleTokenRepository_DeleteExpired_ReturnsZeroWhenNothingToDe
 	now := time.Now().UTC()
 	_ = seedBleTokenRecord(t, user.ID, now.Add(-1*time.Hour), now.Add(23*time.Hour)) // valid only
 
-	repo := NewBleTokenRepository(sharedTestDB)
+	repo := NewBleTokenRepository(zap.NewNop(), sharedTestDB)
 	deleted, err := repo.DeleteExpired(context.Background())
 	if err != nil {
 		t.Fatalf("DeleteExpired: %v", err)
