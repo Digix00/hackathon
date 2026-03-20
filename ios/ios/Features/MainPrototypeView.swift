@@ -44,6 +44,8 @@ struct MainPrototypeView: View {
     @State private var selectedSurface: Surface = .track
     @State private var selectedLibraryTab: LibraryTab = .insights
     @State private var isEncounterDetailPresented = false
+    @StateObject private var profilePageSwipeController = LibraryPageSwipeController()
+    @StateObject private var sharedTrackLoader = SharedTrackLoader()
     @GestureState private var verticalDragOffset: CGFloat = 0
     @EnvironmentObject private var bleCoordinator: BLEAppCoordinator
     let restartOnboarding: () -> Void
@@ -91,13 +93,12 @@ struct MainPrototypeView: View {
 
     private var homeState: HomeScreenState {
         let encounters = bleCoordinator.encounters
-        let featuredTrack = encounters.first?.track ?? MockData.featuredTrack
-        let weeklyTracks = uniqueTracks(from: encounters.map(\.track) + MockData.tracks).prefix(8)
+        let weeklyTracks = uniqueTracks(from: encounters.map(\.track)).prefix(8)
         let todayCount = encounters.filter { $0.happenedToday }.count
 
         return HomeScreenState(
             userName: "Miyu",
-            featuredTrack: featuredTrack,
+            featuredTrack: sharedTrackLoader.track,
             weeklyTracks: Array(weeklyTracks),
             recentEncounters: encounters,
             todayEncounterCount: todayCount,
@@ -122,12 +123,14 @@ struct MainPrototypeView: View {
         navigationContainer {
             HomePage(
                 state: homeState,
-                isMotionActive: isShowingTrackSurface
+                isMotionActive: isShowingTrackSurface,
+                onReload: { Task { await sharedTrackLoader.load() } }
             )
             .toolbarBackground(.hidden, for: .navigationBar)
         }
         .environment(\.topSafeAreaInset, 0)
         .environment(\.bottomSafeAreaInset, 0)
+        .task { await sharedTrackLoader.load() }
     }
 
     private func librarySurface(bottomSafeArea: CGFloat) -> some View {
@@ -152,10 +155,12 @@ struct MainPrototypeView: View {
             navigationContainer {
                 SettingsHubView(restartOnboarding: restartOnboarding)
             }
+            .environment(\.libraryPageSwipeController, profilePageSwipeController)
             .tag(LibraryTab.profile)
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
         .background(Color.clear)
+        .disablePageTabSwipe(selectedLibraryTab == .profile && profilePageSwipeController.isLocked)
         .simultaneousGesture(
             DragGesture(minimumDistance: 20, coordinateSpace: .local)
                 .onEnded { value in

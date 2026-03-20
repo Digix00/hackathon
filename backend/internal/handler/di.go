@@ -3,6 +3,8 @@ package handler
 import (
 	"context"
 
+	"go.uber.org/zap"
+
 	"hackathon/internal/handler/middleware"
 	"hackathon/internal/usecase"
 )
@@ -10,6 +12,7 @@ import (
 // Dependencies はhandlerレイヤーが必要とする外部依存をまとめた構造体。
 // ルーティング登録前にmain側で構築して渡す。
 type Dependencies struct {
+	Logger              *zap.Logger
 	AuthTokenVerifier   middleware.TokenVerifier
 	AuthUserManager     FirebaseUserManager
 	GoEnv               string

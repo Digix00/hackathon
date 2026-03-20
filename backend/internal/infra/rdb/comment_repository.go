@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"hackathon/internal/domain/entity"
@@ -13,11 +14,12 @@ import (
 )
 
 type commentRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
-func NewCommentRepository(db *gorm.DB) repository.CommentRepository {
-	return &commentRepository{db: db}
+func NewCommentRepository(log *zap.Logger, db *gorm.DB) repository.CommentRepository {
+	return &commentRepository{log: log, db: db}
 }
 
 type commentRow struct {

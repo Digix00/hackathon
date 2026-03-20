@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	schemares "hackathon/internal/handler/schema/response"
@@ -14,11 +15,12 @@ import (
 )
 
 type notificationHandler struct {
+	log                 *zap.Logger
 	notificationUsecase usecase.NotificationUsecase
 }
 
-func newNotificationHandler(u usecase.NotificationUsecase) *notificationHandler {
-	return &notificationHandler{notificationUsecase: u}
+func newNotificationHandler(log *zap.Logger, u usecase.NotificationUsecase) *notificationHandler {
+	return &notificationHandler{log: log, notificationUsecase: u}
 }
 
 // listNotifications godoc

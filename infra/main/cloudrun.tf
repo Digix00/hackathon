@@ -75,21 +75,6 @@ resource "google_cloud_run_v2_service" "api" {
       }
 
       env {
-        name  = "VERTEX_AI_PROJECT_ID"
-        value = var.project_id
-      }
-
-      env {
-        name  = "VERTEX_AI_LOCATION"
-        value = "us-central1"
-      }
-
-      env {
-        name  = "GEMINI_MODEL_ID"
-        value = "gemini-1.5-flash"
-      }
-
-      env {
         name = "MUSIC_STATE_SECRET"
         value_source {
           secret_key_ref {
@@ -146,6 +131,14 @@ resource "google_cloud_run_v2_service" "api" {
             secret  = google_secret_manager_secret.apns_key.secret_id
             version = "latest"
           }
+        }
+      }
+
+      dynamic "env" {
+        for_each = var.api_domain != "" ? [1] : []
+        content {
+          name  = "SPOTIFY_REDIRECT_URL"
+          value = "https://${var.api_domain}/api/v1/music-connections/spotify/callback"
         }
       }
 

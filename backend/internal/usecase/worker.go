@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hackathon/internal/domain/repository"
 	"hackathon/internal/usecase/port"
@@ -33,6 +34,7 @@ type WorkerUsecase interface {
 }
 
 type workerUsecase struct {
+	log             *zap.Logger
 	bleTokenRepo    repository.BleTokenRepository
 	lyriaJobRepo    repository.LyriaJobRepository
 	geminiClient    port.GeminiClient
@@ -44,6 +46,7 @@ type workerUsecase struct {
 
 // NewWorkerUsecase は WorkerUsecase を初期化する
 func NewWorkerUsecase(
+	log *zap.Logger,
 	bleTokenRepo repository.BleTokenRepository,
 	lyriaJobRepo repository.LyriaJobRepository,
 	geminiClient port.GeminiClient,
@@ -59,6 +62,7 @@ func NewWorkerUsecase(
 		lyriaTimeoutSec = 300
 	}
 	return &workerUsecase{
+		log:             log,
 		bleTokenRepo:    bleTokenRepo,
 		lyriaJobRepo:    lyriaJobRepo,
 		geminiClient:    geminiClient,

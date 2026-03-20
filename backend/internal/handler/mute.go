@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	schemareq "hackathon/internal/handler/schema/request"
@@ -15,11 +16,12 @@ import (
 )
 
 type muteHandler struct {
+	log     *zap.Logger
 	usecase usecase.MuteUsecase
 }
 
-func newMuteHandler(u usecase.MuteUsecase) *muteHandler {
-	return &muteHandler{usecase: u}
+func newMuteHandler(log *zap.Logger, u usecase.MuteUsecase) *muteHandler {
+	return &muteHandler{log: log, usecase: u}
 }
 
 // createMute godoc

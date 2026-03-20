@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"hackathon/internal/domain/entity"
@@ -14,11 +15,12 @@ import (
 )
 
 type playlistRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
-func NewPlaylistRepository(db *gorm.DB) repository.PlaylistRepository {
-	return &playlistRepository{db: db}
+func NewPlaylistRepository(log *zap.Logger, db *gorm.DB) repository.PlaylistRepository {
+	return &playlistRepository{log: log, db: db}
 }
 
 func (r *playlistRepository) Create(ctx context.Context, p entity.Playlist) error {

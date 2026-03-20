@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	schemares "hackathon/internal/handler/schema/response"
@@ -11,11 +12,12 @@ import (
 )
 
 type songHandler struct {
+	log     *zap.Logger
 	usecase usecase.SongUsecase
 }
 
-func newSongHandler(u usecase.SongUsecase) *songHandler {
-	return &songHandler{usecase: u}
+func newSongHandler(log *zap.Logger, u usecase.SongUsecase) *songHandler {
+	return &songHandler{log: log, usecase: u}
 }
 
 // listMySongs godoc

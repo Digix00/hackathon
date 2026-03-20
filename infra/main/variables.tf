@@ -36,6 +36,12 @@ variable "seed_demo_image_tag" {
   default     = "latest"
 }
 
+variable "api_domain" {
+  type        = string
+  description = "API サーバーのドメイン（Spotify OAuth リダイレクト URL に使用）。Cloud Run の URI から https:// を除いたドメイン部分。GitHub Variables の TF_API_DOMAIN から注入される"
+  default     = ""
+}
+
 variable "seed_target_user_id" {
   type        = string
   description = "デモデータを紐づける対象ユーザーの DB 内 ID"

@@ -10,6 +10,7 @@ struct ContentView: View {
 
     @State private var phase: Phase = .splash
     @StateObject private var authSession = AuthSession()
+    private let userClient: BackendUserAPIClient = BackendAPIClient()
 
     var body: some View {
         GeometryReader { proxy in
@@ -25,20 +26,12 @@ struct ContentView: View {
             authSession.startIfNeeded()
             guard phase == .splash else { return }
             try? await Task.sleep(for: .milliseconds(900))
-            updatePhaseAfterSplash()
+            await updatePhaseAfterSplash()
         }
         .onChange(of: authSession.status) { _, newStatus in
             guard phase != .splash else { return }
-
-            switch newStatus {
-            case .signedIn:
-                if phase == .auth {
-                    phase = .onboarding
-                }
-            case .signedOut:
-                phase = .auth
-            case .checking:
-                break
+            Task {
+                await handleAuthStatusChange(newStatus)
             }
         }
     }
@@ -61,10 +54,48 @@ struct ContentView: View {
             MainPrototypeView(
                 restartOnboarding: { phase = .onboarding }
             )
+            .environmentObject(authSession)
         }
     }
 
-    private func updatePhaseAfterSplash() {
-        phase = authSession.status == .signedIn ? .onboarding : .auth
+    @MainActor
+    private func handleAuthStatusChange(_ status: AuthSession.Status) async {
+        switch status {
+        case .signedIn:
+            phase = .splash
+            phase = await initialSignedInPhase()
+        case .signedOut:
+            phase = .auth
+        case .checking:
+            break
+        }
+    }
+
+    private func updatePhaseAfterSplash() async {
+        if authSession.status == .signedIn {
+            phase = await initialSignedInPhase()
+        } else {
+            phase = .auth
+        }
+    }
+
+    private func initialSignedInPhase() async -> Phase {
+        do {
+            _ = try await userClient.getMe()
+            return .main
+        } catch let error as BackendAPIClient.BackendError {
+            switch error {
+            case .unexpectedStatus(let code, _) where code == 404:
+                return .onboarding
+            case .missingAuthToken, .invalidBaseURL:
+                return .auth
+            default:
+                // Existing signed-in users should not be forced through onboarding
+                // just because profile prefetch failed transiently.
+                return .main
+            }
+        } catch {
+            return .main
+        }
     }
 }

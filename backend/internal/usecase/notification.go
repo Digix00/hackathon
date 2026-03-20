@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"go.uber.org/zap"
+
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
 	"hackathon/internal/usecase/dto"
@@ -16,12 +18,13 @@ type NotificationUsecase interface {
 }
 
 type notificationUsecase struct {
+	log              *zap.Logger
 	userRepo         repository.UserRepository
 	notificationRepo repository.NotificationRepository
 }
 
-func NewNotificationUsecase(userRepo repository.UserRepository, notificationRepo repository.NotificationRepository) NotificationUsecase {
-	return &notificationUsecase{userRepo: userRepo, notificationRepo: notificationRepo}
+func NewNotificationUsecase(log *zap.Logger, userRepo repository.UserRepository, notificationRepo repository.NotificationRepository) NotificationUsecase {
+	return &notificationUsecase{log: log, userRepo: userRepo, notificationRepo: notificationRepo}
 }
 
 func (u *notificationUsecase) ListNotifications(ctx context.Context, authUID string, limit, offset int) (dto.NotificationListOutput, error) {

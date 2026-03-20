@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -15,12 +16,13 @@ import (
 const maxRetryCount = 3
 
 type lyriaJobRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
 // NewLyriaJobRepository は LyriaJobRepository の実装を返す
-func NewLyriaJobRepository(db *gorm.DB) repository.LyriaJobRepository {
-	return &lyriaJobRepository{db: db}
+func NewLyriaJobRepository(log *zap.Logger, db *gorm.DB) repository.LyriaJobRepository {
+	return &lyriaJobRepository{log: log, db: db}
 }
 
 // ClaimPendingJobs は pending 状態のジョブを最大 limit 件取得し processing に遷移させる
