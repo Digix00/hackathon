@@ -53,6 +53,18 @@ jobs:
           docker push $IMAGE:${{ github.sha }}
           docker push $IMAGE:latest
 
+      - name: Build and push seed-demo image
+        env:
+          IMAGE: asia-northeast1-docker.pkg.dev/${{ vars.TF_PROJECT_ID }}/app/seed-demo
+        run: |
+          docker build \
+            -f backend/cmd/seed-demo/Dockerfile.prod \
+            -t $IMAGE:${{ github.sha }} \
+            -t $IMAGE:latest \
+            ./backend
+          docker push $IMAGE:${{ github.sha }}
+          docker push $IMAGE:latest
+
       - name: Deploy Cloud Run Service (api)
         run: |
           gcloud run services update api \

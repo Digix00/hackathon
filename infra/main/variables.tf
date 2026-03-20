@@ -29,3 +29,9 @@ variable "migrate_image_tag" {
   description = "デプロイする migrate イメージのタグ（git SHA または latest）"
   default     = "latest"
 }
+
+variable "seed_demo_image_tag" {
+  type        = string
+  description = "デプロイする seed-demo イメージのタグ（git SHA または latest）"
+  default     = "latest"
+}
