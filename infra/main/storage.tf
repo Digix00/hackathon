@@ -5,16 +5,6 @@ resource "google_storage_bucket" "generated_songs" {
 
   uniform_bucket_level_access = true
 
-  lifecycle_rule {
-    condition {
-      matches_prefix = ["temp/"]
-      age            = 1
-    }
-    action {
-      type = "Delete"
-    }
-  }
-
   depends_on = [google_project_service.apis]
 }
 
@@ -33,7 +23,8 @@ resource "google_storage_bucket_iam_member" "cloudrun_reader" {
 }
 
 # 生成楽曲の公開読み取り（クライアントから直接取得するため）
-# allUsers への IAM Condition は GCP が許可しないため、バケット全体を公開読み取りにする
+# バケットへの書き込みは backend/internal/infra/storage/client.go の UploadSong が songs/ プレフィックスのみに限定している
+# allUsers への IAM Condition は GCP が許可しないため、バケット全体を公開読み取りにする（songs/ 以外のオブジェクトは存在しない）
 resource "google_storage_bucket_iam_member" "public_reader" {
   bucket = google_storage_bucket.generated_songs.name
   role   = "roles/storage.objectViewer"
