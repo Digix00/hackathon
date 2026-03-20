@@ -392,7 +392,12 @@ final class BLEAppCoordinator: ObservableObject {
 
     private static func makeTrack(from item: BackendEncounterTrack?) -> Track {
         guard let item else {
-            return MockData.featuredTrack
+            return Track(
+                title: "曲情報なし",
+                artist: "Unknown Artist",
+                color: PrototypeTheme.surfaceElevated,
+                artwork: nil
+            )
         }
 
         return Track(
