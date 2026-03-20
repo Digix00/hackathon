@@ -17,6 +17,7 @@ final class SearchViewModel: ObservableObject {
     @Published private(set) var favoriteTrackIDs: Set<String> = []
 
     private let client: BackendAPIClient
+    private var searchGeneration: Int = 0
 
     init(client: BackendAPIClient = BackendAPIClient()) {
         self.client = client
@@ -145,31 +146,34 @@ final class SearchViewModel: ObservableObject {
     private func performSearch(query: String) async {
         isSearching = true
         errorMessage = nil
+        searchGeneration += 1
+        let currentGeneration = searchGeneration
         do {
             let response = try await client.searchTracks(query: query, limit: 20)
             results = (response.tracks ?? []).map(mapTrack)
             if results.isEmpty {
                 selectedTrack = nil
             }
-            // フォールバック色で即座に表示した後、並列で実際のアートワーク色を抽出して更新
-            let snapshot = results
-            await withTaskGroup(of: (Int, Color?).self) { group in
-                for (i, track) in snapshot.enumerated() {
-                    group.addTask {
-                        let color = await ArtworkColorExtractor.shared.extractColor(from: track.artwork)
-                        return (i, color)
-                    }
-                }
-                for await (i, color) in group {
-                    if let color, i < results.count {
-                        results[i] = results[i].withColor(color)
-                    }
-                }
-            }
         } catch {
             errorMessage = "検索に失敗しました"
         }
         isSearching = false
+        // フォールバック色で即座に表示した後、並列で実際のアートワーク色を抽出して更新
+        let snapshot = results
+        await withTaskGroup(of: (Int, Color?).self) { group in
+            for (i, track) in snapshot.enumerated() {
+                group.addTask {
+                    let color = await ArtworkColorExtractor.shared.extractColor(from: track.artwork)
+                    return (i, color)
+                }
+            }
+            for await (i, color) in group {
+                guard currentGeneration == searchGeneration else { return }
+                if let color, i < results.count {
+                    results[i] = results[i].withColor(color)
+                }
+            }
+        }
     }
 
     private func fetchTrackDetail(id: String, fallback: Track) async {
