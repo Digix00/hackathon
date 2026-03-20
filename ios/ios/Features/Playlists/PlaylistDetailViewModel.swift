@@ -76,6 +76,21 @@ final class PlaylistDetailViewModel: ObservableObject {
         Task { await addTrackTask(trackId: trackId) }
     }
 
+    func addTrackAsync(trackId: String) async -> Bool {
+        guard !isUpdating else { return false }
+        isUpdating = true
+        errorMessage = nil
+        defer { isUpdating = false }
+        do {
+            try await client.addPlaylistTrack(id: playlistId, trackId: trackId)
+            await loadPlaylist()
+            return true
+        } catch {
+            errorMessage = "トラックの追加に失敗しました"
+            return false
+        }
+    }
+
     func removeTrack(trackId: String) {
         guard !isUpdating else { return }
         isUpdating = true

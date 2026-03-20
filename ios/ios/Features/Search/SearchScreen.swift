@@ -3,6 +3,7 @@ import SwiftUI
 enum SearchMode {
     case shareTrack
     case addToMyTracks
+    case addToPlaylist
 
     var subtitle: String {
         switch self {
@@ -10,6 +11,8 @@ enum SearchMode {
             return "シェアする曲を選ぶ"
         case .addToMyTracks:
             return "マイトラックに追加する曲を選ぶ"
+        case .addToPlaylist:
+            return "プレイリストに追加する曲を選ぶ"
         }
     }
 
@@ -19,6 +22,8 @@ enum SearchMode {
             return "この曲をシェアする"
         case .addToMyTracks:
             return "マイトラックに追加"
+        case .addToPlaylist:
+            return "プレイリストに追加"
         }
     }
 
@@ -26,7 +31,7 @@ enum SearchMode {
         switch self {
         case .shareTrack:
             return "ホーム画面に戻る"
-        case .addToMyTracks:
+        case .addToMyTracks, .addToPlaylist:
             return "閉じる"
         }
     }
@@ -36,13 +41,16 @@ struct SearchView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.homeNamespace) var homeNamespace
     @StateObject private var viewModel = SearchViewModel()
+    @State private var isAddingToPlaylist = false
     private let defaultQuery = "夜に駆ける"
     let mode: SearchMode
     let onTrackAdded: (() -> Void)?
+    let onTrackIdSelected: ((String) async -> Bool)?
 
-    init(mode: SearchMode = .shareTrack, onTrackAdded: (() -> Void)? = nil) {
+    init(mode: SearchMode = .shareTrack, onTrackAdded: (() -> Void)? = nil, onTrackIdSelected: ((String) async -> Bool)? = nil) {
         self.mode = mode
         self.onTrackAdded = onTrackAdded
+        self.onTrackIdSelected = onTrackIdSelected
     }
 
     var body: some View {
@@ -170,8 +178,8 @@ struct SearchView: View {
                                     .foregroundStyle(PrototypeTheme.success)
                             }
                             PrimaryButton(
-                                title: viewModel.isSubmitting ? "送信中..." : mode.actionTitle,
-                                isDisabled: viewModel.isSelecting || viewModel.isSubmitting || selectedTrack.backendId == nil
+                                title: (viewModel.isSubmitting || isAddingToPlaylist) ? "送信中..." : mode.actionTitle,
+                                isDisabled: viewModel.isSelecting || viewModel.isSubmitting || isAddingToPlaylist || selectedTrack.backendId == nil
                             ) {
                                 Task {
                                     let success: Bool
@@ -182,6 +190,14 @@ struct SearchView: View {
                                         success = await viewModel.addSelectedTrackToMyTracks()
                                         if success {
                                             onTrackAdded?()
+                                        }
+                                    case .addToPlaylist:
+                                        if let backendId = viewModel.selectedTrack?.backendId, let onTrackIdSelected {
+                                            isAddingToPlaylist = true
+                                            success = await onTrackIdSelected(backendId)
+                                            isAddingToPlaylist = false
+                                        } else {
+                                            success = false
                                         }
                                     }
                                     if success {

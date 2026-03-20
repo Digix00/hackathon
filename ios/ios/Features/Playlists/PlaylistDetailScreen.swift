@@ -119,8 +119,8 @@ struct PlaylistDetailView: View {
             }
         }
         .sheet(isPresented: $isAddTrackPresented) {
-            PlaylistAddTrackSheet(isSaving: viewModel.isUpdating) { trackId in
-                viewModel.addTrack(trackId: trackId)
+            SearchView(mode: .addToPlaylist) { trackId in
+                await viewModel.addTrackAsync(trackId: trackId)
             }
         }
         .alert("プレイリストを削除しますか？", isPresented: $isDeleteConfirmPresented) {
@@ -189,35 +189,3 @@ private struct PlaylistTrackRow: View {
     }
 }
 
-private struct PlaylistAddTrackSheet: View {
-    let isSaving: Bool
-    let onSubmit: (String) -> Void
-
-    @Environment(\.dismiss) private var dismiss
-    @State private var trackId: String = ""
-
-    var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: 24) {
-                PlaylistTextField(title: "トラックID", placeholder: "spotify:track:...", text: $trackId)
-
-                PrimaryButton(title: isSaving ? "追加中..." : "追加", isDisabled: trackId.isEmpty || isSaving) {
-                    onSubmit(trackId)
-                    dismiss()
-                }
-
-                Spacer()
-            }
-            .padding(24)
-            .navigationTitle("トラック追加")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("閉じる") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-}
