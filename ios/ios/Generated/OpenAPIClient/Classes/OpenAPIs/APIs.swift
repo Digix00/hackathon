@@ -9,7 +9,20 @@ import Foundation
 import FoundationNetworking
 #endif
 open class OpenAPIClientAPI {
-    public static var basePath = "http://localhost:8000"
+    /// ベースURL解決優先順位: 環境変数 API_BASE_URL → Info.plist API_BASE_URL → localhost フォールバック
+    public static var basePath: String = {
+        let candidates: [String?] = [
+            ProcessInfo.processInfo.environment["API_BASE_URL"],
+            Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String,
+            "http://localhost:8000"
+        ]
+        for raw in candidates {
+            guard let value = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else { continue }
+            // 末尾スラッシュを除去して正規化
+            return value.hasSuffix("/") ? String(value.dropLast()) : value
+        }
+        return "http://localhost:8000"
+    }()
     public static var customHeaders: [String: String] = [:]
     public static var credential: URLCredential?
     public static var requestBuilderFactory: RequestBuilderFactory = URLSessionRequestBuilderFactory()
