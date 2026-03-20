@@ -16,21 +16,34 @@ final class GeneratedSongDetailViewModel: ObservableObject {
     @Published private(set) var lyricEntries: [LyricEntryRow] = []
     @Published private(set) var isLoadingLyrics = false
     @Published private(set) var lyricsErrorMessage: String?
+    @Published private(set) var durationSec: Int?
+    @Published private(set) var mood: String?
 
     private let client: BackendAPIClient
     private let songId: String
     private let chainId: String?
+    private let localStudioStore = LocalCompositionStudioStore.shared
+    private let isLocalSong: Bool
     private var hasLoadedLyrics = false
 
     init(song: GeneratedSong, client: BackendAPIClient = BackendAPIClient()) {
         self.songId = song.id
         self.chainId = song.chainId
         self.client = client
+        self.isLocalSong = LocalCompositionStudioStore.shared.containsSong(songID: song.id)
         self.isLiked = song.isLiked
+        self.durationSec = song.durationSec
+        self.mood = song.mood
     }
 
     func toggleLike() {
         guard !isProcessingLike else { return }
+        if isLocalSong {
+            localStudioStore.toggleLike(songID: songId)
+            isLiked = localStudioStore.isSongLiked(songID: songId)
+            errorMessage = nil
+            return
+        }
         isProcessingLike = true
         errorMessage = nil
 
@@ -65,6 +78,10 @@ final class GeneratedSongDetailViewModel: ObservableObject {
 
     func loadLyricsIfNeeded() {
         guard !hasLoadedLyrics, !isLoadingLyrics else { return }
+        if let localChain = localStudioStore.generatedChain(id: chainId) {
+            applyLocalLyrics(from: localChain, message: nil)
+            return
+        }
         guard let chainId, !chainId.isEmpty else {
             hasLoadedLyrics = true
             return
@@ -101,6 +118,8 @@ final class GeneratedSongDetailViewModel: ObservableObject {
                 return
             }
             let response = try await client.getLyricChainDetail(chainId: chainId)
+            durationSec = response.song?.durationSec ?? durationSec
+            mood = response.song?.mood ?? mood
             lyricEntries = response.entries
                 .sorted { $0.sequenceNum < $1.sequenceNum }
                 .map { entry in
@@ -118,5 +137,20 @@ final class GeneratedSongDetailViewModel: ObservableObject {
         }
 
         isLoadingLyrics = false
+    }
+
+    private func applyLocalLyrics(from local: LocalCompositionStudioStore.LocalChainResult, message: String?) {
+        durationSec = local.song?.durationSec ?? durationSec
+        mood = local.song?.mood ?? mood
+        lyricEntries = local.entries.map { entry in
+            LyricEntryRow(
+                id: "\(entry.sequenceNum)-\(entry.user.id)",
+                content: entry.content,
+                userName: entry.user.displayName.isEmpty ? "匿名" : entry.user.displayName,
+                sequenceNum: entry.sequenceNum
+            )
+        }
+        lyricsErrorMessage = message
+        hasLoadedLyrics = true
     }
 }

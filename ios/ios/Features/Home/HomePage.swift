@@ -114,6 +114,16 @@ struct HomePage: View {
                 }
                 .buttonStyle(ScaleButtonStyle())
 
+                if let latestSubmission = bleCoordinator.latestLyricSubmission {
+                    NavigationLink {
+                        ChainProgressView(chainId: latestSubmission.chain.id)
+                    } label: {
+                        HomeLyricChainProgressCard(submission: latestSubmission)
+                    }
+                    .buttonStyle(ScaleButtonStyle())
+                    .padding(.top, 20)
+                }
+
                 Spacer()
 
                 // Bottom Hint
@@ -148,5 +158,83 @@ struct HomePage: View {
         .onDisappear {
             motion.stopUpdates()
         }
+    }
+}
+
+private struct HomeLyricChainProgressCard: View {
+    let submission: BLEAppCoordinator.LatestLyricSubmission
+
+    private var progress: CGFloat {
+        CGFloat(submission.chain.participantCount) / CGFloat(max(submission.chain.threshold, 1))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("LYRIC CHAIN")
+                        .font(.system(size: 10, weight: .black))
+                        .kerning(2)
+                        .foregroundStyle(PrototypeTheme.accent.opacity(0.8))
+
+                    Text("あなたの歌詞が曲になる途中")
+                        .font(.system(size: 18, weight: .black))
+                        .foregroundStyle(PrototypeTheme.textPrimary)
+                }
+
+                Spacer()
+
+                Image(systemName: "sparkles.rectangle.stack")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(PrototypeTheme.textPrimary)
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                GeometryReader { proxy in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(PrototypeTheme.border.opacity(0.35))
+
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [PrototypeTheme.accent, PrototypeTheme.textPrimary],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: max(proxy.size.width * progress, 10))
+                    }
+                }
+                .frame(height: 8)
+
+                HStack {
+                    Text("\(submission.chain.participantCount)/\(submission.chain.threshold)人参加中")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(PrototypeTheme.textPrimary)
+
+                    Spacer()
+
+                    Text(submission.remainingParticipants > 0 ? "あと\(submission.remainingParticipants)人" : "生成開始")
+                        .font(.system(size: 12, weight: .black))
+                        .foregroundStyle(PrototypeTheme.textSecondary)
+                }
+            }
+
+            Text("“\(submission.content)”")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(PrototypeTheme.textSecondary)
+                .lineLimit(2)
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(PrototypeTheme.surface.opacity(0.88))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(PrototypeTheme.border.opacity(0.5), lineWidth: 1)
+        )
     }
 }

@@ -18,6 +18,7 @@ final class ChainProgressViewModel: ObservableObject {
 
     private let chainId: String?
     private let client: BackendAPIClient
+    private let localStudioStore = LocalCompositionStudioStore.shared
     private var hasLoaded = false
 
     init(chainId: String?, client: BackendAPIClient = BackendAPIClient()) {
@@ -53,9 +54,26 @@ final class ChainProgressViewModel: ObservableObject {
         Task { await loadChainDetail() }
     }
 
+    var canAppendDemoLyric: Bool {
+        guard let chain else { return false }
+        return localStudioStore.contains(chainID: chain.id) && chain.status.lowercased() == "pending"
+    }
+
+    func appendDemoLyric() {
+        guard let chain else { return }
+        localStudioStore.appendDemoLyric(to: chain.id)
+        Task { await loadChainDetail() }
+    }
+
     private func loadChainDetail() async {
+        if let local = localStudioStore.generatedChain(id: chainId) {
+            applyLocalChain(local, message: nil)
+            isLoading = false
+            return
+        }
+
         guard let chainId, !chainId.isEmpty else {
-            errorMessage = "まだ歌詞チェーンがありません"
+            errorMessage = "歌詞チェーンの取得に失敗しました"
             return
         }
 
@@ -82,5 +100,20 @@ final class ChainProgressViewModel: ObservableObject {
             hasLoaded = false
         }
         isLoading = false
+    }
+
+    private func applyLocalChain(_ local: LocalCompositionStudioStore.LocalChainResult, message: String?) {
+        chain = local.chain
+        song = local.song
+        entries = local.entries.map { entry in
+            LyricEntryRowModel(
+                id: "\(entry.sequenceNum)-\(entry.user.id)",
+                content: entry.content,
+                userName: entry.user.displayName.isEmpty ? "匿名" : entry.user.displayName,
+                sequenceNum: entry.sequenceNum
+            )
+        }
+        errorMessage = message
+        hasLoaded = true
     }
 }

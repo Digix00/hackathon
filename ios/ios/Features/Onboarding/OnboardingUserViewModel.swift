@@ -115,6 +115,9 @@ final class OnboardingUserViewModel: ObservableObject {
                     errorMessage = "ユーザー作成に失敗しました"
                     isSubmitting = false
                 }
+            case .unexpectedStatus(let code, let body) where code == 401:
+                errorMessage = authErrorMessage(responseBody: body)
+                isSubmitting = false
             case .invalidBaseURL:
                 errorMessage = "API の接続先が未設定です。`Secrets.xcconfig` の `API_BASE_URL` を確認してください"
                 isSubmitting = false
@@ -129,6 +132,14 @@ final class OnboardingUserViewModel: ObservableObject {
             errorMessage = "接続に失敗しました。もう一度お試しください"
             isSubmitting = false
         }
+    }
+
+    private func authErrorMessage(responseBody: String?) -> String {
+        let body = responseBody?.lowercased() ?? ""
+        if body.contains("invalid firebase id token") {
+            return "バックエンドの Firebase 設定がアプリと一致していません。ローカル開発では Xcode Scheme に `DEV_AUTH_TOKEN=dev-auth-token` を設定するか、同じ Firebase project を使ってください"
+        }
+        return "認証に失敗しました。再度ログインしてからお試しください"
     }
 
     private func loadCurrentUserIfAvailable() async {

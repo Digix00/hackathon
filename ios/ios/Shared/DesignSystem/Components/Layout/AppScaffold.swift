@@ -7,7 +7,7 @@ struct AppScaffold<Content: View>: View {
     let trailingSymbol: String?
     let accentColor: Color?
     let customBackground: AnyView?
-    @ViewBuilder var content: Content
+    @ViewBuilder var content: Content   
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.topSafeAreaInset) private var envTopSafeArea
@@ -33,6 +33,8 @@ struct AppScaffold<Content: View>: View {
 
     var body: some View {
         GeometryReader { geometry in
+            let globalWidth = geometry.frame(in: .global).width
+            let layoutWidth = globalWidth > 0 ? min(geometry.size.width, globalWidth) : geometry.size.width
             let topPadding = (envTopSafeArea > 0 ? envTopSafeArea : geometry.safeAreaInsets.top)
             let bottomPadding = (envBottomSafeArea > 0 ? envBottomSafeArea : geometry.safeAreaInsets.bottom)
 
@@ -106,9 +108,12 @@ struct AppScaffold<Content: View>: View {
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, max(24, bottomPadding + 8))
+                    .frame(width: layoutWidth)
                 }
                 .scrollContentBackground(.hidden)
             }
+            .frame(width: layoutWidth)
+            .frame(maxWidth: .infinity, alignment: .center)
             .toolbar(.hidden, for: .navigationBar)
             .background(Color.clear)
             .ignoresSafeArea()
