@@ -47,3 +47,9 @@ variable "seed_target_user_id" {
   description = "デモデータを紐づける対象ユーザーの DB 内 ID"
   default     = "88ca94e3-9c7f-4da8-85d1-74fe42119f53"
 }
+
+variable "seed_other_user_id" {
+  type        = string
+  description = "クロスエンカウントを作成する相手ユーザーの DB 内 ID"
+  default     = "236b9686-98b7-4718-9797-a85e112e92ed"
+}
