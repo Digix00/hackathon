@@ -150,7 +150,7 @@ func (h *musicHandler) searchTracks(c echo.Context) error {
 	if !ok {
 		return errUnauthorized()
 	}
-	limit := 20
+	limit := 10
 	if raw := c.QueryParam("limit"); raw != "" {
 		parsed, err := strconv.Atoi(raw)
 		if err != nil {

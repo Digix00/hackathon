@@ -37,7 +37,7 @@ final class OtherUserProfileViewModel: ObservableObject {
             title: shared.title,
             artist: shared.artistName,
             color: paletteColor(for: shared.id),
-            artwork: nil
+            artwork: shared.artworkURL
         )
     }
 
