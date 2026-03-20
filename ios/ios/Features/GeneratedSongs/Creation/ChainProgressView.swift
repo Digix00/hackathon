@@ -3,160 +3,163 @@ import SwiftUI
 struct ChainProgressView: View {
     @StateObject private var viewModel: ChainProgressViewModel
     @EnvironmentObject private var bleCoordinator: BLEAppCoordinator
+    @Environment(\.dismiss) private var dismiss
 
     init(chainId: String?) {
         _viewModel = StateObject(wrappedValue: ChainProgressViewModel(chainId: chainId))
     }
 
     var body: some View {
-        AppScaffold(
-            title: "歌詞チェーン",
-            subtitle: viewModel.statusTitle,
-            showsBackButton: true
-        ) {
-            VStack(alignment: .leading, spacing: 28) {
-                if viewModel.isLoading && viewModel.chain == nil {
-                    ProgressView("読み込み中")
-                        .frame(maxWidth: .infinity, alignment: .center)
-                } else if let chain = viewModel.chain {
-                    progressHero(chain: chain)
-                    SectionCard(title: "集まった歌詞") {
-                        LyricEntryList(
-                            entries: lyricRows(for: chain),
-                            waitingLine: waitingLine(for: chain)
-                        )
-                    }
-
-                    if chain.status.lowercased() == "completed", let song = viewModel.song {
-                        NavigationLink {
-                            GeneratedSongDetailView(song: generatedSong(from: song, chain: chain))
-                        } label: {
-                            SecondaryButtonLabel(title: "曲を聴く", systemImage: "play.circle.fill")
-                        }
-                        .buttonStyle(.plain)
-                    }
-                } else {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text(viewModel.errorMessage ?? "歌詞チェーンが見つかりませんでした")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(PrototypeTheme.textSecondary)
-
-                        SecondaryButton(title: "再読み込み", systemImage: "arrow.clockwise") {
-                            viewModel.refresh()
-                        }
-                    }
-                }
+        ZStack {
+            DynamicBackground(baseColor: .indigo)
+            
+            if viewModel.isLoading && viewModel.chain == nil {
+                ProgressView("接続中...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if let chain = viewModel.chain {
+                content(chain: chain)
+            } else {
+                errorState
             }
+        }
+        .navigationBarBackButtonHidden()
+        .safeAreaInset(edge: .top) {
+            HStack {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(PrototypeTheme.textPrimary)
+                        .frame(width: 44, height: 44)
+                        .background(Circle().fill(PrototypeTheme.surface.opacity(0.8)))
+                }
+                
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
         }
         .task {
             viewModel.loadIfNeeded()
         }
     }
 
+    private func content(chain: BackendChainDetail) -> some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 40) {
+                progressHero(chain: chain)
+                    .padding(.top, 60)
+
+                VStack(alignment: .leading, spacing: 24) {
+                    HStack {
+                        Text("COLLECTED FRAGMENTS")
+                            .font(PrototypeTheme.Typography.font(size: 10, weight: .black, role: .data))
+                            .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
+                            .kerning(2)
+                        
+                        Spacer()
+                        
+                        Rectangle()
+                            .fill(PrototypeTheme.border)
+                            .frame(height: 1)
+                    }
+                    .padding(.horizontal, 32)
+
+                    LyricEntryList(
+                        entries: lyricRows(for: chain),
+                        waitingLine: waitingLine(for: chain)
+                    )
+                    .padding(.horizontal, 16)
+                }
+
+                if chain.status.lowercased() == "completed", let song = viewModel.song {
+                    NavigationLink {
+                        GeneratedSongDetailView(song: generatedSong(from: song, chain: chain))
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "play.circle.fill")
+                                .font(.system(size: 24))
+                            Text("完成した曲を聴く")
+                                .font(PrototypeTheme.Typography.font(size: 16, weight: .black))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 32)
+                        .padding(.vertical, 18)
+                        .background(Capsule().fill(Color.indigo).shadow(color: Color.indigo.opacity(0.3), radius: 20, y: 10))
+                    }
+                    .padding(.bottom, 40)
+                }
+                
+                Spacer(minLength: 100)
+            }
+        }
+    }
+
     private func progressHero(chain: BackendChainDetail) -> some View {
         let status = chain.status.lowercased()
         let remainingParticipants = max(chain.threshold - chain.participantCount, 0)
+        let progress = CGFloat(chain.participantCount) / CGFloat(max(chain.threshold, 1))
 
-        return SectionCard {
-            VStack(alignment: .leading, spacing: 20) {
-                HStack(spacing: 12) {
-                    ForEach(0..<max(chain.threshold, 1), id: \.self) { index in
-                        Circle()
-                            .fill(fillColor(for: index, chain: chain))
-                            .frame(width: 14, height: 14)
-                            .overlay {
-                                if isMyLyricSlot(index: index, chain: chain) {
-                                    Circle()
-                                        .stroke(Color.white, lineWidth: 2)
-                                        .padding(1)
-                                }
-                            }
-                    }
-                }
-
-                switch status {
-                case "completed":
-                    completedState
-                case "generating":
-                    generatingState
-                case "failed":
-                    failedState
-                default:
-                    pendingState(
-                        progressText: viewModel.progressText,
-                        remainingParticipants: remainingParticipants
+        return VStack(spacing: 32) {
+            // Visual Progress Core
+            ZStack {
+                Circle()
+                    .stroke(Color.indigo.opacity(0.1), lineWidth: 12)
+                    .frame(width: 180, height: 180)
+                
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(
+                        AngularGradient(
+                            colors: [.indigo, .indigo.opacity(0.6), .indigo],
+                            center: .center
+                        ),
+                        style: StrokeStyle(lineWidth: 12, lineCap: .round)
                     )
+                    .frame(width: 180, height: 180)
+                    .rotationEffect(.degrees(-90))
+                    .animation(.spring(response: 1.2, dampingFraction: 0.8), value: progress)
+                
+                VStack(spacing: 4) {
+                    Text("\(Int(progress * 100))%")
+                        .font(.system(size: 44, weight: .black, design: .monospaced))
+                        .foregroundStyle(PrototypeTheme.textPrimary)
+                    
+                    Text("\(chain.participantCount) / \(chain.threshold)")
+                        .font(PrototypeTheme.Typography.font(size: 12, weight: .black, role: .data))
+                        .foregroundStyle(PrototypeTheme.textSecondary)
                 }
             }
-        }
-    }
 
-    private var completedState: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Label("歌詞がそろいました", systemImage: "checkmark.seal.fill")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(PrototypeTheme.accent)
+            // Status Text
+            VStack(spacing: 12) {
+                Text(viewModel.statusTitle.uppercased())
+                    .font(PrototypeTheme.Typography.font(size: 12, weight: .black, role: .data))
+                    .foregroundStyle(Color.indigo)
+                    .kerning(2)
 
-            Text("完成した曲を確認できます。")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(PrototypeTheme.textPrimary)
-
-            if let song = viewModel.song?.title, !song.isEmpty {
-                Text(song)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(PrototypeTheme.textSecondary)
+                Text(status == "completed" ? "共鳴が完了しました" : (remainingParticipants > 0 ? "あと\(remainingParticipants)人の共鳴で曲が生まれます" : "曲を生成しています..."))
+                    .font(PrototypeTheme.Typography.font(size: 24, weight: .black))
+                    .foregroundStyle(PrototypeTheme.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
             }
         }
     }
 
-    private var generatingState: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Label("生成中", systemImage: "waveform.badge.magnifyingglass")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(PrototypeTheme.accent)
-
-            Text("曲を作成しています。")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(PrototypeTheme.textPrimary)
-
-            Text("完成したら通知でお知らせします。")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(PrototypeTheme.textSecondary)
-        }
-    }
-
-    private var failedState: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Label("生成失敗", systemImage: "exclamationmark.triangle.fill")
-                .font(.system(size: 14, weight: .bold))
+    private var errorState: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 48))
                 .foregroundStyle(PrototypeTheme.error)
-
-            Text("曲の生成に失敗しました。")
-                .font(.system(size: 20, weight: .bold))
+            
+            Text(viewModel.errorMessage ?? "チェーンの情報を取得できませんでした")
+                .font(PrototypeTheme.Typography.font(size: 16, weight: .bold))
                 .foregroundStyle(PrototypeTheme.textPrimary)
-
-            Text("技術的な問題が発生しました。時間をおいて再度確認してください。")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(PrototypeTheme.textSecondary)
-        }
-    }
-
-    private func pendingState(progressText: String, remainingParticipants: Int) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(progressText)
-                .font(.system(size: 12, weight: .black))
-                .foregroundStyle(PrototypeTheme.textSecondary)
-
-            Text(remainingParticipants > 0
-                ? "あと\(remainingParticipants)人で曲が完成します。"
-                : "歌詞がそろいました。")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(PrototypeTheme.textPrimary)
-
-            if let content = currentUserLyricContent {
-                Text("あなたの歌詞: “\(content)”")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(PrototypeTheme.textSecondary)
+            
+            SecondaryButton(title: "再読み込み", systemImage: "arrow.clockwise") {
+                viewModel.refresh()
             }
         }
     }
@@ -178,8 +181,8 @@ struct ChainProgressView: View {
         let remainingParticipants = max(chain.threshold - chain.participantCount, 0)
         guard status == "pending", remainingParticipants > 0 else { return nil }
         return remainingParticipants == 1
-            ? "\(chain.participantCount + 1). 最後のひとりを待っています..."
-            : "\(chain.participantCount + 1). あと\(remainingParticipants)人を待っています..."
+            ? "\(chain.participantCount + 1). 最後の共鳴を待っています..."
+            : "\(chain.participantCount + 1). あと\(remainingParticipants)人の共鳴を待っています..."
     }
 
     private func generatedSong(from song: BackendSongDetail, chain: BackendChainDetail) -> GeneratedSong {
@@ -208,17 +211,5 @@ struct ChainProgressView: View {
         }
         return submission.content
     }
-
-    private func isMyLyricSlot(index: Int, chain: BackendChainDetail) -> Bool {
-        guard let content = currentUserLyricContent else { return false }
-        guard let myEntry = viewModel.entries.first(where: { $0.content == content }) else { return false }
-        return myEntry.sequenceNum == index + 1
-    }
-
-    private func fillColor(for index: Int, chain: BackendChainDetail) -> Color {
-        if isMyLyricSlot(index: index, chain: chain) {
-            return PrototypeTheme.accent
-        }
-        return index < chain.participantCount ? PrototypeTheme.textPrimary : PrototypeTheme.border
-    }
 }
+

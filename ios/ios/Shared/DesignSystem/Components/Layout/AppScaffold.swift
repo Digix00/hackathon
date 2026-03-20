@@ -53,6 +53,9 @@ struct AppScaffold<Content: View>: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 28) {
+                        Color.clear
+                            .frame(height: topPadding)
+
                         HStack(alignment: .top) {
                             VStack(alignment: .leading, spacing: 8) {
                                 if showsBackButton {
@@ -102,7 +105,6 @@ struct AppScaffold<Content: View>: View {
                                 }
                             }
                         }
-                        .padding(.top, topPadding + 8)
 
                         content
                     }

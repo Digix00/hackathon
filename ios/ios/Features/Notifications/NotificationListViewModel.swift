@@ -71,6 +71,16 @@ final class NotificationListViewModel: ObservableObject {
     }
 
     private func loadNotifications() async {
+        if MockData.forceGeneratedSongMocks {
+            notifications = Self.mockNotifications()
+            unreadCount = notifications.filter { !$0.isRead }.count
+            totalCount = notifications.count
+            errorMessage = "モック通知を表示しています"
+            hasLoaded = true
+            isLoading = false
+            return
+        }
+
         if isLoading { return }
         isLoading = true
         errorMessage = nil

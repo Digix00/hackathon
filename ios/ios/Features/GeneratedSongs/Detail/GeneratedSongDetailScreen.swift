@@ -9,6 +9,9 @@ struct GeneratedSongDetailView: View {
     @StateObject private var playerViewModel: GeneratedSongPlayerViewModel
     @State private var shareURL: URL?
     @State private var isShowingShareSheet = false
+    @State private var showContent = false
+    @Environment(\.encounterNamespace) private var namespace
+    @Environment(\.dismiss) private var dismiss
 
     init(song: GeneratedSong) {
         self.song = song
@@ -41,87 +44,155 @@ struct GeneratedSongDetailView: View {
     }
 
     var body: some View {
-        AppScaffold(
-            title: song.title,
-            subtitle: "\(song.participantCount)件のすれ違いから生成",
-            showsBackButton: true,
-            accentColor: song.color
-        ) {
-            VStack(alignment: .leading, spacing: 28) {
-                SectionCard {
-                    VStack(spacing: 24) {
-                        MockArtworkView(color: song.color, symbol: "waveform.and.magnifyingglass", size: 180)
-                            .shadow(color: song.color.opacity(0.3), radius: 40, x: 0, y: 20)
+        GeometryReader { proxy in
+            let layoutWidth = proxy.size.width
+            
+            ZStack {
+                // Background
+                PrototypeTheme.background.ignoresSafeArea()
+                
+                // Morphing Aura
+                morphingAura
+                    .ignoresSafeArea()
 
-                        VStack(spacing: 10) {
-                            Text(song.title)
-                                .font(.system(size: 32, weight: .black))
-                                .foregroundStyle(PrototypeTheme.textPrimary)
-                                .multilineTextAlignment(.center)
-                                .lineLimit(2)
-                                .truncationMode(.tail)
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        // Hero Section
+                        VStack(spacing: showContent ? 48 : 32) {
+                            // Artwork
+                            ZStack {
+                                if let namespace = namespace {
+                                    MockArtworkView(color: song.color, symbol: "waveform", size: showContent ? 240 : 84)
+                                        .matchedGeometryEffect(id: "song-artwork-\(song.id)", in: namespace)
+                                } else {
+                                    MockArtworkView(color: song.color, symbol: "waveform", size: 240)
+                                }
+                            }
+                            .shadow(color: song.color.opacity(showContent ? 0.2 : 0.1), radius: showContent ? 60 : 20, x: 0, y: 30)
+                            .padding(.top, showContent ? 60 : 100)
 
-                            Text(song.subtitle)
-                                .prototypeFont(size: 15, weight: .bold, role: .data)
-                                .foregroundStyle(PrototypeTheme.textSecondary)
-                                .multilineTextAlignment(.center)
+                            // Titles
+                            VStack(spacing: 12) {
+                                if let namespace = namespace {
+                                    Text(song.title)
+                                        .font(PrototypeTheme.Typography.font(size: showContent ? 36 : 32, weight: .black))
+                                        .matchedGeometryEffect(id: "song-title-\(song.id)", in: namespace)
+                                        .multilineTextAlignment(.center)
+                                } else {
+                                    Text(song.title)
+                                        .font(PrototypeTheme.Typography.font(size: 36, weight: .black))
+                                }
 
-                            metadataChips
+                                if let namespace = namespace {
+                                    Text(song.subtitle)
+                                        .font(PrototypeTheme.Typography.font(size: 16, weight: .bold, role: .accent))
+                                        .foregroundStyle(song.color)
+                                        .matchedGeometryEffect(id: "song-subtitle-\(song.id)", in: namespace)
+                                } else {
+                                    Text(song.subtitle)
+                                        .font(PrototypeTheme.Typography.font(size: 16, weight: .bold, role: .accent))
+                                        .foregroundStyle(song.color)
+                                }
+                            }
+                            .padding(.horizontal, 32)
+
+                            if showContent {
+                                playbackControls
+                                    .padding(.horizontal, 32)
+                                    .transition(.opacity.combined(with: .offset(y: 20)))
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        if showContent {
+                            // Lyrics Section
+                            VStack(alignment: .leading, spacing: 24) {
+                                HStack {
+                                    Text("SHARED LYRICS")
+                                        .font(PrototypeTheme.Typography.font(size: 12, weight: .black, role: .data))
+                                        .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
+                                        .kerning(2)
+                                    
+                                    Spacer()
+                                    
+                                    Rectangle()
+                                        .fill(PrototypeTheme.border)
+                                        .frame(height: 1)
+                                }
+                                .padding(.horizontal, 32)
+
+                                if viewModel.isLoadingLyrics {
+                                    ProgressView()
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 40)
+                                } else if lyricEntries.isEmpty {
+                                    Text("歌詞の断片を読み込めませんでした")
+                                        .font(PrototypeTheme.Typography.font(size: 14, weight: .medium))
+                                        .foregroundStyle(PrototypeTheme.textTertiary)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 40)
+                                } else {
+                                    LyricEntryList(entries: lyricEntries)
+                                        .padding(.horizontal, 16)
+                                }
+                            }
+                            .padding(.top, 60)
+                            .transition(.opacity.combined(with: .offset(y: 30)))
+                            
+                            // Actions
+                            HStack(spacing: 16) {
+                                SecondaryButton(title: "共有", systemImage: "square.and.arrow.up") {
+                                    if let audioURL = song.audioURL.flatMap(URL.init(string:)) {
+                                        shareURL = audioURL
+                                        isShowingShareSheet = true
+                                    }
+                                }
+                                .disabled(song.audioURL == nil)
+
+                                SecondaryButton(
+                                    title: viewModel.isLiked ? "保存済み" : "保存",
+                                    systemImage: viewModel.isLiked ? "heart.fill" : "heart"
+                                ) {
+                                    viewModel.toggleLike()
+                                }
+                                .disabled(viewModel.isProcessingLike)
+                            }
+                            .padding(32)
+                            .transition(.opacity.combined(with: .offset(y: 40)))
                         }
 
-                        playbackControls
+                        Spacer(minLength: 100)
                     }
-                    .padding(.vertical, 12)
-                }
-
-                SectionCard(title: "参加した歌詞") {
-                    VStack(alignment: .leading, spacing: 20) {
-                        if viewModel.isLoadingLyrics {
-                            ProgressView("読み込み中")
-                        } else if lyricEntries.isEmpty {
-                            Text("まだ歌詞が登録されていません")
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundStyle(PrototypeTheme.textSecondary)
-                        } else {
-                            LyricEntryList(entries: lyricEntries)
-                        }
-
-                        if let lyricsErrorMessage = viewModel.lyricsErrorMessage {
-                            Text(lyricsErrorMessage)
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(PrototypeTheme.error)
-                        }
-                    }
-                }
-
-                if let errorMessage = currentErrorMessage {
-                    Text(errorMessage)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(PrototypeTheme.error)
-                }
-
-                HStack(spacing: 12) {
-                    SecondaryButton(title: "共有", systemImage: "square.and.arrow.up") {
-                        if let audioURL = song.audioURL.flatMap(URL.init(string:)) {
-                            shareURL = audioURL
-                            isShowingShareSheet = true
-                        }
-                    }
-                    .disabled(song.audioURL == nil)
-                    .opacity(song.audioURL == nil ? 0.6 : 1.0)
-
-                    SecondaryButton(
-                        title: viewModel.isLiked ? "保存済み" : "保存",
-                        systemImage: viewModel.isLiked ? "heart.fill" : "heart"
-                    ) {
-                        viewModel.toggleLike()
-                    }
-                    .disabled(viewModel.isProcessingLike)
-                    .opacity(viewModel.isProcessingLike ? 0.6 : 1.0)
                 }
             }
+            .navigationBarBackButtonHidden()
+            .safeAreaInset(edge: .top) {
+                HStack {
+                    Button {
+                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                            showContent = false
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            dismiss()
+                        }
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(PrototypeTheme.textPrimary)
+                            .frame(width: 44, height: 44)
+                            .background(Circle().fill(PrototypeTheme.surface.opacity(0.8)))
+                    }
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+            }
         }
-        .task {
+        .onAppear {
+            withAnimation(.spring(response: 0.8, dampingFraction: 0.7).delay(0.2)) {
+                showContent = true
+            }
             viewModel.loadLyricsIfNeeded()
             playerViewModel.prepareIfNeeded()
         }
@@ -135,56 +206,40 @@ struct GeneratedSongDetailView: View {
         }
     }
 
-    private var metadataChips: some View {
-        HStack(spacing: 10) {
-            if let durationText = durationText {
-                metadataChip(title: durationText, systemImage: "timer")
-            }
-            if let moodText = moodText {
-                metadataChip(title: moodText, systemImage: "sparkles")
-            }
-        }
-    }
+    private var morphingAura: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    song.color.opacity(showContent ? 0.15 : 0.0),
+                    Color.clear
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
 
-    private func metadataChip(title: String, systemImage: String) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: systemImage)
-            Text(title)
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            song.color.opacity(0.2),
+                            song.color.opacity(0.1),
+                            .clear
+                        ],
+                        center: .center,
+                        startRadius: 20,
+                        endRadius: showContent ? 300 : 150
+                    )
+                )
+                .frame(width: showContent ? 600 : 300, height: showContent ? 600 : 300)
+                .blur(radius: showContent ? 100 : 50)
+                .offset(y: showContent ? -150 : 0)
         }
-        .font(.system(size: 12, weight: .bold))
-        .foregroundStyle(PrototypeTheme.textSecondary)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(PrototypeTheme.surfaceMuted)
-        .clipShape(Capsule())
     }
 
     private var playbackControls: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 12) {
-                Button {
-                    playerViewModel.skip(by: -5)
-                } label: {
-                    playbackButtonLabel("gobackward.5")
-                }
-                .disabled(!playerViewModel.canPlay)
-
-                Button {
-                    playerViewModel.togglePlayback()
-                } label: {
-                    playbackButtonLabel(playerViewModel.isPlaying ? "pause.fill" : "play.fill", size: 26)
-                }
-                .disabled(!playerViewModel.canPlay)
-
-                Button {
-                    playerViewModel.skip(by: 5)
-                } label: {
-                    playbackButtonLabel("goforward.5")
-                }
-                .disabled(!playerViewModel.canPlay)
-            }
-
-            VStack(spacing: 8) {
+        VStack(spacing: 24) {
+            // Progress Slider
+            VStack(spacing: 12) {
                 Slider(
                     value: Binding(
                         get: { playerViewModel.progress },
@@ -200,41 +255,76 @@ struct GeneratedSongDetailView: View {
                     Spacer()
                     Text(playerViewModel.durationText)
                 }
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(PrototypeTheme.textSecondary)
+                .font(PrototypeTheme.Typography.font(size: 12, weight: .black, role: .data))
+                .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.6))
             }
+
+            // Buttons
+            HStack(spacing: 40) {
+                Button {
+                    playerViewModel.skip(by: -5)
+                } label: {
+                    Image(systemName: "gobackward.5")
+                        .font(.system(size: 24, weight: .medium))
+                }
+                .disabled(!playerViewModel.canPlay)
+
+                Button {
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    playerViewModel.togglePlayback()
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(song.color)
+                            .frame(width: 80, height: 80)
+                            .shadow(color: song.color.opacity(0.3), radius: 20, y: 10)
+                        
+                        Image(systemName: playerViewModel.isPlaying ? "pause.fill" : "play.fill")
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                }
+                .disabled(!playerViewModel.canPlay)
+                .scaleEffect(playerViewModel.isPlaying ? 0.95 : 1.0)
+                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: playerViewModel.isPlaying)
+
+                Button {
+                    playerViewModel.skip(by: 5)
+                } label: {
+                    Image(systemName: "goforward.5")
+                        .font(.system(size: 24, weight: .medium))
+                }
+                .disabled(!playerViewModel.canPlay)
+            }
+            .foregroundStyle(playerViewModel.canPlay ? PrototypeTheme.textPrimary : PrototypeTheme.textTertiary)
 
             if !playerViewModel.canPlay {
-                Text("音源の準備ができるとここから再生できます。")
-                    .font(.system(size: 14, weight: .medium))
+                Text("音源を生成中です...")
+                    .font(PrototypeTheme.Typography.font(size: 14, weight: .medium))
                     .foregroundStyle(PrototypeTheme.textSecondary)
+                    .italic()
             }
         }
-    }
-
-    private func playbackButtonLabel(_ systemImage: String, size: CGFloat = 20) -> some View {
-        Image(systemName: systemImage)
-            .font(.system(size: size, weight: .bold))
-            .foregroundStyle(playerViewModel.canPlay ? song.color : PrototypeTheme.textTertiary)
-            .frame(width: 52, height: 52)
-            .background(PrototypeTheme.surfaceMuted)
-            .clipShape(Circle())
-    }
-
-    private var durationText: String? {
-        guard let duration = viewModel.durationSec ?? song.durationSec else { return nil }
-        return "\(duration)秒"
-    }
-
-    private var moodText: String? {
-        guard let mood = viewModel.mood ?? song.mood else { return nil }
-        return mood.replacingOccurrences(of: "_", with: " ").capitalized
-    }
-
-    private var currentErrorMessage: String? {
-        playerViewModel.errorMessage ?? viewModel.errorMessage
+        .padding(24)
+        .background(
+            RoundedRectangle(cornerRadius: 32)
+                .fill(PrototypeTheme.surface.opacity(0.4))
+                .background(Blur(style: .systemThinMaterialLight).opacity(0.2))
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 32))
     }
 }
+
+struct Blur: UIViewRepresentable {
+    var style: UIBlurEffect.Style = .systemMaterial
+    func makeUIView(context: Context) -> UIVisualEffectView {
+        UIVisualEffectView(effect: UIBlurEffect(style: style))
+    }
+    func updateUIView(_ uiView: UIVisualEffectView, context: Context) {
+        uiView.effect = UIBlurEffect(style: style)
+    }
+}
+
 
 @MainActor
 final class GeneratedSongPlayerViewModel: ObservableObject {

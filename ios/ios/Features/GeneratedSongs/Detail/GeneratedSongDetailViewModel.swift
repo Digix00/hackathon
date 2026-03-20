@@ -69,6 +69,10 @@ final class GeneratedSongDetailViewModel: ObservableObject {
 
     func loadLyricsIfNeeded() {
         guard !hasLoadedLyrics, !isLoadingLyrics else { return }
+        if MockData.forceGeneratedSongMocks {
+            applyMockLyrics()
+            return
+        }
         guard let chainId, !chainId.isEmpty else {
             hasLoadedLyrics = true
             return

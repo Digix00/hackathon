@@ -54,6 +54,12 @@ final class ChainProgressViewModel: ObservableObject {
     }
 
     private func loadChainDetail() async {
+        if MockData.forceGeneratedSongMocks {
+            applyMockChain(id: chainId, message: "モックのチェーン進捗を表示しています")
+            isLoading = false
+            return
+        }
+
         guard let chainId, !chainId.isEmpty else {
             applyMockChain(id: nil, message: "モックのチェーン進捗を表示しています")
             return

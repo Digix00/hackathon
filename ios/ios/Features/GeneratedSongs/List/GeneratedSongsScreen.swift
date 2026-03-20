@@ -5,27 +5,23 @@ struct GeneratedSongsView: View {
     @EnvironmentObject private var bleCoordinator: BLEAppCoordinator
     @State private var celebrationSong: GeneratedSong?
     @State private var selectedSong: GeneratedSong?
+    @State private var scrollTargetID: String?
+    @Namespace private var songNamespace
+
+    private let wheelItemHeight: CGFloat = 280
+    private let wheelItemSpacing: CGFloat = 10
 
     var body: some View {
-        AppScaffold(
-            title: "ｘ",
-            subtitle: viewModel.subtitleText,
-            trailingSymbol: "sparkles"
-        ) {
-            VStack(alignment: .leading, spacing: 24) {
-                if let progressCard = progressCard {
-                    progressCard
-                }
-
-                if viewModel.songs.isEmpty {
-                    emptyState
-                } else {
-                    songsList
-                }
-
-                footerActions
+        ZStack {
+            PrototypeTheme.background.ignoresSafeArea()
+            
+            if viewModel.songs.isEmpty && !viewModel.isLoading {
+                emptyState
+            } else {
+                content
             }
         }
+        .environment(\.encounterNamespace, songNamespace)
         .task {
             viewModel.loadIfNeeded()
         }
@@ -56,113 +52,112 @@ struct GeneratedSongsView: View {
         }
     }
 
-    private var progressCard: AnyView? {
-        let liveChain = bleCoordinator.latestLyricSubmission?.chain
-        let mockChain = MockData.generatedChain(id: "mock-chain-pending")
-        let chainId = liveChain?.id ?? mockChain?.chain.id
-        let participantCount = liveChain?.participantCount ?? mockChain?.chain.participantCount ?? 0
-        let threshold = liveChain?.threshold ?? mockChain?.chain.threshold ?? 0
-        let content = bleCoordinator.latestLyricSubmission?.content ?? mockChain?.entries.first?.content
+    private var content: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Background elements
+                DotGridBackground()
+                    .opacity(0.15)
+                
+                VStack(spacing: 0) {
+                    // Stats Header
+                    GeneratedSongsStatsHeader(
+                        count: viewModel.songs.count,
+                        subtitle: viewModel.subtitleText
+                    )
+                    .padding(.top, geometry.safeAreaInsets.top + 20)
+                    .padding(.bottom, 20)
 
-        guard let chainId else { return nil }
-
-        return AnyView(
-            NavigationLink {
-                ChainProgressView(chainId: chainId)
-            } label: {
-                SectionCard {
-                    VStack(alignment: .leading, spacing: 14) {
-                        Label("あなたの歌詞が曲になる途中", systemImage: "sparkles")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(PrototypeTheme.accent)
-
-                        HStack(spacing: 10) {
-                            ForEach(0..<max(threshold, 1), id: \.self) { index in
-                                Circle()
-                                    .fill(index < participantCount ? PrototypeTheme.accent : PrototypeTheme.border)
-                                    .frame(width: 12, height: 12)
+                    // Wheel List
+                    ScrollView(.vertical, showsIndicators: false) {
+                        LazyVStack(spacing: wheelItemSpacing) {
+                            ForEach(viewModel.songs) { song in
+                                let isCentered = (scrollTargetID ?? viewModel.songs.first?.id) == song.id
+                                
+                                GeometryReader { itemGeometry in
+                                    let metrics = wheelMetrics(itemGeometry: itemGeometry, wheelGeometry: geometry)
+                                    
+                                    Button {
+                                        withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
+                                            selectedSong = song
+                                        }
+                                    } label: {
+                                        GeneratedSongRow(
+                                            song: song,
+                                            hideMatchedElements: selectedSong?.id == song.id
+                                        )
+                                        .scaleEffect(metrics.scale)
+                                        .opacity(metrics.opacity)
+                                        .blur(radius: metrics.blur)
+                                        .saturation(metrics.saturation)
+                                        .offset(y: metrics.verticalOffset)
+                                    }
+                                    .buttonStyle(EncounterScaleButtonStyle())
+                                    .disabled(!isCentered)
+                                }
+                                .frame(height: wheelItemHeight)
+                                .id(song.id)
+                            }
+                            
+                            if viewModel.isLoadingMore {
+                                ProgressView()
+                                    .padding()
                             }
                         }
-
-                        Text("\(participantCount)/\(threshold)人が参加")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundStyle(PrototypeTheme.textPrimary)
-
-                        if let content {
-                            Text("“\(content)”")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(PrototypeTheme.textSecondary)
-                                .lineLimit(2)
-                        }
+                        .padding(.horizontal, 24)
+                        .safeAreaPadding(.vertical, (geometry.size.height - wheelItemHeight) / 2 - 100)
                     }
+                    .scrollTargetLayout()
+                    .coordinateSpace(name: "songWheel")
+                    .scrollPosition(id: $scrollTargetID, anchor: .center)
+                    .scrollTargetBehavior(.viewAligned)
+                    .scrollClipDisabled()
                 }
-            }
-            .buttonStyle(.plain)
-        )
-    }
-
-    private var songsList: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            ForEach(viewModel.songs) { song in
-                NavigationLink {
-                    GeneratedSongDetailView(song: song)
-                } label: {
-                    HStack(spacing: 18) {
-                        MockArtworkView(color: song.color, symbol: "waveform", size: 64)
-                            .shadow(color: song.color.opacity(0.2), radius: 10, x: 0, y: 5)
-
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(song.title)
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundStyle(PrototypeTheme.textPrimary)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-
-                            Text(song.subtitle)
-                                .prototypeFont(size: 13, weight: .medium, role: .data)
-                                .foregroundStyle(PrototypeTheme.textSecondary)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-
-                            if let lyric = song.myLyric {
-                                Text("“\(lyric)”")
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundStyle(PrototypeTheme.textTertiary)
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                        Image(systemName: song.audioURL == nil ? "clock.badge.exclamationmark" : "play.circle.fill")
-                            .font(.system(size: 28))
-                            .foregroundStyle(song.color)
-                    }
-                    .padding(16)
-                    .background(PrototypeTheme.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .onAppear {
-                    viewModel.loadMoreIfNeeded(currentSong: song)
-                }
-            }
-
-            if viewModel.isLoadingMore {
-                ProgressView()
-                    .frame(maxWidth: .infinity)
             }
         }
     }
 
+    private func wheelMetrics(itemGeometry: GeometryProxy, wheelGeometry: GeometryProxy) -> WheelMetrics {
+        let frame = itemGeometry.frame(in: .named("songWheel"))
+        let viewportCenter = wheelGeometry.size.height / 2
+        let itemCenter = frame.midY
+        let distance = abs(itemCenter - viewportCenter)
+        let normalizedDistance = min(distance / (wheelItemHeight * 0.8), 1)
+        let eased = 1 - pow(1 - normalizedDistance, 2.4)
+        
+        return WheelMetrics(
+            scale: 1.03 - (eased * 0.25),
+            opacity: 1.0 - (eased * 0.6),
+            blur: eased * 2.0,
+            saturation: 1.0 - (eased * 0.3),
+            verticalOffset: eased * 20
+        )
+    }
+
+    private struct WheelMetrics {
+        let scale: CGFloat
+        let opacity: CGFloat
+        let blur: CGFloat
+        let saturation: CGFloat
+        let verticalOffset: CGFloat
+    }
+
     private var emptyState: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            if viewModel.isLoading {
-                ProgressView("読み込み中")
-            } else {
+        VStack(spacing: 24) {
+            Image(systemName: "music.note.list")
+                .font(.system(size: 64))
+                .foregroundStyle(PrototypeTheme.textTertiary)
+            
+            VStack(spacing: 8) {
                 Text(viewModel.errorMessage ?? "生成された曲がまだありません")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(PrototypeTheme.textPrimary)
+                
+                Text("すれ違いから生まれる、あなただけの音楽を待ちましょう。")
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(PrototypeTheme.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
             }
 
             if viewModel.errorMessage != nil {
@@ -171,38 +166,62 @@ struct GeneratedSongsView: View {
                 }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 24)
-    }
-
-    private var footerActions: some View {
-        VStack(spacing: 16) {
-            if let latestSong = viewModel.songs.first {
-                SecondaryButton(title: "完成演出を見る", systemImage: "sparkles.tv") {
-                    celebrationSong = latestSong
-                }
-            }
-
-            NavigationLink {
-                NotificationListView()
-            } label: {
-                SecondaryButtonLabel(title: "生成完了通知を見る", systemImage: "bell.badge")
-            }
-            .buttonStyle(.plain)
-
-            if let chainId = bleCoordinator.latestLyricChain?.id ?? MockData.generatedChain(id: "mock-chain-pending")?.chain.id {
-                NavigationLink {
-                    ChainProgressView(chainId: chainId)
-                } label: {
-                    SecondaryButtonLabel(title: "生成状態を見る", systemImage: "sparkles.rectangle.stack")
-                }
-                .buttonStyle(.plain)
-            } else {
-                SecondaryButton(title: "生成状態を見る", systemImage: "sparkles.rectangle.stack") {}
-                    .disabled(true)
-                    .opacity(0.6)
-            }
-        }
-        .padding(.top, 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
+
+private struct GeneratedSongsStatsHeader: View {
+    let count: Int
+    let subtitle: String
+
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("COLLECTED ARCHIVES")
+                    .font(PrototypeTheme.Typography.font(size: 10, weight: .black, role: .data))
+                    .foregroundStyle(PrototypeTheme.textTertiary)
+                    .kerning(1.8)
+                
+                Text("\(count)")
+                    .font(.system(size: 14, weight: .black, design: .monospaced))
+                    .foregroundStyle(PrototypeTheme.textSecondary)
+            }
+            .padding(.leading, 4)
+            .opacity(isAnimating ? 1.0 : 0)
+            .offset(x: isAnimating ? 0 : -10)
+
+            HStack(alignment: .bottom, spacing: 16) {
+                Text("\(count)")
+                    .font(.system(size: 84, weight: .black))
+                    .foregroundStyle(PrototypeTheme.textPrimary)
+                    .tracking(-4)
+                    .contentTransition(.numericText())
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("SONGS")
+                        .font(PrototypeTheme.Typography.font(size: 10, weight: .black, role: .data))
+                        .foregroundStyle(PrototypeTheme.textPrimary)
+                        .kerning(2.0)
+
+                    Text(subtitle.uppercased())
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(PrototypeTheme.textTertiary)
+                        .kerning(1.0)
+                }
+                .padding(.bottom, 20)
+            }
+            .opacity(isAnimating ? 1.0 : 0)
+            .offset(y: isAnimating ? 0 : 20)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 32)
+        .onAppear {
+            withAnimation(.spring(response: 0.9, dampingFraction: 0.8)) {
+                isAnimating = true
+            }
+        }
+    }
+}
+

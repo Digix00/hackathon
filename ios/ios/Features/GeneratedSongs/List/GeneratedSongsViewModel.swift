@@ -43,6 +43,17 @@ final class GeneratedSongsViewModel: ObservableObject {
     }
 
     private func loadSongs(reset: Bool) async {
+        if MockData.forceGeneratedSongMocks {
+            songs = MockData.generatedSongs
+            hasLoaded = true
+            hasMore = false
+            nextCursor = nil
+            isLoading = false
+            isLoadingMore = false
+            errorMessage = "モックの生成曲を表示しています"
+            return
+        }
+
         if reset {
             hasMore = true
             nextCursor = nil
