@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"time"
@@ -41,7 +42,8 @@ func main() {
 	}
 	defer sqlDB.Close()
 
-	workerUsecase := buildDependencies(db)
+	ctx := context.Background()
+	workerUsecase := buildDependencies(ctx, db, cfg, log)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -56,6 +58,17 @@ func main() {
 			return
 		}
 		log.Info("deleted expired ble tokens", zap.Int64("count", deleted))
+		w.WriteHeader(http.StatusOK)
+	})
+
+	http.HandleFunc("/lyria", func(w http.ResponseWriter, r *http.Request) {
+		processed, err := workerUsecase.ProcessLyriaJobs(r.Context())
+		if err != nil {
+			log.Error("process lyria jobs failed", zap.Error(err))
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+		log.Info("processed lyria jobs", zap.Int("count", processed))
 		w.WriteHeader(http.StatusOK)
 	})
 

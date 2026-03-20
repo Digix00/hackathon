@@ -53,6 +53,16 @@ type WorkerConfig struct {
 	DBPassword       string `envconfig:"DB_PASSWORD"`
 	DBName           string `envconfig:"DB_NAME"`
 	DBConnectionName string `envconfig:"DB_CONNECTION_NAME"`
+
+	// Vertex AI / Lyria / Gemini 設定
+	VertexAIProjectID    string `envconfig:"VERTEX_AI_PROJECT_ID"`
+	VertexAILocation     string `envconfig:"VERTEX_AI_LOCATION" default:"us-central1"`
+	LyriaModelID         string `envconfig:"LYRIA_MODEL_ID" default:"lyria-002"`
+	LyriaDefaultDuration int    `envconfig:"LYRIA_DEFAULT_DURATION" default:"45"`
+	GeminiModelID        string `envconfig:"GEMINI_MODEL_ID" default:"gemini-1.5-flash"`
+
+	// Cloud Storage 設定
+	AudioBucketName string `envconfig:"AUDIO_BUCKET_NAME"`
 }
 
 func LoadWorker() (*WorkerConfig, error) {
