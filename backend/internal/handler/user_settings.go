@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	schemareq "hackathon/internal/handler/schema/request"
@@ -13,11 +14,12 @@ import (
 )
 
 type settingsHandler struct {
+	log             *zap.Logger
 	settingsUsecase usecase.SettingsUsecase
 }
 
-func newSettingsHandler(settingsUsecase usecase.SettingsUsecase) *settingsHandler {
-	return &settingsHandler{settingsUsecase: settingsUsecase}
+func newSettingsHandler(log *zap.Logger, settingsUsecase usecase.SettingsUsecase) *settingsHandler {
+	return &settingsHandler{log: log, settingsUsecase: settingsUsecase}
 }
 
 // getMySettings godoc

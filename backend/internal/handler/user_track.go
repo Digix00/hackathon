@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	schemareq "hackathon/internal/handler/schema/request"
@@ -14,11 +15,12 @@ import (
 )
 
 type userTrackHandler struct {
+	log     *zap.Logger
 	usecase usecase.UserTrackUsecase
 }
 
-func newUserTrackHandler(u usecase.UserTrackUsecase) *userTrackHandler {
-	return &userTrackHandler{usecase: u}
+func newUserTrackHandler(log *zap.Logger, u usecase.UserTrackUsecase) *userTrackHandler {
+	return &userTrackHandler{log: log, usecase: u}
 }
 
 // addUserTrack godoc

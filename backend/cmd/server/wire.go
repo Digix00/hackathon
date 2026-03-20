@@ -2,6 +2,7 @@ package main
 
 import (
 	firebaseauth "firebase.google.com/go/v4/auth"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"hackathon/config"
@@ -13,31 +14,31 @@ import (
 	usecaseport "hackathon/internal/usecase/port"
 )
 
-func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config.Config) handler.Dependencies {
+func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config.Config, log *zap.Logger) handler.Dependencies {
 	tokenEncrypter, err := crypto.NewTokenEncrypter(cfg.MusicTokenEncryptionKey)
 	if err != nil {
 		panic("music token encrypter init failed: " + err.Error())
 	}
 
-	userRepo := rdb.NewUserRepository(db)
-	userSettingsRepo := rdb.NewUserSettingsRepository(db)
-	userDeviceRepo := rdb.NewUserDeviceRepository(db)
-	blockRepo := rdb.NewBlockRepository(db)
-	encounterRepo := rdb.NewEncounterRepository(db)
-	trackRepo := rdb.NewUserCurrentTrackRepository(db)
-	userTrackRepo := rdb.NewUserTrackRepository(db)
-	trackCatalogRepo := rdb.NewTrackCatalogRepository(db)
-	musicConnectionRepo := rdb.NewMusicConnectionRepository(db, tokenEncrypter)
-	bleTokenRepo := rdb.NewBleTokenRepository(db)
-	locationRepo := rdb.NewUserLocationRepository(db)
-	playlistRepo := rdb.NewPlaylistRepository(db)
-	trackFavoriteRepo := rdb.NewTrackFavoriteRepository(db)
-	reportRepo := rdb.NewReportRepository(db)
-	muteRepo := rdb.NewMuteRepository(db)
-	notificationRepo := rdb.NewNotificationRepository(db)
-	commentRepo := rdb.NewCommentRepository(db)
+	userRepo := rdb.NewUserRepository(log, db)
+	userSettingsRepo := rdb.NewUserSettingsRepository(log, db)
+	userDeviceRepo := rdb.NewUserDeviceRepository(log, db)
+	blockRepo := rdb.NewBlockRepository(log, db)
+	encounterRepo := rdb.NewEncounterRepository(log, db)
+	trackRepo := rdb.NewUserCurrentTrackRepository(log, db)
+	userTrackRepo := rdb.NewUserTrackRepository(log, db)
+	trackCatalogRepo := rdb.NewTrackCatalogRepository(log, db)
+	musicConnectionRepo := rdb.NewMusicConnectionRepository(log, db, tokenEncrypter)
+	bleTokenRepo := rdb.NewBleTokenRepository(log, db)
+	locationRepo := rdb.NewUserLocationRepository(log, db)
+	playlistRepo := rdb.NewPlaylistRepository(log, db)
+	trackFavoriteRepo := rdb.NewTrackFavoriteRepository(log, db)
+	reportRepo := rdb.NewReportRepository(log, db)
+	muteRepo := rdb.NewMuteRepository(log, db)
+	notificationRepo := rdb.NewNotificationRepository(log, db)
+	commentRepo := rdb.NewCommentRepository(log, db)
 	_ = rdb.NewTransactor(db)
-	lyricRepo := rdb.NewLyricRepository(db)
+	lyricRepo := rdb.NewLyricRepository(log, db)
 	spotifyProvider := music.NewSpotifyProvider(music.SpotifyConfig{
 		ClientID:     cfg.SpotifyClientID,
 		ClientSecret: cfg.SpotifyClientSecret,
@@ -56,27 +57,28 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config
 	})
 
 	return handler.Dependencies{
+		Logger:              log,
 		AuthTokenVerifier:   authClient,
 		AuthUserManager:     authClient,
 		GoEnv:               cfg.GoEnv,
 		DevAuthToken:        cfg.DevAuthToken,
 		DevAuthUID:          cfg.DevAuthUID,
-		UserUsecase:         usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
-		SettingsUsecase:     usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
-		PushTokenUsecase:    usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
-		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
-		PlaylistUsecase:     usecase.NewPlaylistUsecase(playlistRepo, userRepo),
-		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
-		MuteUsecase:         usecase.NewMuteUsecase(userRepo, muteRepo),
-		BlockUsecase:        usecase.NewBlockUsecase(userRepo, blockRepo),
-		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
-		MusicUsecase:        usecase.NewMusicUsecase(userRepo, musicConnectionRepo, trackCatalogRepo, []usecaseport.MusicProvider{spotifyProvider, appleMusicProvider}, cfg.MusicStateSecret, cfg.AppDeepLinkScheme),
-		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
-		CommentUsecase:      usecase.NewCommentUsecase(userRepo, commentRepo, encounterRepo),
-		LyricUsecase:        usecase.NewLyricUsecase(userRepo, encounterRepo, lyricRepo),
-		SongUsecase:         usecase.NewSongUsecase(userRepo, lyricRepo),
-		UserTrackUsecase:    usecase.NewUserTrackUsecase(userRepo, userTrackRepo, trackRepo, trackCatalogRepo),
-		LocationUsecase:     usecase.NewLocationUsecase(userRepo, userSettingsRepo, locationRepo, encounterRepo, blockRepo),
-		FavoriteUsecase:     usecase.NewFavoriteUsecase(userRepo, trackFavoriteRepo, playlistRepo, trackCatalogRepo),
+		UserUsecase:         usecase.NewUserUsecase(log, userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
+		SettingsUsecase:     usecase.NewSettingsUsecase(log, userRepo, userSettingsRepo),
+		PushTokenUsecase:    usecase.NewPushTokenUsecase(log, userRepo, userDeviceRepo),
+		BleTokenUsecase:     usecase.NewBleTokenUsecase(log, bleTokenRepo, userRepo, blockRepo),
+		PlaylistUsecase:     usecase.NewPlaylistUsecase(log, playlistRepo, userRepo),
+		ReportUsecase:       usecase.NewReportUsecase(log, userRepo, reportRepo),
+		MuteUsecase:         usecase.NewMuteUsecase(log, userRepo, muteRepo),
+		BlockUsecase:        usecase.NewBlockUsecase(log, userRepo, blockRepo),
+		NotificationUsecase: usecase.NewNotificationUsecase(log, userRepo, notificationRepo),
+		MusicUsecase:        usecase.NewMusicUsecase(log, userRepo, musicConnectionRepo, trackCatalogRepo, []usecaseport.MusicProvider{spotifyProvider, appleMusicProvider}, cfg.MusicStateSecret, cfg.AppDeepLinkScheme),
+		EncounterUsecase:    usecase.NewEncounterUsecase(log, userRepo, bleTokenRepo, encounterRepo, blockRepo),
+		CommentUsecase:      usecase.NewCommentUsecase(log, userRepo, commentRepo, encounterRepo),
+		LyricUsecase:        usecase.NewLyricUsecase(log, userRepo, encounterRepo, lyricRepo),
+		SongUsecase:         usecase.NewSongUsecase(log, userRepo, lyricRepo),
+		UserTrackUsecase:    usecase.NewUserTrackUsecase(log, userRepo, userTrackRepo, trackRepo, trackCatalogRepo),
+		LocationUsecase:     usecase.NewLocationUsecase(log, userRepo, userSettingsRepo, locationRepo, encounterRepo, blockRepo),
+		FavoriteUsecase:     usecase.NewFavoriteUsecase(log, userRepo, trackFavoriteRepo, playlistRepo, trackCatalogRepo),
 	}
 }

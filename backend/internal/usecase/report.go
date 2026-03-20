@@ -3,6 +3,8 @@ package usecase
 import (
 	"context"
 
+	"go.uber.org/zap"
+
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
@@ -14,15 +16,18 @@ type ReportUsecase interface {
 }
 
 type reportUsecase struct {
+	log        *zap.Logger
 	userRepo   repository.UserRepository
 	reportRepo repository.ReportRepository
 }
 
 func NewReportUsecase(
+	log *zap.Logger,
 	userRepo repository.UserRepository,
 	reportRepo repository.ReportRepository,
 ) ReportUsecase {
 	return &reportUsecase{
+		log:        log,
 		userRepo:   userRepo,
 		reportRepo: reportRepo,
 	}

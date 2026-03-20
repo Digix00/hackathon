@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/zap"
+
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
@@ -261,7 +263,7 @@ func newUserUsecase(
 	encounterRepo repository.EncounterRepository,
 	trackRepo repository.UserCurrentTrackRepository,
 ) UserUsecase {
-	return NewUserUsecase(userRepo, settingsRepo, blockRepo, encounterRepo, trackRepo)
+	return NewUserUsecase(zap.NewNop(), userRepo, settingsRepo, blockRepo, encounterRepo, trackRepo)
 }
 
 func TestGetUserByID_Blocked(t *testing.T) {

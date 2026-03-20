@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"hackathon/internal/domain/entity"
@@ -14,11 +15,12 @@ import (
 )
 
 type userDeviceRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
-func NewUserDeviceRepository(db *gorm.DB) repository.UserDeviceRepository {
-	return &userDeviceRepository{db: db}
+func NewUserDeviceRepository(log *zap.Logger, db *gorm.DB) repository.UserDeviceRepository {
+	return &userDeviceRepository{log: log, db: db}
 }
 
 func (r *userDeviceRepository) FindByUserIDPlatformAndDeviceID(ctx context.Context, userID string, platform vo.Platform, deviceID string) (entity.UserDevice, error) {

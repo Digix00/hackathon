@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -15,11 +16,12 @@ import (
 )
 
 type userCurrentTrackRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
-func NewUserCurrentTrackRepository(db *gorm.DB) repository.UserCurrentTrackRepository {
-	return &userCurrentTrackRepository{db: db}
+func NewUserCurrentTrackRepository(log *zap.Logger, db *gorm.DB) repository.UserCurrentTrackRepository {
+	return &userCurrentTrackRepository{log: log, db: db}
 }
 
 func (r *userCurrentTrackRepository) FindCurrentByUserID(ctx context.Context, userID string) (entity.TrackInfo, bool, error) {

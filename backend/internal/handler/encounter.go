@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	schemareq "hackathon/internal/handler/schema/request"
@@ -18,11 +19,12 @@ import (
 var bleTokenRegex = regexp.MustCompile("^[0-9a-f]{16}$")
 
 type encounterHandler struct {
+	log     *zap.Logger
 	usecase usecase.EncounterUsecase
 }
 
-func newEncounterHandler(u usecase.EncounterUsecase) *encounterHandler {
-	return &encounterHandler{usecase: u}
+func newEncounterHandler(log *zap.Logger, u usecase.EncounterUsecase) *encounterHandler {
+	return &encounterHandler{log: log, usecase: u}
 }
 
 // createEncounter godoc

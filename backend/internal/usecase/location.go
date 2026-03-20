@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
@@ -19,6 +20,7 @@ type LocationUsecase interface {
 }
 
 type locationUsecase struct {
+	log           *zap.Logger
 	userRepo      repository.UserRepository
 	settingsRepo  repository.UserSettingsRepository
 	locationRepo  repository.UserLocationRepository
@@ -38,6 +40,7 @@ func WithLocationClock(clock Clock) LocationUsecaseOption {
 }
 
 func NewLocationUsecase(
+	log *zap.Logger,
 	userRepo repository.UserRepository,
 	settingsRepo repository.UserSettingsRepository,
 	locationRepo repository.UserLocationRepository,
@@ -46,6 +49,7 @@ func NewLocationUsecase(
 	opts ...LocationUsecaseOption,
 ) LocationUsecase {
 	u := &locationUsecase{
+		log:           log,
 		userRepo:      userRepo,
 		settingsRepo:  settingsRepo,
 		locationRepo:  locationRepo,

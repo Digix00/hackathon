@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"hackathon/internal/domain/entity"
@@ -14,11 +15,12 @@ import (
 )
 
 type userTrackRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
-func NewUserTrackRepository(db *gorm.DB) repository.UserTrackRepository {
-	return &userTrackRepository{db: db}
+func NewUserTrackRepository(log *zap.Logger, db *gorm.DB) repository.UserTrackRepository {
+	return &userTrackRepository{log: log, db: db}
 }
 
 // resolveCurrentTrackInternalID looks up the internal DB UUID for a compound external track ID.
