@@ -351,7 +351,7 @@ resource "google_cloud_run_v2_service" "lyria_worker" {
       }
 
       env {
-        name  = "GENERATED_SONGS_BUCKET"
+        name  = "AUDIO_BUCKET_NAME"
         value = google_storage_bucket.generated_songs.name
       }
 
