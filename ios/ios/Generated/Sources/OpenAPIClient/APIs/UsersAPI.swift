@@ -205,4 +205,41 @@ open class UsersAPI {
 
         return localVariableRequestBuilder.init(method: "PATCH", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true)
     }
+
+    /**
+     アバター画像アップロード
+     
+     - returns: [String: String]
+     */
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    open class func uploadAvatar() async throws -> [String: String] {
+        return try await uploadAvatarWithRequestBuilder().execute().body
+    }
+
+    /**
+     アバター画像アップロード
+     - POST /api/v1/users/me/avatar
+     - raw バイナリ（JPEG または PNG）を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に PATCH /users/me で avatar_url を保存すること。
+     - API Key:
+       - type: apiKey Authorization (HEADER)
+       - name: BearerAuth
+     - returns: RequestBuilder<[String: String]> 
+     */
+    open class func uploadAvatarWithRequestBuilder() -> RequestBuilder<[String: String]> {
+        let localVariablePath = "/api/v1/users/me/avatar"
+        let localVariableURLString = OpenAPIClientAPI.basePath + localVariablePath
+        let localVariableParameters: [String: Any]? = nil
+
+        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
+
+        let localVariableNillableHeaders: [String: Any?] = [
+            :
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<[String: String]>.Type = OpenAPIClientAPI.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "POST", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true)
+    }
 }

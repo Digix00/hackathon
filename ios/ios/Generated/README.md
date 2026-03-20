@@ -89,6 +89,7 @@ Class | Method | HTTP request | Description
 *UsersAPI* | [**getMe**](docs/UsersAPI.md#getme) | **GET** /api/v1/users/me | 自分のユーザー情報取得
 *UsersAPI* | [**getUserByID**](docs/UsersAPI.md#getuserbyid) | **GET** /api/v1/users/{id} | 他ユーザーのプロフィール取得
 *UsersAPI* | [**patchMe**](docs/UsersAPI.md#patchme) | **PATCH** /api/v1/users/me | 自分のプロフィール更新
+*UsersAPI* | [**uploadAvatar**](docs/UsersAPI.md#uploadavatar) | **POST** /api/v1/users/me/avatar | アバター画像アップロード
 
 
 ## Documentation For Models

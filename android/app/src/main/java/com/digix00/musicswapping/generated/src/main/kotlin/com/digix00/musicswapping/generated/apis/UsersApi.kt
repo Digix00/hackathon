@@ -91,4 +91,18 @@ interface UsersApi {
     @PATCH("api/v1/users/me")
     suspend fun patchMe(@Body body: HackathonInternalHandlerSchemaRequestUpdateUserRequest): Response<HackathonInternalHandlerSchemaResponseUserResponse>
 
+    /**
+     * アバター画像アップロード
+     * raw バイナリ（JPEG または PNG）を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に PATCH /users/me で avatar_url を保存すること。
+     * Responses:
+     *  - 200: OK
+     *  - 400: Bad Request
+     *  - 401: Unauthorized
+     *  - 503: Service Unavailable
+     *
+     * @return [kotlin.collections.Map<kotlin.String, kotlin.String>]
+     */
+    @POST("api/v1/users/me/avatar")
+    suspend fun uploadAvatar(): Response<kotlin.collections.Map<kotlin.String, kotlin.String>>
+
 }

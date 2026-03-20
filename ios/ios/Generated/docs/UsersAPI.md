@@ -9,6 +9,7 @@ Method | HTTP request | Description
 [**getMe**](UsersAPI.md#getme) | **GET** /api/v1/users/me | 自分のユーザー情報取得
 [**getUserByID**](UsersAPI.md#getuserbyid) | **GET** /api/v1/users/{id} | 他ユーザーのプロフィール取得
 [**patchMe**](UsersAPI.md#patchme) | **PATCH** /api/v1/users/me | 自分のプロフィール更新
+[**uploadAvatar**](UsersAPI.md#uploadavatar) | **POST** /api/v1/users/me/avatar | アバター画像アップロード
 
 
 # **createUser**
@@ -249,6 +250,52 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **uploadAvatar**
+```swift
+    open class func uploadAvatar(completion: @escaping (_ data: [String: String]?, _ error: Error?) -> Void)
+```
+
+アバター画像アップロード
+
+raw バイナリ（JPEG または PNG）を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に PATCH /users/me で avatar_url を保存すること。
+
+### Example
+```swift
+// The following code samples are still beta. For any issue, please report via http://github.com/OpenAPITools/openapi-generator/issues/new
+import OpenAPIClient
+
+
+// アバター画像アップロード
+UsersAPI.uploadAvatar() { (response, error) in
+    guard error == nil else {
+        print(error)
+        return
+    }
+
+    if (response) {
+        dump(response)
+    }
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+**[String: String]**
+
+### Authorization
+
+[BearerAuth](../README.md#BearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
