@@ -51,4 +51,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TF_VAR_project_id: ${{ vars.TF_PROJECT_ID }}
           TF_VAR_github_repo: ${{ vars.TF_GITHUB_REPO }}
+          TF_VAR_api_domain: ${{ vars.TF_API_DOMAIN }}
         run: tfcmt plan -patch -- terraform plan -input=false
