@@ -3,7 +3,13 @@ import Foundation
 import FirebaseAuth
 #endif
 
-actor BackendAPIClient {
+protocol BackendUserAPIClient: Sendable {
+    func createUser(_ request: CreateUserRequest) async throws -> BackendUser
+    func getMe() async throws -> BackendUser
+    func patchMe(_ request: UpdateUserRequest) async throws -> BackendUser
+}
+
+actor BackendAPIClient: BackendUserAPIClient {
     private static let apiPrefixSegments = ["api", "v1"]
 
     enum BackendError: Error {

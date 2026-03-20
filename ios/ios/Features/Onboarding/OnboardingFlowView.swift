@@ -238,30 +238,56 @@ struct OnboardingFlowView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 14))
                                 .scrollContentBackground(.hidden)
                         }
+                    }
+                }
+            }
 
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("シェアする曲")
+            SectionCard(title: "詳細プロフィール") {
+                VStack(alignment: .leading, spacing: 18) {
+                    OnboardingMenuPicker(
+                        title: "性別",
+                        selection: $userViewModel.sex,
+                        options: ProfileSex.allCases,
+                        selectionValue: \.self
+                    ) { sex in
+                        Text(sex.label)
+                    }
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        Toggle(isOn: $userViewModel.includeBirthdate) {
+                            Text("生年月日を設定する")
                                 .font(PrototypeTheme.Typography.Onboarding.cardLabel)
                                 .foregroundStyle(PrototypeTheme.textSecondary)
-
-                            HStack(spacing: 14) {
-                                MockArtworkView(color: .indigo, symbol: "music.note", size: 52)
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("夜に駆ける")
-                                        .font(.system(size: 16, weight: .bold))
-                                    Text("YOASOBI")
-                                        .font(.system(size: 14))
-                                        .foregroundStyle(PrototypeTheme.textSecondary)
-                                }
-                                Spacer()
-                                Image(systemName: "pencil")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(PrototypeTheme.textTertiary)
-                            }
-                            .padding(12)
-                            .background(PrototypeTheme.surfaceElevated.opacity(0.5))
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
+                        .tint(PrototypeTheme.accent)
+
+                        if userViewModel.includeBirthdate {
+                            DatePicker(
+                                "生年月日",
+                                selection: $userViewModel.birthdate,
+                                in: ...Date(),
+                                displayedComponents: .date
+                            )
+                            .datePickerStyle(.compact)
+
+                            OnboardingMenuPicker(
+                                title: "年齢の公開設定",
+                                selection: $userViewModel.ageVisibility,
+                                options: ProfileAgeVisibility.allCases,
+                                selectionValue: \.self
+                            ) { visibility in
+                                Text(visibility.label)
+                            }
+                        }
+                    }
+
+                    OnboardingMenuPicker(
+                        title: "居住地",
+                        selection: $userViewModel.prefectureId,
+                        options: userViewModel.prefectures,
+                        selectionValue: \.id
+                    ) { prefecture in
+                        Text(prefecture.name)
                     }
                 }
             }
@@ -333,6 +359,48 @@ struct OnboardingFlowView: View {
                     .multilineTextAlignment(.center)
                     .lineSpacing(6)
             }
+        }
+    }
+}
+
+private struct OnboardingMenuPicker<Option: Identifiable, SelectionValue: Hashable, Content: View>: View {
+    let title: String
+    @Binding var selection: SelectionValue
+    let options: [Option]
+    let selectionValue: KeyPath<Option, SelectionValue>
+    let content: (Option) -> Content
+
+    init(
+        title: String,
+        selection: Binding<SelectionValue>,
+        options: [Option],
+        selectionValue: KeyPath<Option, SelectionValue>,
+        @ViewBuilder content: @escaping (Option) -> Content
+    ) {
+        self.title = title
+        self._selection = selection
+        self.options = options
+        self.selectionValue = selectionValue
+        self.content = content
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(PrototypeTheme.Typography.Onboarding.cardLabel)
+                .foregroundStyle(PrototypeTheme.textSecondary)
+
+            Picker(title, selection: $selection) {
+                ForEach(options) { option in
+                    content(option).tag(option[keyPath: selectionValue])
+                }
+            }
+            .pickerStyle(.menu)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(PrototypeTheme.surfaceElevated.opacity(0.5))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
     }
 }

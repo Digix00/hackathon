@@ -1,6 +1,14 @@
 import XCTest
 @testable import ios
 
+#if canImport(FirebaseCore)
+import FirebaseCore
+#endif
+
+#if canImport(FirebaseAuth)
+import FirebaseAuth
+#endif
+
 @MainActor
 final class AuthSessionTests: XCTestCase {
     func test_init_whenFirebaseNotConfigured_setsSignedOut() throws {
