@@ -70,6 +70,7 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config
 		PlaylistUsecase:     usecase.NewPlaylistUsecase(log, playlistRepo, userRepo),
 		ReportUsecase:       usecase.NewReportUsecase(log, userRepo, reportRepo),
 		MuteUsecase:         usecase.NewMuteUsecase(log, userRepo, muteRepo),
+		BlockUsecase:        usecase.NewBlockUsecase(log, userRepo, blockRepo),
 		NotificationUsecase: usecase.NewNotificationUsecase(log, userRepo, notificationRepo),
 		MusicUsecase:        usecase.NewMusicUsecase(log, userRepo, musicConnectionRepo, trackCatalogRepo, []usecaseport.MusicProvider{spotifyProvider, appleMusicProvider}, cfg.MusicStateSecret, cfg.AppDeepLinkScheme),
 		EncounterUsecase:    usecase.NewEncounterUsecase(log, userRepo, bleTokenRepo, encounterRepo, blockRepo),
