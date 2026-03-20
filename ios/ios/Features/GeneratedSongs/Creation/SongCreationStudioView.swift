@@ -60,7 +60,7 @@ struct SongCreationStudioView: View {
                     .font(PrototypeTheme.Typography.font(size: 28, weight: .black))
                     .foregroundStyle(PrototypeTheme.textPrimary)
 
-                Text("1行の歌詞からチェーンを立ち上げて、モックの共鳴を足しながら曲になる流れを体験できます。")
+                Text("1行の歌詞からチェーンを立ち上げて、サンプルの共鳴を足しながら曲になる流れを体験できます。")
                     .font(PrototypeTheme.Typography.font(size: 14, weight: .medium))
                     .foregroundStyle(PrototypeTheme.textSecondary)
                     .lineSpacing(6)
@@ -115,7 +115,7 @@ struct SongCreationStudioView: View {
                         .scrollContentBackground(.hidden)
                 }
 
-                Text("作成後はチェーン進捗画面でモックの歌詞を追加し、完成まで進められます。")
+                Text("作成後はチェーン進捗画面でサンプルの歌詞を追加し、完成まで進められます。")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(PrototypeTheme.textTertiary)
 
@@ -130,7 +130,7 @@ struct SongCreationStudioView: View {
     }
 
     private var templateCard: some View {
-        SectionCard(title: "モックチェーンに参加") {
+        SectionCard(title: "サンプルチェーンに参加") {
             VStack(spacing: 16) {
                 ForEach(studioStore.templates) { template in
                     VStack(alignment: .leading, spacing: 14) {
@@ -181,7 +181,7 @@ struct SongCreationStudioView: View {
     private var progressCard: some View {
         SectionCard(title: "作成中のプロジェクト") {
             if studioStore.projectSummaries.isEmpty {
-                Text("まだローカルの作曲プロジェクトはありません。上のフォームかモックチェーンから始めてください。")
+                Text("まだローカルの作曲プロジェクトはありません。上のフォームかサンプルチェーンから始めてください。")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(PrototypeTheme.textSecondary)
             } else {
@@ -209,7 +209,7 @@ struct SongCreationStudioView: View {
                                 }
 
                                 if !project.isCompleted {
-                                    SecondaryButton(title: "モックで進める", systemImage: "plus.circle") {
+                                    SecondaryButton(title: "サンプルで進める", systemImage: "plus.circle") {
                                         studioStore.appendDemoLyric(to: project.id)
                                     }
                                 }

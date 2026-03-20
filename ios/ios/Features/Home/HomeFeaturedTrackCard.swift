@@ -35,7 +35,7 @@ struct HomeFeaturedTrackCard: View {
                                 )
                         }
 
-                        MockArtworkView(
+                        ArtworkPlaceholderView(
                             color: track.color,
                             symbol: "music.note",
                             size: Layout.artworkSize,

@@ -1,21 +1,21 @@
 import SwiftUI
 
-struct GeneratedSongMockGalleryView: View {
+struct GeneratedSongPreviewGalleryView: View {
     @State private var coverSong: GeneratedSong?
 
     private var playableSong: GeneratedSong? { nil }
     private var nonPlayableSong: GeneratedSong? { nil }
 
     private let chainEntries: [(id: String, title: String, subtitle: String)] = [
-        ("mock-chain-pending", "チェーン進捗: pending", "参加待ちの状態を確認"),
-        ("mock-chain-generating", "チェーン進捗: generating", "生成中ヒーロー表示を確認"),
-        ("mock-chain-failed", "チェーン進捗: failed", "失敗状態の表示を確認"),
-        ("mock-chain-completed-1", "チェーン進捗: completed", "完成済みから詳細導線を確認")
+        ("sample-chain-pending", "チェーン進捗: pending", "参加待ちの状態を確認"),
+        ("sample-chain-generating", "チェーン進捗: generating", "生成中ヒーロー表示を確認"),
+        ("sample-chain-failed", "チェーン進捗: failed", "失敗状態の表示を確認"),
+        ("sample-chain-completed-1", "チェーン進捗: completed", "完成済みから詳細導線を確認")
     ]
 
     var body: some View {
         AppScaffold(
-            title: "生成曲モック",
+            title: "生成曲プレビュー",
             subtitle: "DEVELOPER ENTRY",
             showsBackButton: true
         ) {
@@ -25,13 +25,13 @@ struct GeneratedSongMockGalleryView: View {
                     items: [
                         galleryLink(
                             title: "生成曲一覧",
-                            subtitle: "モックの一覧ホイール画面"
+                            subtitle: "プレビューの一覧ホイール画面"
                         ) {
                             GeneratedSongsView()
                         },
                         galleryLink(
                             title: "通知一覧",
-                            subtitle: "生成完了通知のモックを確認"
+                            subtitle: "生成完了通知のプレビューを確認"
                         ) {
                             NotificationListView()
                         }
@@ -93,7 +93,7 @@ struct GeneratedSongMockGalleryView: View {
                                     } label: {
                                         galleryRow(
                                             title: "完了演出オーバーレイ",
-                                            subtitle: "再生可能モックで full screen を表示"
+                                            subtitle: "再生可能プレビューで full screen を表示"
                                         )
                                     }
                                     .buttonStyle(.plain)

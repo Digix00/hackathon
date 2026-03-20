@@ -66,10 +66,10 @@ struct GeneratedSongDetailView: View {
                             // Artwork
                             ZStack {
                                 if let namespace = namespace {
-                                    MockArtworkView(color: song.color, symbol: "waveform", size: showContent ? 240 : 84)
+                                    ArtworkPlaceholderView(color: song.color, symbol: "waveform", size: showContent ? 240 : 84)
                                         .matchedGeometryEffect(id: "song-artwork-\(song.id)", in: namespace)
                                 } else {
-                                    MockArtworkView(color: song.color, symbol: "waveform", size: 240)
+                                    ArtworkPlaceholderView(color: song.color, symbol: "waveform", size: 240)
                                 }
                             }
                             .shadow(color: song.color.opacity(showContent ? 0.2 : 0.1), radius: showContent ? 60 : 20, x: 0, y: 30)

@@ -126,7 +126,7 @@ struct GeneratedSongRow: View {
 
     private func artworkView(size: CGFloat) -> some View {
         ZStack {
-            MockArtworkView(color: song.color, symbol: "waveform", size: size)
+            ArtworkPlaceholderView(color: song.color, symbol: "waveform", size: size)
             
             if !isReady {
                 Circle()

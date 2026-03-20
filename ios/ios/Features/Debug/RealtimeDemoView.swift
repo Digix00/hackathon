@@ -28,7 +28,7 @@ struct RealtimeDemoView: View {
                                 .fill(circleColor.opacity(0.15))
                                 .frame(width: circleSize + 20, height: circleSize + 20)
                             
-                            MockArtworkView(color: circleColor, symbol: "music.note", size: 90)
+                            ArtworkPlaceholderView(color: circleColor, symbol: "music.note", size: 90)
                                 .shadow(color: circleColor.opacity(0.3), radius: 20, x: 0, y: 10)
                         }
                         
