@@ -9,7 +9,7 @@ import (
 func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	InstallHTTPErrorHandler(e, deps.Logger)
 
-	userHandler := newUserHandler(deps.Logger, deps.AuthUserManager, deps.UserUsecase)
+	userHandler := newUserHandler(deps.Logger, deps.AuthUserManager, deps.UserUsecase, deps.AvatarUploader)
 	settingsHandler := newSettingsHandler(deps.Logger, deps.SettingsUsecase)
 	pushTokenHandler := newPushTokenHandler(deps.Logger, deps.PushTokenUsecase)
 	bleTokenHandler := newBleTokenHandler(deps.Logger, deps.BleTokenUsecase)
@@ -41,6 +41,7 @@ func RegisterRoutes(e *echo.Echo, deps Dependencies) {
 	protected.GET("/users/me", userHandler.getMe)
 	protected.GET("/users/:id", userHandler.getUserByID)
 	protected.PATCH("/users/me", userHandler.patchMe)
+	protected.POST("/users/me/avatar", userHandler.uploadAvatar)
 	protected.DELETE("/users/me", userHandler.deleteMe)
 
 	protected.GET("/users/me/settings", settingsHandler.getMySettings)

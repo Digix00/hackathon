@@ -24,6 +24,7 @@ type Config struct {
 	DevAuthToken             string `envconfig:"DEV_AUTH_TOKEN"`
 	DevAuthUID               string `envconfig:"DEV_AUTH_UID" default:"dev-user"`
 
+	AvatarBucketName  string `envconfig:"AVATAR_BUCKET_NAME"`
 	AppDeepLinkScheme string `envconfig:"APP_DEEP_LINK_SCHEME" default:"digix"`
 	MusicStateSecret  string `envconfig:"MUSIC_STATE_SECRET" required:"true"`
 

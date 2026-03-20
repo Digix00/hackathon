@@ -1,9 +1,11 @@
 package storage
 
 import (
-	"cloud.google.com/go/storage"
 	"context"
 	"fmt"
+
+	"cloud.google.com/go/storage"
+	"github.com/google/uuid"
 )
 
 // Client は Cloud Storage への音声ファイルアップロードを担当する
@@ -47,6 +49,30 @@ func (c *Client) UploadSong(ctx context.Context, chainID string, audioData []byt
 
 	if err := wc.Close(); err != nil {
 		return "", fmt.Errorf("storage.UploadSong: close failed: %w", err)
+	}
+
+	url := fmt.Sprintf("https://storage.googleapis.com/%s/%s", c.bucketName, objectPath)
+	return url, nil
+}
+
+// UploadAvatar はアバター画像を Cloud Storage にアップロードし、公開 URL を返す
+func (c *Client) UploadAvatar(ctx context.Context, userID string, data []byte, mimeType string) (string, error) {
+	ext := "jpg"
+	if mimeType == "image/png" {
+		ext = "png"
+	}
+	objectPath := fmt.Sprintf("avatars/%s/%s.%s", userID, uuid.NewString(), ext)
+
+	wc := c.bucket.Object(objectPath).NewWriter(ctx)
+	wc.ContentType = mimeType
+
+	if _, err := wc.Write(data); err != nil {
+		_ = wc.Close()
+		return "", fmt.Errorf("storage.UploadAvatar: write failed: %w", err)
+	}
+
+	if err := wc.Close(); err != nil {
+		return "", fmt.Errorf("storage.UploadAvatar: close failed: %w", err)
 	}
 
 	url := fmt.Sprintf("https://storage.googleapis.com/%s/%s", c.bucketName, objectPath)

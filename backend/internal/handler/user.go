@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"io"
 	"net/http"
 	"time"
 
@@ -19,13 +20,15 @@ type userHandler struct {
 	log             *zap.Logger
 	authUserManager FirebaseUserManager
 	userUsecase     usecase.UserUsecase
+	avatarUploader  AvatarUploader // nil の場合はアバターアップロード機能が無効
 }
 
-func newUserHandler(log *zap.Logger, authUserManager FirebaseUserManager, userUsecase usecase.UserUsecase) *userHandler {
+func newUserHandler(log *zap.Logger, authUserManager FirebaseUserManager, userUsecase usecase.UserUsecase, avatarUploader AvatarUploader) *userHandler {
 	return &userHandler{
 		log:             log,
 		authUserManager: authUserManager,
 		userUsecase:     userUsecase,
+		avatarUploader:  avatarUploader,
 	}
 }
 
@@ -213,6 +216,60 @@ func (h *userHandler) patchMe(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, schemares.UserResponse{User: userDTOToResponse(updated)})
+}
+
+// uploadAvatar godoc
+// @ID           uploadAvatar
+// @Summary      アバター画像アップロード
+// @Description  raw バイナリ（JPEG または PNG）を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に PATCH /users/me で avatar_url を保存すること。
+// @Tags         users
+// @Accept       image/jpeg,image/png
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  map[string]string
+// @Failure      400  {object}  errorResponse
+// @Failure      401  {object}  errorResponse
+// @Failure      503  {object}  errorResponse
+// @Router       /api/v1/users/me/avatar [post]
+func (h *userHandler) uploadAvatar(c echo.Context) error {
+	uid, ok := middleware.UserIDFromContext(c)
+	if !ok {
+		return errUnauthorized()
+	}
+
+	if h.avatarUploader == nil {
+		return echo.NewHTTPError(http.StatusServiceUnavailable, map[string]any{
+			"code":    "SERVICE_UNAVAILABLE",
+			"message": "Avatar upload is not configured",
+			"details": nil,
+		})
+	}
+
+	mimeType := c.Request().Header.Get("Content-Type")
+	if mimeType != "image/jpeg" && mimeType != "image/png" {
+		return errBadRequest("Content-Type must be image/jpeg or image/png")
+	}
+
+	const maxSize = 5 << 20 // 5MB
+	data, err := io.ReadAll(io.LimitReader(c.Request().Body, maxSize+1))
+	if err != nil {
+		return errBadRequest("failed to read request body")
+	}
+	if int64(len(data)) > maxSize {
+		return errBadRequest("image size must not exceed 5MB")
+	}
+
+	avatarURL, err := h.avatarUploader.UploadAvatar(c.Request().Context(), uid, data, mimeType)
+	if err != nil {
+		h.log.Error("uploadAvatar: storage upload failed", zap.String("uid", uid), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, map[string]any{
+			"code":    "INTERNAL_SERVER_ERROR",
+			"message": "Failed to upload avatar",
+			"details": nil,
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"avatar_url": avatarURL})
 }
 
 // deleteMe godoc
