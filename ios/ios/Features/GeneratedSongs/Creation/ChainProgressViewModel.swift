@@ -67,19 +67,13 @@ final class ChainProgressViewModel: ObservableObject {
 
     private func loadChainDetail() async {
         if let local = localStudioStore.generatedChain(id: chainId) {
-            applyChainMock(local, message: nil)
-            isLoading = false
-            return
-        }
-
-        if MockData.forceGeneratedSongMocks {
-            applyMockChain(id: chainId, message: "モックのチェーン進捗を表示しています")
+            applyLocalChain(local, message: nil)
             isLoading = false
             return
         }
 
         guard let chainId, !chainId.isEmpty else {
-            applyMockChain(id: nil, message: "モックのチェーン進捗を表示しています")
+            errorMessage = "歌詞チェーンの取得に失敗しました"
             return
         }
 
@@ -102,25 +96,16 @@ final class ChainProgressViewModel: ObservableObject {
                 }
             hasLoaded = true
         } catch {
-            applyMockChain(id: chainId, message: "API に接続できないためモックのチェーン進捗を表示しています")
+            errorMessage = "歌詞チェーンの取得に失敗しました"
+            hasLoaded = false
         }
         isLoading = false
     }
 
-    private func applyMockChain(id: String?, message: String) {
-        guard let mock = MockData.generatedChain(id: id) else {
-            errorMessage = "歌詞チェーンの取得に失敗しました"
-            hasLoaded = false
-            return
-        }
-        applyChainMock(mock, message: message)
-    }
-
-    private func applyChainMock(_ mock: MockData.GeneratedChainMock, message: String?) {
-
-        chain = mock.chain
-        song = mock.song
-        entries = mock.entries.map { entry in
+    private func applyLocalChain(_ local: LocalCompositionStudioStore.LocalChainResult, message: String?) {
+        chain = local.chain
+        song = local.song
+        entries = local.entries.map { entry in
             LyricEntryRowModel(
                 id: "\(entry.sequenceNum)-\(entry.user.id)",
                 content: entry.content,

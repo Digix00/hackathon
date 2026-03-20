@@ -6,6 +6,12 @@ import Combine
 final class LocalCompositionStudioStore: ObservableObject {
     static let shared = LocalCompositionStudioStore()
 
+    struct LocalChainResult {
+        let chain: BackendChainDetail
+        let entries: [BackendChainEntryDetail]
+        let song: BackendSongDetail?
+    }
+
     struct TemplateSeed: Identifiable, Equatable {
         let id: String
         let userName: String
@@ -240,7 +246,7 @@ final class LocalCompositionStudioStore: ObservableObject {
         persist()
     }
 
-    func generatedChain(id: String?) -> MockData.GeneratedChainMock? {
+    func generatedChain(id: String?) -> LocalChainResult? {
         guard let id else { return nil }
         guard let project = projects.first(where: { $0.chainID == id }) else { return nil }
 
@@ -273,7 +279,7 @@ final class LocalCompositionStudioStore: ObservableObject {
             mood: project.mood
         )
 
-        return MockData.GeneratedChainMock(chain: chain, entries: entries, song: song)
+        return LocalChainResult(chain: chain, entries: entries, song: song)
     }
 
     func contains(chainID: String) -> Bool {

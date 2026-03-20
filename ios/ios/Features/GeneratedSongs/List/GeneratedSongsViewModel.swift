@@ -37,10 +37,6 @@ final class GeneratedSongsViewModel: ObservableObject {
     }
 
     func latestSong() async -> GeneratedSong? {
-        if MockData.forceGeneratedSongMocks {
-            return MockData.playableGeneratedSongs.first ?? MockData.generatedSongs.first
-        }
-
         do {
             let response = try await client.listMySongs(cursor: nil)
             let latest = response.songs.max {
@@ -59,17 +55,6 @@ final class GeneratedSongsViewModel: ObservableObject {
     }
 
     private func loadSongs(reset: Bool) async {
-        if MockData.forceGeneratedSongMocks {
-            songs = MockData.generatedSongs
-            hasLoaded = true
-            hasMore = false
-            nextCursor = nil
-            isLoading = false
-            isLoadingMore = false
-            errorMessage = "モックの生成曲を表示しています"
-            return
-        }
-
         if reset {
             hasMore = true
             nextCursor = nil
@@ -94,11 +79,7 @@ final class GeneratedSongsViewModel: ObservableObject {
             hasMore = response.pagination.hasMore
             nextCursor = response.pagination.nextCursor
         } catch {
-            songs = MockData.generatedSongs
-            hasLoaded = true
-            hasMore = false
-            nextCursor = nil
-            errorMessage = "API に接続できないためモックを表示しています"
+            errorMessage = "生成曲の取得に失敗しました"
         }
 
         isLoading = false

@@ -44,11 +44,6 @@ final class GeneratedSongDetailViewModel: ObservableObject {
             errorMessage = nil
             return
         }
-        if MockData.forceGeneratedSongMocks {
-            isLiked.toggle()
-            errorMessage = nil
-            return
-        }
         isProcessingLike = true
         errorMessage = nil
 
@@ -84,11 +79,7 @@ final class GeneratedSongDetailViewModel: ObservableObject {
     func loadLyricsIfNeeded() {
         guard !hasLoadedLyrics, !isLoadingLyrics else { return }
         if let localChain = localStudioStore.generatedChain(id: chainId) {
-            applyLyrics(from: localChain, message: nil)
-            return
-        }
-        if MockData.forceGeneratedSongMocks {
-            applyMockLyrics()
+            applyLocalLyrics(from: localChain, message: nil)
             return
         }
         guard let chainId, !chainId.isEmpty else {
@@ -142,24 +133,16 @@ final class GeneratedSongDetailViewModel: ObservableObject {
                 }
             hasLoadedLyrics = true
         } catch {
-            applyMockLyrics()
+            lyricsErrorMessage = "参加した歌詞の取得に失敗しました"
         }
 
         isLoadingLyrics = false
     }
 
-    private func applyMockLyrics() {
-        guard let mock = MockData.generatedChain(id: chainId) else {
-            lyricsErrorMessage = "参加した歌詞の取得に失敗しました"
-            return
-        }
-        applyLyrics(from: mock, message: "API に接続できないためモック歌詞を表示しています")
-    }
-
-    private func applyLyrics(from mock: MockData.GeneratedChainMock, message: String?) {
-        durationSec = mock.song?.durationSec ?? durationSec
-        mood = mock.song?.mood ?? mood
-        lyricEntries = mock.entries.map { entry in
+    private func applyLocalLyrics(from local: LocalCompositionStudioStore.LocalChainResult, message: String?) {
+        durationSec = local.song?.durationSec ?? durationSec
+        mood = local.song?.mood ?? mood
+        lyricEntries = local.entries.map { entry in
             LyricEntryRow(
                 id: "\(entry.sequenceNum)-\(entry.user.id)",
                 content: entry.content,
