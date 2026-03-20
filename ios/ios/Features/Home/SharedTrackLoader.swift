@@ -18,7 +18,11 @@ final class SharedTrackLoader: ObservableObject {
         defer { isLoading = false }
         do {
             if let shared = try await client.getSharedTrack() {
-                track = mapTrack(shared)
+                var mapped = mapTrack(shared)
+                if let extracted = await ArtworkColorExtractor.shared.extractColor(from: mapped.artwork) {
+                    mapped = mapped.withColor(extracted)
+                }
+                track = mapped
             } else {
                 track = nil
             }

@@ -17,6 +17,7 @@ final class SearchViewModel: ObservableObject {
     @Published private(set) var favoriteTrackIDs: Set<String> = []
 
     private let client: BackendAPIClient
+    private var searchGeneration: Int = 0
 
     init(client: BackendAPIClient = BackendAPIClient()) {
         self.client = client
@@ -145,6 +146,8 @@ final class SearchViewModel: ObservableObject {
     private func performSearch(query: String) async {
         isSearching = true
         errorMessage = nil
+        searchGeneration += 1
+        let currentGeneration = searchGeneration
         do {
             let response = try await client.searchTracks(query: query, limit: 20)
             results = (response.tracks ?? []).map(mapTrack)
@@ -155,6 +158,22 @@ final class SearchViewModel: ObservableObject {
             errorMessage = "検索に失敗しました"
         }
         isSearching = false
+        // フォールバック色で即座に表示した後、並列で実際のアートワーク色を抽出して更新
+        let snapshot = results
+        await withTaskGroup(of: (Int, Color?).self) { group in
+            for (i, track) in snapshot.enumerated() {
+                group.addTask {
+                    let color = await ArtworkColorExtractor.shared.extractColor(from: track.artwork)
+                    return (i, color)
+                }
+            }
+            for await (i, color) in group {
+                guard currentGeneration == searchGeneration else { return }
+                if let color, i < results.count {
+                    results[i] = results[i].withColor(color)
+                }
+            }
+        }
     }
 
     private func fetchTrackDetail(id: String, fallback: Track) async {
@@ -164,7 +183,13 @@ final class SearchViewModel: ObservableObject {
         do {
             let track = try await client.getTrack(id: id)
             if selectedTrack?.backendId == requestedId {
-                selectedTrack = mapTrack(track)
+                var mapped = mapTrack(track)
+                if let extracted = await ArtworkColorExtractor.shared.extractColor(from: mapped.artwork) {
+                    mapped = mapped.withColor(extracted)
+                }
+                if selectedTrack?.backendId == requestedId {
+                    selectedTrack = mapped
+                }
             }
         } catch {
             if selectedTrack?.backendId == requestedId {
@@ -180,9 +205,16 @@ final class SearchViewModel: ObservableObject {
         errorMessage = nil
         do {
             let shared = try await client.getSharedTrack()
-            sharedTrack = shared.flatMap(mapSharedTrack)
-            if let sharedTrack, selectedTrack == nil {
-                selectedTrack = sharedTrack
+            if var mapped = shared.flatMap(mapSharedTrack) {
+                if let extracted = await ArtworkColorExtractor.shared.extractColor(from: mapped.artwork) {
+                    mapped = mapped.withColor(extracted)
+                }
+                sharedTrack = mapped
+                if selectedTrack == nil {
+                    selectedTrack = mapped
+                }
+            } else {
+                sharedTrack = nil
             }
         } catch {
             errorMessage = "シェア中の曲の取得に失敗しました"
