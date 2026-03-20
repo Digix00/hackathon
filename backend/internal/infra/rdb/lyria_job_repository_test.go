@@ -213,7 +213,7 @@ func TestLyriaJobRepository_FailJob_Retry(t *testing.T) {
 	}
 
 	// 1回失敗 → pending に戻るはず
-	if err := repo.FailJob(context.Background(), jobID, "test error"); err != nil {
+	if err := repo.FailJob(context.Background(), jobID, "test error", false); err != nil {
 		t.Fatalf("FailJob: %v", err)
 	}
 
@@ -242,7 +242,7 @@ func TestLyriaJobRepository_FailJob_MaxRetry(t *testing.T) {
 	sharedTestDB.Model(&model.OutboxLyriaJob{}).Where("id = ?", jobID).
 		Updates(map[string]any{"retry_count": maxRetryCount - 1, "status": "processing"})
 
-	if err := repo.FailJob(context.Background(), jobID, "final error"); err != nil {
+	if err := repo.FailJob(context.Background(), jobID, "final error", false); err != nil {
 		t.Fatalf("FailJob: %v", err)
 	}
 
@@ -250,5 +250,44 @@ func TestLyriaJobRepository_FailJob_MaxRetry(t *testing.T) {
 	sharedTestDB.First(&job, "id = ?", jobID)
 	if job.Status != "failed" {
 		t.Errorf("after max retry: expected failed, got %s", job.Status)
+	}
+
+	// LyricChain も failed に更新されているはず
+	var chain model.LyricChain
+	sharedTestDB.First(&chain, "id = ?", job.ChainID)
+	if chain.Status != "failed" {
+		t.Errorf("chain status after max retry: expected failed, got %s", chain.Status)
+	}
+}
+
+func TestLyriaJobRepository_FailJob_Permanent(t *testing.T) {
+	if sharedTestDB == nil {
+		t.Skip("postgres not available")
+	}
+
+	chainID, jobID := setupLyriaTestData(t)
+	repo := NewLyriaJobRepository(sharedTestDB)
+
+	// claim して processing にする
+	if _, err := repo.ClaimPendingJobs(context.Background(), 5); err != nil {
+		t.Fatalf("ClaimPendingJobs: %v", err)
+	}
+
+	// permanent=true で即座に failed になるはず (リトライ回数に関係なく)
+	if err := repo.FailJob(context.Background(), jobID, "harmful content", true); err != nil {
+		t.Fatalf("FailJob permanent: %v", err)
+	}
+
+	var job model.OutboxLyriaJob
+	sharedTestDB.First(&job, "id = ?", jobID)
+	if job.Status != "failed" {
+		t.Errorf("permanent fail: expected failed, got %s", job.Status)
+	}
+
+	// LyricChain も failed に更新されているはず
+	var chain model.LyricChain
+	sharedTestDB.First(&chain, "id = ?", chainID)
+	if chain.Status != "failed" {
+		t.Errorf("chain status on permanent fail: expected failed, got %s", chain.Status)
 	}
 }

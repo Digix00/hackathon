@@ -12,10 +12,15 @@ import (
 
 // ─── スタブ実装 ───────────────────────────────────────────────────────────────
 
+type failedJob struct {
+	jobID     string
+	permanent bool
+}
+
 type stubLyriaJobRepo struct {
 	pendingJobs []repository.OutboxLyriaJobDetail
 	completed   []repository.SaveSongInput
-	failed      []string // FailJob で記録された jobID
+	failed      []failedJob // FailJob で記録された jobID と permanent フラグ
 }
 
 func (r *stubLyriaJobRepo) ClaimPendingJobs(_ context.Context, _ int) ([]repository.OutboxLyriaJobDetail, error) {
@@ -27,8 +32,8 @@ func (r *stubLyriaJobRepo) CompleteJob(_ context.Context, _, _ string, song repo
 	return nil
 }
 
-func (r *stubLyriaJobRepo) FailJob(_ context.Context, jobID string, _ string) error {
-	r.failed = append(r.failed, jobID)
+func (r *stubLyriaJobRepo) FailJob(_ context.Context, jobID string, _ string, permanent bool) error {
+	r.failed = append(r.failed, failedJob{jobID: jobID, permanent: permanent})
 	return nil
 }
 
@@ -167,8 +172,11 @@ func TestProcessLyriaJobs_HarmfulContent(t *testing.T) {
 	if processed != 0 {
 		t.Errorf("expected 0 processed (harmful content), got %d", processed)
 	}
-	if len(jobRepo.failed) != 1 || jobRepo.failed[0] != "job-harmful" {
+	if len(jobRepo.failed) != 1 || jobRepo.failed[0].jobID != "job-harmful" {
 		t.Errorf("expected job-harmful to be failed, got %v", jobRepo.failed)
+	}
+	if !jobRepo.failed[0].permanent {
+		t.Error("expected harmful content job to be permanently failed (permanent=true)")
 	}
 }
 
@@ -197,6 +205,9 @@ func TestProcessLyriaJobs_LyriaError(t *testing.T) {
 	}
 	if len(jobRepo.failed) != 1 {
 		t.Errorf("expected 1 failed job, got %v", jobRepo.failed)
+	}
+	if jobRepo.failed[0].permanent {
+		t.Error("expected transient error job to not be permanently failed (permanent=false)")
 	}
 }
 

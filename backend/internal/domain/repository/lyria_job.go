@@ -28,6 +28,8 @@ type LyriaJobRepository interface {
 	// CompleteJob はジョブを completed に更新し、生成楽曲を保存してチェーンを completed に更新する
 	CompleteJob(ctx context.Context, jobID, chainID string, song SaveSongInput) error
 
-	// FailJob はジョブ失敗を記録する。リトライ回数が閾値未満なら pending に戻す
-	FailJob(ctx context.Context, jobID string, errMsg string) error
+	// FailJob はジョブ失敗を記録する。permanent=true またはリトライ回数が閾値に達した場合は
+	// ジョブを failed に遷移させ、関連する LyricChain も failed に更新する。
+	// それ以外はリトライのため pending に戻す。
+	FailJob(ctx context.Context, jobID string, errMsg string, permanent bool) error
 }

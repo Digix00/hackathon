@@ -127,8 +127,10 @@ func (r *lyriaJobRepository) CompleteJob(ctx context.Context, jobID, chainID str
 	})
 }
 
-// FailJob はジョブ失敗を記録する。リトライ回数が閾値未満なら pending に戻す
-func (r *lyriaJobRepository) FailJob(ctx context.Context, jobID string, errMsg string) error {
+// FailJob はジョブ失敗を記録する。permanent=true またはリトライ回数が閾値に達した場合は
+// ジョブを failed に遷移させ、関連する LyricChain も failed に更新する。
+// それ以外はリトライのため pending に戻す。
+func (r *lyriaJobRepository) FailJob(ctx context.Context, jobID string, errMsg string, permanent bool) error {
 	now := time.Now().UTC()
 
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -141,8 +143,13 @@ func (r *lyriaJobRepository) FailJob(ctx context.Context, jobID string, errMsg s
 		job.ErrorMessage = &errMsg
 		job.ProcessedAt = &now
 
-		if job.RetryCount >= maxRetryCount {
+		if permanent || job.RetryCount >= maxRetryCount {
 			job.Status = "failed"
+			if err := tx.Model(&model.LyricChain{}).
+				Where("id = ?", job.ChainID).
+				Update("status", "failed").Error; err != nil {
+				return err
+			}
 		} else {
 			job.Status = "pending"
 		}
