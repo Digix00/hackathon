@@ -28,6 +28,12 @@ resource "google_project_iam_member" "cloudrun_firebase_auth_admin" {
   member  = "serviceAccount:${google_service_account.cloudrun.email}"
 }
 
+resource "google_project_iam_member" "cloudrun_aiplatform_user" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.cloudrun.email}"
+}
+
 # Worker 用サービスアカウント
 resource "google_service_account" "worker" {
   account_id   = "worker-sa"

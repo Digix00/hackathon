@@ -31,3 +31,10 @@ resource "google_storage_bucket_iam_member" "cloudrun_reader" {
   role   = "roles/storage.objectViewer"
   member = "serviceAccount:${google_service_account.cloudrun.email}"
 }
+
+# 生成楽曲の公開読み取り（songs/ 配下の音声ファイルをクライアントから直接取得するため）
+resource "google_storage_bucket_iam_member" "public_reader" {
+  bucket = google_storage_bucket.generated_songs.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
+}

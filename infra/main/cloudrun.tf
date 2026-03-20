@@ -74,6 +74,21 @@ resource "google_cloud_run_v2_service" "api" {
       }
 
       env {
+        name  = "VERTEX_AI_PROJECT_ID"
+        value = var.project_id
+      }
+
+      env {
+        name  = "VERTEX_AI_LOCATION"
+        value = "us-central1"
+      }
+
+      env {
+        name  = "GEMINI_MODEL_ID"
+        value = "gemini-1.5-flash"
+      }
+
+      env {
         name = "MUSIC_STATE_SECRET"
         value_source {
           secret_key_ref {
@@ -218,6 +233,41 @@ resource "google_cloud_run_v2_service" "worker" {
       env {
         name  = "GO_ENV"
         value = "production"
+      }
+
+      env {
+        name  = "VERTEX_AI_PROJECT_ID"
+        value = var.project_id
+      }
+
+      env {
+        name  = "VERTEX_AI_LOCATION"
+        value = "us-central1"
+      }
+
+      env {
+        name  = "LYRIA_MODEL_ID"
+        value = "lyria-002"
+      }
+
+      env {
+        name  = "LYRIA_DEFAULT_DURATION"
+        value = "45"
+      }
+
+      env {
+        name  = "LYRIA_TIMEOUT_SEC"
+        value = "300"
+      }
+
+      env {
+        name  = "GEMINI_MODEL_ID"
+        value = "gemini-1.5-flash"
+      }
+
+      env {
+        name  = "GENERATED_SONGS_BUCKET"
+        value = google_storage_bucket.generated_songs.name
       }
 
       volume_mounts {
