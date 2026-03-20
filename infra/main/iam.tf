@@ -73,6 +73,15 @@ resource "google_cloud_run_v2_service_iam_member" "scheduler_worker_invoker" {
   member   = "serviceAccount:${google_service_account.scheduler.email}"
 }
 
+# Scheduler SA に lyria-worker Service の invoker 権限を付与
+resource "google_cloud_run_v2_service_iam_member" "scheduler_lyria_worker_invoker" {
+  project  = var.project_id
+  location = google_cloud_run_v2_service.lyria_worker.location
+  name     = google_cloud_run_v2_service.lyria_worker.name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.scheduler.email}"
+}
+
 # Terraform CI/CD SA に migrate Service の invoker 権限を付与（CI からマイグレーション実行用）
 resource "google_cloud_run_v2_service_iam_member" "terraform_ci_migrate_invoker" {
   project  = var.project_id
