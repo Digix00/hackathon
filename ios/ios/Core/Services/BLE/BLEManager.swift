@@ -216,10 +216,7 @@ final class BLEManager: NSObject, ObservableObject {
         }
         guard let tokenUUIDString = makeTokenUUIDString(fromHex8Bytes: normalizedToken) else { return nil }
 
-        return AdvertisingPayload(
-            backendToken: normalizedToken,
-            tokenUUID: CBUUID(string: tokenUUIDString)
-        )
+        return AdvertisingPayload(backendToken: normalizedToken, tokenUUID: CBUUID(string: tokenUUIDString))
     }
 
     private func makeTokenUUIDString(fromHex8Bytes tokenHex: String) -> String? {
@@ -243,14 +240,6 @@ final class BLEManager: NSObject, ObservableObject {
             return nil
         }
 
-        if let serviceData = advertisementData[CBAdvertisementDataServiceDataKey] as? [CBUUID: Data],
-           let tokenData = serviceData[Constants.appServiceUUID],
-           let token = hexString(from: tokenData),
-           token.count == 16
-        {
-            return token
-        }
-
         guard let tokenUUID = serviceUUIDs.first(where: { $0 != Constants.appServiceUUID }) else {
             return nil
         }
@@ -270,12 +259,6 @@ final class BLEManager: NSObject, ObservableObject {
 
         // Otherwise treat it as canonical UUID token.
         return normalized
-    }
-
-
-    private func hexString(from data: Data) -> String? {
-        guard !data.isEmpty else { return nil }
-        return data.map { String(format: "%02x", $0) }.joined()
     }
 
     private func shouldEmitDetection(token: String, rssi: NSNumber, now: Date) -> Bool {

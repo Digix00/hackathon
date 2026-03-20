@@ -24,6 +24,8 @@ func main() {
 	}
 	defer sqlDB.Close() //nolint:errcheck
 
+	otherUserID := os.Getenv("SEED_OTHER_USER_ID")
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if err := rdb.SeedProd(db, targetUserID); err != nil {
 			log.Printf("seed failed: %v", err)
@@ -31,6 +33,16 @@ func main() {
 			return
 		}
 		log.Printf("seed completed for user %s", targetUserID)
+
+		if otherUserID != "" {
+			if err := rdb.SeedProdCrossEncounter(db, targetUserID, otherUserID); err != nil {
+				log.Printf("cross encounter seed failed: %v", err)
+				http.Error(w, "cross encounter seed failed", http.StatusInternalServerError)
+				return
+			}
+			log.Printf("cross encounter seed completed between %s and %s", targetUserID, otherUserID)
+		}
+
 		w.WriteHeader(http.StatusOK)
 	})
 
