@@ -61,6 +61,9 @@ type WorkerConfig struct {
 	LyriaDefaultDuration int    `envconfig:"LYRIA_DEFAULT_DURATION" default:"45"`
 	GeminiModelID        string `envconfig:"GEMINI_MODEL_ID" default:"gemini-1.5-flash"`
 
+	// Lyria タイムアウト設定（秒）
+	LyriaTimeoutSec int `envconfig:"LYRIA_TIMEOUT_SEC" default:"300"`
+
 	// Cloud Storage 設定
 	AudioBucketName string `envconfig:"AUDIO_BUCKET_NAME"`
 }
@@ -81,8 +84,13 @@ func LoadWorker() (*WorkerConfig, error) {
 			cfg.DBConnectionName,
 		)
 	}
-	if cfg.GoEnv != "development" && cfg.VertexAIProjectID != "" && cfg.AudioBucketName == "" {
-		return nil, fmt.Errorf("AUDIO_BUCKET_NAME は本番環境で VERTEX_AI_PROJECT_ID が設定されている場合は必須です")
+	if cfg.GoEnv != "development" {
+		if cfg.VertexAIProjectID == "" {
+			return nil, fmt.Errorf("VERTEX_AI_PROJECT_ID は本番環境で必須です")
+		}
+		if cfg.AudioBucketName == "" {
+			return nil, fmt.Errorf("AUDIO_BUCKET_NAME は本番環境で必須です")
+		}
 	}
 	return &cfg, nil
 }

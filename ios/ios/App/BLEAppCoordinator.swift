@@ -174,12 +174,16 @@ final class BLEAppCoordinator: ObservableObject {
             return
         }
 
-        latestLyricChain = BackendLyricChainSummary(
+        let updatedChain = BackendLyricChainSummary(
             id: chain.id,
             participantCount: chain.participantCount,
             status: chain.status,
             threshold: chain.threshold
         )
+        latestLyricChain = updatedChain
+        if let current = latestLyricSubmission {
+            latestLyricSubmission = LatestLyricSubmission(chain: updatedChain, content: current.content)
+        }
     }
 
     func setBLEEnabled(_ isEnabled: Bool) {
