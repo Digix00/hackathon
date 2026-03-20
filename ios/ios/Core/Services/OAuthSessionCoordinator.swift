@@ -24,8 +24,10 @@ final class OAuthSessionCoordinator: NSObject, ASWebAuthenticationPresentationCo
             url: url,
             callbackURLScheme: callbackScheme
         ) { [weak self] callbackURL, _ in
-            self?.activeSession = nil
-            Task { @MainActor in completion(callbackURL) }
+            Task { @MainActor in
+                self?.activeSession = nil
+                completion(callbackURL)
+            }
         }
         session.presentationContextProvider = self
         session.prefersEphemeralWebBrowserSession = false
