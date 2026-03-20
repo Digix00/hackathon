@@ -147,28 +147,100 @@ struct GeneratedSongsView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "music.note.list")
-                .font(.system(size: 64))
-                .foregroundStyle(PrototypeTheme.textTertiary)
-            
-            VStack(spacing: 8) {
-                Text(viewModel.errorMessage ?? "生成された曲がまだありません")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(PrototypeTheme.textPrimary)
-                
-                Text("すれ違いから生まれる、あなただけの音楽を待ちましょう。")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(PrototypeTheme.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-            }
-
-            if viewModel.errorMessage != nil {
-                SecondaryButton(title: "再読み込み", systemImage: "arrow.clockwise") {
-                    viewModel.refresh()
+        ZStack {
+            // Layer 0: Background Aura
+            TimelineView(.animation) { timeline in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                ZStack {
+                    Circle()
+                        .fill(Color.indigo.opacity(0.08))
+                        .frame(width: 300, height: 300)
+                        .blur(radius: 80)
+                        .offset(x: sin(t * 0.4) * 40, y: cos(t * 0.3) * 20)
+                    
+                    Circle()
+                        .fill(Color.blue.opacity(0.05))
+                        .frame(width: 250, height: 250)
+                        .blur(radius: 60)
+                        .offset(x: cos(t * 0.5) * 50, y: sin(t * 0.4) * 30)
                 }
             }
+
+            VStack(spacing: 56) {
+                // Symbol
+                ZStack {
+                    Circle()
+                        .stroke(Color.indigo.opacity(0.1), lineWidth: 1)
+                        .frame(width: 140, height: 140)
+                        .scaleEffect(1.2)
+                    
+                    Image(systemName: viewModel.errorMessage != nil ? "exclamationmark.triangle" : "music.quarternote.3")
+                        .font(.system(size: 40, weight: .thin))
+                        .foregroundStyle(Color.indigo.gradient)
+                        .symbolEffect(.pulse, options: .repeating)
+                }
+
+                // Text Content
+                VStack(spacing: 20) {
+                    VStack(spacing: 8) {
+                        Text(viewModel.errorMessage != nil ? "CONNECTION ERROR" : "SILENT ARCHIVE")
+                            .font(PrototypeTheme.Typography.font(size: 10, weight: .black, role: .data))
+                            .kerning(4)
+                            .foregroundStyle(Color.indigo.opacity(0.5))
+
+                        Text(viewModel.errorMessage != nil ? "通信が途絶えています" : "まだ静かなライブラリ")
+                            .font(PrototypeTheme.Typography.font(size: 22, weight: .black, role: .primary))
+                            .foregroundStyle(PrototypeTheme.textPrimary)
+                    }
+
+                    Text(viewModel.errorMessage ?? "すれ違いから生まれる、あなただけの音楽を待ちましょう。\n街のどこかで、誰かの言葉が共鳴を待っています。")
+                        .font(PrototypeTheme.Typography.font(size: 14, weight: .medium))
+                        .foregroundStyle(PrototypeTheme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(8)
+                        .padding(.horizontal, 48)
+                        .opacity(0.8)
+                }
+
+                // Actions
+                VStack(spacing: 16) {
+                    if viewModel.errorMessage != nil {
+                        SecondaryButton(title: "再読み込み", systemImage: "arrow.clockwise") {
+                            viewModel.refresh()
+                        }
+                    } else {
+                        // 能動的な導線
+                        NavigationLink {
+                            NotificationListView()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "bell")
+                                    .font(.system(size: 12, weight: .bold))
+                                Text("通知履歴を確認する")
+                                    .font(PrototypeTheme.Typography.font(size: 13, weight: .black))
+                            }
+                            .foregroundStyle(Color.indigo)
+                            .padding(.horizontal, 28)
+                            .padding(.vertical, 14)
+                            .background(Capsule().fill(Color.indigo.opacity(0.06)))
+                        }
+                        .buttonStyle(EncounterScaleButtonStyle())
+
+                        if let submission = bleCoordinator.latestLyricSubmission {
+                            NavigationLink {
+                                ChainProgressView(chainId: submission.chain.id)
+                            } label: {
+                                Text("生成中の進捗を見る")
+                                    .font(PrototypeTheme.Typography.font(size: 12, weight: .bold))
+                                    .foregroundStyle(PrototypeTheme.textTertiary)
+                                    .underline()
+                            }
+                            .padding(.top, 4)
+                        }
+                    }
+                }
+            }
+            .offset(y: -20)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
