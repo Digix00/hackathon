@@ -18,6 +18,7 @@ Docker Compose で以下を起動します。
 
 ```bash
 make run-dev
+```
 
 起動状態確認:
 
