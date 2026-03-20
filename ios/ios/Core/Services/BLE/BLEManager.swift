@@ -2,26 +2,22 @@ import Combine
 import CoreBluetooth
 import Foundation
 
-/// BLE token exchange manager based on docs/architecture/ble.md.
+/// BLE token exchange manager using GATT connections for reliable background operation.
 ///
-/// - Uses non-connectable advertising + scanning only (no GATT connection).
-/// - Exchanges only ephemeral BLE token via service UUID advertising payload.
-/// - Applies client-side RSSI / detection-count / debounce / cooldown filters before surfacing detections.
-/// - Foreground requires two detections within 30 seconds; background accepts a single stronger detection.
+/// - Uses GATT connection-based approach (CBCentralManager + CBPeripheralManager).
+/// - Peripheral advertises a service and exposes token via characteristic.
+/// - Central scans, connects, reads token from characteristic, then disconnects.
+/// - Supports state restoration for background operation continuity.
 final class BLEManager: NSObject, ObservableObject {
     struct Constants {
-        static let appServiceUUID = CBUUID(string: "00001234-0000-1000-8000-00805F9B34FB")
-        static let tokenPrefixHex = "A17E1E50B1ECAFE0"
-        static let foregroundRSSIThreshold = -85
-        static let backgroundRSSIThreshold = -80
-        // Temporary debugging relaxation: allow a single foreground detection.
-        static let foregroundDetectionCountThreshold = 1
-        static let backgroundDetectionCountThreshold = 1
-        static let detectionWindow: TimeInterval = 30
-        static let debounce: TimeInterval = 30
-        static let cooldown: TimeInterval = 5 * 60
+        static let serviceUUID = CBUUID(string: "00001234-0000-1000-8000-00805F9B34FB")
+        static let characteristicUUID = CBUUID(string: "00001235-0000-1000-8000-00805F9B34FB")
         static let centralRestoreIdentifier = "hackathon-ble-central"
         static let peripheralRestoreIdentifier = "hackathon-ble-peripheral"
+
+        // Detection filters
+        static let encounterCooldown: TimeInterval = 5 * 60 // 5 minutes
+        static let debounce: TimeInterval = 30 // 30 seconds
     }
 
     enum BLEState: Equatable {
@@ -48,51 +44,41 @@ final class BLEManager: NSObject, ObservableObject {
 
     private var shouldAdvertise = false
     private var shouldScan = false
-    private var isForeground = true
-    private var lowPowerModeObserver: NSObjectProtocol?
-    private var isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
     private var advertisedToken: String?
-    private var advertisedTokenUUID: CBUUID?
+    private var characteristic: CBMutableCharacteristic?
 
-    private var detectionCountsByToken: [String: DetectionCounter] = [:]
-    private var debounceByToken: [String: Date] = [:]
+    // Connection management
+    private var connectedPeripherals: Set<CBPeripheral> = []
+
+    // Detection deduplication
     private var cooldownByToken: [String: Date] = [:]
+    private var debounceByToken: [String: Date] = [:]
 
     override init() {
         super.init()
         centralManager = CBCentralManager(
             delegate: self,
-            queue: .main,
+            queue: nil,
             options: [CBCentralManagerOptionRestoreIdentifierKey: Constants.centralRestoreIdentifier]
         )
         peripheralManager = CBPeripheralManager(
             delegate: self,
-            queue: .main,
+            queue: nil,
             options: [CBPeripheralManagerOptionRestoreIdentifierKey: Constants.peripheralRestoreIdentifier]
         )
-        lowPowerModeObserver = NotificationCenter.default.addObserver(
-            forName: .NSProcessInfoPowerStateDidChange,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.handlePowerModeChange()
-        }
     }
 
     deinit {
-        if let lowPowerModeObserver {
-            NotificationCenter.default.removeObserver(lowPowerModeObserver)
-        }
         stopScanning()
         stopAdvertising()
     }
 
     func startAdvertising(token: String) {
-        guard let payload = makeAdvertisingPayload(token: token) else { return }
+        let normalizedToken = token.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !normalizedToken.isEmpty else { return }
 
         shouldAdvertise = true
-        advertisedToken = payload.backendToken
-        advertisedTokenUUID = payload.tokenUUID
+        advertisedToken = normalizedToken
         applyAdvertisingState()
     }
 
@@ -103,7 +89,7 @@ final class BLEManager: NSObject, ObservableObject {
 
     func startScanning() {
         shouldScan = true
-        reconfigureScanningPolicy()
+        startScanningRuntimeIfPossible()
     }
 
     func stopScanning() {
@@ -112,8 +98,13 @@ final class BLEManager: NSObject, ObservableObject {
     }
 
     func updateAppForegroundState(_ isForeground: Bool) {
-        self.isForeground = isForeground
-        reconfigureScanningPolicy()
+        // GATT-based approach works in both foreground and background
+        // No special handling needed
+    }
+
+    func resetCooldownCache() {
+        cooldownByToken.removeAll()
+        debounceByToken.removeAll()
     }
 
     private func stopScanningRuntime() {
@@ -122,6 +113,13 @@ final class BLEManager: NSObject, ObservableObject {
             return
         }
         centralManager.stopScan()
+
+        // Disconnect all connected peripherals
+        for peripheral in connectedPeripherals {
+            centralManager.cancelPeripheralConnection(peripheral)
+        }
+        connectedPeripherals.removeAll()
+
         isScanning = false
     }
 
@@ -132,11 +130,14 @@ final class BLEManager: NSObject, ObservableObject {
         }
         guard !isScanning else { return }
 
+        // Scan for peripherals advertising our service
+        // Allow duplicates is false to reduce overhead, we'll reconnect after cooldown
         centralManager.scanForPeripherals(
-            withServices: [Constants.appServiceUUID],
-            options: [CBCentralManagerScanOptionAllowDuplicatesKey: true]
+            withServices: [Constants.serviceUUID],
+            options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
         )
         isScanning = true
+        log("Started scanning for peripherals")
     }
 
     private func updateState(_ centralState: CBManagerState) {
@@ -168,36 +169,79 @@ final class BLEManager: NSObject, ObservableObject {
     private func applyAdvertisingState() {
         guard
             shouldAdvertise,
-            !isLowPowerModeEnabled,
             peripheralManager.state == .poweredOn,
-            advertisedToken != nil,
-            let tokenUUID = advertisedTokenUUID
+            let token = advertisedToken
         else {
             stopAdvertisingRuntime()
             return
         }
 
-        let data: [String: Any] = [
-            CBAdvertisementDataServiceUUIDsKey: [Constants.appServiceUUID, tokenUUID]
-        ]
+        // Create characteristic with dynamic read
+        let characteristic = CBMutableCharacteristic(
+            type: Constants.characteristicUUID,
+            properties: [.read],
+            value: nil, // Dynamic read
+            permissions: [.readable]
+        )
+        self.characteristic = characteristic
 
-        peripheralManager.stopAdvertising()
-        peripheralManager.startAdvertising(data)
+        // Create service
+        let service = CBMutableService(type: Constants.serviceUUID, primary: true)
+        service.characteristics = [characteristic]
+
+        // Remove existing services and add new one
+        peripheralManager.removeAllServices()
+        peripheralManager.add(service)
+
+        // Start advertising
+        peripheralManager.startAdvertising([
+            CBAdvertisementDataServiceUUIDsKey: [Constants.serviceUUID],
+            CBAdvertisementDataLocalNameKey: "Hackathon"
+        ])
+
+        log("Started advertising with token: \(token)")
     }
 
-    private func reconfigureScanningPolicy() {
-        guard shouldScan, !isLowPowerModeEnabled else {
-            stopScanningRuntime()
-            return
+    private func shouldEmitDetection(token: String, now: Date) -> Bool {
+        // Exclude self
+        guard token != advertisedToken else {
+            log("Ignore detection: self token")
+            return false
         }
 
-        startScanningRuntimeIfPossible()
+        // Check debounce (prevent rapid re-detection)
+        if let lastDebounce = debounceByToken[token],
+           now.timeIntervalSince(lastDebounce) < Constants.debounce {
+            log("Ignore detection token=\(token) reason=debounce")
+            return false
+        }
+
+        // Check cooldown (prevent detection within cooldown period)
+        if let lastCooldown = cooldownByToken[token],
+           now.timeIntervalSince(lastCooldown) < Constants.encounterCooldown {
+            log("Ignore detection token=\(token) reason=cooldown")
+            return false
+        }
+
+        // Update debounce and cooldown
+        debounceByToken[token] = now
+        cooldownByToken[token] = now
+
+        log("Emit detection token=\(token)")
+        return true
     }
 
-    private func handlePowerModeChange() {
-        isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
-        applyAdvertisingState()
-        reconfigureScanningPolicy()
+    private func processEncounter(token: String, rssi: Int?) {
+        let now = Date()
+        guard shouldEmitDetection(token: token, now: now) else { return }
+
+        DispatchQueue.main.async {
+            self.latestDetection = Detection(
+                token: token,
+                rssi: rssi ?? 0,
+                detectedAt: now
+            )
+        }
     }
 
     private func log(_ message: String) {
@@ -205,138 +249,19 @@ final class BLEManager: NSObject, ObservableObject {
         print("[BLEManager] \(message)")
         #endif
     }
-
-    private func makeAdvertisingPayload(token: String) -> AdvertisingPayload? {
-        let normalizedToken = token.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !normalizedToken.isEmpty else { return nil }
-
-        // Token must be 8-byte (16 hex chars), embed it as APP_PREFIX(8 bytes) + TOKEN(8 bytes).
-        guard normalizedToken.count == 16, normalizedToken.range(of: "^[0-9a-f]{16}$", options: .regularExpression) != nil else {
-            return nil
-        }
-        guard let tokenUUIDString = makeTokenUUIDString(fromHex8Bytes: normalizedToken) else { return nil }
-
-        return AdvertisingPayload(backendToken: normalizedToken, tokenUUID: CBUUID(string: tokenUUIDString))
-    }
-
-    private func makeTokenUUIDString(fromHex8Bytes tokenHex: String) -> String? {
-        let fullHex = Constants.tokenPrefixHex + tokenHex
-        guard fullHex.count == 32 else { return nil }
-        return [
-            String(fullHex.prefix(8)),
-            String(fullHex.dropFirst(8).prefix(4)),
-            String(fullHex.dropFirst(12).prefix(4)),
-            String(fullHex.dropFirst(16).prefix(4)),
-            String(fullHex.dropFirst(20).prefix(12))
-        ].joined(separator: "-")
-    }
-
-    private func decodeToken(fromAdvertisementData advertisementData: [String: Any]) -> String? {
-        let primaryUUIDs = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] ?? []
-        let overflowUUIDs = advertisementData[CBAdvertisementDataOverflowServiceUUIDsKey] as? [CBUUID] ?? []
-        let serviceUUIDs = primaryUUIDs + overflowUUIDs
-
-        guard serviceUUIDs.contains(Constants.appServiceUUID) else {
-            return nil
-        }
-
-        guard let tokenUUID = serviceUUIDs.first(where: { $0 != Constants.appServiceUUID }) else {
-            return nil
-        }
-
-        return decodeBackendToken(fromTokenUUID: tokenUUID)
-    }
-
-    private func decodeBackendToken(fromTokenUUID tokenUUID: CBUUID) -> String {
-        let normalized = tokenUUID.uuidString.lowercased()
-        let compact = normalized.replacingOccurrences(of: "-", with: "")
-        let expectedPrefix = Constants.tokenPrefixHex.lowercased()
-
-        // If this UUID was built from APP_PREFIX + 8-byte token, restore hex token.
-        if compact.count == 32, compact.hasPrefix(expectedPrefix) {
-            return String(compact.suffix(16))
-        }
-
-        // Otherwise treat it as canonical UUID token.
-        return normalized
-    }
-
-    private func shouldEmitDetection(token: String, rssi: NSNumber, now: Date) -> Bool {
-        let rssiValue = rssi.intValue
-        // CoreBluetooth uses 127 as a sentinel for unavailable RSSI.
-        guard rssiValue != 127 else {
-            log("ignore detection token=\(token) reason=unavailable_rssi")
-            return false
-        }
-        let rssiThreshold = isForeground
-            ? Constants.foregroundRSSIThreshold
-            : Constants.backgroundRSSIThreshold
-        guard rssiValue >= rssiThreshold else {
-            log("ignore detection token=\(token) rssi=\(rssiValue) threshold=\(rssiThreshold) reason=weak_signal")
-            return false
-        }
-
-        let detectionThreshold = isForeground
-            ? Constants.foregroundDetectionCountThreshold
-            : Constants.backgroundDetectionCountThreshold
-
-        let previousCounter = detectionCountsByToken[token]
-        let nextCount: Int
-        if let previousCounter, now.timeIntervalSince(previousCounter.windowStartedAt) <= Constants.detectionWindow {
-            nextCount = previousCounter.count + 1
-        } else {
-            nextCount = 1
-        }
-        detectionCountsByToken[token] = DetectionCounter(count: nextCount, windowStartedAt: now)
-        guard nextCount >= detectionThreshold else {
-            log("hold detection token=\(token) rssi=\(rssiValue) count=\(nextCount)/\(detectionThreshold)")
-            return false
-        }
-
-        if isForeground {
-            if let last = debounceByToken[token], now.timeIntervalSince(last) < Constants.debounce {
-                log("ignore detection token=\(token) reason=debounce")
-                return false
-            }
-        }
-        if let last = cooldownByToken[token], now.timeIntervalSince(last) < Constants.cooldown {
-            log("ignore detection token=\(token) reason=cooldown")
-            return false
-        }
-
-        if isForeground {
-            debounceByToken[token] = now
-        } else {
-            debounceByToken.removeValue(forKey: token)
-        }
-        cooldownByToken[token] = now
-        detectionCountsByToken[token] = DetectionCounter(count: 0, windowStartedAt: now)
-        log("emit detection token=\(token) rssi=\(rssiValue) foreground=\(isForeground)")
-        return true
-    }
-
-    func resetCooldownCache() {
-        detectionCountsByToken.removeAll()
-        debounceByToken.removeAll()
-        cooldownByToken.removeAll()
-    }
 }
 
+// MARK: - CBCentralManagerDelegate
 extension BLEManager: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         updateState(central.state)
-        reconfigureScanningPolicy()
-    }
+        log("Central state updated: \(central.state.rawValue)")
 
-    func centralManager(_ central: CBCentralManager, willRestoreState dict: [String: Any]) {
-        log("Central state restored: \(dict.keys.sorted())")
-
-        if let restoredScanServices = dict[CBCentralManagerRestoredStateScanServicesKey] as? [CBUUID],
-           restoredScanServices.contains(Constants.appServiceUUID) {
-            shouldScan = true
+        if central.state == .poweredOn && shouldScan {
+            startScanningRuntimeIfPossible()
+        } else {
+            stopScanningRuntime()
         }
-
-        reconfigureScanningPolicy()
     }
 
     func centralManager(
@@ -345,30 +270,163 @@ extension BLEManager: CBCentralManagerDelegate {
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
-        guard let token = decodeToken(fromAdvertisementData: advertisementData) else { return }
-        guard token != advertisedToken else {
-            log("ignore detection token=\(token) reason=self_token")
+        // Avoid duplicate connections
+        guard !connectedPeripherals.contains(peripheral) else {
+            log("Skip connection: already connected to \(peripheral.identifier)")
             return
         }
 
-        let now = Date()
-        guard shouldEmitDetection(token: token, rssi: RSSI, now: now) else { return }
+        log("Discovered peripheral: \(peripheral.identifier), RSSI: \(RSSI)")
 
-        latestDetection = Detection(token: token, rssi: RSSI.intValue, detectedAt: now)
+        connectedPeripherals.insert(peripheral)
+        peripheral.delegate = self
+        central.connect(peripheral, options: nil)
+    }
+
+    func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        log("Connected to peripheral: \(peripheral.identifier)")
+        peripheral.discoverServices([Constants.serviceUUID])
+    }
+
+    func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        log("Failed to connect to peripheral: \(peripheral.identifier), error: \(error?.localizedDescription ?? "none")")
+        connectedPeripherals.remove(peripheral)
+    }
+
+    func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        log("Disconnected from peripheral: \(peripheral.identifier), error: \(error?.localizedDescription ?? "none")")
+        connectedPeripherals.remove(peripheral)
+    }
+
+    func centralManager(_ central: CBCentralManager, willRestoreState dict: [String: Any]) {
+        log("Central will restore state: \(dict.keys.sorted())")
+
+        // Restore connected peripherals
+        if let peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral] {
+            for peripheral in peripherals {
+                log("Restoring peripheral: \(peripheral.identifier)")
+                connectedPeripherals.insert(peripheral)
+                peripheral.delegate = self
+            }
+        }
+
+        // Restore scanning state
+        if let restoredScanServices = dict[CBCentralManagerRestoredStateScanServicesKey] as? [CBUUID],
+           restoredScanServices.contains(Constants.serviceUUID) {
+            shouldScan = true
+        }
     }
 }
 
-private struct AdvertisingPayload {
-    let backendToken: String
-    let tokenUUID: CBUUID
+// MARK: - CBPeripheralDelegate
+extension BLEManager: CBPeripheralDelegate {
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        if let error {
+            log("Error discovering services: \(error.localizedDescription)")
+            centralManager.cancelPeripheralConnection(peripheral)
+            return
+        }
+
+        guard let services = peripheral.services else {
+            centralManager.cancelPeripheralConnection(peripheral)
+            return
+        }
+
+        for service in services where service.uuid == Constants.serviceUUID {
+            log("Discovered service: \(service.uuid)")
+            peripheral.discoverCharacteristics([Constants.characteristicUUID], for: service)
+        }
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        if let error {
+            log("Error discovering characteristics: \(error.localizedDescription)")
+            centralManager.cancelPeripheralConnection(peripheral)
+            return
+        }
+
+        guard let characteristics = service.characteristics else {
+            centralManager.cancelPeripheralConnection(peripheral)
+            return
+        }
+
+        for char in characteristics where char.uuid == Constants.characteristicUUID {
+            log("Discovered characteristic: \(char.uuid)")
+            peripheral.readValue(for: char)
+        }
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        // Always disconnect after reading
+        defer {
+            centralManager.cancelPeripheralConnection(peripheral)
+        }
+
+        if let error {
+            log("Error reading characteristic: \(error.localizedDescription)")
+            return
+        }
+
+        guard let data = characteristic.value,
+              let token = String(data: data, encoding: .utf8) else {
+            log("Invalid characteristic data")
+            return
+        }
+
+        log("Read token from peripheral: \(token)")
+
+        // RSSI is not directly available after connection, set to 0
+        let rssi: Int? = nil
+        processEncounter(token: token, rssi: rssi)
+    }
 }
 
-private struct DetectionCounter {
-    let count: Int
-    let windowStartedAt: Date
-}
-
+// MARK: - CBPeripheralManagerDelegate
 extension BLEManager: CBPeripheralManagerDelegate {
+    func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
+        log("Peripheral state updated: \(peripheral.state.rawValue)")
+
+        if peripheral.state == .poweredOn && shouldAdvertise {
+            applyAdvertisingState()
+        } else {
+            stopAdvertisingRuntime()
+        }
+    }
+
+    func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveRead request: CBATTRequest) {
+        guard request.characteristic.uuid == Constants.characteristicUUID else {
+            log("Read request for unknown characteristic: \(request.characteristic.uuid)")
+            peripheral.respond(to: request, withResult: .attributeNotFound)
+            return
+        }
+
+        guard let token = advertisedToken,
+              let data = token.data(using: .utf8) else {
+            log("No token to send")
+            peripheral.respond(to: request, withResult: .unlikelyError)
+            return
+        }
+
+        if request.offset > data.count {
+            log("Invalid offset: \(request.offset)")
+            peripheral.respond(to: request, withResult: .invalidOffset)
+            return
+        }
+
+        request.value = data.subdata(in: request.offset..<data.count)
+        peripheral.respond(to: request, withResult: .success)
+        log("Sent token to central")
+    }
+
+    func peripheralManager(_ peripheral: CBPeripheralManager, willRestoreState dict: [String: Any]) {
+        log("Peripheral will restore state: \(dict.keys.sorted())")
+
+        // Restore advertising state
+        if let _ = dict[CBPeripheralManagerRestoredStateAdvertisementDataKey] {
+            shouldAdvertise = true
+        }
+    }
+
     func peripheralManagerDidStartAdvertising(_ peripheral: CBPeripheralManager, error: Error?) {
         if let error {
             log("Advertising failed: \(error.localizedDescription)")
@@ -376,47 +434,12 @@ extension BLEManager: CBPeripheralManagerDelegate {
             return
         }
         isAdvertising = true
-    }
-
-    func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
-        applyAdvertisingState()
-    }
-
-    func peripheralManager(_ peripheral: CBPeripheralManager, willRestoreState dict: [String: Any]) {
-        log("Peripheral state restored: \(dict.keys.sorted())")
-
-        if let restoredAdvertisement = dict[CBPeripheralManagerRestoredStateAdvertisementDataKey] as? [String: Any],
-           let restoredUUIDs = restoredAdvertisement[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID],
-           let restoredTokenUUID = restoredUUIDs.first(where: { $0 != Constants.appServiceUUID }) {
-            shouldAdvertise = true
-            advertisedTokenUUID = restoredTokenUUID
-            advertisedToken = decodeBackendToken(fromTokenUUID: restoredTokenUUID)
-        }
-
-        applyAdvertisingState()
+        log("Advertising started successfully")
     }
 }
 
 #if DEBUG
 extension BLEManager {
-    struct TestAdvertisingPayload: Equatable {
-        let backendToken: String
-        let tokenUUID: CBUUID
-    }
-
-    func _test_makeAdvertisingPayload(token: String) -> TestAdvertisingPayload? {
-        guard let payload = makeAdvertisingPayload(token: token) else { return nil }
-        return TestAdvertisingPayload(backendToken: payload.backendToken, tokenUUID: payload.tokenUUID)
-    }
-
-    func _test_decodeToken(fromAdvertisementData advertisementData: [String: Any]) -> String? {
-        decodeToken(fromAdvertisementData: advertisementData)
-    }
-
-    func _test_shouldEmitDetection(token: String, rssi: NSNumber, now: Date) -> Bool {
-        shouldEmitDetection(token: token, rssi: rssi, now: now)
-    }
-
     func _test_resetCaches() {
         resetCooldownCache()
     }
