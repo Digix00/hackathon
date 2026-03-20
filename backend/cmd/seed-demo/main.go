@@ -50,7 +50,7 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-	log.Printf("listening on :%s (target user: %s)", port, targetUserID)
+	log.Printf("listening on :%s (target user: %s, other user: %s)", port, targetUserID, otherUserID)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
