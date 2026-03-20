@@ -120,26 +120,13 @@ struct SearchView: View {
                                 Button {
                                     viewModel.select(track: track)
                                 } label: {
-                                    TrackSelectionRow(track: track)
+                                    TrackSelectionRow(
+                                        track: track,
+                                        isSelected: viewModel.selectedTrack?.id == track.id
+                                    )
                                 }
                                 .buttonStyle(.plain)
                             }
-                        }
-                    }
-                }
-
-                SectionCard(title: "最近検索した曲") {
-                    VStack(spacing: 16) {
-                        ForEach(MockData.recentSearches) { track in
-                            TrackSelectionRow(track: track)
-                        }
-                    }
-                }
-
-                SectionCard(title: "人気の曲") {
-                    VStack(spacing: 16) {
-                        ForEach(MockData.popularTracks) { track in
-                            TrackSelectionRow(track: track)
                         }
                     }
                 }
@@ -242,10 +229,6 @@ struct SearchView: View {
         }
         .contentShape(Rectangle())
         .onAppear {
-            if viewModel.query.isEmpty {
-                viewModel.query = defaultQuery
-                viewModel.search()
-            }
             viewModel.loadFavoriteTracks()
             if mode == .shareTrack {
                 viewModel.loadSharedTrack()
