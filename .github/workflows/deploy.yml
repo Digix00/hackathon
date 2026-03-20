@@ -54,6 +54,7 @@ jobs:
           docker push $IMAGE:latest
 
       - name: Build and push seed-demo image
+        continue-on-error: true
         env:
           IMAGE: asia-northeast1-docker.pkg.dev/${{ vars.TF_PROJECT_ID }}/app/seed-demo
         run: |
