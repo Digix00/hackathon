@@ -120,22 +120,6 @@ struct SearchView: View {
                     }
                 }
 
-                SectionCard(title: "最近検索した曲") {
-                    VStack(spacing: 16) {
-                        ForEach(MockData.recentSearches) { track in
-                            TrackSelectionRow(track: track)
-                        }
-                    }
-                }
-
-                SectionCard(title: "人気の曲") {
-                    VStack(spacing: 16) {
-                        ForEach(MockData.popularTracks) { track in
-                            TrackSelectionRow(track: track)
-                        }
-                    }
-                }
-
                 if mode == .shareTrack {
                     SectionCard(title: "現在シェア中の曲") {
                         VStack(alignment: .leading, spacing: 16) {

@@ -17,9 +17,15 @@ final class SearchViewModel: ObservableObject {
     @Published private(set) var favoriteTrackIDs: Set<String> = []
 
     private let client: BackendAPIClient
+    private var cancellables: Set<AnyCancellable> = []
 
     init(client: BackendAPIClient = BackendAPIClient()) {
         self.client = client
+        $query
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .removeDuplicates()
+            .sink { [weak self] _ in self?.search() }
+            .store(in: &cancellables)
     }
 
     func search() {
