@@ -71,3 +71,4 @@ tools/gradle-*-bin.zip
 
 # Xcode
 .deriveddata/
+ios/GoogleService-Info.plist

@@ -18,6 +18,7 @@ fastlane/test_output/
 
 # Secrets
 ios/config/Secrets.xcconfig
+ios/GoogleService-Info.plist
 
 # Schemes
 ios/ios.xcodeproj/xcshareddata/xcschemes/ios.xcscheme
