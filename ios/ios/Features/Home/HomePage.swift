@@ -3,6 +3,7 @@ import SwiftUI
 struct HomePage: View {
     let state: HomeScreenState
     let isMotionActive: Bool
+    var onReload: (() -> Void)? = nil
 
     @Environment(\.topSafeAreaInset) private var topSafeArea
     @Environment(\.bottomSafeAreaInset) private var bottomSafeArea
@@ -132,6 +133,7 @@ struct HomePage: View {
             }
         }
         .onAppear {
+            onReload?()
             if isMotionActive {
                 motion.startUpdates()
             }
