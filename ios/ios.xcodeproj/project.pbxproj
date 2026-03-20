@@ -43,9 +43,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				config/Debug.xcconfig,
-				Info.plist,
 				config/Release.xcconfig,
 				config/Secrets.xcconfig,
+				Info.plist,
 			);
 			target = 524C6B9A2F6562AC007E823F /* ios */;
 		};

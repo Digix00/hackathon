@@ -391,6 +391,9 @@ private struct OnboardingMenuPicker<Option: Identifiable, SelectionValue: Hashab
                 .foregroundStyle(PrototypeTheme.textSecondary)
 
             Picker(title, selection: $selection) {
+                if let noneValue = menuPickerNoneValue(for: SelectionValue.self) {
+                    Text("未選択").tag(noneValue)
+                }
                 ForEach(options) { option in
                     content(option).tag(option[keyPath: selectionValue])
                 }
@@ -403,4 +406,11 @@ private struct OnboardingMenuPicker<Option: Identifiable, SelectionValue: Hashab
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
     }
+}
+
+private func menuPickerNoneValue<T>(for type: T.Type) -> T? {
+    if type == String.self {
+        return "" as? T
+    }
+    return nil
 }
