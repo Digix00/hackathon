@@ -1,9 +1,9 @@
+import AuthenticationServices
 import Combine
 import SwiftUI
 
 struct MusicServicesView: View {
     @StateObject private var viewModel = MusicServicesViewModel()
-    @Environment(\.openURL) private var openURL
     @State private var pendingDisconnectProvider: MusicConnectionProvider?
 
     var body: some View {
@@ -57,9 +57,6 @@ struct MusicServicesView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .onAppear { viewModel.loadIfNeeded() }
-            .onOpenURL { url in
-                viewModel.handleCallbackURL(url)
-            }
             .confirmationDialog(
                 "連携解除",
                 isPresented: Binding(
@@ -93,7 +90,11 @@ struct MusicServicesView: View {
 
         Task {
             if let url = await viewModel.startConnection(for: provider) {
-                openURL(url)
+                await OAuthSessionCoordinator.shared.start(url: url, callbackScheme: "digix") { callbackURL in
+                    if let callbackURL {
+                        viewModel.handleCallbackURL(callbackURL)
+                    }
+                }
             }
         }
     }

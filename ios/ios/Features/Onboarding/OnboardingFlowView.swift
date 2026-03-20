@@ -1,3 +1,4 @@
+import AuthenticationServices
 import SwiftUI
 
 struct OnboardingFlowView: View {
@@ -40,7 +41,6 @@ struct OnboardingFlowView: View {
     @State private var step: Step = .welcome
     @StateObject private var userViewModel = OnboardingUserViewModel()
     @StateObject private var musicServicesViewModel = MusicServicesViewModel()
-    @Environment(\.openURL) private var openURL
     let onFinish: () -> Void
 
     var body: some View {
@@ -103,9 +103,6 @@ struct OnboardingFlowView: View {
         }
         .onAppear {
             userViewModel.prefillIfPossible()
-        }
-        .onOpenURL { url in
-            musicServicesViewModel.handleCallbackURL(url)
         }
     }
 
@@ -477,7 +474,11 @@ struct OnboardingFlowView: View {
 
         Task {
             if let url = await musicServicesViewModel.startConnection(for: provider) {
-                openURL(url)
+                await OAuthSessionCoordinator.shared.start(url: url, callbackScheme: "digix") { callbackURL in
+                    if let callbackURL {
+                        musicServicesViewModel.handleCallbackURL(callbackURL)
+                    }
+                }
             }
         }
     }
