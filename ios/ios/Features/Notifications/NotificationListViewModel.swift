@@ -54,13 +54,6 @@ final class NotificationListViewModel: ObservableObject {
 
     func markAsRead(id: String) {
         guard !processingIDs.contains(id) else { return }
-        if MockData.forceGeneratedSongMocks {
-            if let index = notifications.firstIndex(where: { $0.id == id }), !notifications[index].isRead {
-                notifications[index].isRead = true
-                unreadCount = max(0, unreadCount - 1)
-            }
-            return
-        }
         errorMessage = nil
         processingIDs.insert(id)
         Task { await markAsReadTask(id: id) }
@@ -68,17 +61,6 @@ final class NotificationListViewModel: ObservableObject {
 
     func deleteNotification(id: String) {
         guard !processingIDs.contains(id) else { return }
-        if MockData.forceGeneratedSongMocks {
-            if let index = notifications.firstIndex(where: { $0.id == id }) {
-                let wasUnread = !notifications[index].isRead
-                notifications.remove(at: index)
-                totalCount = max(0, totalCount - 1)
-                if wasUnread {
-                    unreadCount = max(0, unreadCount - 1)
-                }
-            }
-            return
-        }
         errorMessage = nil
         processingIDs.insert(id)
         Task { await deleteNotificationTask(id: id) }
@@ -89,16 +71,6 @@ final class NotificationListViewModel: ObservableObject {
     }
 
     private func loadNotifications() async {
-        if MockData.forceGeneratedSongMocks {
-            notifications = Self.mockNotifications()
-            unreadCount = notifications.filter { !$0.isRead }.count
-            totalCount = notifications.count
-            errorMessage = "モック通知を表示しています"
-            hasLoaded = true
-            isLoading = false
-            return
-        }
-
         if isLoading { return }
         isLoading = true
         errorMessage = nil
@@ -111,17 +83,12 @@ final class NotificationListViewModel: ObservableObject {
                     let right = rhs.createdAt ?? .distantPast
                     return left > right
                 }
-            notifications = mapped.isEmpty ? Self.mockNotifications() : mapped
-            unreadCount = mapped.isEmpty
-                ? notifications.filter { !$0.isRead }.count
-                : max(0, Int(response.unreadCount))
-            totalCount = mapped.isEmpty ? notifications.count : max(0, Int(response.total))
+            notifications = mapped
+            unreadCount = max(0, Int(response.unreadCount))
+            totalCount = max(0, Int(response.total))
             hasLoaded = true
         } catch {
-            notifications = Self.mockNotifications()
-            unreadCount = notifications.filter { !$0.isRead }.count
-            totalCount = notifications.count
-            errorMessage = "API に接続できないためモック通知を表示しています"
+            errorMessage = "通知の取得に失敗しました"
             hasLoaded = true
         }
         isLoading = false
@@ -170,7 +137,4 @@ final class NotificationListViewModel: ObservableObject {
         )
     }
 
-    private static func mockNotifications() -> [NotificationRowModel] {
-        MockData.generatedSongNotifications.map(mapNotification)
-    }
 }

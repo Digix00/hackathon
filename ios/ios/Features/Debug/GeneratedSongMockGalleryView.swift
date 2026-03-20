@@ -3,13 +3,8 @@ import SwiftUI
 struct GeneratedSongMockGalleryView: View {
     @State private var coverSong: GeneratedSong?
 
-    private var playableSong: GeneratedSong? {
-        MockData.playableGeneratedSongs.first
-    }
-
-    private var nonPlayableSong: GeneratedSong? {
-        MockData.generatedSongs.first(where: { $0.audioURL == nil })
-    }
+    private var playableSong: GeneratedSong? { nil }
+    private var nonPlayableSong: GeneratedSong? { nil }
 
     private let chainEntries: [(id: String, title: String, subtitle: String)] = [
         ("mock-chain-pending", "チェーン進捗: pending", "参加待ちの状態を確認"),
