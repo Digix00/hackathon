@@ -20,7 +20,7 @@ struct GeneratedSongRow: View {
 
     private var horizontalShift: CGFloat {
         let baseShift = CGFloat(seed % 40) - 20
-        return baseShift * 1.2
+        return baseShift * 0.8
     }
 
     private var artworkOffset: (x: CGFloat, y: CGFloat) {

@@ -53,9 +53,6 @@ struct AppScaffold<Content: View>: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 28) {
-                        Color.clear
-                            .frame(height: topPadding)
-
                         HStack(alignment: .top) {
                             VStack(alignment: .leading, spacing: 8) {
                                 if showsBackButton {
@@ -105,6 +102,7 @@ struct AppScaffold<Content: View>: View {
                                 }
                             }
                         }
+                        .padding(.top, topPadding + 8)
 
                         content
                     }
@@ -114,8 +112,8 @@ struct AppScaffold<Content: View>: View {
                 }
                 .scrollContentBackground(.hidden)
             }
-            .frame(width: layoutWidth, height: geometry.size.height)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .frame(width: layoutWidth)
+            .frame(maxWidth: .infinity, alignment: .center)
             .toolbar(.hidden, for: .navigationBar)
             .background(Color.clear)
             .ignoresSafeArea()

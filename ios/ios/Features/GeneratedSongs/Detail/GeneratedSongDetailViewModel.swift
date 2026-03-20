@@ -35,6 +35,11 @@ final class GeneratedSongDetailViewModel: ObservableObject {
 
     func toggleLike() {
         guard !isProcessingLike else { return }
+        if MockData.forceGeneratedSongMocks {
+            isLiked.toggle()
+            errorMessage = nil
+            return
+        }
         isProcessingLike = true
         errorMessage = nil
 

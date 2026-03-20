@@ -62,56 +62,57 @@ struct GeneratedSongsView: View {
                 VStack(spacing: 0) {
                     // Stats Header
                     GeneratedSongsStatsHeader(
-                        count: viewModel.songs.count,
-                        subtitle: viewModel.subtitleText
+                        count: viewModel.songs.count
                     )
-                    .padding(.top, geometry.safeAreaInsets.top + 20)
+                    .padding(.top, geometry.safeAreaInsets.top + 8)
                     .padding(.bottom, 20)
 
                     // Wheel List
-                    ScrollView(.vertical, showsIndicators: false) {
-                        LazyVStack(spacing: wheelItemSpacing) {
-                            ForEach(viewModel.songs) { song in
-                                let isCentered = (scrollTargetID ?? viewModel.songs.first?.id) == song.id
-                                
-                                GeometryReader { itemGeometry in
-                                    let metrics = wheelMetrics(itemGeometry: itemGeometry, wheelGeometry: geometry)
+                    GeometryReader { wheelGeometry in
+                        ScrollView(.vertical, showsIndicators: false) {
+                            LazyVStack(spacing: wheelItemSpacing) {
+                                ForEach(viewModel.songs) { song in
+                                    let isCentered = (scrollTargetID ?? viewModel.songs.first?.id) == song.id
                                     
-                                    Button {
-                                        withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
-                                            selectedSong = song
+                                    GeometryReader { itemGeometry in
+                                        let metrics = wheelMetrics(itemGeometry: itemGeometry, wheelGeometry: wheelGeometry)
+                                        
+                                        Button {
+                                            withAnimation(.spring(response: 0.8, dampingFraction: 0.75)) {
+                                                selectedSong = song
+                                            }
+                                        } label: {
+                                            GeneratedSongRow(
+                                                song: song,
+                                                hideMatchedElements: selectedSong?.id == song.id
+                                            )
+                                            .scaleEffect(metrics.scale)
+                                            .opacity(metrics.opacity)
+                                            .blur(radius: metrics.blur)
+                                            .saturation(metrics.saturation)
+                                            .offset(y: metrics.verticalOffset)
                                         }
-                                    } label: {
-                                        GeneratedSongRow(
-                                            song: song,
-                                            hideMatchedElements: selectedSong?.id == song.id
-                                        )
-                                        .scaleEffect(metrics.scale)
-                                        .opacity(metrics.opacity)
-                                        .blur(radius: metrics.blur)
-                                        .saturation(metrics.saturation)
-                                        .offset(y: metrics.verticalOffset)
+                                        .buttonStyle(EncounterScaleButtonStyle())
+                                        .disabled(!isCentered)
                                     }
-                                    .buttonStyle(EncounterScaleButtonStyle())
-                                    .disabled(!isCentered)
+                                    .frame(height: wheelItemHeight)
+                                    .id(song.id)
                                 }
-                                .frame(height: wheelItemHeight)
-                                .id(song.id)
+                                
+                                if viewModel.isLoadingMore {
+                                    ProgressView()
+                                        .padding()
+                                }
                             }
-                            
-                            if viewModel.isLoadingMore {
-                                ProgressView()
-                                    .padding()
-                            }
+                            .padding(.horizontal, 24)
+                            .safeAreaPadding(.vertical, max((wheelGeometry.size.height - wheelItemHeight) / 2, 0))
                         }
-                        .padding(.horizontal, 24)
-                        .safeAreaPadding(.vertical, (geometry.size.height - wheelItemHeight) / 2 - 100)
+                        .scrollTargetLayout()
+                        .coordinateSpace(name: "songWheel")
+                        .scrollPosition(id: $scrollTargetID, anchor: .center)
+                        .scrollTargetBehavior(.viewAligned)
+                        .scrollClipDisabled()
                     }
-                    .scrollTargetLayout()
-                    .coordinateSpace(name: "songWheel")
-                    .scrollPosition(id: $scrollTargetID, anchor: .center)
-                    .scrollTargetBehavior(.viewAligned)
-                    .scrollClipDisabled()
                 }
             }
         }
@@ -172,7 +173,6 @@ struct GeneratedSongsView: View {
 
 private struct GeneratedSongsStatsHeader: View {
     let count: Int
-    let subtitle: String
 
     @State private var isAnimating = false
 
@@ -191,29 +191,6 @@ private struct GeneratedSongsStatsHeader: View {
             .padding(.leading, 4)
             .opacity(isAnimating ? 1.0 : 0)
             .offset(x: isAnimating ? 0 : -10)
-
-            HStack(alignment: .bottom, spacing: 16) {
-                Text("\(count)")
-                    .font(.system(size: 84, weight: .black))
-                    .foregroundStyle(PrototypeTheme.textPrimary)
-                    .tracking(-4)
-                    .contentTransition(.numericText())
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("SONGS")
-                        .font(PrototypeTheme.Typography.font(size: 10, weight: .black, role: .data))
-                        .foregroundStyle(PrototypeTheme.textPrimary)
-                        .kerning(2.0)
-
-                    Text(subtitle.uppercased())
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(PrototypeTheme.textTertiary)
-                        .kerning(1.0)
-                }
-                .padding(.bottom, 20)
-            }
-            .opacity(isAnimating ? 1.0 : 0)
-            .offset(y: isAnimating ? 0 : 20)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 32)
@@ -224,4 +201,5 @@ private struct GeneratedSongsStatsHeader: View {
         }
     }
 }
+
 

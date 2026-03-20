@@ -114,6 +114,11 @@ enum MockData {
         )
     ]
 
+    static let playableGeneratedSongs: [GeneratedSong] = generatedSongs.filter {
+        guard let audioURL = $0.audioURL else { return false }
+        return !audioURL.isEmpty
+    }
+
     static let generatedSongNotifications: [BackendNotificationItem] = [
         BackendNotificationItem(
             id: "notification-generated-1",

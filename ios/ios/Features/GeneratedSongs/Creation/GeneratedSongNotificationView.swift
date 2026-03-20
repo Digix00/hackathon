@@ -102,6 +102,14 @@ final class GeneratedSongNotificationLoaderViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
+        if MockData.forceGeneratedSongMocks {
+            song = MockData.playableGeneratedSongs.first ?? MockData.generatedSongs.first
+            hasLoaded = true
+            errorMessage = "モックの生成曲を表示しています"
+            isLoading = false
+            return
+        }
+
         do {
             let response = try await client.listMySongs()
             let items = response.songs
@@ -113,12 +121,12 @@ final class GeneratedSongNotificationLoaderViewModel: ObservableObject {
                 song = Self.mapSong(latest)
                 hasLoaded = true
             } else {
-                song = MockData.generatedSongs.first
+                song = MockData.playableGeneratedSongs.first ?? MockData.generatedSongs.first
                 hasLoaded = true
                 errorMessage = "モックの生成曲を表示しています"
             }
         } catch {
-            song = MockData.generatedSongs.first
+            song = MockData.playableGeneratedSongs.first ?? MockData.generatedSongs.first
             hasLoaded = true
             errorMessage = "API に接続できないためモックの生成曲を表示しています"
         }

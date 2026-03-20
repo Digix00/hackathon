@@ -54,6 +54,13 @@ final class NotificationListViewModel: ObservableObject {
 
     func markAsRead(id: String) {
         guard !processingIDs.contains(id) else { return }
+        if MockData.forceGeneratedSongMocks {
+            if let index = notifications.firstIndex(where: { $0.id == id }), !notifications[index].isRead {
+                notifications[index].isRead = true
+                unreadCount = max(0, unreadCount - 1)
+            }
+            return
+        }
         errorMessage = nil
         processingIDs.insert(id)
         Task { await markAsReadTask(id: id) }
@@ -61,6 +68,17 @@ final class NotificationListViewModel: ObservableObject {
 
     func deleteNotification(id: String) {
         guard !processingIDs.contains(id) else { return }
+        if MockData.forceGeneratedSongMocks {
+            if let index = notifications.firstIndex(where: { $0.id == id }) {
+                let wasUnread = !notifications[index].isRead
+                notifications.remove(at: index)
+                totalCount = max(0, totalCount - 1)
+                if wasUnread {
+                    unreadCount = max(0, unreadCount - 1)
+                }
+            }
+            return
+        }
         errorMessage = nil
         processingIDs.insert(id)
         Task { await deleteNotificationTask(id: id) }
