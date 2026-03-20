@@ -7,6 +7,10 @@ struct iosApp: App {
     @StateObject private var bleCoordinator = BLEAppCoordinator()
     @StateObject private var pushManager = PushNotificationManager.shared
 
+    init() {
+        FirebaseBootstrapper.configureIfNeeded()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()

@@ -237,6 +237,12 @@ final class AuthGateViewModel: ObservableObject {
         guard let clientID = resolvedGoogleClientID() else {
             throw AuthGateError.missingGoogleClientID
         }
+        guard let reversedClientID = resolvedGoogleReversedClientID() else {
+            throw AuthGateError.missingGoogleURLScheme
+        }
+        guard isRegisteredURLScheme(reversedClientID) else {
+            throw AuthGateError.missingGoogleURLScheme
+        }
         guard let presentingViewController = UIApplication.topViewController() else {
             throw AuthGateError.missingPresentingViewController
         }
@@ -305,6 +311,30 @@ final class AuthGateViewModel: ObservableObject {
         return value.hasPrefix("$(") && value.hasSuffix(")")
     }
 
+    private func resolvedGoogleReversedClientID() -> String? {
+        if let reversedClientID = Bundle.main.object(forInfoDictionaryKey: "GOOGLE_REVERSED_CLIENT_ID") as? String {
+            let trimmed = reversedClientID.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !isInvalidFirebaseInfoValue(trimmed) {
+                return trimmed
+            }
+        }
+
+        return nil
+    }
+
+    private func isRegisteredURLScheme(_ scheme: String) -> Bool {
+        guard
+            let urlTypes = Bundle.main.object(forInfoDictionaryKey: "CFBundleURLTypes") as? [[String: Any]]
+        else {
+            return false
+        }
+
+        return urlTypes
+            .compactMap { $0["CFBundleURLSchemes"] as? [String] }
+            .flatMap { $0 }
+            .contains(scheme)
+    }
+
     private static func sha256(_ input: String) -> String {
         let hashed = SHA256.hash(data: Data(input.utf8))
         return hashed.map { String(format: "%02x", $0) }.joined()
@@ -344,6 +374,7 @@ private enum AuthGateError: LocalizedError {
     case nonceGenerationFailed
     case invalidAppleToken
     case missingGoogleClientID
+    case missingGoogleURLScheme
     case missingGoogleIDToken
     case missingPresentingViewController
     case googleSignInUnavailable
@@ -362,6 +393,8 @@ private enum AuthGateError: LocalizedError {
             return "Apple の ID トークンを読み取れませんでした。"
         case .missingGoogleClientID:
             return "Google Client ID が未設定です。Firebase 設定を確認してください。"
+        case .missingGoogleURLScheme:
+            return "Google ログインの URL Scheme が未設定です。Info.plist と Secrets.xcconfig を確認してください。"
         case .missingGoogleIDToken:
             return "Google の ID トークンを取得できませんでした。"
         case .missingPresentingViewController:

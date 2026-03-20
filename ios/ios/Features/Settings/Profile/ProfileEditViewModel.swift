@@ -32,24 +32,8 @@ enum ProfileAgeVisibility: String, CaseIterable, Identifiable {
 struct ProfilePrefecture: Identifiable, Hashable {
     let id: String
     let name: String
-}
 
-@MainActor
-final class ProfileEditViewModel: ObservableObject {
-    @Published var displayName = ""
-    @Published var avatarURL = ""
-    @Published var bio = ""
-    @Published var birthdate = Date()
-    @Published var ageVisibility = ProfileAgeVisibility.hidden
-    @Published var prefectureId = ""
-    @Published var sex = ProfileSex.noAnswer
-
-    @Published private(set) var isLoading = false
-    @Published private(set) var isSaving = false
-    @Published private(set) var errorMessage: String?
-    @Published private(set) var successMessage: String?
-
-    let prefectures: [ProfilePrefecture] = [
+    static let all: [ProfilePrefecture] = [
         .init(id: "01", name: "北海道"), .init(id: "02", name: "青森県"), .init(id: "03", name: "岩手県"),
         .init(id: "04", name: "宮城県"), .init(id: "05", name: "秋田県"), .init(id: "06", name: "山形県"),
         .init(id: "07", name: "福島県"), .init(id: "08", name: "茨城県"), .init(id: "09", name: "栃木県"),
@@ -67,6 +51,24 @@ final class ProfileEditViewModel: ObservableObject {
         .init(id: "43", name: "熊本県"), .init(id: "44", name: "大分県"), .init(id: "45", name: "宮崎県"),
         .init(id: "46", name: "鹿児島県"), .init(id: "47", name: "沖縄県")
     ]
+}
+
+@MainActor
+final class ProfileEditViewModel: ObservableObject {
+    @Published var displayName = ""
+    @Published var avatarURL = ""
+    @Published var bio = ""
+    @Published var birthdate = Date()
+    @Published var ageVisibility = ProfileAgeVisibility.hidden
+    @Published var prefectureId = ""
+    @Published var sex = ProfileSex.noAnswer
+
+    @Published private(set) var isLoading = false
+    @Published private(set) var isSaving = false
+    @Published private(set) var errorMessage: String?
+    @Published private(set) var successMessage: String?
+
+    let prefectures = ProfilePrefecture.all
 
     private let client: BackendAPIClient
     private var loadedUser: BackendUser?

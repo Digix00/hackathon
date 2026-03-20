@@ -218,12 +218,46 @@ actor BLEBackendClient {
             guard let value = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else {
                 continue
             }
-            if let url = URL(string: value.hasSuffix("/") ? value : value + "/") {
+            guard !isPlaceholderBaseURLValue(value) else {
+                continue
+            }
+            if let url = URL(string: value.hasSuffix("/") ? value : value + "/"),
+               hasReachableBaseURLShape(url),
+               !isPlaceholderBaseURL(url) {
                 return url
             }
         }
 
         return nil
+    }
+
+    private static func isPlaceholderBaseURLValue(_ value: String) -> Bool {
+        if value == "demo" || value.hasPrefix("YOUR_") {
+            return true
+        }
+
+        if value.hasPrefix("$(") && value.hasSuffix(")") {
+            return true
+        }
+
+        return value.contains("$()")
+    }
+
+    private static func hasReachableBaseURLShape(_ url: URL) -> Bool {
+        guard let scheme = url.scheme?.lowercased(), ["http", "https"].contains(scheme) else {
+            return false
+        }
+
+        guard let host = url.host, !host.isEmpty else {
+            return false
+        }
+
+        return true
+    }
+
+    private static func isPlaceholderBaseURL(_ url: URL) -> Bool {
+        guard let host = url.host?.lowercased() else { return false }
+        return host == "example.com" || host.hasSuffix(".example.com")
     }
 
     private static func decodeISO8601Date(_ decoder: Decoder) throws -> Date {

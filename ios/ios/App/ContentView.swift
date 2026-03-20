@@ -22,6 +22,7 @@ struct ContentView: View {
             .ignoresSafeArea()
         }
         .task {
+            authSession.startIfNeeded()
             guard phase == .splash else { return }
             try? await Task.sleep(for: .milliseconds(900))
             updatePhaseAfterSplash()
