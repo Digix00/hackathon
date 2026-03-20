@@ -81,6 +81,9 @@ func LoadWorker() (*WorkerConfig, error) {
 			cfg.DBConnectionName,
 		)
 	}
+	if cfg.GoEnv != "development" && cfg.VertexAIProjectID != "" && cfg.AudioBucketName == "" {
+		return nil, fmt.Errorf("AUDIO_BUCKET_NAME は本番環境で VERTEX_AI_PROJECT_ID が設定されている場合は必須です")
+	}
 	return &cfg, nil
 }
 
