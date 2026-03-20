@@ -44,6 +44,7 @@ struct MainPrototypeView: View {
     @State private var selectedSurface: Surface = .track
     @State private var selectedLibraryTab: LibraryTab = .insights
     @State private var isEncounterDetailPresented = false
+    @StateObject private var profilePageSwipeController = LibraryPageSwipeController()
     @GestureState private var verticalDragOffset: CGFloat = 0
     @EnvironmentObject private var bleCoordinator: BLEAppCoordinator
     let restartOnboarding: () -> Void
@@ -152,10 +153,12 @@ struct MainPrototypeView: View {
             navigationContainer {
                 SettingsHubView(restartOnboarding: restartOnboarding)
             }
+            .environment(\.libraryPageSwipeController, profilePageSwipeController)
             .tag(LibraryTab.profile)
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
         .background(Color.clear)
+        .disablePageTabSwipe(selectedLibraryTab == .profile && profilePageSwipeController.isLocked)
         .simultaneousGesture(
             DragGesture(minimumDistance: 20, coordinateSpace: .local)
                 .onEnded { value in
