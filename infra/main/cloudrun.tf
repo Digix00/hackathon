@@ -75,21 +75,6 @@ resource "google_cloud_run_v2_service" "api" {
       }
 
       env {
-        name  = "VERTEX_AI_PROJECT_ID"
-        value = var.project_id
-      }
-
-      env {
-        name  = "VERTEX_AI_LOCATION"
-        value = "us-central1"
-      }
-
-      env {
-        name  = "GEMINI_MODEL_ID"
-        value = "gemini-1.5-flash"
-      }
-
-      env {
         name = "MUSIC_STATE_SECRET"
         value_source {
           secret_key_ref {
@@ -146,6 +131,14 @@ resource "google_cloud_run_v2_service" "api" {
             secret  = google_secret_manager_secret.apns_key.secret_id
             version = "latest"
           }
+        }
+      }
+
+      dynamic "env" {
+        for_each = var.api_domain != "" ? [1] : []
+        content {
+          name  = "SPOTIFY_REDIRECT_URL"
+          value = "https://${var.api_domain}/api/v1/music-connections/spotify/callback"
         }
       }
 
@@ -234,125 +227,6 @@ resource "google_cloud_run_v2_service" "worker" {
       env {
         name  = "GO_ENV"
         value = "production"
-      }
-
-      volume_mounts {
-        name       = "cloudsql"
-        mount_path = "/cloudsql"
-      }
-    }
-  }
-
-  depends_on = [
-    google_project_service.apis,
-    google_secret_manager_secret_version.db_password,
-  ]
-}
-
-# Cloud Run Service（Lyria Worker）
-# Lyria 楽曲生成専用ワーカー。生成処理は30秒〜5分かかるため、
-# 通常 worker と分離してタイムアウトとリソースを独立して設定する。
-# Cloud Scheduler から HTTP POST /lyria でトリガーされる。
-resource "google_cloud_run_v2_service" "lyria_worker" {
-  name     = "lyria-worker"
-  location = var.region
-
-  deletion_protection = false
-
-  template {
-    service_account = google_service_account.worker.email
-
-    # Lyria 生成（最大 5 分）+ バッファを持たせて 900 秒に設定
-    timeout = "900s"
-
-    volumes {
-      name = "cloudsql"
-      cloud_sql_instance {
-        instances = [google_sql_database_instance.main.connection_name]
-      }
-    }
-
-    scaling {
-      min_instance_count = 0
-      max_instance_count = 1
-    }
-
-    containers {
-      image = local.image_worker
-
-      resources {
-        limits = {
-          # 音声データの保持・Vertex AI gRPC 処理のため通常 worker より多く確保
-          cpu    = "2"
-          memory = "1024Mi"
-        }
-        cpu_idle          = true
-        startup_cpu_boost = false
-      }
-
-      env {
-        name  = "DB_USER"
-        value = google_sql_user.app.name
-      }
-
-      env {
-        name  = "DB_NAME"
-        value = google_sql_database.app.name
-      }
-
-      env {
-        name  = "DB_CONNECTION_NAME"
-        value = google_sql_database_instance.main.connection_name
-      }
-
-      env {
-        name = "DB_PASSWORD"
-        value_source {
-          secret_key_ref {
-            secret  = google_secret_manager_secret.db_password.secret_id
-            version = "latest"
-          }
-        }
-      }
-
-      env {
-        name  = "GO_ENV"
-        value = "production"
-      }
-
-      env {
-        name  = "VERTEX_AI_PROJECT_ID"
-        value = var.project_id
-      }
-
-      env {
-        name  = "VERTEX_AI_LOCATION"
-        value = "us-central1"
-      }
-
-      env {
-        name  = "LYRIA_MODEL_ID"
-        value = "lyria-002"
-      }
-
-      env {
-        name  = "LYRIA_DEFAULT_DURATION"
-        value = "45"
-      }
-
-      env {
-        name  = "LYRIA_TIMEOUT_SEC"
-        value = "300"
-      }
-
-      env {
-        name  = "GEMINI_MODEL_ID"
-        value = "gemini-1.5-flash"
-      }
-
-      env {
-        name  = "AUDIO_BUCKET_NAME"
-        value = google_storage_bucket.generated_songs.name
       }
 
       volume_mounts {
@@ -546,11 +420,6 @@ output "api_url" {
 output "worker_url" {
   value       = google_cloud_run_v2_service.worker.uri
   description = "Worker Function の URL（Cloud Scheduler がトリガー）"
-}
-
-output "lyria_worker_url" {
-  value       = google_cloud_run_v2_service.lyria_worker.uri
-  description = "Lyria Worker の URL（Cloud Scheduler が /lyria をトリガー）"
 }
 
 output "migrate_url" {
