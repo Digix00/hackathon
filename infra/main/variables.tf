@@ -35,3 +35,9 @@ variable "seed_demo_image_tag" {
   description = "デプロイする seed-demo イメージのタグ（git SHA または latest）"
   default     = "latest"
 }
+
+variable "seed_target_user_id" {
+  type        = string
+  description = "デモデータを紐づける対象ユーザーの DB 内 ID"
+  default     = "88ca94e3-9c7f-4da8-85d1-74fe42119f53"
+}
