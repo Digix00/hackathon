@@ -4,6 +4,12 @@ import PhotosUI
 struct ProfileEditView: View {
     @StateObject private var viewModel = ProfileEditViewModel()
     @State private var selectedItem: PhotosPickerItem?
+    @State private var signOutErrorMessage: String?
+    @EnvironmentObject private var authSession: AuthSession
+
+    private var session: AuthSession {
+        _authSession.wrappedValue
+    }
 
     var body: some View {
         AppScaffold(
@@ -123,6 +129,36 @@ struct ProfileEditView: View {
                     }
                 }
 
+                SectionCard(title: "アカウント") {
+                    VStack(alignment: .leading, spacing: 16) {
+                        if let signOutErrorMessage {
+                            Text(signOutErrorMessage)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(PrototypeTheme.error)
+                        }
+
+                        Button(action: handleSignOut) {
+                            HStack(spacing: 12) {
+                                Image(systemName: "rectangle.portrait.and.arrow.right")
+                                    .font(.system(size: 16, weight: .bold))
+                                Text(session.isSigningOut ? "ログアウト中..." : "ログアウト")
+                                    .font(.system(size: 16, weight: .black))
+                                Spacer()
+                            }
+                            .foregroundStyle(PrototypeTheme.error)
+                            .padding(.horizontal, 18)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 56)
+                            .background(PrototypeTheme.surfaceMuted)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(session.isSigningOut)
+                        .opacity(session.isSigningOut ? 0.6 : 1)
+                    }
+                    .padding(.vertical, 8)
+                }
+
                 // メッセージ表示エリア
                 VStack(spacing: 8) {
                     if let errorMessage = viewModel.errorMessage {
@@ -156,6 +192,16 @@ struct ProfileEditView: View {
         }
         .onChange(of: selectedItem) { newItem in
             // 本来は画像アップロードロジックが必要
+        }
+    }
+
+    private func handleSignOut() {
+        signOutErrorMessage = nil
+
+        do {
+            try session.signOut()
+        } catch {
+            signOutErrorMessage = error.localizedDescription
         }
     }
 }
