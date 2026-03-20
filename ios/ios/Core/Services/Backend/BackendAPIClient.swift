@@ -31,7 +31,7 @@ actor BackendAPIClient: BackendUserAPIClient {
         return component.addingPercentEncoding(withAllowedCharacters: allowed) ?? component
     }
 
-    init(session: URLSession = .shared) {
+    nonisolated init(session: URLSession = .shared) {
         self.session = session
         self.baseURL = Self.resolveBaseURL()
 
