@@ -124,6 +124,14 @@ struct ChainProgressView: View {
                         .frame(maxWidth: sectionWidth)
                         .frame(maxWidth: .infinity)
 
+                        if viewModel.canAppendDemoLyric {
+                            SecondaryButton(title: "モックで共鳴を進める", systemImage: "plus.circle") {
+                                viewModel.appendDemoLyric()
+                            }
+                            .frame(maxWidth: sectionWidth)
+                            .frame(maxWidth: .infinity)
+                        }
+
                         if chain.status.lowercased() == "completed", let song = viewModel.song {
                             NavigationLink {
                                 GeneratedSongDetailView(song: generatedSong(from: song, chain: chain))

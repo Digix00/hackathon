@@ -22,12 +22,15 @@ final class GeneratedSongDetailViewModel: ObservableObject {
     private let client: BackendAPIClient
     private let songId: String
     private let chainId: String?
+    private let localStudioStore = LocalCompositionStudioStore.shared
+    private let isLocalSong: Bool
     private var hasLoadedLyrics = false
 
     init(song: GeneratedSong, client: BackendAPIClient = BackendAPIClient()) {
         self.songId = song.id
         self.chainId = song.chainId
         self.client = client
+        self.isLocalSong = LocalCompositionStudioStore.shared.containsSong(songID: song.id)
         self.isLiked = song.isLiked
         self.durationSec = song.durationSec
         self.mood = song.mood
@@ -35,6 +38,12 @@ final class GeneratedSongDetailViewModel: ObservableObject {
 
     func toggleLike() {
         guard !isProcessingLike else { return }
+        if isLocalSong {
+            localStudioStore.toggleLike(songID: songId)
+            isLiked = localStudioStore.isSongLiked(songID: songId)
+            errorMessage = nil
+            return
+        }
         if MockData.forceGeneratedSongMocks {
             isLiked.toggle()
             errorMessage = nil
@@ -74,6 +83,10 @@ final class GeneratedSongDetailViewModel: ObservableObject {
 
     func loadLyricsIfNeeded() {
         guard !hasLoadedLyrics, !isLoadingLyrics else { return }
+        if let localChain = localStudioStore.generatedChain(id: chainId) {
+            applyLyrics(from: localChain, message: nil)
+            return
+        }
         if MockData.forceGeneratedSongMocks {
             applyMockLyrics()
             return
@@ -140,7 +153,10 @@ final class GeneratedSongDetailViewModel: ObservableObject {
             lyricsErrorMessage = "参加した歌詞の取得に失敗しました"
             return
         }
+        applyLyrics(from: mock, message: "API に接続できないためモック歌詞を表示しています")
+    }
 
+    private func applyLyrics(from mock: MockData.GeneratedChainMock, message: String?) {
         durationSec = mock.song?.durationSec ?? durationSec
         mood = mock.song?.mood ?? mood
         lyricEntries = mock.entries.map { entry in
@@ -151,7 +167,7 @@ final class GeneratedSongDetailViewModel: ObservableObject {
                 sequenceNum: entry.sequenceNum
             )
         }
-        lyricsErrorMessage = "API に接続できないためモック歌詞を表示しています"
+        lyricsErrorMessage = message
         hasLoadedLyrics = true
     }
 }

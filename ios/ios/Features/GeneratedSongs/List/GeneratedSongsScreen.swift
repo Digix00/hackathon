@@ -2,6 +2,7 @@ import SwiftUI
 
 struct GeneratedSongsView: View {
     @StateObject private var viewModel = GeneratedSongsViewModel()
+    @StateObject private var localStudioStore = LocalCompositionStudioStore.shared
     @EnvironmentObject private var bleCoordinator: BLEAppCoordinator
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("generated_song.last_presented_id") private var lastPresentedGeneratedSongID: String = ""
@@ -14,11 +15,22 @@ struct GeneratedSongsView: View {
     private let wheelItemHeight: CGFloat = 280
     private let wheelItemSpacing: CGFloat = 10
 
+    private var allSongs: [GeneratedSong] {
+        let merged = localStudioStore.completedSongs + viewModel.songs
+        var seen: Set<String> = []
+
+        return merged
+            .filter { song in
+                seen.insert(song.id).inserted
+            }
+            .sorted { ($0.generatedAt ?? .distantPast) > ($1.generatedAt ?? .distantPast) }
+    }
+
     var body: some View {
         ZStack {
             PrototypeTheme.background.ignoresSafeArea()
             
-            if viewModel.songs.isEmpty && !viewModel.isLoading {
+            if allSongs.isEmpty && !viewModel.isLoading {
                 emptyState
             } else {
                 content
@@ -31,6 +43,11 @@ struct GeneratedSongsView: View {
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
+            Task {
+                await presentCelebrationIfNeeded()
+            }
+        }
+        .onChange(of: localStudioStore.completedSongs.map(\.id)) { _, _ in
             Task {
                 await presentCelebrationIfNeeded()
             }
@@ -58,7 +75,7 @@ struct GeneratedSongsView: View {
 
     private func presentCelebrationIfNeeded() async {
         guard celebrationSong == nil else { return }
-        guard let latestSong = await viewModel.latestSong() else { return }
+        guard let latestSong = await latestAvailableSong() else { return }
         guard latestSong.id != lastPresentedGeneratedSongID else { return }
 
         lastPresentedGeneratedSongID = latestSong.id
@@ -67,6 +84,12 @@ struct GeneratedSongsView: View {
         if let chainID = latestSong.chainId {
             bleCoordinator.clearLatestLyricSubmission(for: chainID)
         }
+    }
+
+    private func latestAvailableSong() async -> GeneratedSong? {
+        let remoteSong = await viewModel.latestSong()
+        return ([remoteSong].compactMap { $0 } + localStudioStore.completedSongs)
+            .max { ($0.generatedAt ?? .distantPast) < ($1.generatedAt ?? .distantPast) }
     }
 
     private var content: some View {
@@ -78,7 +101,11 @@ struct GeneratedSongsView: View {
                         .opacity(0.15)
                     
                     VStack(alignment: .leading, spacing: 0) {
-                        GeneratedSongsStatsHeader(count: viewModel.songs.count)
+                        HStack(alignment: .top, spacing: 16) {
+                            GeneratedSongsStatsHeader(count: allSongs.count)
+                            Spacer()
+                            createSongLink
+                        }
                             .padding(.top, geometry.safeAreaInsets.top + 20)
                         Spacer()
                     }
@@ -90,8 +117,8 @@ struct GeneratedSongsView: View {
                     GeometryReader { wheelGeometry in
                         ScrollView(.vertical, showsIndicators: false) {
                             LazyVStack(spacing: wheelItemSpacing) {
-                                ForEach(viewModel.songs) { song in
-                                    let isCentered = (scrollTargetID ?? viewModel.songs.first?.id) == song.id
+                                ForEach(allSongs) { song in
+                                    let isCentered = (scrollTargetID ?? allSongs.first?.id) == song.id
                                     
                                     GeometryReader { itemGeometry in
                                         let metrics = wheelMetrics(itemGeometry: itemGeometry, wheelGeometry: wheelGeometry)
@@ -226,6 +253,8 @@ struct GeneratedSongsView: View {
                             viewModel.refresh()
                         }
                     } else {
+                        createSongLink
+
                         // 能動的な導線
                         NavigationLink {
                             NotificationListView()
@@ -260,6 +289,24 @@ struct GeneratedSongsView: View {
             .offset(y: -20)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var createSongLink: some View {
+        NavigationLink {
+            SongCreationStudioView()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "waveform.badge.plus")
+                    .font(.system(size: 12, weight: .bold))
+                Text("作曲する")
+                    .font(PrototypeTheme.Typography.font(size: 13, weight: .black))
+            }
+            .foregroundStyle(Color.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Capsule().fill(Color.indigo))
+        }
+        .buttonStyle(EncounterScaleButtonStyle())
     }
 }
 

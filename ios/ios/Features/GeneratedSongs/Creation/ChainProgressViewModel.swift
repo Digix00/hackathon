@@ -18,6 +18,7 @@ final class ChainProgressViewModel: ObservableObject {
 
     private let chainId: String?
     private let client: BackendAPIClient
+    private let localStudioStore = LocalCompositionStudioStore.shared
     private var hasLoaded = false
 
     init(chainId: String?, client: BackendAPIClient = BackendAPIClient()) {
@@ -53,7 +54,24 @@ final class ChainProgressViewModel: ObservableObject {
         Task { await loadChainDetail() }
     }
 
+    var canAppendDemoLyric: Bool {
+        guard let chain else { return false }
+        return localStudioStore.contains(chainID: chain.id) && chain.status.lowercased() == "pending"
+    }
+
+    func appendDemoLyric() {
+        guard let chain else { return }
+        localStudioStore.appendDemoLyric(to: chain.id)
+        Task { await loadChainDetail() }
+    }
+
     private func loadChainDetail() async {
+        if let local = localStudioStore.generatedChain(id: chainId) {
+            applyChainMock(local, message: nil)
+            isLoading = false
+            return
+        }
+
         if MockData.forceGeneratedSongMocks {
             applyMockChain(id: chainId, message: "モックのチェーン進捗を表示しています")
             isLoading = false
@@ -95,6 +113,10 @@ final class ChainProgressViewModel: ObservableObject {
             hasLoaded = false
             return
         }
+        applyChainMock(mock, message: message)
+    }
+
+    private func applyChainMock(_ mock: MockData.GeneratedChainMock, message: String?) {
 
         chain = mock.chain
         song = mock.song

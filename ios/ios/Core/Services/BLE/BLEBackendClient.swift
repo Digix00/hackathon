@@ -175,6 +175,13 @@ actor BLEBackendClient {
     }
 
     private func fetchBearerToken() async throws -> String {
+        if let devToken = ProcessInfo.processInfo.environment["DEV_AUTH_TOKEN"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+            !devToken.isEmpty
+        {
+            return devToken
+        }
+
         if let fixed = ProcessInfo.processInfo.environment["FIREBASE_ID_TOKEN"]?
             .trimmingCharacters(in: .whitespacesAndNewlines),
             !fixed.isEmpty
