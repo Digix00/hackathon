@@ -126,7 +126,8 @@ func (u *musicUsecase) HandleCallback(ctx context.Context, provider, code, state
 	}
 	profile, err := musicProvider.GetProfile(ctx, token.AccessToken)
 	if err != nil {
-		return err
+		// プロフィール取得に失敗してもアクセストークンは保存する（Premium 制限等への対処）
+		profile = port.AccountProfile{}
 	}
 	_, err = u.musicConnectionRepo.Upsert(ctx, repository.UpsertMusicConnectionParams{
 		UserID:           user.ID,

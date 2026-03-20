@@ -48,7 +48,7 @@ func (p *spotifyProvider) BuildAuthorizeURL(input port.OAuthAuthorizeInput) (str
 	values.Set("response_type", "code")
 	values.Set("client_id", p.cfg.ClientID)
 	values.Set("redirect_uri", p.cfg.RedirectURL)
-	values.Set("scope", "user-read-private")
+	values.Set("scope", "user-read-email")
 	values.Set("state", input.State)
 	return p.cfg.AuthorizeURL + "?" + values.Encode(), nil
 }
