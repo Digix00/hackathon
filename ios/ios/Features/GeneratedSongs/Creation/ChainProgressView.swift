@@ -10,17 +10,24 @@ struct ChainProgressView: View {
     }
 
     var body: some View {
-        ZStack {
-            DynamicBackground(baseColor: .indigo)
-            
-            if viewModel.isLoading && viewModel.chain == nil {
-                ProgressView("接続中...")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if let chain = viewModel.chain {
-                content(chain: chain)
-            } else {
-                errorState
+        GeometryReader { proxy in
+            let globalWidth = proxy.frame(in: .global).width
+            let layoutWidth = globalWidth > 0 ? min(proxy.size.width, globalWidth) : proxy.size.width
+
+            ZStack {
+                DynamicBackground(baseColor: .indigo)
+
+                if viewModel.isLoading && viewModel.chain == nil {
+                    ProgressView("接続中...")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if let chain = viewModel.chain {
+                    content(chain: chain, layoutWidth: layoutWidth)
+                } else {
+                    errorState
+                }
             }
+            .frame(width: layoutWidth)
+            .frame(maxWidth: .infinity, alignment: .center)
         }
         .navigationBarBackButtonHidden()
         .safeAreaInset(edge: .top) {
@@ -45,7 +52,7 @@ struct ChainProgressView: View {
         }
     }
 
-    private func content(chain: BackendChainDetail) -> some View {
+    private func content(chain: BackendChainDetail, layoutWidth: CGFloat) -> some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 40) {
                 progressHero(chain: chain)
@@ -90,9 +97,10 @@ struct ChainProgressView: View {
                     }
                     .padding(.bottom, 40)
                 }
-                
+
                 Spacer(minLength: 100)
             }
+            .frame(width: layoutWidth)
         }
     }
 

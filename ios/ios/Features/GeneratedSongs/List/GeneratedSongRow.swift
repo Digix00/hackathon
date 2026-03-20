@@ -16,8 +16,6 @@ struct GeneratedSongRow: View {
         return Int(magnitude % UInt(Int.max))
     }
 
-    // --- Dynamic Design Engine (Adapted for Songs) ---
-
     private var horizontalShift: CGFloat {
         let baseShift = CGFloat(seed % 40) - 20
         return baseShift * 0.8
@@ -32,6 +30,10 @@ struct GeneratedSongRow: View {
         return -horizontalShift * 0.5
     }
 
+    private var isReady: Bool {
+        song.audioURL != nil
+    }
+
     var body: some View {
         ZStack(alignment: .center) {
             // Background Aura
@@ -41,13 +43,13 @@ struct GeneratedSongRow: View {
                 
                 // Metadata
                 HStack(alignment: .center, spacing: 12) {
-                    Text("GENERATED SONG")
+                    Text(isReady ? "GENERATED SONG" : "GENERATING...")
                         .font(PrototypeTheme.Typography.font(size: 10, weight: .black, role: .data))
                         .kerning(2)
-                        .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.4))
+                        .foregroundStyle(isReady ? PrototypeTheme.textSecondary.opacity(0.4) : PrototypeTheme.textTertiary)
                     
                     Rectangle()
-                        .fill(song.color.opacity(0.2))
+                        .fill(isReady ? song.color.opacity(0.2) : PrototypeTheme.border)
                         .frame(width: 30, height: 1)
                 }
                 .padding(.bottom, 24)
@@ -81,7 +83,7 @@ struct GeneratedSongRow: View {
                             }
                         }
                         .font(PrototypeTheme.Typography.font(size: 32, weight: .black, role: .primary))
-                        .foregroundStyle(PrototypeTheme.textPrimary)
+                        .foregroundStyle(isReady ? PrototypeTheme.textPrimary : PrototypeTheme.textSecondary)
                         .tracking(-1.0)
                         .lineLimit(2)
                         .multilineTextAlignment(horizontalShift > 0 ? .leading : .trailing)
@@ -96,7 +98,7 @@ struct GeneratedSongRow: View {
                             }
                         }
                         .font(PrototypeTheme.Typography.font(size: 14, weight: .bold, role: .accent))
-                        .foregroundStyle(song.color)
+                        .foregroundStyle(isReady ? song.color : PrototypeTheme.textTertiary)
                     }
                     .frame(width: 220, alignment: horizontalShift > 0 ? .leading : .trailing)
                     .offset(x: horizontalShift)
@@ -107,7 +109,7 @@ struct GeneratedSongRow: View {
                 if let myLyric = song.myLyric, !myLyric.isEmpty {
                     Text("“\(myLyric)”")
                         .font(PrototypeTheme.Typography.font(size: 16, weight: .medium))
-                        .foregroundStyle(PrototypeTheme.textPrimary.opacity(0.7))
+                        .foregroundStyle(PrototypeTheme.textPrimary.opacity(isReady ? 0.7 : 0.4))
                         .italic()
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: 280)
@@ -115,6 +117,8 @@ struct GeneratedSongRow: View {
                 }
             }
             .padding(.vertical, 60)
+            .grayscale(isReady ? 0 : 1.0)
+            .opacity(isReady ? 1.0 : 0.8)
         }
         .frame(maxWidth: .infinity)
         .background(Color.white.opacity(0.001))
@@ -124,17 +128,17 @@ struct GeneratedSongRow: View {
         ZStack {
             MockArtworkView(color: song.color, symbol: "waveform", size: size)
             
-            if song.audioURL == nil {
+            if !isReady {
+                Circle()
+                    .fill(Color.black.opacity(0.6))
+                    .frame(width: size, height: size)
+                
                 Image(systemName: "clock.fill")
-                    .font(.system(size: size * 0.3, weight: .bold))
+                    .font(.system(size: size * 0.4, weight: .bold))
                     .foregroundStyle(.white)
-                    .padding(8)
-                    .background(Color.black.opacity(0.4))
-                    .clipShape(Circle())
-                    .offset(x: size * 0.35, y: -size * 0.35)
             }
         }
-        .shadow(color: song.color.opacity(0.15), radius: 25, x: 0, y: 12)
+        .shadow(color: isReady ? song.color.opacity(0.15) : Color.clear, radius: 25, x: 0, y: 12)
     }
 
     private var auraView: some View {
@@ -146,14 +150,16 @@ struct GeneratedSongRow: View {
             let driftX = CGFloat(sin(t * 0.6 + seedPhase) * 40)
             let driftY = CGFloat(cos(t * 0.5 + seedPhase * 1.2) * 25)
             let pulse = 1 + CGFloat(sin(t * 0.65 + seedPhase) * 0.1)
+            
+            let auraOpacity = isReady ? 1.0 : 0.4
 
             ZStack {
                 Ellipse()
                     .fill(
                         RadialGradient(
                             colors: [
-                                song.color.opacity(0.35),
-                                song.color.opacity(0.12),
+                                song.color.opacity(0.35 * auraOpacity),
+                                song.color.opacity(0.12 * auraOpacity),
                                 .clear
                             ],
                             center: .center,
@@ -163,15 +169,15 @@ struct GeneratedSongRow: View {
                     )
                     .frame(width: 320, height: 260)
                     .scaleEffect(pulse)
-                    .blur(radius: 60)
+                    .blur(radius: isReady ? 60 : 80)
                     .offset(x: horizontalShift * 1.5 + driftX, y: driftY)
 
                 Circle()
                     .fill(
                         RadialGradient(
                             colors: [
-                                song.color.opacity(0.25),
-                                song.color.opacity(0.08),
+                                song.color.opacity(0.25 * auraOpacity),
+                                song.color.opacity(0.08 * auraOpacity),
                                 .clear
                             ],
                             center: .center,
@@ -181,10 +187,10 @@ struct GeneratedSongRow: View {
                     )
                     .frame(width: 200, height: 200)
                     .scaleEffect(pulse * 0.9)
-                    .blur(radius: 40)
+                    .blur(radius: isReady ? 40 : 60)
                     .offset(x: horizontalShift * 1.0 - driftX * 0.5, y: -20 + driftY * 0.8)
             }
-            .saturation(1.1)
+            .saturation(isReady ? 1.1 : 0)
         }
     }
 }
