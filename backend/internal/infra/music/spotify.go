@@ -113,7 +113,7 @@ func (p *spotifyProvider) SearchTracks(ctx context.Context, accessToken, query s
 	values := url.Values{}
 	values.Set("q", query)
 	values.Set("type", "track")
-	values.Set("limit", strconv.Itoa(limit))
+	values.Set("limit", strconv.Itoa(min(limit, 10)))
 	if cursor != nil && *cursor != "" {
 		offsetBytes, err := base64.RawURLEncoding.DecodeString(*cursor)
 		if err != nil {
