@@ -91,8 +91,8 @@ struct MainPrototypeView: View {
 
     private var homeState: HomeScreenState {
         let encounters = bleCoordinator.encounters
-        let featuredTrack = encounters.first?.track ?? MockData.featuredTrack
-        let weeklyTracks = uniqueTracks(from: encounters.map(\.track) + MockData.tracks).prefix(8)
+        let featuredTrack = encounters.first?.track
+        let weeklyTracks = uniqueTracks(from: encounters.map(\.track)).prefix(8)
         let todayCount = encounters.filter { $0.happenedToday }.count
 
         return HomeScreenState(

@@ -36,7 +36,6 @@ struct SearchView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.homeNamespace) var homeNamespace
     @StateObject private var viewModel = SearchViewModel()
-    private let defaultQuery = "夜に駆ける"
     let mode: SearchMode
     let onTrackAdded: (() -> Void)?
 
@@ -116,22 +115,6 @@ struct SearchView: View {
                                 }
                                 .buttonStyle(.plain)
                             }
-                        }
-                    }
-                }
-
-                SectionCard(title: "最近検索した曲") {
-                    VStack(spacing: 16) {
-                        ForEach(MockData.recentSearches) { track in
-                            TrackSelectionRow(track: track)
-                        }
-                    }
-                }
-
-                SectionCard(title: "人気の曲") {
-                    VStack(spacing: 16) {
-                        ForEach(MockData.popularTracks) { track in
-                            TrackSelectionRow(track: track)
                         }
                     }
                 }
@@ -236,10 +219,6 @@ struct SearchView: View {
                 }
         )
         .onAppear {
-            if viewModel.query.isEmpty {
-                viewModel.query = defaultQuery
-                viewModel.search()
-            }
             viewModel.loadFavoriteTracks()
             if mode == .shareTrack {
                 viewModel.loadSharedTrack()
