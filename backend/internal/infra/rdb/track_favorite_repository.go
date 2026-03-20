@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"hackathon/internal/domain/entity"
@@ -14,11 +15,12 @@ import (
 )
 
 type trackFavoriteRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
-func NewTrackFavoriteRepository(db *gorm.DB) repository.TrackFavoriteRepository {
-	return &trackFavoriteRepository{db: db}
+func NewTrackFavoriteRepository(log *zap.Logger, db *gorm.DB) repository.TrackFavoriteRepository {
+	return &trackFavoriteRepository{log: log, db: db}
 }
 
 func (r *trackFavoriteRepository) Upsert(ctx context.Context, userID, externalTrackID string) (entity.TrackFavorite, bool, error) {

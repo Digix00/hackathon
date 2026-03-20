@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"hackathon/internal/infra/rdb/model"
@@ -165,7 +166,7 @@ func TestIntegration_WorkerUsecase_DeleteExpiredBleTokens(t *testing.T) {
 	_ = seedBleTokenRecord(t, user.ID, now.Add(-24*time.Hour), now.Add(-1*time.Hour))     // expired
 	_ = seedBleTokenRecord(t, user.ID, now.Add(-30*time.Minute), now.Add(30*time.Minute)) // valid
 
-	workerUsecase := usecase.NewWorkerUsecase(NewBleTokenRepository(sharedTestDB), nil, nil, nil, nil, 45)
+	workerUsecase := usecase.NewWorkerUsecase(zap.NewNop(), NewBleTokenRepository(zap.NewNop(), sharedTestDB), nil, nil, nil, nil, 45)
 	deleted, err := workerUsecase.DeleteExpiredBleTokens(context.Background())
 	if err != nil {
 		t.Fatalf("DeleteExpiredBleTokens: %v", err)

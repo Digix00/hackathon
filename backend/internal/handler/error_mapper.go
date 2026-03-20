@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	domainerrs "hackathon/internal/domain/errs"
 )
@@ -22,7 +23,10 @@ type errorResponse struct {
 	Error errorBody `json:"error"`
 }
 
-func InstallHTTPErrorHandler(e *echo.Echo) {
+// InstallHTTPErrorHandler はzapロガーを使用するカスタムHTTPエラーハンドラーをEchoに登録する。
+// ハンドラーはDomainErrorとecho.HTTPErrorを統一されたエラーレスポンス形式に変換する。
+// レスポンス書き込みに失敗した場合はzapでエラーを記録する。
+func InstallHTTPErrorHandler(e *echo.Echo, log *zap.Logger) {
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
 		if c.Response().Committed {
 			return
@@ -30,7 +34,11 @@ func InstallHTTPErrorHandler(e *echo.Echo) {
 
 		status, body := mapError(err)
 		if jsonErr := c.JSON(status, errorResponse{Error: body}); jsonErr != nil {
-			c.Logger().Error(jsonErr)
+			log.Error("failed to write error response",
+				zap.Error(jsonErr),
+				zap.String("request_id", c.Response().Header().Get(echo.HeaderXRequestID)),
+				zap.String("path", c.Request().URL.Path),
+			)
 		}
 	}
 }

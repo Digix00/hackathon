@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	schemareq "hackathon/internal/handler/schema/request"
@@ -14,11 +15,12 @@ import (
 )
 
 type locationHandler struct {
+	log     *zap.Logger
 	usecase usecase.LocationUsecase
 }
 
-func newLocationHandler(u usecase.LocationUsecase) *locationHandler {
-	return &locationHandler{usecase: u}
+func newLocationHandler(log *zap.Logger, u usecase.LocationUsecase) *locationHandler {
+	return &locationHandler{log: log, usecase: u}
 }
 
 // postLocation godoc

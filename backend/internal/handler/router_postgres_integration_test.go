@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"hackathon/internal/infra/rdb"
@@ -70,30 +71,32 @@ RESTART IDENTITY CASCADE;
 func newPostgresIntegrationServer(t *testing.T, db *gorm.DB, authUID string) *echo.Echo {
 	t.Helper()
 
-	userRepo := rdb.NewUserRepository(db)
-	userSettingsRepo := rdb.NewUserSettingsRepository(db)
-	userDeviceRepo := rdb.NewUserDeviceRepository(db)
-	blockRepo := rdb.NewBlockRepository(db)
-	encounterRepo := rdb.NewEncounterRepository(db)
-	trackRepo := rdb.NewUserCurrentTrackRepository(db)
-	bleTokenRepo := rdb.NewBleTokenRepository(db)
-	reportRepo := rdb.NewReportRepository(db)
-	notificationRepo := rdb.NewNotificationRepository(db)
-	lyricRepo := rdb.NewLyricRepository(db)
+	nopLog := zap.NewNop()
+	userRepo := rdb.NewUserRepository(nopLog, db)
+	userSettingsRepo := rdb.NewUserSettingsRepository(nopLog, db)
+	userDeviceRepo := rdb.NewUserDeviceRepository(nopLog, db)
+	blockRepo := rdb.NewBlockRepository(nopLog, db)
+	encounterRepo := rdb.NewEncounterRepository(nopLog, db)
+	trackRepo := rdb.NewUserCurrentTrackRepository(nopLog, db)
+	bleTokenRepo := rdb.NewBleTokenRepository(nopLog, db)
+	reportRepo := rdb.NewReportRepository(nopLog, db)
+	notificationRepo := rdb.NewNotificationRepository(nopLog, db)
+	lyricRepo := rdb.NewLyricRepository(nopLog, db)
 
 	e := echo.New()
 	RegisterRoutes(e, Dependencies{
+		Logger:              nopLog,
 		AuthTokenVerifier:   testTokenVerifier{uid: authUID},
 		AuthUserManager:     testAuthUserManager{},
-		UserUsecase:         usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
-		SettingsUsecase:     usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
-		PushTokenUsecase:    usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
-		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
-		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
-		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
-		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
-		LyricUsecase:        usecase.NewLyricUsecase(userRepo, encounterRepo, lyricRepo),
-		SongUsecase:         usecase.NewSongUsecase(userRepo, lyricRepo),
+		UserUsecase:         usecase.NewUserUsecase(nopLog, userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
+		SettingsUsecase:     usecase.NewSettingsUsecase(nopLog, userRepo, userSettingsRepo),
+		PushTokenUsecase:    usecase.NewPushTokenUsecase(nopLog, userRepo, userDeviceRepo),
+		BleTokenUsecase:     usecase.NewBleTokenUsecase(nopLog, bleTokenRepo, userRepo, blockRepo),
+		ReportUsecase:       usecase.NewReportUsecase(nopLog, userRepo, reportRepo),
+		NotificationUsecase: usecase.NewNotificationUsecase(nopLog, userRepo, notificationRepo),
+		EncounterUsecase:    usecase.NewEncounterUsecase(nopLog, userRepo, bleTokenRepo, encounterRepo, blockRepo),
+		LyricUsecase:        usecase.NewLyricUsecase(nopLog, userRepo, encounterRepo, lyricRepo),
+		SongUsecase:         usecase.NewSongUsecase(nopLog, userRepo, lyricRepo),
 	})
 	return e
 }
