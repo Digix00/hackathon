@@ -3,6 +3,7 @@ package rdb
 import (
 	"context"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"hackathon/internal/domain/entity"
@@ -12,11 +13,12 @@ import (
 )
 
 type reportRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
-func NewReportRepository(db *gorm.DB) repository.ReportRepository {
-	return &reportRepository{db: db}
+func NewReportRepository(log *zap.Logger, db *gorm.DB) repository.ReportRepository {
+	return &reportRepository{log: log, db: db}
 }
 
 func (r *reportRepository) Create(ctx context.Context, report entity.Report) error {

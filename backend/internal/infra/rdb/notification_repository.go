@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"hackathon/internal/domain/entity"
@@ -14,11 +15,12 @@ import (
 )
 
 type notificationRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
-func NewNotificationRepository(db *gorm.DB) repository.NotificationRepository {
-	return &notificationRepository{db: db}
+func NewNotificationRepository(log *zap.Logger, db *gorm.DB) repository.NotificationRepository {
+	return &notificationRepository{log: log, db: db}
 }
 
 func (r *notificationRepository) ListByUserID(ctx context.Context, userID string, limit, offset int) ([]entity.Notification, error) {

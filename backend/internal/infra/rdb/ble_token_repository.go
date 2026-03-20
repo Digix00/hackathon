@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"hackathon/internal/domain/entity"
@@ -14,11 +15,12 @@ import (
 )
 
 type bleTokenRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
-func NewBleTokenRepository(db *gorm.DB) repository.BleTokenRepository {
-	return &bleTokenRepository{db: db}
+func NewBleTokenRepository(log *zap.Logger, db *gorm.DB) repository.BleTokenRepository {
+	return &bleTokenRepository{log: log, db: db}
 }
 
 func (r *bleTokenRepository) Create(ctx context.Context, e entity.BleToken) error {

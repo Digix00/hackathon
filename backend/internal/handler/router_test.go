@@ -12,6 +12,7 @@ import (
 	firebaseauth "firebase.google.com/go/v4/auth"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"hackathon/internal/infra/crypto"
@@ -125,26 +126,27 @@ func newTestServer(t *testing.T, db *gorm.DB, authUID string) *echo.Echo {
 func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, providers []usecaseport.MusicProvider) *echo.Echo {
 	t.Helper()
 
-	userRepo := rdb.NewUserRepository(db)
-	userSettingsRepo := rdb.NewUserSettingsRepository(db)
-	userDeviceRepo := rdb.NewUserDeviceRepository(db)
-	blockRepo := rdb.NewBlockRepository(db)
-	encounterRepo := rdb.NewEncounterRepository(db)
-	trackRepo := rdb.NewUserCurrentTrackRepository(db)
-	trackCatalogRepo := rdb.NewTrackCatalogRepository(db)
+	nopLog := zap.NewNop()
+	userRepo := rdb.NewUserRepository(nopLog, db)
+	userSettingsRepo := rdb.NewUserSettingsRepository(nopLog, db)
+	userDeviceRepo := rdb.NewUserDeviceRepository(nopLog, db)
+	blockRepo := rdb.NewBlockRepository(nopLog, db)
+	encounterRepo := rdb.NewEncounterRepository(nopLog, db)
+	trackRepo := rdb.NewUserCurrentTrackRepository(nopLog, db)
+	trackCatalogRepo := rdb.NewTrackCatalogRepository(nopLog, db)
 	enc, err := crypto.NewTokenEncrypter(testTokenEncryptionKey)
 	if err != nil {
 		t.Fatalf("token encrypter init: %v", err)
 	}
-	musicConnectionRepo := rdb.NewMusicConnectionRepository(db, enc)
-	bleTokenRepo := rdb.NewBleTokenRepository(db)
-	playlistRepo := rdb.NewPlaylistRepository(db)
-	reportRepo := rdb.NewReportRepository(db)
-	muteRepo := rdb.NewMuteRepository(db)
-	notificationRepo := rdb.NewNotificationRepository(db)
-	locationRepo := rdb.NewUserLocationRepository(db)
-	commentRepo := rdb.NewCommentRepository(db)
-	lyricRepo := rdb.NewLyricRepository(db)
+	musicConnectionRepo := rdb.NewMusicConnectionRepository(nopLog, db, enc)
+	bleTokenRepo := rdb.NewBleTokenRepository(nopLog, db)
+	playlistRepo := rdb.NewPlaylistRepository(nopLog, db)
+	reportRepo := rdb.NewReportRepository(nopLog, db)
+	muteRepo := rdb.NewMuteRepository(nopLog, db)
+	notificationRepo := rdb.NewNotificationRepository(nopLog, db)
+	locationRepo := rdb.NewUserLocationRepository(nopLog, db)
+	commentRepo := rdb.NewCommentRepository(nopLog, db)
+	lyricRepo := rdb.NewLyricRepository(nopLog, db)
 	if providers == nil {
 		providers = []usecaseport.MusicProvider{
 			music.NewSpotifyProvider(music.SpotifyConfig{}),
@@ -152,30 +154,31 @@ func newTestServerWithProviders(t *testing.T, db *gorm.DB, authUID string, provi
 		}
 	}
 
-	userTrackRepo := rdb.NewUserTrackRepository(db)
-	trackFavoriteRepo := rdb.NewTrackFavoriteRepository(db)
+	userTrackRepo := rdb.NewUserTrackRepository(nopLog, db)
+	trackFavoriteRepo := rdb.NewTrackFavoriteRepository(nopLog, db)
 
 	e := echo.New()
 	RegisterRoutes(e, Dependencies{
 		AuthTokenVerifier:   testTokenVerifier{uid: authUID},
 		AuthUserManager:     testAuthUserManager{},
-		UserUsecase:         usecase.NewUserUsecase(userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
-		SettingsUsecase:     usecase.NewSettingsUsecase(userRepo, userSettingsRepo),
-		PushTokenUsecase:    usecase.NewPushTokenUsecase(userRepo, userDeviceRepo),
-		BleTokenUsecase:     usecase.NewBleTokenUsecase(bleTokenRepo, userRepo, blockRepo),
-		PlaylistUsecase:     usecase.NewPlaylistUsecase(playlistRepo, userRepo),
-		ReportUsecase:       usecase.NewReportUsecase(userRepo, reportRepo),
-		MuteUsecase:         usecase.NewMuteUsecase(userRepo, muteRepo),
-		BlockUsecase:        usecase.NewBlockUsecase(userRepo, blockRepo),
-		NotificationUsecase: usecase.NewNotificationUsecase(userRepo, notificationRepo),
-		MusicUsecase:        usecase.NewMusicUsecase(userRepo, musicConnectionRepo, trackCatalogRepo, providers, "test-state-secret", "digix"),
-		EncounterUsecase:    usecase.NewEncounterUsecase(userRepo, bleTokenRepo, encounterRepo, blockRepo),
-		CommentUsecase:      usecase.NewCommentUsecase(userRepo, commentRepo, encounterRepo),
-		LyricUsecase:        usecase.NewLyricUsecase(userRepo, encounterRepo, lyricRepo),
-		SongUsecase:         usecase.NewSongUsecase(userRepo, lyricRepo),
-		UserTrackUsecase:    usecase.NewUserTrackUsecase(userRepo, userTrackRepo, trackRepo, trackCatalogRepo),
-		LocationUsecase:     usecase.NewLocationUsecase(userRepo, userSettingsRepo, locationRepo, encounterRepo, blockRepo),
-		FavoriteUsecase:     usecase.NewFavoriteUsecase(userRepo, trackFavoriteRepo, playlistRepo, trackCatalogRepo),
+		Logger:              nopLog,
+		UserUsecase:         usecase.NewUserUsecase(nopLog, userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
+		SettingsUsecase:     usecase.NewSettingsUsecase(nopLog, userRepo, userSettingsRepo),
+		PushTokenUsecase:    usecase.NewPushTokenUsecase(nopLog, userRepo, userDeviceRepo),
+		BleTokenUsecase:     usecase.NewBleTokenUsecase(nopLog, bleTokenRepo, userRepo, blockRepo),
+		PlaylistUsecase:     usecase.NewPlaylistUsecase(nopLog, playlistRepo, userRepo),
+		ReportUsecase:       usecase.NewReportUsecase(nopLog, userRepo, reportRepo),
+		MuteUsecase:         usecase.NewMuteUsecase(nopLog, userRepo, muteRepo),
+		BlockUsecase:        usecase.NewBlockUsecase(nopLog, userRepo, blockRepo),
+		NotificationUsecase: usecase.NewNotificationUsecase(nopLog, userRepo, notificationRepo),
+		MusicUsecase:        usecase.NewMusicUsecase(nopLog, userRepo, musicConnectionRepo, trackCatalogRepo, providers, "test-state-secret", "digix"),
+		EncounterUsecase:    usecase.NewEncounterUsecase(nopLog, userRepo, bleTokenRepo, encounterRepo, blockRepo),
+		CommentUsecase:      usecase.NewCommentUsecase(nopLog, userRepo, commentRepo, encounterRepo),
+		LyricUsecase:        usecase.NewLyricUsecase(nopLog, userRepo, encounterRepo, lyricRepo),
+		SongUsecase:         usecase.NewSongUsecase(nopLog, userRepo, lyricRepo),
+		UserTrackUsecase:    usecase.NewUserTrackUsecase(nopLog, userRepo, userTrackRepo, trackRepo, trackCatalogRepo),
+		LocationUsecase:     usecase.NewLocationUsecase(nopLog, userRepo, userSettingsRepo, locationRepo, encounterRepo, blockRepo),
+		FavoriteUsecase:     usecase.NewFavoriteUsecase(nopLog, userRepo, trackFavoriteRepo, playlistRepo, trackCatalogRepo),
 	})
 	return e
 }

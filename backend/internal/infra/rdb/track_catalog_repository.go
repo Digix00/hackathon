@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -17,11 +18,12 @@ import (
 )
 
 type trackCatalogRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
-func NewTrackCatalogRepository(db *gorm.DB) repository.TrackCatalogRepository {
-	return &trackCatalogRepository{db: db}
+func NewTrackCatalogRepository(log *zap.Logger, db *gorm.DB) repository.TrackCatalogRepository {
+	return &trackCatalogRepository{log: log, db: db}
 }
 
 func (r *trackCatalogRepository) Upsert(ctx context.Context, track entity.TrackInfo) (entity.TrackInfo, error) {

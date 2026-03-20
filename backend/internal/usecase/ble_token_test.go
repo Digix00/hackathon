@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/zap"
+
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
 )
@@ -72,7 +74,7 @@ func TestCreateBleToken(t *testing.T) {
 		byToken:  make(map[string]entity.BleToken),
 	}
 
-	uc := NewBleTokenUsecase(bleRepo, userRepo, &stubBlockRepo{})
+	uc := NewBleTokenUsecase(zap.NewNop(), bleRepo, userRepo, &stubBlockRepo{})
 
 	token, err := uc.CreateBleToken(context.Background(), authUID)
 	if err != nil {
@@ -111,7 +113,7 @@ func TestGetCurrentBleToken(t *testing.T) {
 		byToken: make(map[string]entity.BleToken),
 	}
 
-	uc := NewBleTokenUsecase(bleRepo, userRepo, &stubBlockRepo{})
+	uc := NewBleTokenUsecase(zap.NewNop(), bleRepo, userRepo, &stubBlockRepo{})
 
 	token, err := uc.GetCurrentBleToken(context.Background(), authUID)
 	if err != nil {
@@ -151,7 +153,7 @@ func TestGetBleUserByToken(t *testing.T) {
 		},
 	}
 
-	uc := NewBleTokenUsecase(bleRepo, userRepo, &stubBlockRepo{})
+	uc := NewBleTokenUsecase(zap.NewNop(), bleRepo, userRepo, &stubBlockRepo{})
 
 	pub, err := uc.GetBleUserByToken(context.Background(), requesterAuthUID, tokenStr)
 	if err != nil {

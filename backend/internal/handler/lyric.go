@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	schemareq "hackathon/internal/handler/schema/request"
@@ -14,11 +15,12 @@ import (
 )
 
 type lyricHandler struct {
+	log     *zap.Logger
 	usecase usecase.LyricUsecase
 }
 
-func newLyricHandler(u usecase.LyricUsecase) *lyricHandler {
-	return &lyricHandler{usecase: u}
+func newLyricHandler(log *zap.Logger, u usecase.LyricUsecase) *lyricHandler {
+	return &lyricHandler{log: log, usecase: u}
 }
 
 // submitLyric godoc

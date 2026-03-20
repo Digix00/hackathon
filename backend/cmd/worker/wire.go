@@ -17,8 +17,8 @@ import (
 )
 
 func buildDependencies(ctx context.Context, db *gorm.DB, cfg *config.WorkerConfig, log *zap.Logger) (usecase.WorkerUsecase, func()) {
-	bleTokenRepo := rdb.NewBleTokenRepository(db)
-	lyriaJobRepo := rdb.NewLyriaJobRepository(db)
+	bleTokenRepo := rdb.NewBleTokenRepository(log, db)
+	lyriaJobRepo := rdb.NewLyriaJobRepository(log, db)
 
 	var geminiClient port.GeminiClient
 	var lyriaClient port.LyriaClient
@@ -65,6 +65,7 @@ func buildDependencies(ctx context.Context, db *gorm.DB, cfg *config.WorkerConfi
 	}
 
 	return usecase.NewWorkerUsecase(
+		log,
 		bleTokenRepo,
 		lyriaJobRepo,
 		geminiClient,
