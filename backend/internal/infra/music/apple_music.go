@@ -123,7 +123,7 @@ func (p *appleMusicProvider) doJSON(request *http.Request, dest any) error {
 	if err != nil {
 		return domainerrs.Internal(err.Error())
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return err

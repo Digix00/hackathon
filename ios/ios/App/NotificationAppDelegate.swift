@@ -6,6 +6,7 @@ final class NotificationAppDelegate: NSObject, UIApplicationDelegate, UNUserNoti
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        FirebaseBootstrapper.configureIfNeeded()
         UNUserNotificationCenter.current().delegate = self
         return true
     }

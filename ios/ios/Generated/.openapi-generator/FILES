@@ -4,7 +4,6 @@ Cartfile
 Package.swift
 README.md
 Sources/OpenAPIClient/APIHelper.swift
-Sources/OpenAPIClient/APIs.swift
 Sources/OpenAPIClient/APIs/BleTokensAPI.swift
 Sources/OpenAPIClient/APIs/BlocksAPI.swift
 Sources/OpenAPIClient/APIs/CommentsAPI.swift

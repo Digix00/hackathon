@@ -9,3 +9,7 @@ git_push.sh
 
 # CocoaPods: このプロジェクトは CocoaPods を使用しないため不要
 OpenAPIClient.podspec
+
+# 環境変数によるベースURL解決ロジックを含むため、再生成時の上書きを防止
+Sources/OpenAPIClient/APIs.swift
+OpenAPIClient/Classes/OpenAPIs/APIs.swift

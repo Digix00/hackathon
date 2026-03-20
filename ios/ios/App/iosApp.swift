@@ -7,6 +7,10 @@ struct iosApp: App {
     @StateObject private var bleCoordinator = BLEAppCoordinator()
     @StateObject private var pushManager = PushNotificationManager.shared
 
+    init() {
+        FirebaseBootstrapper.configureIfNeeded()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -14,6 +18,9 @@ struct iosApp: App {
                 .environmentObject(bleCoordinator)
                 .environmentObject(bleCoordinator.bleManager)
                 .environmentObject(pushManager)
+                .onOpenURL { url in
+                    _ = GoogleSignInCoordinator.handle(url: url)
+                }
                 .task {
                     bleCoordinator.startIfNeeded(scenePhase: scenePhase)
                 }

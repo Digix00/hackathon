@@ -59,9 +59,16 @@ jobs:
             --format='value(spec.template.spec.containers[0].image)' 2>/dev/null \
             | awk -F: '{print $NF}' || true)
           MIGRATE_TAG=${MIGRATE_TAG:-latest}
+          SEED_DEMO_TAG=$(gcloud run services describe seed-demo \
+            --region asia-northeast1 \
+            --project ${{ vars.TF_PROJECT_ID }} \
+            --format='value(spec.template.spec.containers[0].image)' 2>/dev/null \
+            | awk -F: '{print $NF}' || true)
+          SEED_DEMO_TAG=${SEED_DEMO_TAG:-latest}
           echo "TF_VAR_server_image_tag=$SERVER_TAG" >> $GITHUB_ENV
           echo "TF_VAR_worker_image_tag=$WORKER_TAG" >> $GITHUB_ENV
           echo "TF_VAR_migrate_image_tag=$MIGRATE_TAG" >> $GITHUB_ENV
+          echo "TF_VAR_seed_demo_image_tag=$SEED_DEMO_TAG" >> $GITHUB_ENV
 
       - name: Terraform Apply
         env:

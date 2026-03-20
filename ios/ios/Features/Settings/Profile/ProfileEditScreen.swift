@@ -176,6 +176,9 @@ private struct ProfilePicker<Option: Identifiable, SelectionValue: Hashable, Con
                 .padding(.leading, 4)
             
             Picker(title, selection: $selection) {
+                if let noneValue = profilePickerNoneValue(for: SelectionValue.self) {
+                    Text("未選択").tag(noneValue)
+                }
                 ForEach(options) { option in
                     content(option).tag(option[keyPath: selectionValue])
                 }
@@ -188,6 +191,13 @@ private struct ProfilePicker<Option: Identifiable, SelectionValue: Hashable, Con
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
     }
+}
+
+private func profilePickerNoneValue<T>(for type: T.Type) -> T? {
+    if type == String.self {
+        return "" as? T
+    }
+    return nil
 }
 
 private struct ProfileTextField: View {
