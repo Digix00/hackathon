@@ -22,12 +22,6 @@ struct SettingsHubView: View {
                 icon: "bell.fill",
                 title: "通知設定",
                 destination: { lockedDestination(NotificationSettingsView().environmentObject(settingsViewModel)) }
-            ),
-            SettingsDestination(
-                id: "appearance-settings",
-                icon: "paintbrush.fill",
-                title: "外観",
-                destination: { lockedDestination(AppearanceSettingsView().environmentObject(settingsViewModel)) }
             )
         ]
     }
