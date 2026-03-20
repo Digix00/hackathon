@@ -68,11 +68,9 @@ struct GeneratedSongDetailView: View {
 
                             metadataChips
                         }
-                        .frame(maxWidth: .infinity)
 
                         playbackControls
                     }
-                    .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                 }
 
@@ -80,7 +78,6 @@ struct GeneratedSongDetailView: View {
                     VStack(alignment: .leading, spacing: 20) {
                         if viewModel.isLoadingLyrics {
                             ProgressView("読み込み中")
-                                .frame(maxWidth: .infinity, alignment: .leading)
                         } else if lyricEntries.isEmpty {
                             Text("まだ歌詞が登録されていません")
                                 .font(.system(size: 15, weight: .medium))
@@ -122,7 +119,6 @@ struct GeneratedSongDetailView: View {
                     .disabled(viewModel.isProcessingLike)
                     .opacity(viewModel.isProcessingLike ? 0.6 : 1.0)
                 }
-                .frame(maxWidth: .infinity)
             }
         }
         .task {

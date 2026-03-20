@@ -9,62 +9,74 @@ struct GeneratedSongNotificationView: View {
     @State private var isAnimating = false
 
     var body: some View {
-        ZStack {
-            DynamicBackground(baseColor: song.color)
+        GeometryReader { proxy in
+            let globalWidth = proxy.frame(in: .global).width
+            let layoutWidth = globalWidth > 0 ? min(proxy.size.width, globalWidth) : proxy.size.width
 
-            VStack(spacing: 32) {
-                Spacer()
+            ZStack {
+                DynamicBackground(baseColor: song.color)
 
-                ZStack {
-                    Circle()
-                        .fill(Color.white.opacity(0.2))
-                        .frame(width: 200, height: 200)
-                        .scaleEffect(isAnimating ? 1.2 : 1.0)
-                        .blur(radius: 30)
-                        .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
+                VStack(spacing: 32) {
+                    Spacer()
 
-                    MockArtworkView(color: song.color, symbol: "sparkles", size: 120)
-                        .shadow(color: song.color.opacity(0.8), radius: isAnimating ? 40 : 20, x: 0, y: 15)
-                        .rotationEffect(.degrees(isAnimating ? 8 : -8))
-                        .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: isAnimating)
-                }
-                .onAppear {
-                    isAnimating = true
-                }
+                    ZStack {
+                        Circle()
+                            .fill(Color.white.opacity(0.2))
+                            .frame(width: 200, height: 200)
+                            .scaleEffect(isAnimating ? 1.2 : 1.0)
+                            .blur(radius: 30)
+                            .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
 
-                VStack(spacing: 16) {
-                    Text("新しい曲が生まれました")
-                        .font(.system(size: 12, weight: .black))
+                        MockArtworkView(color: song.color, symbol: "sparkles", size: 120)
+                            .shadow(color: song.color.opacity(0.8), radius: isAnimating ? 40 : 20, x: 0, y: 15)
+                            .rotationEffect(.degrees(isAnimating ? 8 : -8))
+                            .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: isAnimating)
+                    }
+                    .onAppear {
+                        isAnimating = true
+                    }
+
+                    VStack(spacing: 16) {
+                        Text("新しい曲が生まれました")
+                            .font(.system(size: 12, weight: .black))
+                            .foregroundStyle(.white.opacity(0.7))
+                            .kerning(2.0)
+
+                        Text("「\(song.title)」")
+                            .font(.system(size: 36, weight: .black))
+                            .foregroundStyle(.white)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+
+                        Text("\(song.participantCount)人の出会いから生まれた曲です。")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.8))
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.horizontal, 32)
+
+                    Spacer()
+
+                    VStack(spacing: 16) {
+                        PrimaryButton(title: "今すぐ聴く", systemImage: "play.fill", isDisabled: song.audioURL == nil) {
+                            onListenNow?()
+                        }
+
+                        Button("あとで") {
+                            onLater?()
+                        }
+                        .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.white.opacity(0.7))
-                        .kerning(2.0)
-
-                    Text("「\(song.title)」")
-                        .font(.system(size: 36, weight: .black))
-                        .foregroundStyle(.white)
-                        .multilineTextAlignment(.center)
-
-                    Text("\(song.participantCount)人の出会いから生まれた曲です。")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.8))
-                        .multilineTextAlignment(.center)
-                }
-
-                Spacer()
-
-                VStack(spacing: 16) {
-                    PrimaryButton(title: "今すぐ聴く", systemImage: "play.fill", isDisabled: song.audioURL == nil) {
-                        onListenNow?()
                     }
-
-                    Button("あとで") {
-                        onLater?()
-                    }
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .padding(.horizontal, 32)
                 }
+                .padding(.vertical, 32)
+                .frame(width: layoutWidth)
             }
-            .padding(32)
+            .frame(width: layoutWidth, height: proxy.size.height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
+        .ignoresSafeArea()
     }
 }
 

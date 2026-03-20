@@ -8,7 +8,7 @@ struct GeneratedSongsView: View {
 
     var body: some View {
         AppScaffold(
-            title: "生成曲",
+            title: "ｘ",
             subtitle: viewModel.subtitleText,
             trailingSymbol: "sparkles"
         ) {
@@ -129,11 +129,10 @@ struct GeneratedSongsView: View {
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundStyle(PrototypeTheme.textTertiary)
                                     .lineLimit(1)
+                                    .truncationMode(.tail)
                             }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
-
-                        Spacer()
 
                         Image(systemName: song.audioURL == nil ? "clock.badge.exclamationmark" : "play.circle.fill")
                             .font(.system(size: 28))
