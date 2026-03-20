@@ -153,10 +153,13 @@ final class SearchViewModel: ObservableObject {
         errorMessage = nil
         do {
             let response = try await client.searchTracks(query: query, limit: 20)
-            results = (response.tracks ?? []).map(mapTrack)
-            if results.isEmpty {
-                selectedTrack = nil
-            }
+            let mapped = (response.tracks ?? []).map(mapTrack)
+            results = mapped  // フォールバック色で即時表示
+            if results.isEmpty { selectedTrack = nil }
+
+            // 画像から色を抽出して results を更新（バックグラウンド並列処理）
+            let updated = await resolveArtworkColors(for: mapped)
+            if !Task.isCancelled { results = updated }
         } catch {
             errorMessage = "検索に失敗しました"
         }
@@ -168,9 +171,12 @@ final class SearchViewModel: ObservableObject {
         isSelecting = true
         errorMessage = nil
         do {
-            let track = try await client.getTrack(id: id)
+            var track = mapTrack(try await client.getTrack(id: id))
+            if let resolved = await ArtworkColorExtractor.shared.extractColor(from: track.artwork) {
+                track = track.withColor(resolved)
+            }
             if selectedTrack?.backendId == requestedId {
-                selectedTrack = mapTrack(track)
+                selectedTrack = track
             }
         } catch {
             if selectedTrack?.backendId == requestedId {
@@ -185,15 +191,41 @@ final class SearchViewModel: ObservableObject {
         isLoadingSharedTrack = true
         errorMessage = nil
         do {
-            let shared = try await client.getSharedTrack()
-            sharedTrack = shared.flatMap(mapSharedTrack)
-            if let sharedTrack, selectedTrack == nil {
-                selectedTrack = sharedTrack
+            if var track = try await client.getSharedTrack().flatMap(mapSharedTrack) {
+                sharedTrack = track
+                if selectedTrack == nil { selectedTrack = track }
+
+                if let resolved = await ArtworkColorExtractor.shared.extractColor(from: track.artwork) {
+                    track = track.withColor(resolved)
+                    sharedTrack = track
+                    if selectedTrack?.backendId == track.backendId { selectedTrack = track }
+                }
+            } else {
+                sharedTrack = nil
             }
         } catch {
             errorMessage = "シェア中の曲の取得に失敗しました"
         }
         isLoadingSharedTrack = false
+    }
+
+    /// トラック配列に対して画像から色を並列抽出し、更新済み配列を返す。
+    private func resolveArtworkColors(for tracks: [Track]) async -> [Track] {
+        await withTaskGroup(of: (Int, Color?).self, returning: [Track].self) { group in
+            for (index, track) in tracks.enumerated() {
+                group.addTask {
+                    let color = await ArtworkColorExtractor.shared.extractColor(from: track.artwork)
+                    return (index, color)
+                }
+            }
+            var result = tracks
+            for await (index, color) in group {
+                if let color {
+                    result[index] = result[index].withColor(color)
+                }
+            }
+            return result
+        }
     }
 
     private func mapTrack(_ track: BackendPublicTrack) -> Track {
