@@ -33,8 +33,15 @@ resource "google_storage_bucket_iam_member" "cloudrun_reader" {
 }
 
 # 生成楽曲の公開読み取り（songs/ 配下の音声ファイルをクライアントから直接取得するため）
+# IAM Condition で songs/ プレフィックスに限定し、temp/ 配下の一時ファイルは非公開に保つ
 resource "google_storage_bucket_iam_member" "public_reader" {
   bucket = google_storage_bucket.generated_songs.name
   role   = "roles/storage.objectViewer"
   member = "allUsers"
+
+  condition {
+    title       = "songs_prefix_only"
+    description = "songs/ 配下のみ公開読み取りを許可"
+    expression  = "resource.name.startsWith(\"projects/_/buckets/${google_storage_bucket.generated_songs.name}/objects/songs/\")"
+  }
 }
