@@ -15,4 +15,8 @@ struct Track: Identifiable, Hashable {
         self.artwork = artwork
         self.backendId = backendId
     }
+
+    func withColor(_ newColor: Color) -> Track {
+        Track(title: title, artist: artist, color: newColor, artwork: artwork, backendId: backendId)
+    }
 }

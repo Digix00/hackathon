@@ -151,6 +151,21 @@ final class SearchViewModel: ObservableObject {
             if results.isEmpty {
                 selectedTrack = nil
             }
+            // フォールバック色で即座に表示した後、並列で実際のアートワーク色を抽出して更新
+            let snapshot = results
+            await withTaskGroup(of: (Int, Color?).self) { group in
+                for (i, track) in snapshot.enumerated() {
+                    group.addTask {
+                        let color = await ArtworkColorExtractor.shared.extractColor(from: track.artwork)
+                        return (i, color)
+                    }
+                }
+                for await (i, color) in group {
+                    if let color, i < results.count {
+                        results[i] = results[i].withColor(color)
+                    }
+                }
+            }
         } catch {
             errorMessage = "検索に失敗しました"
         }
@@ -164,7 +179,13 @@ final class SearchViewModel: ObservableObject {
         do {
             let track = try await client.getTrack(id: id)
             if selectedTrack?.backendId == requestedId {
-                selectedTrack = mapTrack(track)
+                var mapped = mapTrack(track)
+                if let extracted = await ArtworkColorExtractor.shared.extractColor(from: mapped.artwork) {
+                    mapped = mapped.withColor(extracted)
+                }
+                if selectedTrack?.backendId == requestedId {
+                    selectedTrack = mapped
+                }
             }
         } catch {
             if selectedTrack?.backendId == requestedId {
@@ -180,9 +201,16 @@ final class SearchViewModel: ObservableObject {
         errorMessage = nil
         do {
             let shared = try await client.getSharedTrack()
-            sharedTrack = shared.flatMap(mapSharedTrack)
-            if let sharedTrack, selectedTrack == nil {
-                selectedTrack = sharedTrack
+            if var mapped = shared.flatMap(mapSharedTrack) {
+                if let extracted = await ArtworkColorExtractor.shared.extractColor(from: mapped.artwork) {
+                    mapped = mapped.withColor(extracted)
+                }
+                sharedTrack = mapped
+                if selectedTrack == nil {
+                    selectedTrack = mapped
+                }
+            } else {
+                sharedTrack = nil
             }
         } catch {
             errorMessage = "シェア中の曲の取得に失敗しました"
