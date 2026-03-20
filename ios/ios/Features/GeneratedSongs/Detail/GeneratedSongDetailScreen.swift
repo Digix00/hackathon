@@ -364,9 +364,6 @@ final class GeneratedSongPlayerViewModel: ObservableObject {
     }
 
     deinit {
-        if let timeObserver, let player {
-            player.removeTimeObserver(timeObserver)
-        }
         if let endObserver {
             NotificationCenter.default.removeObserver(endObserver)
         }
@@ -399,6 +396,10 @@ final class GeneratedSongPlayerViewModel: ObservableObject {
     }
 
     func stop() {
+        if let timeObserver, let player {
+            player.removeTimeObserver(timeObserver)
+            self.timeObserver = nil
+        }
         player?.pause()
         isPlaying = false
     }

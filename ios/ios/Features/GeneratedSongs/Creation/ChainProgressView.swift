@@ -232,8 +232,11 @@ struct ChainProgressView: View {
     }
 
     private func lyricRows(for chain: BackendChainDetail) -> [LyricEntryList.Row] {
-        viewModel.entries.map { entry in
-            let isMine = currentUserLyricContent == entry.content && chain.id == bleCoordinator.latestLyricSubmission?.chain.id
+        let myContent = chain.id == bleCoordinator.latestLyricSubmission?.chain.id ? currentUserLyricContent : nil
+        var foundMine = false
+        return viewModel.entries.map { entry in
+            let isMine = !foundMine && myContent != nil && entry.content == myContent
+            if isMine { foundMine = true }
             return LyricEntryList.Row(
                 id: entry.id,
                 content: entry.content,
