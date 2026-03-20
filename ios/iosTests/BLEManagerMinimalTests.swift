@@ -61,6 +61,20 @@ final class BLEManagerMinimalTests: XCTestCase {
         XCTAssertEqual(sut._test_decodeToken(fromAdvertisementData: data), token)
     }
 
+    func test_decodeToken_extractsTokenUUIDFromOverflowServiceUUIDs() {
+        let token = "0011223344556677"
+        guard let payload = sut._test_makeAdvertisingPayload(token: token) else {
+            XCTFail("Expected payload")
+            return
+        }
+
+        let data: [String: Any] = [
+            CBAdvertisementDataOverflowServiceUUIDsKey: [BLEManager.Constants.appServiceUUID, payload.tokenUUID]
+        ]
+
+        XCTAssertEqual(sut._test_decodeToken(fromAdvertisementData: data), token)
+    }
+
     func test_shouldEmitDetection_filtersByRSSI() {
         let token = "0011223344556677"
         let now = Date(timeIntervalSince1970: 0)
@@ -75,6 +89,15 @@ final class BLEManagerMinimalTests: XCTestCase {
 
         XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
         XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now.addingTimeInterval(1)))
+    }
+
+    func test_shouldEmitDetection_inBackgroundRequiresSingleDetection() {
+        let token = "0011223344556677"
+        let now = Date(timeIntervalSince1970: 0)
+
+        sut.updateAppForegroundState(false)
+
+        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
     }
 
     func test_shouldEmitDetection_resetsCountOutsideWindow() {
