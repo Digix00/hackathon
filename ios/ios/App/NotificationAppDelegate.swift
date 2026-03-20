@@ -18,14 +18,6 @@ final class NotificationAppDelegate: NSObject, UIApplicationDelegate, UNUserNoti
     }
 
     func application(
-        _ app: UIApplication,
-        open url: URL,
-        options: [UIApplication.OpenURLOptionsKey: Any] = [:]
-    ) -> Bool {
-        GoogleSignInCoordinator.handle(url: url)
-    }
-
-    func application(
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
@@ -77,10 +69,19 @@ final class NotificationAppDelegate: NSObject, UIApplicationDelegate, UNUserNoti
         }
 
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, trimmed != "demo" else {
+        guard !isInvalidFirebaseInfoValue(trimmed) else {
             return nil
         }
         return trimmed
+    }
+
+    private func isInvalidFirebaseInfoValue(_ value: String) -> Bool {
+        if value.isEmpty || value == "demo" || value.hasPrefix("YOUR_") {
+            return true
+        }
+
+        // Treat unresolved build setting placeholders as missing configuration.
+        return value.hasPrefix("$(") && value.hasSuffix(")")
     }
 #endif
 }

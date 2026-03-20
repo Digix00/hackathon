@@ -1,5 +1,4 @@
 import AuthenticationServices
-import Combine
 import CryptoKit
 import Security
 import SwiftUI
@@ -160,10 +159,15 @@ final class AuthGateViewModel: ObservableObject {
 
     func prepareAppleRequest(_ request: ASAuthorizationAppleIDRequest) {
         errorMessage = nil
-        let nonce = Self.randomNonceString()
-        currentNonce = nonce
-        request.requestedScopes = [.fullName, .email]
-        request.nonce = Self.sha256(nonce)
+        do {
+            let nonce = try Self.randomNonceString()
+            currentNonce = nonce
+            request.requestedScopes = [.fullName, .email]
+            request.nonce = Self.sha256(nonce)
+        } catch {
+            currentNonce = nil
+            errorMessage = error.localizedDescription
+        }
     }
 
     func handleAppleSignIn(_ result: Result<ASAuthorization, Error>) {
@@ -181,6 +185,7 @@ final class AuthGateViewModel: ObservableObject {
 
     func signInWithGoogle() {
         Task {
+            errorMessage = nil
             isLoading = true
             defer { isLoading = false }
 
@@ -296,17 +301,17 @@ final class AuthGateViewModel: ObservableObject {
         return hashed.map { String(format: "%02x", $0) }.joined()
     }
 
-    private static func randomNonceString(length: Int = 32) -> String {
+    private static func randomNonceString(length: Int = 32) throws -> String {
         let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
         var result = ""
         var remainingLength = length
 
         while remainingLength > 0 {
-            let randoms: [UInt8] = (0..<16).map { _ in
+            let randoms: [UInt8] = try (0..<16).map { _ in
                 var random: UInt8 = 0
                 let status = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
                 if status != errSecSuccess {
-                    fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(status)")
+                    throw AuthGateError.nonceGenerationFailed
                 }
                 return random
             }
@@ -327,6 +332,7 @@ final class AuthGateViewModel: ObservableObject {
 private enum AuthGateError: LocalizedError {
     case invalidAppleCredential
     case missingNonce
+    case nonceGenerationFailed
     case invalidAppleToken
     case missingGoogleClientID
     case missingGoogleIDToken
@@ -341,6 +347,8 @@ private enum AuthGateError: LocalizedError {
             return "Apple ログイン情報を取得できませんでした。"
         case .missingNonce:
             return "Apple ログインの nonce が失われました。再試行してください。"
+        case .nonceGenerationFailed:
+            return "Apple ログインの準備に失敗しました。再試行してください。"
         case .invalidAppleToken:
             return "Apple の ID トークンを読み取れませんでした。"
         case .missingGoogleClientID:
