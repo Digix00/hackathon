@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -70,6 +71,7 @@ func (h *musicHandler) callback(c echo.Context) error {
 	if err := h.musicUsecase.HandleCallback(c.Request().Context(), provider, code, state); err != nil {
 		result = "error"
 		errorCode = domainErrorCode(err)
+		log.Printf("[SPOTIFY_CALLBACK_ERROR] provider=%s code=%s error=%v", provider, code, err)
 	}
 	return c.Redirect(http.StatusFound, h.musicUsecase.CallbackRedirectURL(provider, result, errorCode))
 }
