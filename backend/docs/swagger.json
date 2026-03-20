@@ -2028,10 +2028,9 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "raw バイナリ（JPEG または PNG）を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に PATCH /users/me で avatar_url を保存すること。",
+                "description": "multipart/form-data でアバター画像を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に PATCH /users/me で avatar_url を保存すること。",
                 "consumes": [
-                    "image/jpeg",
-                    "image/png"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -2041,6 +2040,15 @@
                 ],
                 "summary": "アバター画像アップロード",
                 "operationId": "uploadAvatar",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "アバター画像（JPEG または PNG、最大 5MB）",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

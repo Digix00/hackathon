@@ -2386,11 +2386,16 @@ paths:
   /api/v1/users/me/avatar:
     post:
       consumes:
-      - image/jpeg
-      - image/png
-      description: raw バイナリ（JPEG または PNG）を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に
+      - multipart/form-data
+      description: multipart/form-data でアバター画像を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に
         PATCH /users/me で avatar_url を保存すること。
       operationId: uploadAvatar
+      parameters:
+      - description: アバター画像（JPEG または PNG、最大 5MB）
+        in: formData
+        name: file
+        required: true
+        type: file
       produces:
       - application/json
       responses:

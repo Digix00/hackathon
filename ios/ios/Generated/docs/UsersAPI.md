@@ -256,21 +256,22 @@ Name | Type | Description  | Notes
 
 # **uploadAvatar**
 ```swift
-    open class func uploadAvatar(completion: @escaping (_ data: [String: String]?, _ error: Error?) -> Void)
+    open class func uploadAvatar(file: URL, completion: @escaping (_ data: [String: String]?, _ error: Error?) -> Void)
 ```
 
 アバター画像アップロード
 
-raw バイナリ（JPEG または PNG）を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に PATCH /users/me で avatar_url を保存すること。
+multipart/form-data でアバター画像を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に PATCH /users/me で avatar_url を保存すること。
 
 ### Example
 ```swift
 // The following code samples are still beta. For any issue, please report via http://github.com/OpenAPITools/openapi-generator/issues/new
 import OpenAPIClient
 
+let file = URL(string: "https://example.com")! // URL | アバター画像（JPEG または PNG、最大 5MB）
 
 // アバター画像アップロード
-UsersAPI.uploadAvatar() { (response, error) in
+UsersAPI.uploadAvatar(file: file) { (response, error) in
     guard error == nil else {
         print(error)
         return
@@ -283,7 +284,10 @@ UsersAPI.uploadAvatar() { (response, error) in
 ```
 
 ### Parameters
-This endpoint does not need any parameter.
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **file** | **URL** | アバター画像（JPEG または PNG、最大 5MB） | 
 
 ### Return type
 
@@ -295,7 +299,7 @@ This endpoint does not need any parameter.
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: multipart/form-data
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

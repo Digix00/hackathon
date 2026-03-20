@@ -221,11 +221,12 @@ func (h *userHandler) patchMe(c echo.Context) error {
 // uploadAvatar godoc
 // @ID           uploadAvatar
 // @Summary      アバター画像アップロード
-// @Description  raw バイナリ（JPEG または PNG）を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に PATCH /users/me で avatar_url を保存すること。
+// @Description  multipart/form-data でアバター画像を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に PATCH /users/me で avatar_url を保存すること。
 // @Tags         users
-// @Accept       image/jpeg,image/png
+// @Accept       multipart/form-data
 // @Produce      json
 // @Security     BearerAuth
+// @Param        file formData file true "アバター画像（JPEG または PNG、最大 5MB）"
 // @Success      200  {object}  map[string]string
 // @Failure      400  {object}  errorResponse
 // @Failure      401  {object}  errorResponse
@@ -245,18 +246,27 @@ func (h *userHandler) uploadAvatar(c echo.Context) error {
 		})
 	}
 
-	mimeType := c.Request().Header.Get("Content-Type")
+	const maxSize = 5 << 20 // 5MB
+	file, header, err := c.Request().FormFile("file")
+	if err != nil {
+		return errBadRequest("file is required")
+	}
+	defer file.Close()
+
+	mimeType := header.Header.Get("Content-Type")
 	if mimeType != "image/jpeg" && mimeType != "image/png" {
-		return errBadRequest("Content-Type must be image/jpeg or image/png")
+		return errBadRequest("file Content-Type must be image/jpeg or image/png")
 	}
 
-	const maxSize = 5 << 20 // 5MB
-	data, err := io.ReadAll(io.LimitReader(c.Request().Body, maxSize+1))
+	data, err := io.ReadAll(io.LimitReader(file, maxSize+1))
 	if err != nil {
-		return errBadRequest("failed to read request body")
+		return errBadRequest("failed to read file")
+	}
+	if len(data) == 0 {
+		return errBadRequest("file is empty")
 	}
 	if int64(len(data)) > maxSize {
-		return errBadRequest("image size must not exceed 5MB")
+		return errBadRequest("file size must not exceed 5MB")
 	}
 
 	avatarURL, err := h.avatarUploader.UploadAvatar(c.Request().Context(), uid, data, mimeType)

@@ -179,6 +179,7 @@ final class ProfileEditViewModel: ObservableObject {
             ageVisibility = ProfileAgeVisibility(rawValue: updated.ageVisibility ?? "hidden") ?? .hidden
             prefectureId = updated.prefectureId ?? ""
             sex = ProfileSex(rawValue: updated.sex ?? "no-answer") ?? .noAnswer
+            previewImage = nil
             successMessage = "プロフィールを保存しました"
         } catch {
             errorMessage = "プロフィールの保存に失敗しました"

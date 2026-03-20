@@ -81,7 +81,21 @@ actor BackendAPIClient: BackendUserAPIClient {
     }
 
     func uploadAvatar(_ imageData: Data, mimeType: String) async throws -> String {
-        let result = try await send(path: "users/me/avatar", method: "POST", body: imageData, contentType: mimeType)
+        let boundary = UUID().uuidString
+        let filename = mimeType == "image/png" ? "avatar.png" : "avatar.jpg"
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+
+        let result = try await send(
+            path: "users/me/avatar",
+            method: "POST",
+            body: body,
+            contentType: "multipart/form-data; boundary=\(boundary)"
+        )
         guard result.response.statusCode == 200 else {
             throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
         }

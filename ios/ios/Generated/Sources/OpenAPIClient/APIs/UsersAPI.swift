@@ -209,31 +209,38 @@ open class UsersAPI {
     /**
      アバター画像アップロード
      
+     - parameter file: (form) アバター画像（JPEG または PNG、最大 5MB） 
      - returns: [String: String]
      */
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-    open class func uploadAvatar() async throws -> [String: String] {
-        return try await uploadAvatarWithRequestBuilder().execute().body
+    open class func uploadAvatar(file: URL) async throws -> [String: String] {
+        return try await uploadAvatarWithRequestBuilder(file: file).execute().body
     }
 
     /**
      アバター画像アップロード
      - POST /api/v1/users/me/avatar
-     - raw バイナリ（JPEG または PNG）を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に PATCH /users/me で avatar_url を保存すること。
+     - multipart/form-data でアバター画像を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に PATCH /users/me で avatar_url を保存すること。
      - API Key:
        - type: apiKey Authorization (HEADER)
        - name: BearerAuth
+     - parameter file: (form) アバター画像（JPEG または PNG、最大 5MB） 
      - returns: RequestBuilder<[String: String]> 
      */
-    open class func uploadAvatarWithRequestBuilder() -> RequestBuilder<[String: String]> {
+    open class func uploadAvatarWithRequestBuilder(file: URL) -> RequestBuilder<[String: String]> {
         let localVariablePath = "/api/v1/users/me/avatar"
         let localVariableURLString = OpenAPIClientAPI.basePath + localVariablePath
-        let localVariableParameters: [String: Any]? = nil
+        let localVariableFormParams: [String: Any?] = [
+            "file": file.encodeToJSON(),
+        ]
+
+        let localVariableNonNullParameters = APIHelper.rejectNil(localVariableFormParams)
+        let localVariableParameters = APIHelper.convertBoolToString(localVariableNonNullParameters)
 
         let localVariableUrlComponents = URLComponents(string: localVariableURLString)
 
         let localVariableNillableHeaders: [String: Any?] = [
-            :
+            "Content-Type": "multipart/form-data",
         ]
 
         let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
