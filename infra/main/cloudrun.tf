@@ -309,8 +309,12 @@ resource "google_cloud_run_v2_service" "migrate" {
 
 # Cloud Run Function（デモデータ一括投入）
 # HTTP POST で起動し、DB への seed 完了後に 200 を返して終了する。
-# 手元から以下で実行する（認証付き）:
-#   curl -X POST -H "Authorization: Bearer $(gcloud auth print-identity-token)" $(terraform output -raw seed_demo_url)
+# 手元から以下で実行する（terraform_ci SA を impersonate して IDトークンを取得）:
+#   SEED_URL=$(terraform output -raw seed_demo_url)
+#   TOKEN=$(gcloud auth print-identity-token \
+#     --impersonate-service-account=<TERRAFORM_CI_SA_EMAIL> \
+#     --audiences="$SEED_URL")
+#   curl -X POST -H "Authorization: Bearer $TOKEN" "$SEED_URL/"
 # タイムアウト上限は 3600s（60 分）。
 resource "google_cloud_run_v2_service" "seed_demo" {
   name     = "seed-demo"
@@ -370,6 +374,21 @@ resource "google_cloud_run_v2_service" "seed_demo" {
             version = "latest"
           }
         }
+      }
+
+      env {
+        name = "MUSIC_TOKEN_ENCRYPTION_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.music_token_encryption_key.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name  = "SEED_TARGET_USER_ID"
+        value = var.seed_target_user_id
       }
 
       volume_mounts {
