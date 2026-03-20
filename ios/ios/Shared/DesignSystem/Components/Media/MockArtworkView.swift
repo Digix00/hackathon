@@ -48,8 +48,8 @@ struct MockArtworkView: View {
 
     @ViewBuilder
     private var content: some View {
-        if let artworkURLString = artwork, let artworkURL = URL(string: artworkURLString) {
-            AsyncImage(url: artworkURL) { phase in
+        if let artwork, let url = URL(string: artwork) {
+            AsyncImage(url: url) { phase in
                 switch phase {
                 case .success(let image):
                     image
@@ -58,16 +58,16 @@ struct MockArtworkView: View {
                         .frame(width: size, height: size)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 default:
-                    fallbackView
+                    placeholder
                 }
             }
             .frame(width: size, height: size)
         } else {
-            fallbackView
+            placeholder
         }
     }
 
-    private var fallbackView: some View {
+    private var placeholder: some View {
         RoundedRectangle(cornerRadius: 14, style: .continuous)
             .fill(
                 LinearGradient(

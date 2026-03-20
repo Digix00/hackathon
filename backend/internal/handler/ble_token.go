@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	"hackathon/internal/handler/schema/response"
@@ -12,11 +13,12 @@ import (
 )
 
 type bleTokenHandler struct {
+	log     *zap.Logger
 	usecase usecase.BleTokenUsecase
 }
 
-func newBleTokenHandler(u usecase.BleTokenUsecase) *bleTokenHandler {
-	return &bleTokenHandler{usecase: u}
+func newBleTokenHandler(log *zap.Logger, u usecase.BleTokenUsecase) *bleTokenHandler {
+	return &bleTokenHandler{log: log, usecase: u}
 }
 
 // createBleToken godoc

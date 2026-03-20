@@ -3,6 +3,8 @@ package usecase
 import (
 	"context"
 
+	"go.uber.org/zap"
+
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
 	usecasedto "hackathon/internal/usecase/dto"
@@ -14,13 +16,15 @@ type LyricUsecase interface {
 }
 
 type lyricUsecase struct {
+	log           *zap.Logger
 	userRepo      repository.UserRepository
 	encounterRepo repository.EncounterRepository
 	lyricRepo     repository.LyricRepository
 }
 
-func NewLyricUsecase(userRepo repository.UserRepository, encounterRepo repository.EncounterRepository, lyricRepo repository.LyricRepository) LyricUsecase {
+func NewLyricUsecase(log *zap.Logger, userRepo repository.UserRepository, encounterRepo repository.EncounterRepository, lyricRepo repository.LyricRepository) LyricUsecase {
 	return &lyricUsecase{
+		log:           log,
 		userRepo:      userRepo,
 		encounterRepo: encounterRepo,
 		lyricRepo:     lyricRepo,

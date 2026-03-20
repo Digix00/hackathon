@@ -175,6 +175,13 @@ actor BLEBackendClient {
     }
 
     private func fetchBearerToken() async throws -> String {
+        if let devToken = ProcessInfo.processInfo.environment["DEV_AUTH_TOKEN"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+            !devToken.isEmpty
+        {
+            return devToken
+        }
+
         if let fixed = ProcessInfo.processInfo.environment["FIREBASE_ID_TOKEN"]?
             .trimmingCharacters(in: .whitespacesAndNewlines),
             !fixed.isEmpty
@@ -374,6 +381,9 @@ actor BLEBackendClient {
             let occurredAt = Date(timeIntervalSince1970: TimeInterval(next.occurredAtEpochMs) / 1_000)
 
             do {
+                #if DEBUG
+                print("[BLEBackendClient] post encounter token=\(next.targetBLEToken) rssi=\(next.rssi) attempts=\(next.attempts)")
+                #endif
                 try await postEncounter(
                     targetBLEToken: next.targetBLEToken,
                     rssi: next.rssi,
@@ -386,6 +396,9 @@ actor BLEBackendClient {
                 if case let BackendError.unexpectedStatus(statusCode) = error,
                    Self.isPermanentHTTPFailure(statusCode)
                 {
+                    #if DEBUG
+                    print("[BLEBackendClient] drop encounter token=\(next.targetBLEToken) status=\(statusCode) reason=permanent_http_failure")
+                    #endif
                     markAsFailedAndDropPending(
                         encounter: next,
                         statusCode: statusCode,
@@ -397,6 +410,9 @@ actor BLEBackendClient {
 
                 next.attempts += 1
                 if next.attempts >= Self.maxRetryAttempts {
+                    #if DEBUG
+                    print("[BLEBackendClient] drop encounter token=\(next.targetBLEToken) reason=max_retry_exceeded")
+                    #endif
                     markAsFailedAndDropPending(
                         encounter: next,
                         statusCode: nil,
@@ -408,6 +424,9 @@ actor BLEBackendClient {
 
                 pendingEncounters[0] = next
                 persistPendingEncounters()
+                #if DEBUG
+                print("[BLEBackendClient] retry encounter token=\(next.targetBLEToken) attempts=\(next.attempts) delay=\(retryDelaySeconds)s error=\(error)")
+                #endif
                 try? await Task.sleep(nanoseconds: retryDelaySeconds * 1_000_000_000)
                 retryDelaySeconds = min(retryDelaySeconds * 2, Self.maxRetryDelaySeconds)
             }

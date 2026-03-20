@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
+
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
@@ -34,6 +36,7 @@ type MusicUsecase interface {
 }
 
 type musicUsecase struct {
+	log                 *zap.Logger
 	userRepo            repository.UserRepository
 	musicConnectionRepo repository.MusicConnectionRepository
 	trackCatalogRepo    repository.TrackCatalogRepository
@@ -51,6 +54,7 @@ type musicStatePayload struct {
 }
 
 func NewMusicUsecase(
+	log *zap.Logger,
 	userRepo repository.UserRepository,
 	musicConnectionRepo repository.MusicConnectionRepository,
 	trackCatalogRepo repository.TrackCatalogRepository,
@@ -66,6 +70,7 @@ func NewMusicUsecase(
 		providerMap[provider.Provider()] = provider
 	}
 	return &musicUsecase{
+		log:                 log,
 		userRepo:            userRepo,
 		musicConnectionRepo: musicConnectionRepo,
 		trackCatalogRepo:    trackCatalogRepo,

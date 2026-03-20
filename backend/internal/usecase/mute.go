@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"go.uber.org/zap"
+
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
@@ -19,12 +21,14 @@ type MuteUsecase interface {
 }
 
 type muteUsecase struct {
+	log      *zap.Logger
 	userRepo repository.UserRepository
 	muteRepo repository.MuteRepository
 }
 
-func NewMuteUsecase(userRepo repository.UserRepository, muteRepo repository.MuteRepository) MuteUsecase {
+func NewMuteUsecase(log *zap.Logger, userRepo repository.UserRepository, muteRepo repository.MuteRepository) MuteUsecase {
 	return &muteUsecase{
+		log:      log,
 		userRepo: userRepo,
 		muteRepo: muteRepo,
 	}

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"hackathon/internal/infra/rdb/model"
@@ -79,7 +80,7 @@ func TestIntegration_BleTokenRepository_DeleteExpired_RemovesExpiredTokens(t *te
 	expired1 := seedBleTokenRecord(t, user.ID, now.Add(-48*time.Hour), now.Add(-24*time.Hour))
 	expired2 := seedBleTokenRecord(t, user.ID, now.Add(-2*time.Hour), now.Add(-1*time.Hour))
 
-	repo := NewBleTokenRepository(sharedTestDB)
+	repo := NewBleTokenRepository(zap.NewNop(), sharedTestDB)
 	deleted, err := repo.DeleteExpired(context.Background())
 	if err != nil {
 		t.Fatalf("DeleteExpired: %v", err)
@@ -113,7 +114,7 @@ func TestIntegration_BleTokenRepository_DeleteExpired_KeepsValidTokens(t *testin
 	_ = seedBleTokenRecord(t, user.ID, now.Add(-48*time.Hour), now.Add(-24*time.Hour))    // expired
 	valid := seedBleTokenRecord(t, user.ID, now.Add(-1*time.Hour), now.Add(23*time.Hour)) // valid
 
-	repo := NewBleTokenRepository(sharedTestDB)
+	repo := NewBleTokenRepository(zap.NewNop(), sharedTestDB)
 	deleted, err := repo.DeleteExpired(context.Background())
 	if err != nil {
 		t.Fatalf("DeleteExpired: %v", err)
@@ -143,7 +144,7 @@ func TestIntegration_BleTokenRepository_DeleteExpired_ReturnsZeroWhenNothingToDe
 	now := time.Now().UTC()
 	_ = seedBleTokenRecord(t, user.ID, now.Add(-1*time.Hour), now.Add(23*time.Hour)) // valid only
 
-	repo := NewBleTokenRepository(sharedTestDB)
+	repo := NewBleTokenRepository(zap.NewNop(), sharedTestDB)
 	deleted, err := repo.DeleteExpired(context.Background())
 	if err != nil {
 		t.Fatalf("DeleteExpired: %v", err)
@@ -165,7 +166,7 @@ func TestIntegration_WorkerUsecase_DeleteExpiredBleTokens(t *testing.T) {
 	_ = seedBleTokenRecord(t, user.ID, now.Add(-24*time.Hour), now.Add(-1*time.Hour))     // expired
 	_ = seedBleTokenRecord(t, user.ID, now.Add(-30*time.Minute), now.Add(30*time.Minute)) // valid
 
-	workerUsecase := usecase.NewWorkerUsecase(NewBleTokenRepository(sharedTestDB), nil, nil, nil, nil, 45)
+	workerUsecase := usecase.NewWorkerUsecase(zap.NewNop(), NewBleTokenRepository(zap.NewNop(), sharedTestDB), nil, nil, nil, nil, 45, 300)
 	deleted, err := workerUsecase.DeleteExpiredBleTokens(context.Background())
 	if err != nil {
 		t.Fatalf("DeleteExpiredBleTokens: %v", err)

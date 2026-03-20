@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"go.uber.org/zap"
+
 	"hackathon/internal/domain/entity"
 	domainerrs "hackathon/internal/domain/errs"
 	"hackathon/internal/domain/repository"
@@ -19,12 +21,14 @@ type BlockUsecase interface {
 }
 
 type blockUsecase struct {
+	log       *zap.Logger
 	userRepo  repository.UserRepository
 	blockRepo repository.BlockRepository
 }
 
-func NewBlockUsecase(userRepo repository.UserRepository, blockRepo repository.BlockRepository) BlockUsecase {
+func NewBlockUsecase(log *zap.Logger, userRepo repository.UserRepository, blockRepo repository.BlockRepository) BlockUsecase {
 	return &blockUsecase{
+		log:       log,
 		userRepo:  userRepo,
 		blockRepo: blockRepo,
 	}

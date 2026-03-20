@@ -36,6 +36,18 @@ final class GeneratedSongsViewModel: ObservableObject {
         Task { await loadSongs(reset: true) }
     }
 
+    func latestSong() async -> GeneratedSong? {
+        do {
+            let response = try await client.listMySongs(cursor: nil)
+            let latest = response.songs.max {
+                ($0.generatedAt ?? .distantPast) < ($1.generatedAt ?? .distantPast)
+            } ?? response.songs.first
+            return latest.map(Self.mapSong)
+        } catch {
+            return nil
+        }
+    }
+
     func loadMoreIfNeeded(currentSong: GeneratedSong) {
         guard hasMore, !isLoadingMore, !isLoading else { return }
         guard songs.last?.id == currentSong.id else { return }
@@ -68,9 +80,6 @@ final class GeneratedSongsViewModel: ObservableObject {
             nextCursor = response.pagination.nextCursor
         } catch {
             errorMessage = "生成曲の取得に失敗しました"
-            if reset {
-                hasLoaded = false
-            }
         }
 
         isLoading = false
@@ -93,6 +102,8 @@ final class GeneratedSongsViewModel: ObservableObject {
             color: paletteColor(for: song.id),
             participantCount: participantCount,
             generatedAt: song.generatedAt,
+            durationSec: song.durationSec,
+            mood: song.mood,
             myLyric: song.myLyric.isEmpty ? nil : song.myLyric,
             audioURL: song.audioURL,
             chainId: song.chainId,

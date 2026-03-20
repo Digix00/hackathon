@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hackathon/internal/domain/repository"
 	"hackathon/internal/usecase/port"
@@ -33,33 +34,42 @@ type WorkerUsecase interface {
 }
 
 type workerUsecase struct {
-	bleTokenRepo  repository.BleTokenRepository
-	lyriaJobRepo  repository.LyriaJobRepository
-	geminiClient  port.GeminiClient
-	lyriaClient   port.LyriaClient
-	songUploader  SongUploader
-	defaultDurSec int
+	log             *zap.Logger
+	bleTokenRepo    repository.BleTokenRepository
+	lyriaJobRepo    repository.LyriaJobRepository
+	geminiClient    port.GeminiClient
+	lyriaClient     port.LyriaClient
+	songUploader    SongUploader
+	defaultDurSec   int
+	lyriaTimeoutSec int
 }
 
 // NewWorkerUsecase は WorkerUsecase を初期化する
 func NewWorkerUsecase(
+	log *zap.Logger,
 	bleTokenRepo repository.BleTokenRepository,
 	lyriaJobRepo repository.LyriaJobRepository,
 	geminiClient port.GeminiClient,
 	lyriaClient port.LyriaClient,
 	songUploader SongUploader,
 	defaultDurSec int,
+	lyriaTimeoutSec int,
 ) WorkerUsecase {
 	if defaultDurSec <= 0 {
 		defaultDurSec = 45
 	}
+	if lyriaTimeoutSec <= 0 {
+		lyriaTimeoutSec = 300
+	}
 	return &workerUsecase{
-		bleTokenRepo:  bleTokenRepo,
-		lyriaJobRepo:  lyriaJobRepo,
-		geminiClient:  geminiClient,
-		lyriaClient:   lyriaClient,
-		songUploader:  songUploader,
-		defaultDurSec: defaultDurSec,
+		log:             log,
+		bleTokenRepo:    bleTokenRepo,
+		lyriaJobRepo:    lyriaJobRepo,
+		geminiClient:    geminiClient,
+		lyriaClient:     lyriaClient,
+		songUploader:    songUploader,
+		defaultDurSec:   defaultDurSec,
+		lyriaTimeoutSec: lyriaTimeoutSec,
 	}
 }
 
@@ -67,9 +77,12 @@ func (u *workerUsecase) DeleteExpiredBleTokens(ctx context.Context) (int64, erro
 	return u.bleTokenRepo.DeleteExpired(ctx)
 }
 
-// ProcessLyriaJobs は pending 状態のジョブを最大 5 件処理する
+// ProcessLyriaJobs は pending 状態のジョブを最大 2 件処理する。
+// Lyria 1ジョブあたり最大 lyriaTimeoutSec(300s) + Gemini + upload 等で約 320s かかるため、
+// 2件で最大 640s となり Cloud Run timeout(900s) に対してバッファを確保できる。
+// 5件では worst case 1500s+ となり Cloud Run に途中で切られる。
 func (u *workerUsecase) ProcessLyriaJobs(ctx context.Context) (int, error) {
-	jobs, err := u.lyriaJobRepo.ClaimPendingJobs(ctx, 5)
+	jobs, err := u.lyriaJobRepo.ClaimPendingJobs(ctx, 2)
 	if err != nil {
 		return 0, fmt.Errorf("ProcessLyriaJobs: claim failed: %w", err)
 	}
@@ -120,8 +133,10 @@ func (u *workerUsecase) processJob(ctx context.Context, job repository.OutboxLyr
 		}
 	}
 
-	// Lyria で楽曲生成
-	lyriaResp, err := u.lyriaClient.GenerateSong(ctx, &port.LyriaRequest{
+	// Lyria で楽曲生成（LYRIA_TIMEOUT_SEC で設定した秒数でタイムアウト）
+	lyriaCtx, lyriaCancel := context.WithTimeout(ctx, time.Duration(u.lyriaTimeoutSec)*time.Second)
+	defer lyriaCancel()
+	lyriaResp, err := u.lyriaClient.GenerateSong(lyriaCtx, &port.LyriaRequest{
 		Lyrics:      lyrics,
 		Mood:        analysis.Mood,
 		Genre:       analysis.Genre,

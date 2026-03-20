@@ -757,6 +757,8 @@ nonisolated struct BackendUserSong: Decodable, Equatable {
     let id: String
     let title: String?
     let audioURL: String?
+    let durationSec: Int?
+    let mood: String?
     let generatedAt: Date?
     let participantCount: Int
     let myLyric: String
@@ -767,6 +769,8 @@ nonisolated struct BackendUserSong: Decodable, Equatable {
         case id
         case title
         case audioURL = "audio_url"
+        case durationSec = "duration_sec"
+        case mood
         case generatedAt = "generated_at"
         case participantCount = "participant_count"
         case myLyric = "my_lyric"

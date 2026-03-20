@@ -176,7 +176,7 @@ struct EncounterPrimaryActions: View {
                 HStack(spacing: 12) {
                     Image(systemName: "sparkles")
                         .font(.system(size: 18, weight: .bold))
-                    Text("想いを刻む")
+                    Text("この歌詞で曲を作る")
                         .font(PrototypeTheme.Typography.font(size: 16, weight: .bold))
                 }
                 .foregroundStyle(PrototypeTheme.textPrimary)

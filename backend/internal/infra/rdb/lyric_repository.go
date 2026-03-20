@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -18,11 +19,12 @@ import (
 )
 
 type lyricRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
-func NewLyricRepository(db *gorm.DB) repository.LyricRepository {
-	return &lyricRepository{db: db}
+func NewLyricRepository(log *zap.Logger, db *gorm.DB) repository.LyricRepository {
+	return &lyricRepository{log: log, db: db}
 }
 
 func (r *lyricRepository) SubmitEntry(ctx context.Context, userID, encounterID, content string) (repository.SubmitLyricResult, error) {

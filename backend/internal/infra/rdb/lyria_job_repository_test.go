@@ -9,6 +9,8 @@ import (
 
 	"github.com/google/uuid"
 
+	"go.uber.org/zap"
+
 	"hackathon/internal/domain/repository"
 	"hackathon/internal/infra/rdb/model"
 )
@@ -97,7 +99,7 @@ func TestLyriaJobRepository_ClaimPendingJobs(t *testing.T) {
 	}
 
 	chainID, jobID := setupLyriaTestData(t)
-	repo := NewLyriaJobRepository(sharedTestDB)
+	repo := NewLyriaJobRepository(zap.NewNop(), sharedTestDB)
 
 	jobs, err := repo.ClaimPendingJobs(context.Background(), 5)
 	if err != nil {
@@ -141,7 +143,7 @@ func TestLyriaJobRepository_CompleteJob(t *testing.T) {
 	}
 
 	chainID, jobID := setupLyriaTestData(t)
-	repo := NewLyriaJobRepository(sharedTestDB)
+	repo := NewLyriaJobRepository(zap.NewNop(), sharedTestDB)
 
 	// まず claim して processing にする
 	_, err := repo.ClaimPendingJobs(context.Background(), 5)
@@ -205,7 +207,7 @@ func TestLyriaJobRepository_FailJob_Retry(t *testing.T) {
 	}
 
 	_, jobID := setupLyriaTestData(t)
-	repo := NewLyriaJobRepository(sharedTestDB)
+	repo := NewLyriaJobRepository(zap.NewNop(), sharedTestDB)
 
 	// claim
 	if _, err := repo.ClaimPendingJobs(context.Background(), 5); err != nil {
@@ -236,7 +238,7 @@ func TestLyriaJobRepository_FailJob_MaxRetry(t *testing.T) {
 	}
 
 	_, jobID := setupLyriaTestData(t)
-	repo := NewLyriaJobRepository(sharedTestDB)
+	repo := NewLyriaJobRepository(zap.NewNop(), sharedTestDB)
 
 	// retry_count を maxRetryCount-1 に設定してから失敗させる
 	sharedTestDB.Model(&model.OutboxLyriaJob{}).Where("id = ?", jobID).
@@ -266,7 +268,7 @@ func TestLyriaJobRepository_FailJob_Permanent(t *testing.T) {
 	}
 
 	chainID, jobID := setupLyriaTestData(t)
-	repo := NewLyriaJobRepository(sharedTestDB)
+	repo := NewLyriaJobRepository(zap.NewNop(), sharedTestDB)
 
 	// claim して processing にする
 	if _, err := repo.ClaimPendingJobs(context.Background(), 5); err != nil {

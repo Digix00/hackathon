@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	"go.uber.org/zap"
+
 	"hackathon/internal/domain/entity"
 	"hackathon/internal/domain/repository"
 	"hackathon/internal/usecase/port"
@@ -101,13 +103,14 @@ func TestProcessLyriaJobs_Success(t *testing.T) {
 		},
 	}
 
-	uc := NewWorkerUsecase(
+	uc := NewWorkerUsecase(zap.NewNop(),
 		&stubBleTokenRepo{byUserID: make(map[string]entity.BleToken), byToken: make(map[string]entity.BleToken)},
 		jobRepo,
 		&stubGeminiClient{},
 		&stubLyriaClient{},
 		&stubSongUploader{},
 		45,
+		300,
 	)
 
 	processed, err := uc.ProcessLyriaJobs(context.Background())
@@ -131,13 +134,14 @@ func TestProcessLyriaJobs_Success(t *testing.T) {
 func TestProcessLyriaJobs_NoPendingJobs(t *testing.T) {
 	jobRepo := &stubLyriaJobRepo{pendingJobs: nil}
 
-	uc := NewWorkerUsecase(
+	uc := NewWorkerUsecase(zap.NewNop(),
 		&stubBleTokenRepo{byUserID: make(map[string]entity.BleToken), byToken: make(map[string]entity.BleToken)},
 		jobRepo,
 		&stubGeminiClient{},
 		&stubLyriaClient{},
 		&stubSongUploader{},
 		45,
+		300,
 	)
 
 	processed, err := uc.ProcessLyriaJobs(context.Background())
@@ -156,13 +160,14 @@ func TestProcessLyriaJobs_HarmfulContent(t *testing.T) {
 		},
 	}
 
-	uc := NewWorkerUsecase(
+	uc := NewWorkerUsecase(zap.NewNop(),
 		&stubBleTokenRepo{byUserID: make(map[string]entity.BleToken), byToken: make(map[string]entity.BleToken)},
 		jobRepo,
 		&stubGeminiClient{harmful: true},
 		&stubLyriaClient{},
 		&stubSongUploader{},
 		45,
+		300,
 	)
 
 	processed, err := uc.ProcessLyriaJobs(context.Background())
@@ -187,13 +192,14 @@ func TestProcessLyriaJobs_LyriaError(t *testing.T) {
 		},
 	}
 
-	uc := NewWorkerUsecase(
+	uc := NewWorkerUsecase(zap.NewNop(),
 		&stubBleTokenRepo{byUserID: make(map[string]entity.BleToken), byToken: make(map[string]entity.BleToken)},
 		jobRepo,
 		&stubGeminiClient{},
 		&stubLyriaClient{generateErr: errors.New("vertex ai timeout")},
 		&stubSongUploader{},
 		45,
+		300,
 	)
 
 	processed, err := uc.ProcessLyriaJobs(context.Background())
@@ -219,13 +225,14 @@ func TestProcessLyriaJobs_MultipleJobs(t *testing.T) {
 		},
 	}
 
-	uc := NewWorkerUsecase(
+	uc := NewWorkerUsecase(zap.NewNop(),
 		&stubBleTokenRepo{byUserID: make(map[string]entity.BleToken), byToken: make(map[string]entity.BleToken)},
 		jobRepo,
 		&stubGeminiClient{},
 		&stubLyriaClient{},
 		&stubSongUploader{},
 		45,
+		300,
 	)
 
 	processed, err := uc.ProcessLyriaJobs(context.Background())

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	"hackathon/internal/handler/middleware"
 	schemareq "hackathon/internal/handler/schema/request"
@@ -14,11 +15,12 @@ import (
 )
 
 type reportHandler struct {
+	log     *zap.Logger
 	usecase usecase.ReportUsecase
 }
 
-func newReportHandler(u usecase.ReportUsecase) *reportHandler {
-	return &reportHandler{usecase: u}
+func newReportHandler(log *zap.Logger, u usecase.ReportUsecase) *reportHandler {
+	return &reportHandler{log: log, usecase: u}
 }
 
 // createReport godoc

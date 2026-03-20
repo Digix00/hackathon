@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -12,11 +13,12 @@ import (
 )
 
 type userLocationRepository struct {
-	db *gorm.DB
+	log *zap.Logger
+	db  *gorm.DB
 }
 
-func NewUserLocationRepository(db *gorm.DB) repository.UserLocationRepository {
-	return &userLocationRepository{db: db}
+func NewUserLocationRepository(log *zap.Logger, db *gorm.DB) repository.UserLocationRepository {
+	return &userLocationRepository{log: log, db: db}
 }
 
 func (r *userLocationRepository) Upsert(ctx context.Context, id, userID string, lat, lng float64) error {

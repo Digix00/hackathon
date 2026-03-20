@@ -3,6 +3,15 @@ import SwiftUI
 
 @MainActor
 final class BLEAppCoordinator: ObservableObject {
+    struct LatestLyricSubmission: Equatable {
+        let chain: BackendLyricChainSummary
+        let content: String
+
+        var remainingParticipants: Int {
+            max(chain.threshold - chain.participantCount, 0)
+        }
+    }
+
     let bleManager: BLEManager
     @Published private(set) var latestDetectedUser: BLEPublicUser?
     @Published private(set) var encounters: [Encounter] = []
@@ -16,6 +25,7 @@ final class BLEAppCoordinator: ObservableObject {
     @Published private(set) var encounterErrorMessage: String?
     @Published private(set) var settingsErrorMessage: String?
     @Published private(set) var latestLyricChain: BackendLyricChainSummary?
+    @Published private(set) var latestLyricSubmission: LatestLyricSubmission?
     @Published private(set) var isPostingLocation = false
     @Published private(set) var locationPostMessage: String?
     @Published private(set) var locationPostErrorMessage: String?
@@ -141,7 +151,39 @@ final class BLEAppCoordinator: ObservableObject {
             )
         }
         latestLyricChain = response.chain
+        latestLyricSubmission = LatestLyricSubmission(chain: response.chain, content: content)
         return response
+    }
+
+    func clearLatestLyricSubmission() {
+        latestLyricSubmission = nil
+    }
+
+    func clearLatestLyricSubmission(for chainID: String) {
+        guard latestLyricSubmission?.chain.id == chainID else { return }
+        latestLyricSubmission = nil
+    }
+
+    func syncLatestLyricSubmission(with chain: BackendChainDetail) {
+        guard latestLyricSubmission?.chain.id == chain.id else { return }
+
+        let normalizedStatus = chain.status.lowercased()
+        if normalizedStatus == "completed" || normalizedStatus == "failed" {
+            latestLyricSubmission = nil
+            latestLyricChain = nil
+            return
+        }
+
+        let updatedChain = BackendLyricChainSummary(
+            id: chain.id,
+            participantCount: chain.participantCount,
+            status: chain.status,
+            threshold: chain.threshold
+        )
+        latestLyricChain = updatedChain
+        if let current = latestLyricSubmission {
+            latestLyricSubmission = LatestLyricSubmission(chain: updatedChain, content: current.content)
+        }
     }
 
     func setBLEEnabled(_ isEnabled: Bool) {
@@ -245,6 +287,9 @@ final class BLEAppCoordinator: ObservableObject {
             .compactMap { $0 }
             .sink { [backendClient] detection in
                 Task { [weak self] in
+                    #if DEBUG
+                    print("[BLEAppCoordinator] latest detection token=\(detection.token) rssi=\(detection.rssi)")
+                    #endif
                     await backendClient.enqueueEncounter(
                         targetBLEToken: detection.token,
                         rssi: detection.rssi,
@@ -254,9 +299,15 @@ final class BLEAppCoordinator: ObservableObject {
                     do {
                         let user = try await backendClient.fetchUser(forBLEToken: detection.token)
                         await MainActor.run {
+                            #if DEBUG
+                            print("[BLEAppCoordinator] resolved detected user id=\(user.id) name=\(user.displayName)")
+                            #endif
                             self?.latestDetectedUser = user
                         }
                     } catch {
+                        #if DEBUG
+                        print("[BLEAppCoordinator] failed to resolve detected user token=\(detection.token) error=\(error)")
+                        #endif
                         // Ignore lookup failures (expired token / blocked / network).
                     }
 
@@ -392,7 +443,12 @@ final class BLEAppCoordinator: ObservableObject {
 
     private static func makeTrack(from item: BackendEncounterTrack?) -> Track {
         guard let item else {
-            return MockData.featuredTrack
+            return Track(
+                title: "曲情報なし",
+                artist: "Unknown Artist",
+                color: PrototypeTheme.surfaceElevated,
+                artwork: nil
+            )
         }
 
         return Track(
