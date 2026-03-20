@@ -96,7 +96,7 @@ curl -v http://127.0.0.1:8000/healthz/postgres
 - デモコメント: 2件（`demo-user-1` と `demo-user-2` のやり取り）
 - デモ通知: 2件（`demo-user-1` 宛て）
 
-iOS から動作確認する場合は `ios/README.md` の Firebase Auth Emulator 手順を参照してください。
+iOS から動作確認する場合は `../ios/README.md` の Firebase Auth Emulator 手順を参照してください。
 
 ### 5) 開発用認証バイパス（DEV_AUTH_TOKEN）
 
