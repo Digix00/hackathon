@@ -12,6 +12,9 @@ struct GeneratedSongNotificationView: View {
         GeometryReader { proxy in
             let globalWidth = proxy.frame(in: .global).width
             let layoutWidth = globalWidth > 0 ? min(proxy.size.width, globalWidth) : proxy.size.width
+            let horizontalPadding: CGFloat = layoutWidth < 390 ? 20 : 32
+            let readableWidth = max(layoutWidth - (horizontalPadding * 2), 0)
+            let sectionWidth = min(readableWidth, 520)
 
             ZStack {
                 DynamicBackground(baseColor: song.color)
@@ -53,7 +56,7 @@ struct GeneratedSongNotificationView: View {
                             .foregroundStyle(.white.opacity(0.8))
                             .multilineTextAlignment(.center)
                     }
-                    .padding(.horizontal, 32)
+                    .frame(maxWidth: sectionWidth)
 
                     Spacer()
 
@@ -68,13 +71,35 @@ struct GeneratedSongNotificationView: View {
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.white.opacity(0.7))
                     }
-                    .padding(.horizontal, 32)
+                    .frame(maxWidth: sectionWidth)
                 }
+                .padding(.horizontal, horizontalPadding)
                 .padding(.vertical, 32)
                 .frame(width: layoutWidth)
             }
             .frame(width: layoutWidth, height: proxy.size.height)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .safeAreaInset(edge: .top) {
+                HStack {
+                    Spacer()
+
+                    if let onLater {
+                        Button("閉じる") {
+                            onLater()
+                        }
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(Color.black.opacity(0.18))
+                        .clipShape(Capsule())
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .frame(width: layoutWidth)
+                .frame(maxWidth: .infinity, alignment: .center)
+            }
         }
         .ignoresSafeArea()
     }

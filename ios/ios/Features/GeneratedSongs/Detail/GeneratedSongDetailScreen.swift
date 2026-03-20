@@ -45,7 +45,11 @@ struct GeneratedSongDetailView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let layoutWidth = proxy.size.width
+            let globalWidth = proxy.frame(in: .global).width
+            let layoutWidth = globalWidth > 0 ? min(proxy.size.width, globalWidth) : proxy.size.width
+            let horizontalPadding: CGFloat = layoutWidth < 390 ? 20 : 32
+            let readableWidth = max(layoutWidth - (horizontalPadding * 2), 0)
+            let sectionWidth = min(readableWidth, 560)
             
             ZStack {
                 // Background
@@ -94,11 +98,11 @@ struct GeneratedSongDetailView: View {
                                         .foregroundStyle(song.color)
                                 }
                             }
-                            .padding(.horizontal, 32)
+                            .frame(maxWidth: sectionWidth)
 
                             if showContent {
                                 playbackControls
-                                    .padding(.horizontal, 32)
+                                    .frame(maxWidth: sectionWidth)
                                     .transition(.opacity.combined(with: .offset(y: 20)))
                             }
                         }
@@ -119,7 +123,6 @@ struct GeneratedSongDetailView: View {
                                         .fill(PrototypeTheme.border)
                                         .frame(height: 1)
                                 }
-                                .padding(.horizontal, 32)
 
                                 if viewModel.isLoadingLyrics {
                                     ProgressView()
@@ -133,9 +136,11 @@ struct GeneratedSongDetailView: View {
                                         .padding(.vertical, 40)
                                 } else {
                                     LyricEntryList(entries: lyricEntries)
-                                        .padding(.horizontal, 16)
+                                        .padding(.horizontal, 8)
                                 }
                             }
+                            .frame(maxWidth: sectionWidth)
+                            .frame(maxWidth: .infinity)
                             .padding(.top, 60)
                             .transition(.opacity.combined(with: .offset(y: 30)))
                             
@@ -157,14 +162,22 @@ struct GeneratedSongDetailView: View {
                                 }
                                 .disabled(viewModel.isProcessingLike)
                             }
-                            .padding(32)
+                            .frame(maxWidth: sectionWidth)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 32)
                             .transition(.opacity.combined(with: .offset(y: 40)))
                         }
 
                         Spacer(minLength: 100)
                     }
+                    .padding(.horizontal, horizontalPadding)
+                    .frame(width: layoutWidth)
                 }
+                .frame(width: layoutWidth)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
+            .frame(width: layoutWidth, height: proxy.size.height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             .navigationBarBackButtonHidden()
             .safeAreaInset(edge: .top) {
                 HStack {
@@ -187,6 +200,8 @@ struct GeneratedSongDetailView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
+                .frame(width: layoutWidth)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
         }
         .onAppear {

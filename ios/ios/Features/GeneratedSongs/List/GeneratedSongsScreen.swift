@@ -26,26 +26,16 @@ struct GeneratedSongsView: View {
             viewModel.loadIfNeeded()
         }
         .fullScreenCover(item: $celebrationSong) { song in
-            NavigationStack {
-                GeneratedSongNotificationView(
-                    song: song,
-                    onListenNow: {
-                        selectedSong = song
-                        celebrationSong = nil
-                    },
-                    onLater: {
-                        celebrationSong = nil
-                    }
-                )
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("閉じる") {
-                            celebrationSong = nil
-                        }
-                        .foregroundStyle(Color.white)
-                    }
+            GeneratedSongNotificationView(
+                song: song,
+                onListenNow: {
+                    selectedSong = song
+                    celebrationSong = nil
+                },
+                onLater: {
+                    celebrationSong = nil
                 }
-            }
+            )
         }
         .navigationDestination(item: $selectedSong) { song in
             GeneratedSongDetailView(song: song)
@@ -276,5 +266,4 @@ private struct GeneratedSongsStatsHeader: View {
         }
     }
 }
-
 
