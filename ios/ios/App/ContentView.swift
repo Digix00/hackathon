@@ -61,6 +61,7 @@ struct ContentView: View {
             MainPrototypeView(
                 restartOnboarding: { phase = .onboarding }
             )
+            .environmentObject(authSession)
         }
     }
 

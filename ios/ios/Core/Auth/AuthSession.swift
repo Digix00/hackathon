@@ -9,6 +9,10 @@ import FirebaseCore
 import FirebaseAuth
 #endif
 
+#if canImport(GoogleSignIn)
+import GoogleSignIn
+#endif
+
 @MainActor
 final class AuthSession: ObservableObject {
     enum Status {
@@ -18,6 +22,7 @@ final class AuthSession: ObservableObject {
     }
 
     @Published private(set) var status: Status
+    @Published private(set) var isSigningOut = false
     private var didStart = false
 
 #if canImport(FirebaseAuth)
@@ -54,5 +59,23 @@ final class AuthSession: ObservableObject {
             Auth.auth().removeStateDidChangeListener(listenerHandle)
         }
 #endif
+    }
+
+    func signOut() throws {
+        guard !isSigningOut else { return }
+        isSigningOut = true
+        defer { isSigningOut = false }
+
+#if canImport(GoogleSignIn)
+        GIDSignIn.sharedInstance.signOut()
+#endif
+
+#if canImport(FirebaseAuth) && canImport(FirebaseCore)
+        if FirebaseApp.app() != nil, Auth.auth().currentUser != nil {
+            try Auth.auth().signOut()
+        }
+#endif
+
+        status = .signedOut
     }
 }
