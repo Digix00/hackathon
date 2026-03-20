@@ -18,12 +18,20 @@ final class AuthSession: ObservableObject {
     }
 
     @Published private(set) var status: Status
+    private var didStart = false
 
 #if canImport(FirebaseAuth)
     private var listenerHandle: AuthStateDidChangeListenerHandle?
 #endif
 
     init() {
+        status = .checking
+    }
+
+    func startIfNeeded() {
+        guard !didStart else { return }
+        didStart = true
+
 #if canImport(FirebaseAuth) && canImport(FirebaseCore)
         guard FirebaseApp.app() != nil else {
             status = .signedOut
