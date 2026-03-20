@@ -448,7 +448,6 @@ gs://ana-prod-generated-songs/
 │   │   ├── original.wav      # 生成オリジナル
 │   │   └── compressed.mp3    # 配信用圧縮版
 │   └── ...
-└── temp/                      # 一時ファイル（TTL: 24h）
 ```
 
 ### アップロード処理
@@ -554,15 +553,6 @@ resource "google_storage_bucket" "generated_songs" {
 
   uniform_bucket_level_access = true
 
-  lifecycle_rule {
-    condition {
-      age = 1  # temp/配下は1日で削除
-      matches_prefix = ["temp/"]
-    }
-    action {
-      type = "Delete"
-    }
-  }
 }
 
 # サービスアカウントにVertex AI権限付与

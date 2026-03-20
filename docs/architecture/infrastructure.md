@@ -226,17 +226,6 @@ resource "google_storage_bucket" "generated_songs" {
   location = var.region
 
   uniform_bucket_level_access = true
-
-  # temp/ 配下は1日で自動削除
-  lifecycle_rule {
-    condition {
-      age = 1
-      matches_prefix = ["temp/"]
-    }
-    action {
-      type = "Delete"
-    }
-  }
 }
 ```
 
