@@ -518,6 +518,11 @@ resource "google_cloud_run_v2_service" "seed_demo" {
         value = var.seed_target_user_id
       }
 
+      env {
+        name  = "SEED_OTHER_USER_ID"
+        value = var.seed_other_user_id
+      }
+
       volume_mounts {
         name       = "cloudsql"
         mount_path = "/cloudsql"

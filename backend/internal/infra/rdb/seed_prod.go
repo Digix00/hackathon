@@ -92,6 +92,13 @@ const (
 	prodSeedGeneratedSongIDB = "prod-seed-song-02"
 
 	prodSeedSongLikeIDA = "prod-seed-song-like-01"
+
+	// クロスエンカウンター（2人の実ユーザー間）用 ID
+	prodSeedCrossEncounterID     = "prod-seed-cross-enc-01"
+	prodSeedCrossEncTrackIDA     = "prod-seed-cross-enc-track-01"
+	prodSeedCrossEncTrackIDB     = "prod-seed-cross-enc-track-02"
+	prodSeedCrossNotifForUser1   = "prod-seed-cross-notif-01"
+	prodSeedCrossNotifForUser2   = "prod-seed-cross-notif-02"
 )
 
 func seedProdData(db *gorm.DB, target model.User) error {
@@ -268,6 +275,59 @@ func seedProdData(db *gorm.DB, target model.User) error {
 
 		// --- LyricChain + エントリ + 生成曲 ---
 		if err := seedProdLyricData(tx, target.ID); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+// SeedProdCrossEncounter は既存の 2 人の実ユーザー間にすれ違いレコードを投入する。
+// user_id1 < user_id2 制約を満たすよう引数の順序に関わらず自動的に並び替える。
+// 両ユーザーが DB に存在していることが前提。
+func SeedProdCrossEncounter(db *gorm.DB, userIDA, userIDB string) error {
+	// 両ユーザーの存在確認
+	for _, id := range []string{userIDA, userIDB} {
+		var u model.User
+		if err := db.Where("id = ?", id).First(&u).Error; err != nil {
+			return fmt.Errorf("rdb.SeedProdCrossEncounter: user not found (id=%s): %w", id, err)
+		}
+	}
+
+	// user_id1 < user_id2 制約を満たす順序に正規化
+	uid1, uid2 := userIDA, userIDB
+	if uid1 > uid2 {
+		uid1, uid2 = uid2, uid1
+	}
+
+	return db.Transaction(func(tx *gorm.DB) error {
+		now := time.Now().UTC()
+
+		encounter := model.Encounter{
+			ID:            prodSeedCrossEncounterID,
+			UserID1:       uid1,
+			UserID2:       uid2,
+			EncounteredAt: now.Add(-3 * time.Hour),
+			EncounterType: "ble",
+		}
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&encounter).Error; err != nil {
+			return err
+		}
+
+		// 既存の prod-seed トラックを流用してすれ違い楽曲を紐付ける
+		encounterTracks := []model.EncounterTrack{
+			{ID: prodSeedCrossEncTrackIDA, EncounterID: prodSeedCrossEncounterID, TrackID: prodSeedTrackIDA, SourceUserID: uid1},
+			{ID: prodSeedCrossEncTrackIDB, EncounterID: prodSeedCrossEncounterID, TrackID: prodSeedTrackIDC, SourceUserID: uid2},
+		}
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&encounterTracks).Error; err != nil {
+			return err
+		}
+
+		notifications := []model.OutboxNotification{
+			{ID: prodSeedCrossNotifForUser1, UserID: uid1, EncounterID: prodSeedCrossEncounterID, Status: "sent"},
+			{ID: prodSeedCrossNotifForUser2, UserID: uid2, EncounterID: prodSeedCrossEncounterID, Status: "sent"},
+		}
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&notifications).Error; err != nil {
 			return err
 		}
 
