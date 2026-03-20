@@ -11,16 +11,20 @@ import FirebaseAuth
 
 @MainActor
 final class AuthSessionTests: XCTestCase {
-    func test_init_whenFirebaseNotConfigured_setsSignedOut() throws {
+    func test_startIfNeeded_whenFirebaseNotConfigured_setsSignedOut() throws {
 #if canImport(FirebaseAuth) && canImport(FirebaseCore)
         if FirebaseApp.app() == nil {
             let session = AuthSession()
+            XCTAssertEqual(session.status, .checking)
+            session.startIfNeeded()
             XCTAssertEqual(session.status, .signedOut)
         } else {
             throw XCTSkip("FirebaseApp is configured; skipping non-configured case")
         }
 #else
         let session = AuthSession()
+        XCTAssertEqual(session.status, .checking)
+        session.startIfNeeded()
         XCTAssertEqual(session.status, .signedOut)
 #endif
     }
@@ -36,6 +40,7 @@ final class AuthSessionTests: XCTestCase {
 
         try? Auth.auth().signOut()
         let session = AuthSession()
+        session.startIfNeeded()
         XCTAssertEqual(session.status, .signedOut)
 
         // Sign in anonymously and wait for listener to update
