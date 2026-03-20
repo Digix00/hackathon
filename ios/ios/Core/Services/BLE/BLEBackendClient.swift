@@ -80,9 +80,13 @@ actor BLEBackendClient {
         )
         let result = try await send(path: "encounters", method: "POST", body: body)
 
-        guard result.response.statusCode == 200 || result.response.statusCode == 201 else {
+        guard result.response.statusCode == 200 || result.response.statusCode == 201 || result.response.statusCode == 204 else {
             throw BackendError.unexpectedStatus(result.response.statusCode)
         }
+
+        #if DEBUG
+        print("[BLEBackendClient] post encounter success token=\(targetBLEToken) status=\(result.response.statusCode)")
+        #endif
     }
 
     func fetchUser(forBLEToken token: String) async throws -> BLEPublicUser {
