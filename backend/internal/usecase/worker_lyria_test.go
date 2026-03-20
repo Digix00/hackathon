@@ -87,19 +87,6 @@ func (s *stubSongUploader) UploadSong(_ context.Context, chainID string, _ []byt
 	return "https://storage.googleapis.com/mock/" + chainID + "/original.wav", nil
 }
 
-type stubBleTokenRepoForWorker struct{}
-
-func (r *stubBleTokenRepoForWorker) DeleteExpired(_ context.Context) (int64, error) { return 0, nil }
-func (r *stubBleTokenRepoForWorker) Create(_ context.Context, _ interface{}) error  { return nil }
-
-// BleTokenRepository の最小スタブ（worker.go が bleTokenRepo を必要とするため）
-func newWorkerUsecase(jobRepo repository.LyriaJobRepository, gemini port.GeminiClient, lyria port.LyriaClient, uploader SongUploader) WorkerUsecase {
-	return NewWorkerUsecase(&stubBleTokenRepo{
-		byUserID: make(map[string]entity.BleToken),
-		byToken:  make(map[string]entity.BleToken),
-	}, jobRepo, gemini, lyria, uploader, 45)
-}
-
 // ─── テスト ───────────────────────────────────────────────────────────────────
 
 func TestProcessLyriaJobs_Success(t *testing.T) {

@@ -898,23 +898,23 @@ func TestMusicConnectionsAuthorizeCallbackListDeleteAndTrackEndpoints(t *testing
 	user := seedTestUser(t, db, "firebase-uid-music")
 
 	providerServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch {
-		case r.URL.Path == "/api/token":
+		switch r.URL.Path {
+		case "/api/token":
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"access_token":"spotify-access","refresh_token":"spotify-refresh","expires_in":3600}`))
-		case r.URL.Path == "/v1/me":
+		case "/v1/me":
 			if got := r.Header.Get("Authorization"); got != "Bearer spotify-access" {
 				t.Fatalf("unexpected auth header for /me: %s", got)
 			}
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"id":"spotify-user-1","display_name":"Spotify Tester"}`))
-		case r.URL.Path == "/v1/search":
+		case "/v1/search":
 			if q := r.URL.Query().Get("q"); q != "hello" {
 				t.Fatalf("unexpected q: %s", q)
 			}
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"tracks":{"items":[{"id":"track-1","name":"Song A","duration_ms":225000,"preview_url":"https://preview.example/song-a.mp3","album":{"name":"Album A","images":[{"url":"https://img.example/song-a.jpg"}]},"artists":[{"name":"Artist A"}]}],"offset":0,"limit":20,"total":1,"next":null}}`))
-		case r.URL.Path == "/v1/tracks/track-1":
+		case "/v1/tracks/track-1":
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"id":"track-1","name":"Song A","duration_ms":225000,"preview_url":"https://preview.example/song-a.mp3","album":{"name":"Album A","images":[{"url":"https://img.example/song-a.jpg"}]},"artists":[{"name":"Artist A"}]}`))
 		default:

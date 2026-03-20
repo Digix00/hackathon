@@ -40,7 +40,7 @@ func main() {
 	if err != nil {
 		log.Fatal("db get sql.DB failed", zap.Error(err))
 	}
-	defer sqlDB.Close()
+	defer func() { _ = sqlDB.Close() }()
 
 	ctx := context.Background()
 	workerUsecase := buildDependencies(ctx, db, cfg, log)
