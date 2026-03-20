@@ -1,6 +1,10 @@
 import Combine
 import Foundation
 
+#if canImport(FirebaseCore)
+import FirebaseCore
+#endif
+
 #if canImport(FirebaseAuth)
 import FirebaseAuth
 #endif
@@ -20,7 +24,12 @@ final class AuthSession: ObservableObject {
 #endif
 
     init() {
-#if canImport(FirebaseAuth)
+#if canImport(FirebaseAuth) && canImport(FirebaseCore)
+        guard FirebaseApp.app() != nil else {
+            status = .signedOut
+            return
+        }
+
         status = Auth.auth().currentUser == nil ? .signedOut : .signedIn
         listenerHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
             guard let self else { return }
