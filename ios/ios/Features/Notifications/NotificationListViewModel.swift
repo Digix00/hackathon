@@ -89,7 +89,7 @@ final class NotificationListViewModel: ObservableObject {
             hasLoaded = true
         } catch {
             errorMessage = "通知の取得に失敗しました"
-            hasLoaded = true
+            hasLoaded = false
         }
         isLoading = false
     }

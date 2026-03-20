@@ -162,14 +162,29 @@ struct NotificationListView: View {
 
     private var emptyState: some View {
         VStack(spacing: 24) {
-            Image(systemName: "bell.slash")
-                .font(.system(size: 48))
-                .foregroundStyle(PrototypeTheme.textTertiary)
-            
-            Text("新しい通知はありません")
-                .font(PrototypeTheme.Typography.font(size: 16, weight: .bold))
-                .foregroundStyle(PrototypeTheme.textSecondary)
-            
+            if let errorMessage = viewModel.errorMessage {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 48))
+                    .foregroundStyle(PrototypeTheme.warning)
+
+                Text("通信エラー")
+                    .font(PrototypeTheme.Typography.font(size: 16, weight: .bold))
+                    .foregroundStyle(PrototypeTheme.textPrimary)
+
+                Text(errorMessage)
+                    .font(PrototypeTheme.Typography.font(size: 13, weight: .medium))
+                    .foregroundStyle(PrototypeTheme.textSecondary)
+                    .multilineTextAlignment(.center)
+            } else {
+                Image(systemName: "bell.slash")
+                    .font(.system(size: 48))
+                    .foregroundStyle(PrototypeTheme.textTertiary)
+
+                Text("新しい通知はありません")
+                    .font(PrototypeTheme.Typography.font(size: 16, weight: .bold))
+                    .foregroundStyle(PrototypeTheme.textSecondary)
+            }
+
             SecondaryButton(title: "再読み込み", systemImage: "arrow.clockwise") {
                 viewModel.refresh()
             }
