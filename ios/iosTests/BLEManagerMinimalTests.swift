@@ -83,6 +83,16 @@ final class BLEManagerMinimalTests: XCTestCase {
         XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -90), now: now))
     }
 
+    func test_shouldEmitDetection_inBackgroundUsesStricterRSSIThreshold() {
+        let token = "0011223344556677"
+        let now = Date(timeIntervalSince1970: 0)
+
+        sut.updateAppForegroundState(false)
+
+        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -81), now: now))
+        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -80), now: now))
+    }
+
     func test_shouldEmitDetection_requiresTwoDetectionsWithinWindow() {
         let token = "0011223344556677"
         let now = Date(timeIntervalSince1970: 0)
@@ -118,6 +128,16 @@ final class BLEManagerMinimalTests: XCTestCase {
         let debounceStart = now.addingTimeInterval(5)
         XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: debounceStart))
         XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: debounceStart.addingTimeInterval(1)))
+    }
+
+    func test_shouldEmitDetection_inBackgroundIgnoresDebounceButKeepsCooldown() {
+        let token = "0011223344556677"
+        let now = Date(timeIntervalSince1970: 0)
+
+        sut.updateAppForegroundState(false)
+
+        XCTAssertTrue(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now))
+        XCTAssertFalse(sut._test_shouldEmitDetection(token: token, rssi: NSNumber(value: -70), now: now.addingTimeInterval(5)))
     }
 
     func test_shouldEmitDetection_appliesCooldown() {

@@ -7,11 +7,13 @@ import Foundation
 /// - Uses non-connectable advertising + scanning only (no GATT connection).
 /// - Exchanges only ephemeral BLE token via service UUID advertising payload.
 /// - Applies client-side RSSI / detection-count / debounce / cooldown filters before surfacing detections.
+/// - Foreground requires two detections within 30 seconds; background accepts a single stronger detection.
 final class BLEManager: NSObject, ObservableObject {
     struct Constants {
         static let appServiceUUID = CBUUID(string: "00001234-0000-1000-8000-00805F9B34FB")
         static let tokenPrefixHex = "A17E1E50B1ECAFE0"
-        static let rssiThreshold = -85
+        static let foregroundRSSIThreshold = -85
+        static let backgroundRSSIThreshold = -80
         static let foregroundDetectionCountThreshold = 2
         static let backgroundDetectionCountThreshold = 1
         static let detectionWindow: TimeInterval = 30
@@ -262,7 +264,11 @@ final class BLEManager: NSObject, ObservableObject {
         let rssiValue = rssi.intValue
         // CoreBluetooth uses 127 as a sentinel for unavailable RSSI.
         guard rssiValue != 127 else { return false }
-        guard rssiValue >= Constants.rssiThreshold else { return false }
+        let rssiThreshold = isForeground
+            ? Constants.foregroundRSSIThreshold
+            : Constants.backgroundRSSIThreshold
+        guard rssiValue >= rssiThreshold else { return false }
+
         let detectionThreshold = isForeground
             ? Constants.foregroundDetectionCountThreshold
             : Constants.backgroundDetectionCountThreshold
@@ -277,14 +283,20 @@ final class BLEManager: NSObject, ObservableObject {
         detectionCountsByToken[token] = DetectionCounter(count: nextCount, windowStartedAt: now)
         guard nextCount >= detectionThreshold else { return false }
 
-        if let last = debounceByToken[token], now.timeIntervalSince(last) < Constants.debounce {
-            return false
+        if isForeground {
+            if let last = debounceByToken[token], now.timeIntervalSince(last) < Constants.debounce {
+                return false
+            }
         }
         if let last = cooldownByToken[token], now.timeIntervalSince(last) < Constants.cooldown {
             return false
         }
 
-        debounceByToken[token] = now
+        if isForeground {
+            debounceByToken[token] = now
+        } else {
+            debounceByToken.removeValue(forKey: token)
+        }
         cooldownByToken[token] = now
         detectionCountsByToken[token] = DetectionCounter(count: 0, windowStartedAt: now)
         return true
