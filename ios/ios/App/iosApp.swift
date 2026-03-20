@@ -1,9 +1,5 @@
 import SwiftUI
 
-#if canImport(FirebaseCore)
-import FirebaseCore
-#endif
-
 @main
 struct iosApp: App {
     @Environment(\.scenePhase) private var scenePhase
@@ -12,9 +8,7 @@ struct iosApp: App {
     @StateObject private var pushManager = PushNotificationManager.shared
 
     init() {
-#if canImport(FirebaseCore)
-        FirebaseApp.configure()
-#endif
+        FirebaseBootstrapper.configureIfNeeded()
     }
 
     var body: some Scene {
