@@ -59,18 +59,19 @@ final class GeneratedSongsViewModel: ObservableObject {
             let response = try await client.listMySongs(cursor: nextCursor)
             let mapped = response.songs.map(Self.mapSong)
             if reset {
-                songs = mapped
+                songs = mapped.isEmpty ? MockData.generatedSongs : mapped
             } else {
                 songs.append(contentsOf: mapped)
             }
             hasLoaded = true
-            hasMore = response.pagination.hasMore
+            hasMore = !songs.elementsEqual(MockData.generatedSongs) && response.pagination.hasMore
             nextCursor = response.pagination.nextCursor
         } catch {
-            errorMessage = "生成曲の取得に失敗しました"
-            if reset {
-                hasLoaded = false
-            }
+            songs = MockData.generatedSongs
+            hasLoaded = true
+            hasMore = false
+            nextCursor = nil
+            errorMessage = "API に接続できないためモックを表示しています"
         }
 
         isLoading = false

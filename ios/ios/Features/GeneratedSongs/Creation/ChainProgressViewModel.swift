@@ -55,7 +55,7 @@ final class ChainProgressViewModel: ObservableObject {
 
     private func loadChainDetail() async {
         guard let chainId, !chainId.isEmpty else {
-            errorMessage = "まだ歌詞チェーンがありません"
+            applyMockChain(id: nil, message: "モックのチェーン進捗を表示しています")
             return
         }
 
@@ -78,9 +78,29 @@ final class ChainProgressViewModel: ObservableObject {
                 }
             hasLoaded = true
         } catch {
-            errorMessage = "歌詞チェーンの取得に失敗しました"
-            hasLoaded = false
+            applyMockChain(id: chainId, message: "API に接続できないためモックのチェーン進捗を表示しています")
         }
         isLoading = false
+    }
+
+    private func applyMockChain(id: String?, message: String) {
+        guard let mock = MockData.generatedChain(id: id) else {
+            errorMessage = "歌詞チェーンの取得に失敗しました"
+            hasLoaded = false
+            return
+        }
+
+        chain = mock.chain
+        song = mock.song
+        entries = mock.entries.map { entry in
+            LyricEntryRowModel(
+                id: "\(entry.sequenceNum)-\(entry.user.id)",
+                content: entry.content,
+                userName: entry.user.displayName.isEmpty ? "匿名" : entry.user.displayName,
+                sequenceNum: entry.sequenceNum
+            )
+        }
+        errorMessage = message
+        hasLoaded = true
     }
 }

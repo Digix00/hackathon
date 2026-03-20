@@ -57,10 +57,18 @@ struct GeneratedSongsView: View {
     }
 
     private var progressCard: AnyView? {
-        guard let chain = bleCoordinator.latestLyricSubmission?.chain else { return nil }
+        let liveChain = bleCoordinator.latestLyricSubmission?.chain
+        let mockChain = MockData.generatedChain(id: "mock-chain-pending")
+        let chainId = liveChain?.id ?? mockChain?.chain.id
+        let participantCount = liveChain?.participantCount ?? mockChain?.chain.participantCount ?? 0
+        let threshold = liveChain?.threshold ?? mockChain?.chain.threshold ?? 0
+        let content = bleCoordinator.latestLyricSubmission?.content ?? mockChain?.entries.first?.content
+
+        guard let chainId else { return nil }
+
         return AnyView(
             NavigationLink {
-                ChainProgressView(chainId: chain.id)
+                ChainProgressView(chainId: chainId)
             } label: {
                 SectionCard {
                     VStack(alignment: .leading, spacing: 14) {
@@ -69,18 +77,18 @@ struct GeneratedSongsView: View {
                             .foregroundStyle(PrototypeTheme.accent)
 
                         HStack(spacing: 10) {
-                            ForEach(0..<max(chain.threshold, 1), id: \.self) { index in
+                            ForEach(0..<max(threshold, 1), id: \.self) { index in
                                 Circle()
-                                    .fill(index < chain.participantCount ? PrototypeTheme.accent : PrototypeTheme.border)
+                                    .fill(index < participantCount ? PrototypeTheme.accent : PrototypeTheme.border)
                                     .frame(width: 12, height: 12)
                             }
                         }
 
-                        Text("\(chain.participantCount)/\(chain.threshold)人が参加")
+                        Text("\(participantCount)/\(threshold)人が参加")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundStyle(PrototypeTheme.textPrimary)
 
-                        if let content = bleCoordinator.latestLyricSubmission?.content {
+                        if let content {
                             Text("“\(content)”")
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundStyle(PrototypeTheme.textSecondary)
@@ -183,7 +191,7 @@ struct GeneratedSongsView: View {
             }
             .buttonStyle(.plain)
 
-            if let chainId = bleCoordinator.latestLyricChain?.id {
+            if let chainId = bleCoordinator.latestLyricChain?.id ?? MockData.generatedChain(id: "mock-chain-pending")?.chain.id {
                 NavigationLink {
                     ChainProgressView(chainId: chainId)
                 } label: {

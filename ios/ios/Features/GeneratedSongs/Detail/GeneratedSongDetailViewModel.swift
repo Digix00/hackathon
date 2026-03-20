@@ -120,9 +120,29 @@ final class GeneratedSongDetailViewModel: ObservableObject {
                 }
             hasLoadedLyrics = true
         } catch {
-            lyricsErrorMessage = "参加した歌詞の取得に失敗しました"
+            applyMockLyrics()
         }
 
         isLoadingLyrics = false
+    }
+
+    private func applyMockLyrics() {
+        guard let mock = MockData.generatedChain(id: chainId) else {
+            lyricsErrorMessage = "参加した歌詞の取得に失敗しました"
+            return
+        }
+
+        durationSec = mock.song?.durationSec ?? durationSec
+        mood = mock.song?.mood ?? mood
+        lyricEntries = mock.entries.map { entry in
+            LyricEntryRow(
+                id: "\(entry.sequenceNum)-\(entry.user.id)",
+                content: entry.content,
+                userName: entry.user.displayName.isEmpty ? "匿名" : entry.user.displayName,
+                sequenceNum: entry.sequenceNum
+            )
+        }
+        lyricsErrorMessage = "API に接続できないためモック歌詞を表示しています"
+        hasLoadedLyrics = true
     }
 }

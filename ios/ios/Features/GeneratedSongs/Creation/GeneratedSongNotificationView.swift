@@ -98,30 +98,38 @@ final class GeneratedSongNotificationLoaderViewModel: ObservableObject {
             } ?? items.first
 
             if let latest {
-                let title = latest.title?.trimmingCharacters(in: .whitespacesAndNewlines)
-                song = GeneratedSong(
-                    id: latest.id,
-                    title: title?.isEmpty == false ? title! : "無題の曲",
-                    subtitle: "\(max(0, latest.participantCount))人で作成",
-                    color: .indigo,
-                    participantCount: max(0, latest.participantCount),
-                    generatedAt: latest.generatedAt,
-                    durationSec: nil,
-                    mood: nil,
-                    myLyric: latest.myLyric.isEmpty ? nil : latest.myLyric,
-                    audioURL: latest.audioURL,
-                    chainId: latest.chainId,
-                    isLiked: latest.liked ?? false
-                )
+                song = Self.mapSong(latest)
                 hasLoaded = true
             } else {
-                errorMessage = "表示できる生成曲がありません"
+                song = MockData.generatedSongs.first
+                hasLoaded = true
+                errorMessage = "モックの生成曲を表示しています"
             }
         } catch {
-            errorMessage = "生成曲の取得に失敗しました"
+            song = MockData.generatedSongs.first
+            hasLoaded = true
+            errorMessage = "API に接続できないためモックの生成曲を表示しています"
         }
 
         isLoading = false
+    }
+
+    private static func mapSong(_ latest: BackendUserSong) -> GeneratedSong {
+        let title = latest.title?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return GeneratedSong(
+            id: latest.id,
+            title: title?.isEmpty == false ? title! : "無題の曲",
+            subtitle: "\(max(0, latest.participantCount))人で作成",
+            color: .indigo,
+            participantCount: max(0, latest.participantCount),
+            generatedAt: latest.generatedAt,
+            durationSec: nil,
+            mood: nil,
+            myLyric: latest.myLyric.isEmpty ? nil : latest.myLyric,
+            audioURL: latest.audioURL,
+            chainId: latest.chainId,
+            isLiked: latest.liked ?? false
+        )
     }
 }
 
