@@ -39,6 +39,7 @@ variable "seed_demo_image_tag" {
 variable "api_domain" {
   type        = string
   description = "API サーバーのドメイン（Spotify OAuth リダイレクト URL に使用）。Cloud Run の URI から https:// を除いた値を設定する"
+  default     = ""
 }
 
 variable "seed_target_user_id" {

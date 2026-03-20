@@ -134,9 +134,12 @@ resource "google_cloud_run_v2_service" "api" {
         }
       }
 
-      env {
-        name  = "SPOTIFY_REDIRECT_URL"
-        value = "https://${var.api_domain}/api/v1/music-connections/spotify/callback"
+      dynamic "env" {
+        for_each = var.api_domain != "" ? [1] : []
+        content {
+          name  = "SPOTIFY_REDIRECT_URL"
+          value = "https://${var.api_domain}/api/v1/music-connections/spotify/callback"
+        }
       }
 
       volume_mounts {
