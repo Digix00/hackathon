@@ -2,7 +2,7 @@
 
 PRODUCT_BUNDLE_IDENTIFIER = com.digix.ios.dev
 APP_DISPLAY_NAME = ios Dev
-API_BASE_URL = https:/$()/dev-api.example.com
+API_BASE_URL = https://api-599474430997.asia-northeast1.run.app
 INFOPLIST_KEY_API_BASE_URL = $(API_BASE_URL)
 APP_DEEPLINK_SCHEME = digix
 INFOPLIST_KEY_CFBundleURLTypes = ( { CFBundleURLSchemes = ( $(APP_DEEPLINK_SCHEME) ); }, { CFBundleURLSchemes = ( $(GOOGLE_REVERSED_CLIENT_ID) ); } );
