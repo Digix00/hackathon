@@ -17,14 +17,14 @@ final class BLEManagerMinimalTests: XCTestCase {
         super.tearDown()
     }
 
-    func test_makeAdvertisingPayload_convertsHexTokenToUUID() {
+    func test_makeAdvertisingPayload_convertsHexTokenToServiceData() {
         let token = "0011223344556677"
 
         let payload = sut._test_makeAdvertisingPayload(token: token)
 
         XCTAssertNotNil(payload)
         XCTAssertEqual(payload?.backendToken, token)
-        XCTAssertEqual(payload?.tokenUUID.uuidString.lowercased(), uuidStringFromPrefixAndToken(prefixHex: BLEManager.Constants.tokenPrefixHex, tokenHex: token))
+        XCTAssertEqual(payload?.serviceData, Data([0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77]))
     }
 
     func test_makeAdvertisingPayload_rejectsInvalidToken() {
@@ -42,12 +42,12 @@ final class BLEManagerMinimalTests: XCTestCase {
         }
 
         let missingAppService: [String: Any] = [
-            CBAdvertisementDataServiceUUIDsKey: [payload.tokenUUID]
+            CBAdvertisementDataServiceDataKey: [BLEManager.Constants.appServiceUUID: payload.serviceData]
         ]
         XCTAssertNil(sut._test_decodeToken(fromAdvertisementData: missingAppService))
     }
 
-    func test_decodeToken_extractsTokenUUID() {
+    func test_decodeToken_extractsTokenFromServiceData() {
         let token = "0011223344556677"
         guard let payload = sut._test_makeAdvertisingPayload(token: token) else {
             XCTFail("Expected payload")
@@ -55,21 +55,19 @@ final class BLEManagerMinimalTests: XCTestCase {
         }
 
         let data: [String: Any] = [
-            CBAdvertisementDataServiceUUIDsKey: [BLEManager.Constants.appServiceUUID, payload.tokenUUID]
+            CBAdvertisementDataServiceUUIDsKey: [BLEManager.Constants.appServiceUUID],
+            CBAdvertisementDataServiceDataKey: [BLEManager.Constants.appServiceUUID: payload.serviceData]
         ]
 
         XCTAssertEqual(sut._test_decodeToken(fromAdvertisementData: data), token)
     }
 
-    func test_decodeToken_extractsTokenUUIDFromOverflowServiceUUIDs() {
+    func test_decodeToken_supportsLegacyTokenUUIDEncoding() {
         let token = "0011223344556677"
-        guard let payload = sut._test_makeAdvertisingPayload(token: token) else {
-            XCTFail("Expected payload")
-            return
-        }
+        let legacyUUID = CBUUID(string: uuidStringFromPrefixAndToken(prefixHex: BLEManager.Constants.tokenPrefixHex, tokenHex: token))
 
         let data: [String: Any] = [
-            CBAdvertisementDataOverflowServiceUUIDsKey: [BLEManager.Constants.appServiceUUID, payload.tokenUUID]
+            CBAdvertisementDataOverflowServiceUUIDsKey: [BLEManager.Constants.appServiceUUID, legacyUUID]
         ]
 
         XCTAssertEqual(sut._test_decodeToken(fromAdvertisementData: data), token)

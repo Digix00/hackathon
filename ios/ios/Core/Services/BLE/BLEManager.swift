@@ -52,7 +52,7 @@ final class BLEManager: NSObject, ObservableObject {
     private var lowPowerModeObserver: NSObjectProtocol?
     private var isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
     private var advertisedToken: String?
-    private var advertisedTokenUUID: CBUUID?
+    private var advertisedServiceData: Data?
 
     private var detectionCountsByToken: [String: DetectionCounter] = [:]
     private var debounceByToken: [String: Date] = [:]
@@ -92,7 +92,7 @@ final class BLEManager: NSObject, ObservableObject {
 
         shouldAdvertise = true
         advertisedToken = payload.backendToken
-        advertisedTokenUUID = payload.tokenUUID
+        advertisedServiceData = payload.serviceData
         applyAdvertisingState()
     }
 
@@ -171,14 +171,15 @@ final class BLEManager: NSObject, ObservableObject {
             !isLowPowerModeEnabled,
             peripheralManager.state == .poweredOn,
             advertisedToken != nil,
-            let tokenUUID = advertisedTokenUUID
+            let serviceData = advertisedServiceData
         else {
             stopAdvertisingRuntime()
             return
         }
 
         let data: [String: Any] = [
-            CBAdvertisementDataServiceUUIDsKey: [Constants.appServiceUUID, tokenUUID]
+            CBAdvertisementDataServiceUUIDsKey: [Constants.appServiceUUID],
+            CBAdvertisementDataServiceDataKey: [Constants.appServiceUUID: serviceData]
         ]
 
         peripheralManager.stopAdvertising()
@@ -214,9 +215,9 @@ final class BLEManager: NSObject, ObservableObject {
         guard normalizedToken.count == 16, normalizedToken.range(of: "^[0-9a-f]{16}$", options: .regularExpression) != nil else {
             return nil
         }
-        guard let tokenUUIDString = makeTokenUUIDString(fromHex8Bytes: normalizedToken) else { return nil }
+        guard let serviceData = dataFromHex(normalizedToken) else { return nil }
 
-        return AdvertisingPayload(backendToken: normalizedToken, tokenUUID: CBUUID(string: tokenUUIDString))
+        return AdvertisingPayload(backendToken: normalizedToken, serviceData: serviceData)
     }
 
     private func makeTokenUUIDString(fromHex8Bytes tokenHex: String) -> String? {
@@ -240,6 +241,14 @@ final class BLEManager: NSObject, ObservableObject {
             return nil
         }
 
+        if let serviceData = advertisementData[CBAdvertisementDataServiceDataKey] as? [CBUUID: Data],
+           let tokenData = serviceData[Constants.appServiceUUID],
+           let token = hexString(from: tokenData),
+           token.count == 16
+        {
+            return token
+        }
+
         guard let tokenUUID = serviceUUIDs.first(where: { $0 != Constants.appServiceUUID }) else {
             return nil
         }
@@ -259,6 +268,27 @@ final class BLEManager: NSObject, ObservableObject {
 
         // Otherwise treat it as canonical UUID token.
         return normalized
+    }
+
+    private func dataFromHex(_ hex: String) -> Data? {
+        guard hex.count.isMultiple(of: 2) else { return nil }
+
+        var data = Data(capacity: hex.count / 2)
+        var index = hex.startIndex
+        while index < hex.endIndex {
+            let nextIndex = hex.index(index, offsetBy: 2)
+            guard let byte = UInt8(hex[index..<nextIndex], radix: 16) else {
+                return nil
+            }
+            data.append(byte)
+            index = nextIndex
+        }
+        return data
+    }
+
+    private func hexString(from data: Data) -> String? {
+        guard !data.isEmpty else { return nil }
+        return data.map { String(format: "%02x", $0) }.joined()
     }
 
     private func shouldEmitDetection(token: String, rssi: NSNumber, now: Date) -> Bool {
@@ -360,7 +390,7 @@ extension BLEManager: CBCentralManagerDelegate {
 
 private struct AdvertisingPayload {
     let backendToken: String
-    let tokenUUID: CBUUID
+    let serviceData: Data
 }
 
 private struct DetectionCounter {
@@ -386,10 +416,17 @@ extension BLEManager: CBPeripheralManagerDelegate {
         log("Peripheral state restored: \(dict.keys.sorted())")
 
         if let restoredAdvertisement = dict[CBPeripheralManagerRestoredStateAdvertisementDataKey] as? [String: Any],
-           let restoredUUIDs = restoredAdvertisement[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID],
-           let restoredTokenUUID = restoredUUIDs.first(where: { $0 != Constants.appServiceUUID }) {
+           let restoredServiceData = restoredAdvertisement[CBAdvertisementDataServiceDataKey] as? [CBUUID: Data],
+           let tokenData = restoredServiceData[Constants.appServiceUUID],
+           let restoredToken = hexString(from: tokenData) {
             shouldAdvertise = true
-            advertisedTokenUUID = restoredTokenUUID
+            advertisedServiceData = tokenData
+            advertisedToken = restoredToken
+        } else if let restoredAdvertisement = dict[CBPeripheralManagerRestoredStateAdvertisementDataKey] as? [String: Any],
+                  let restoredUUIDs = restoredAdvertisement[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID],
+                  let restoredTokenUUID = restoredUUIDs.first(where: { $0 != Constants.appServiceUUID }) {
+            shouldAdvertise = true
+            advertisedServiceData = dataFromHex(decodeBackendToken(fromTokenUUID: restoredTokenUUID))
             advertisedToken = decodeBackendToken(fromTokenUUID: restoredTokenUUID)
         }
 
@@ -401,12 +438,12 @@ extension BLEManager: CBPeripheralManagerDelegate {
 extension BLEManager {
     struct TestAdvertisingPayload: Equatable {
         let backendToken: String
-        let tokenUUID: CBUUID
+        let serviceData: Data
     }
 
     func _test_makeAdvertisingPayload(token: String) -> TestAdvertisingPayload? {
         guard let payload = makeAdvertisingPayload(token: token) else { return nil }
-        return TestAdvertisingPayload(backendToken: payload.backendToken, tokenUUID: payload.tokenUUID)
+        return TestAdvertisingPayload(backendToken: payload.backendToken, serviceData: payload.serviceData)
     }
 
     func _test_decodeToken(fromAdvertisementData advertisementData: [String: Any]) -> String? {
