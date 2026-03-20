@@ -66,6 +66,10 @@ struct ChainProgressView: View {
         .task {
             viewModel.loadIfNeeded()
         }
+        .onChange(of: viewModel.chain) { _, newValue in
+            guard let chain = newValue else { return }
+            bleCoordinator.syncLatestLyricSubmission(with: chain)
+        }
     }
 
     @ViewBuilder

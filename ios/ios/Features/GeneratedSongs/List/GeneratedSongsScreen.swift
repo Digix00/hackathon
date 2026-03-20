@@ -3,8 +3,11 @@ import SwiftUI
 struct GeneratedSongsView: View {
     @StateObject private var viewModel = GeneratedSongsViewModel()
     @EnvironmentObject private var bleCoordinator: BLEAppCoordinator
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("generated_song.last_presented_id") private var lastPresentedGeneratedSongID: String = ""
     @State private var celebrationSong: GeneratedSong?
     @State private var selectedSong: GeneratedSong?
+    @State private var pendingSongAfterCelebration: GeneratedSong?
     @State private var scrollTargetID: String?
     @Namespace private var songNamespace
 
@@ -24,12 +27,23 @@ struct GeneratedSongsView: View {
         .environment(\.encounterNamespace, songNamespace)
         .task {
             viewModel.loadIfNeeded()
+            await presentCelebrationIfNeeded()
         }
-        .fullScreenCover(item: $celebrationSong) { song in
+        .onChange(of: scenePhase) { _, newPhase in
+            guard newPhase == .active else { return }
+            Task {
+                await presentCelebrationIfNeeded()
+            }
+        }
+        .fullScreenCover(item: $celebrationSong, onDismiss: {
+            guard let pendingSongAfterCelebration else { return }
+            selectedSong = pendingSongAfterCelebration
+            self.pendingSongAfterCelebration = nil
+        }) { song in
             GeneratedSongNotificationView(
                 song: song,
                 onListenNow: {
-                    selectedSong = song
+                    pendingSongAfterCelebration = song
                     celebrationSong = nil
                 },
                 onLater: {
@@ -39,6 +53,19 @@ struct GeneratedSongsView: View {
         }
         .navigationDestination(item: $selectedSong) { song in
             GeneratedSongDetailView(song: song)
+        }
+    }
+
+    private func presentCelebrationIfNeeded() async {
+        guard celebrationSong == nil else { return }
+        guard let latestSong = await viewModel.latestSong() else { return }
+        guard latestSong.id != lastPresentedGeneratedSongID else { return }
+
+        lastPresentedGeneratedSongID = latestSong.id
+        celebrationSong = latestSong
+
+        if let chainID = latestSong.chainId {
+            bleCoordinator.clearLatestLyricSubmission(for: chainID)
         }
     }
 
@@ -266,4 +293,3 @@ private struct GeneratedSongsStatsHeader: View {
         }
     }
 }
-

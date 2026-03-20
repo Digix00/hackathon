@@ -180,6 +180,7 @@ final class GeneratedSongNotificationLoaderViewModel: ObservableObject {
 
 struct GeneratedSongNotificationLoaderView: View {
     @StateObject private var viewModel = GeneratedSongNotificationLoaderViewModel()
+    let sourceNotificationID: String?
     let onDismiss: () -> Void
     let onListenNow: (GeneratedSong) -> Void
 
@@ -199,6 +200,13 @@ struct GeneratedSongNotificationLoaderView: View {
                     Text(viewModel.errorMessage ?? "表示できる生成曲がありません")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(PrototypeTheme.textPrimary)
+
+                    if sourceNotificationID != nil {
+                        Text("通知から対象曲を特定できないため、最新の生成曲を表示します。")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(PrototypeTheme.textSecondary)
+                            .multilineTextAlignment(.center)
+                    }
 
                     SecondaryButton(title: "閉じる", systemImage: "xmark") {
                         onDismiss()

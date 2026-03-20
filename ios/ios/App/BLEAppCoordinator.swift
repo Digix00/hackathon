@@ -159,6 +159,29 @@ final class BLEAppCoordinator: ObservableObject {
         latestLyricSubmission = nil
     }
 
+    func clearLatestLyricSubmission(for chainID: String) {
+        guard latestLyricSubmission?.chain.id == chainID else { return }
+        latestLyricSubmission = nil
+    }
+
+    func syncLatestLyricSubmission(with chain: BackendChainDetail) {
+        guard latestLyricSubmission?.chain.id == chain.id else { return }
+
+        let normalizedStatus = chain.status.lowercased()
+        if normalizedStatus == "completed" || normalizedStatus == "failed" {
+            latestLyricSubmission = nil
+            latestLyricChain = nil
+            return
+        }
+
+        latestLyricChain = BackendLyricChainSummary(
+            id: chain.id,
+            participantCount: chain.participantCount,
+            status: chain.status,
+            threshold: chain.threshold
+        )
+    }
+
     func setBLEEnabled(_ isEnabled: Bool) {
         bleSettingsUpdateTask?.cancel()
         bleSettingsRequestVersion += 1

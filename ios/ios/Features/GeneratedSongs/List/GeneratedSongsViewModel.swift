@@ -36,6 +36,22 @@ final class GeneratedSongsViewModel: ObservableObject {
         Task { await loadSongs(reset: true) }
     }
 
+    func latestSong() async -> GeneratedSong? {
+        if MockData.forceGeneratedSongMocks {
+            return MockData.playableGeneratedSongs.first ?? MockData.generatedSongs.first
+        }
+
+        do {
+            let response = try await client.listMySongs(cursor: nil)
+            let latest = response.songs.max {
+                ($0.generatedAt ?? .distantPast) < ($1.generatedAt ?? .distantPast)
+            } ?? response.songs.first
+            return latest.map(Self.mapSong)
+        } catch {
+            return nil
+        }
+    }
+
     func loadMoreIfNeeded(currentSong: GeneratedSong) {
         guard hasMore, !isLoadingMore, !isLoading else { return }
         guard songs.last?.id == currentSong.id else { return }

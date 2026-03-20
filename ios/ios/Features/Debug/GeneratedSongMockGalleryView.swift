@@ -210,6 +210,7 @@ private struct GeneratedSongNotificationLoaderHostView: View {
 
     var body: some View {
         GeneratedSongNotificationLoaderView(
+            sourceNotificationID: nil,
             onDismiss: {
                 dismiss()
             },

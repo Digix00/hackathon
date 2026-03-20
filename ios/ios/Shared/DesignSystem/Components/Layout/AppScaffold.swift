@@ -7,7 +7,7 @@ struct AppScaffold<Content: View>: View {
     let trailingSymbol: String?
     let accentColor: Color?
     let customBackground: AnyView?
-    @ViewBuilder var content: Content
+    @ViewBuilder var content: Content   
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.topSafeAreaInset) private var envTopSafeArea

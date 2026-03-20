@@ -23,6 +23,7 @@ struct LyricComposerSheet: View {
     @State private var isSubmitting = false
     @State private var errorMessage: String?
     @State private var step: Step = .compose
+    @State private var hasNavigatedToProgress = false
 
     private var trimmedDraft: String {
         draft.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -64,6 +65,12 @@ struct LyricComposerSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .task(id: step) {
+            guard case .success = step, !hasNavigatedToProgress else { return }
+            try? await Task.sleep(for: .milliseconds(1500))
+            guard !Task.isCancelled, !hasNavigatedToProgress else { return }
+            dismiss()
+        }
     }
 
     private var navigationTitle: String {
@@ -252,6 +259,9 @@ struct LyricComposerSheet: View {
 
             NavigationLink {
                 ChainProgressView(chainId: successState.chainId)
+                    .onAppear {
+                        hasNavigatedToProgress = true
+                    }
             } label: {
                 SecondaryButtonLabel(
                     title: successState.remainingParticipants > 0 ? "進捗を見る" : "生成状況を見る",

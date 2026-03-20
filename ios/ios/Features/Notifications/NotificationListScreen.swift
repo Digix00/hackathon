@@ -4,6 +4,7 @@ struct NotificationListView: View {
     @StateObject private var viewModel = NotificationListViewModel()
     @State private var isShowingGeneratedSongNotification = false
     @State private var notificationTargetSong: GeneratedSong?
+    @State private var notificationSourceID: String?
     @State private var scrollTargetID: String?
     @Namespace private var notificationNamespace
     @Environment(\.dismiss) private var dismiss
@@ -48,10 +49,12 @@ struct NotificationListView: View {
         .onAppear {
             viewModel.loadIfNeeded()
         }
-        .fullScreenCover(isPresented: $isShowingGeneratedSongNotification) {
-            NotificationGeneratedSongCover(song: $notificationTargetSong) {
+        .fullScreenCover(isPresented: $isShowingGeneratedSongNotification, onDismiss: {
+            guard notificationTargetSong != nil else { return }
+        }) {
+            NotificationGeneratedSongCover(song: $notificationTargetSong, sourceNotificationID: notificationSourceID) {
                 isShowingGeneratedSongNotification = false
-                notificationTargetSong = nil
+                notificationSourceID = nil
             }
         }
         .navigationDestination(item: $notificationTargetSong) { song in
@@ -91,6 +94,7 @@ struct NotificationListView: View {
                                 isProcessing: viewModel.isProcessing(id: notification.id),
                                 isCentered: isCentered,
                                 onOpenGeneratedSong: notification.isGeneratedSongNotification ? {
+                                    notificationSourceID = notification.id
                                     isShowingGeneratedSongNotification = true
                                 } : nil,
                                 onMarkAsRead: {
@@ -394,10 +398,12 @@ private struct NotificationActionButton: View {
 
 private struct NotificationGeneratedSongCover: View {
     @Binding var song: GeneratedSong?
+    let sourceNotificationID: String?
     let onDismiss: () -> Void
 
     var body: some View {
         GeneratedSongNotificationLoaderView(
+            sourceNotificationID: sourceNotificationID,
             onDismiss: onDismiss,
             onListenNow: { loadedSong in
                 song = loadedSong
