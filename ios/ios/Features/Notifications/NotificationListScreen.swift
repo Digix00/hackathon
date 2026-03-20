@@ -81,6 +81,10 @@ struct NotificationListView: View {
 
     private func notificationWheel(layoutWidth: CGFloat) -> some View {
         GeometryReader { geometry in
+            let horizontalPadding: CGFloat = layoutWidth < 390 ? 20 : 24
+            let readableWidth = max(layoutWidth - (horizontalPadding * 2), 0)
+            let rowWidth = min(readableWidth, 560)
+
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVStack(spacing: wheelItemSpacing) {
                     ForEach(viewModel.notifications) { notification in
@@ -104,6 +108,8 @@ struct NotificationListView: View {
                                     viewModel.deleteNotification(id: notification.id)
                                 }
                             )
+                            .frame(maxWidth: rowWidth)
+                            .frame(maxWidth: .infinity)
                             .scaleEffect(metrics.scale)
                             .opacity(metrics.opacity)
                             .blur(radius: metrics.blur)
@@ -114,10 +120,12 @@ struct NotificationListView: View {
                         .id(notification.id)
                     }
                 }
-                .padding(.horizontal, 24)
+                .padding(.horizontal, horizontalPadding)
                 .safeAreaPadding(.vertical, max((geometry.size.height - wheelItemHeight) / 2, 0))
                 .frame(width: layoutWidth)
             }
+            .frame(width: layoutWidth)
+            .frame(maxWidth: .infinity, alignment: .center)
             .scrollTargetLayout()
             .coordinateSpace(name: "notificationWheel")
             .scrollPosition(id: $scrollTargetID, anchor: .center)
@@ -300,6 +308,7 @@ private struct NotificationRow: View {
             )
             .opacity(isProcessing ? 0.6 : 1.0)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var statusIcon: String {
