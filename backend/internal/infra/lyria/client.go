@@ -37,6 +37,11 @@ func NewClient(ctx context.Context, projectID, location, modelID string) (*Clien
 	}, nil
 }
 
+// Close は内部の gRPC 接続を閉じる
+func (c *Client) Close() error {
+	return c.prediction.Close()
+}
+
 // GenerateSong は歌詞とパラメータから楽曲を生成する
 func (c *Client) GenerateSong(ctx context.Context, req *port.LyriaRequest) (*port.LyriaResponse, error) {
 	prompt := c.buildPrompt(req)

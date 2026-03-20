@@ -16,13 +16,14 @@ import (
 	"hackathon/internal/usecase/port"
 )
 
-func buildDependencies(ctx context.Context, db *gorm.DB, cfg *config.WorkerConfig, log *zap.Logger) usecase.WorkerUsecase {
+func buildDependencies(ctx context.Context, db *gorm.DB, cfg *config.WorkerConfig, log *zap.Logger) (usecase.WorkerUsecase, func()) {
 	bleTokenRepo := rdb.NewBleTokenRepository(db)
 	lyriaJobRepo := rdb.NewLyriaJobRepository(db)
 
 	var geminiClient port.GeminiClient
 	var lyriaClient port.LyriaClient
 	var songUploader usecase.SongUploader
+	var cleanup func()
 
 	// 開発環境またはプロジェクトID未設定時はモッククライアントを使用
 	if cfg.GoEnv == "development" || cfg.VertexAIProjectID == "" {
@@ -30,24 +31,37 @@ func buildDependencies(ctx context.Context, db *gorm.DB, cfg *config.WorkerConfi
 		geminiClient = newMockGeminiClient()
 		lyriaClient = infralyria.NewMockClient()
 		songUploader = newMockSongUploader()
+		cleanup = func() {}
 	} else {
-		var err error
-
-		geminiClient, err = infragemini.NewClient(ctx, cfg.VertexAIProjectID, cfg.VertexAILocation, cfg.GeminiModelID)
+		realGeminiClient, err := infragemini.NewClient(ctx, cfg.VertexAIProjectID, cfg.VertexAILocation, cfg.GeminiModelID)
 		if err != nil {
 			log.Fatal("failed to create Gemini client", zap.Error(err))
 		}
+		geminiClient = realGeminiClient
 
-		lyriaClient, err = infralyria.NewClient(ctx, cfg.VertexAIProjectID, cfg.VertexAILocation, cfg.LyriaModelID)
+		realLyriaClient, err := infralyria.NewClient(ctx, cfg.VertexAIProjectID, cfg.VertexAILocation, cfg.LyriaModelID)
 		if err != nil {
 			log.Fatal("failed to create Lyria client", zap.Error(err))
 		}
+		lyriaClient = realLyriaClient
 
 		storageClient, err := infrastorage.NewClient(ctx, cfg.AudioBucketName)
 		if err != nil {
 			log.Fatal("failed to create Storage client", zap.Error(err))
 		}
 		songUploader = storageClient
+
+		cleanup = func() {
+			if err := realGeminiClient.Close(); err != nil {
+				log.Warn("failed to close Gemini client", zap.Error(err))
+			}
+			if err := realLyriaClient.Close(); err != nil {
+				log.Warn("failed to close Lyria client", zap.Error(err))
+			}
+			if err := storageClient.Close(); err != nil {
+				log.Warn("failed to close Storage client", zap.Error(err))
+			}
+		}
 	}
 
 	return usecase.NewWorkerUsecase(
@@ -57,7 +71,7 @@ func buildDependencies(ctx context.Context, db *gorm.DB, cfg *config.WorkerConfi
 		lyriaClient,
 		songUploader,
 		cfg.LyriaDefaultDuration,
-	)
+	), cleanup
 }
 
 // mockGeminiClient は開発環境用のモック Gemini クライアント
