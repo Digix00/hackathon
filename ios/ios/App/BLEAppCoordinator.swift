@@ -455,7 +455,7 @@ final class BLEAppCoordinator: ObservableObject {
             title: item.title,
             artist: item.artistName,
             color: colorSeed(for: item.title + item.artistName),
-            artwork: nil
+            artwork: item.artworkURL
         )
     }
 
