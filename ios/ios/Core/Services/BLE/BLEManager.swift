@@ -10,8 +10,8 @@ import Foundation
 /// - Supports state restoration for background operation continuity.
 final class BLEManager: NSObject, ObservableObject {
     struct Constants {
-        static let serviceUUID = CBUUID(string: "00001234-0000-1000-8000-00805F9B34FB")
-        static let characteristicUUID = CBUUID(string: "00001235-0000-1000-8000-00805F9B34FB")
+        static let serviceUUID = CBUUID(string: "12345678-1234-1234-1234-123456789ABC")
+        static let characteristicUUID = CBUUID(string: "12345678-1234-1234-1234-123456789ABD")
         static let centralRestoreIdentifier = "hackathon-ble-central"
         static let peripheralRestoreIdentifier = "hackathon-ble-peripheral"
 
