@@ -1,8 +1,6 @@
 import Combine
 import Foundation
-
-import Combine
-import Foundation
+import UIKit
 
 enum ProfileSex: String, CaseIterable, Identifiable {
     case male, female, other, noAnswer = "no-answer"
@@ -67,6 +65,9 @@ final class ProfileEditViewModel: ObservableObject {
     @Published private(set) var isSaving = false
     @Published private(set) var errorMessage: String?
     @Published private(set) var successMessage: String?
+    @Published private(set) var previewImage: UIImage?
+
+    private var pendingAvatarData: Data?
 
     let prefectures = ProfilePrefecture.all
 
@@ -94,6 +95,11 @@ final class ProfileEditViewModel: ObservableObject {
 
     func refresh() {
         Task { await load() }
+    }
+
+    func setAvatarData(jpeg: Data, preview: UIImage) {
+        previewImage = preview
+        pendingAvatarData = jpeg
     }
 
     func save() {
@@ -133,6 +139,18 @@ final class ProfileEditViewModel: ObservableObject {
         errorMessage = nil
         successMessage = nil
 
+        if let avatarData = pendingAvatarData {
+            do {
+                let uploadedURL = try await client.uploadAvatar(avatarData, mimeType: "image/jpeg")
+                avatarURL = uploadedURL
+                pendingAvatarData = nil
+            } catch {
+                errorMessage = "アバターのアップロードに失敗しました"
+                isSaving = false
+                return
+            }
+        }
+
         let trimmedName = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
         let request = UpdateUserRequest(
             displayName: trimmedName,
@@ -156,6 +174,7 @@ final class ProfileEditViewModel: ObservableObject {
             ageVisibility = ProfileAgeVisibility(rawValue: updated.ageVisibility ?? "hidden") ?? .hidden
             prefectureId = updated.prefectureId ?? ""
             sex = ProfileSex(rawValue: updated.sex ?? "no-answer") ?? .noAnswer
+            previewImage = nil
             successMessage = "プロフィールを保存しました"
         } catch {
             errorMessage = "プロフィールの保存に失敗しました"

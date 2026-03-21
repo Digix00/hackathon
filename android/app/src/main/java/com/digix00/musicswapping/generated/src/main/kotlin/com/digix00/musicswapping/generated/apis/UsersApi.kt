@@ -13,6 +13,8 @@ import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchema
 import com.digix00.musicswapping.generated.models.HackathonInternalHandlerSchemaResponseUserResponse
 import com.digix00.musicswapping.generated.models.InternalHandlererrorResponse
 
+import okhttp3.MultipartBody
+
 interface UsersApi {
     /**
      * ユーザー作成
@@ -90,5 +92,22 @@ interface UsersApi {
      */
     @PATCH("api/v1/users/me")
     suspend fun patchMe(@Body body: HackathonInternalHandlerSchemaRequestUpdateUserRequest): Response<HackathonInternalHandlerSchemaResponseUserResponse>
+
+    /**
+     * アバター画像アップロード
+     * multipart/form-data でアバター画像を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に PATCH /users/me で avatar_url を保存すること。
+     * Responses:
+     *  - 200: OK
+     *  - 400: Bad Request
+     *  - 401: Unauthorized
+     *  - 500: Internal Server Error
+     *  - 503: Service Unavailable
+     *
+     * @param file アバター画像（JPEG または PNG、最大 5MB）
+     * @return [kotlin.collections.Map<kotlin.String, kotlin.String>]
+     */
+    @Multipart
+    @POST("api/v1/users/me/avatar")
+    suspend fun uploadAvatar(@Part file: MultipartBody.Part): Response<kotlin.collections.Map<kotlin.String, kotlin.String>>
 
 }

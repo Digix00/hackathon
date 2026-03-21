@@ -9,6 +9,12 @@ import (
 	"hackathon/internal/usecase"
 )
 
+// AvatarUploader はアバター画像をオブジェクトストレージにアップロードする操作を抽象化する。
+// 未設定（nil）の場合はアバターアップロード機能が無効になる。
+type AvatarUploader interface {
+	UploadAvatar(ctx context.Context, userID string, data []byte, mimeType string) (string, error)
+}
+
 // Dependencies はhandlerレイヤーが必要とする外部依存をまとめた構造体。
 // ルーティング登録前にmain側で構築して渡す。
 type Dependencies struct {
@@ -18,6 +24,7 @@ type Dependencies struct {
 	GoEnv               string
 	DevAuthToken        string
 	DevAuthUID          string
+	AvatarUploader      AvatarUploader // nil の場合はアバターアップロード機能が無効
 	UserUsecase         usecase.UserUsecase
 	SettingsUsecase     usecase.SettingsUsecase
 	PushTokenUsecase    usecase.PushTokenUsecase

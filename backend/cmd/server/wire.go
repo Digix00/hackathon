@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	firebaseauth "firebase.google.com/go/v4/auth"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -10,6 +12,7 @@ import (
 	"hackathon/internal/infra/crypto"
 	"hackathon/internal/infra/music"
 	"hackathon/internal/infra/rdb"
+	infrastorage "hackathon/internal/infra/storage"
 	"hackathon/internal/usecase"
 	usecaseport "hackathon/internal/usecase/port"
 )
@@ -18,6 +21,15 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config
 	tokenEncrypter, err := crypto.NewTokenEncrypter(cfg.MusicTokenEncryptionKey)
 	if err != nil {
 		panic("music token encrypter init failed: " + err.Error())
+	}
+
+	var avatarUploader handler.AvatarUploader
+	if cfg.AvatarBucketName != "" {
+		storageClient, err := infrastorage.NewClient(context.Background(), cfg.AvatarBucketName)
+		if err != nil {
+			panic("avatar storage client init failed: " + err.Error())
+		}
+		avatarUploader = storageClient
 	}
 
 	userRepo := rdb.NewUserRepository(log, db)
@@ -63,6 +75,7 @@ func buildDependencies(db *gorm.DB, authClient *firebaseauth.Client, cfg *config
 		GoEnv:               cfg.GoEnv,
 		DevAuthToken:        cfg.DevAuthToken,
 		DevAuthUID:          cfg.DevAuthUID,
+		AvatarUploader:      avatarUploader,
 		UserUsecase:         usecase.NewUserUsecase(log, userRepo, userSettingsRepo, blockRepo, encounterRepo, trackRepo),
 		SettingsUsecase:     usecase.NewSettingsUsecase(log, userRepo, userSettingsRepo),
 		PushTokenUsecase:    usecase.NewPushTokenUsecase(log, userRepo, userDeviceRepo),

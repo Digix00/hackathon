@@ -7,6 +7,7 @@ protocol BackendUserAPIClient: Sendable {
     func createUser(_ request: CreateUserRequest) async throws -> BackendUser
     func getMe() async throws -> BackendUser
     func patchMe(_ request: UpdateUserRequest) async throws -> BackendUser
+    func uploadAvatar(_ imageData: Data, mimeType: String) async throws -> String
 }
 
 actor BackendAPIClient: BackendUserAPIClient {
@@ -77,6 +78,29 @@ actor BackendAPIClient: BackendUserAPIClient {
             throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
         }
         return try decoder.decode(BackendUserResponse.self, from: result.data).user
+    }
+
+    func uploadAvatar(_ imageData: Data, mimeType: String) async throws -> String {
+        let boundary = UUID().uuidString
+        let filename = mimeType == "image/png" ? "avatar.png" : "avatar.jpg"
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+
+        let result = try await send(
+            path: "users/me/avatar",
+            method: "POST",
+            body: body,
+            contentType: "multipart/form-data; boundary=\(boundary)"
+        )
+        guard result.response.statusCode == 200 else {
+            throw BackendError.unexpectedStatus(result.response.statusCode, result.bodyString)
+        }
+        let response = try decoder.decode(UploadAvatarResponse.self, from: result.data)
+        return response.avatarURL
     }
 
     func deleteMe() async throws {
@@ -650,10 +674,18 @@ actor BackendAPIClient: BackendUserAPIClient {
 
     // MARK: - Internal
 
+    private struct UploadAvatarResponse: Decodable {
+        let avatarURL: String
+        enum CodingKeys: String, CodingKey {
+            case avatarURL = "avatar_url"
+        }
+    }
+
     private func send(
         path: String,
         method: String,
         body: Data? = nil,
+        contentType: String = "application/json",
         queryItems: [URLQueryItem] = []
     ) async throws -> (data: Data, response: HTTPURLResponse, bodyString: String?) {
         guard
@@ -681,7 +713,7 @@ actor BackendAPIClient: BackendUserAPIClient {
 
         if let body {
             request.httpBody = body
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue(contentType, forHTTPHeaderField: "Content-Type")
         }
 
         let (data, response) = try await session.data(for: request)

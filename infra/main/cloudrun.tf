@@ -142,6 +142,11 @@ resource "google_cloud_run_v2_service" "api" {
         }
       }
 
+      env {
+        name  = "AVATAR_BUCKET_NAME"
+        value = google_storage_bucket.avatars.name
+      }
+
       volume_mounts {
         name       = "cloudsql"
         mount_path = "/cloudsql"
