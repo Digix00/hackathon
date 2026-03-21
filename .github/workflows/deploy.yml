@@ -79,3 +79,11 @@ jobs:
             --image asia-northeast1-docker.pkg.dev/${{ vars.TF_PROJECT_ID }}/app/worker:${{ github.sha }} \
             --region asia-northeast1 \
             --project ${{ vars.TF_PROJECT_ID }}
+
+      - name: Deploy Cloud Run Service (seed-demo)
+        continue-on-error: true
+        run: |
+          gcloud run services update seed-demo \
+            --image asia-northeast1-docker.pkg.dev/${{ vars.TF_PROJECT_ID }}/app/seed-demo:${{ github.sha }} \
+            --region asia-northeast1 \
+            --project ${{ vars.TF_PROJECT_ID }}
