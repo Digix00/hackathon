@@ -24,6 +24,7 @@ struct LyricComposerSheet: View {
     @State private var errorMessage: String?
     @State private var step: Step = .compose
     @State private var hasNavigatedToProgress = false
+    @FocusState private var isComposerFocused: Bool
 
     private var trimmedDraft: String {
         draft.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -104,6 +105,7 @@ struct LyricComposerSheet: View {
                 TextEditor(text: $draft)
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(PrototypeTheme.textPrimary)
+                    .focused($isComposerFocused)
                     .padding(12)
                     .frame(minHeight: 140)
                     .background(PrototypeTheme.surface)
@@ -152,6 +154,7 @@ struct LyricComposerSheet: View {
             .foregroundStyle(PrototypeTheme.textSecondary)
             .frame(maxWidth: .infinity)
         }
+        .keyboardAvoiding(active: isComposerFocused, padding: 20)
     }
 
     private var confirmationContent: some View {
