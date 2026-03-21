@@ -30,3 +30,28 @@ resource "google_storage_bucket_iam_member" "public_reader" {
   role   = "roles/storage.objectViewer"
   member = "allUsers"
 }
+
+# ユーザーアバター画像バケット
+resource "google_storage_bucket" "avatars" {
+  name          = "${var.project_id}-avatars"
+  location      = var.region
+  storage_class = "STANDARD"
+
+  uniform_bucket_level_access = true
+
+  depends_on = [google_project_service.apis]
+}
+
+# API サーバー SA → アバターバケットへの書き込み権限
+resource "google_storage_bucket_iam_member" "cloudrun_avatar_writer" {
+  bucket = google_storage_bucket.avatars.name
+  role   = "roles/storage.objectCreator"
+  member = "serviceAccount:${google_service_account.cloudrun.email}"
+}
+
+# アバター画像の公開読み取り（プロフィール画像はクライアントから直接参照するため）
+resource "google_storage_bucket_iam_member" "avatars_public_reader" {
+  bucket = google_storage_bucket.avatars.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
+}

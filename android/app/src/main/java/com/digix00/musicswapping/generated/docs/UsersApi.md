@@ -9,6 +9,7 @@ All URIs are relative to *http://localhost:8000*
 | [**getMe**](UsersApi.md#getMe) | **GET** api/v1/users/me | 自分のユーザー情報取得 |
 | [**getUserByID**](UsersApi.md#getUserByID) | **GET** api/v1/users/{id} | 他ユーザーのプロフィール取得 |
 | [**patchMe**](UsersApi.md#patchMe) | **PATCH** api/v1/users/me | 自分のプロフィール更新 |
+| [**uploadAvatar**](UsersApi.md#uploadAvatar) | **POST** api/v1/users/me/avatar | アバター画像アップロード |
 
 
 
@@ -198,5 +199,44 @@ launch(Dispatchers.IO) {
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+アバター画像アップロード
+
+multipart/form-data でアバター画像を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に PATCH /users/me で avatar_url を保存すること。
+
+### Example
+```kotlin
+// Import classes:
+//import com.digix00.musicswapping.generated.*
+//import com.digix00.musicswapping.generated.infrastructure.*
+//import com.digix00.musicswapping.generated.models.*
+
+val apiClient = ApiClient()
+val webService = apiClient.createWebservice(UsersApi::class.java)
+val file : java.io.File = BINARY_DATA_HERE // java.io.File | アバター画像（JPEG または PNG、最大 5MB）
+
+launch(Dispatchers.IO) {
+    val result : kotlin.collections.Map<kotlin.String, kotlin.String> = webService.uploadAvatar(file)
+}
+```
+
+### Parameters
+| Name | Type | Description  | Notes |
+| ------------- | ------------- | ------------- | ------------- |
+| **file** | **java.io.File**| アバター画像（JPEG または PNG、最大 5MB） | |
+
+### Return type
+
+**kotlin.collections.Map&lt;kotlin.String, kotlin.String&gt;**
+
+### Authorization
+
+
+
+### HTTP request headers
+
+ - **Content-Type**: multipart/form-data
  - **Accept**: application/json
 

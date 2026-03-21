@@ -2389,6 +2389,49 @@ paths:
       summary: 自分のプロフィール更新
       tags:
       - users
+  /api/v1/users/me/avatar:
+    post:
+      consumes:
+      - multipart/form-data
+      description: multipart/form-data でアバター画像を受け取り GCS にアップロードして公開 URL を返す。DB 更新は行わないため、呼び出し後に
+        PATCH /users/me で avatar_url を保存すること。
+      operationId: uploadAvatar
+      parameters:
+      - description: アバター画像（JPEG または PNG、最大 5MB）
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/internal_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: アバター画像アップロード
+      tags:
+      - users
   /api/v1/users/me/blocks:
     get:
       description: 認証済みユーザーがブロックしているユーザーの一覧をカーソルページネーションで取得する
