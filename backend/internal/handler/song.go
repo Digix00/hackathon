@@ -50,8 +50,11 @@ func (h *songHandler) listMySongs(c echo.Context) error {
 	for _, s := range result.Songs {
 		songs = append(songs, schemares.UserSong{
 			ID:               s.ID,
+			ChainID:          s.ChainID,
 			Title:            s.Title,
 			AudioURL:         s.AudioURL,
+			DurationSec:      s.DurationSec,
+			Mood:             s.Mood,
 			ParticipantCount: s.ParticipantCount,
 			MyLyric:          s.MyLyric,
 			GeneratedAt:      s.GeneratedAt,

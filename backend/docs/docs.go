@@ -5020,10 +5020,19 @@ const docTemplate = `{
                 "audio_url": {
                     "type": "string"
                 },
+                "chain_id": {
+                    "type": "string"
+                },
+                "duration_sec": {
+                    "type": "integer"
+                },
                 "generated_at": {
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "mood": {
                     "type": "string"
                 },
                 "my_lyric": {

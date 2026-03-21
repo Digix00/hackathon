@@ -24,8 +24,11 @@ import kotlinx.serialization.Contextual
  * 
  *
  * @param audioUrl 
+ * @param chainId 
+ * @param durationSec 
  * @param generatedAt 
  * @param id 
+ * @param mood 
  * @param myLyric 
  * @param participantCount 
  * @param title 
@@ -37,11 +40,20 @@ data class HackathonInternalHandlerSchemaResponseUserSong (
     @SerialName(value = "audio_url")
     val audioUrl: kotlin.String? = null,
 
+    @SerialName(value = "chain_id")
+    val chainId: kotlin.String? = null,
+
+    @SerialName(value = "duration_sec")
+    val durationSec: kotlin.Int? = null,
+
     @SerialName(value = "generated_at")
     val generatedAt: kotlin.String? = null,
 
     @SerialName(value = "id")
     val id: kotlin.String? = null,
+
+    @SerialName(value = "mood")
+    val mood: kotlin.String? = null,
 
     @SerialName(value = "my_lyric")
     val myLyric: kotlin.String? = null,
