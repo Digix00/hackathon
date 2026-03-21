@@ -125,6 +125,7 @@ struct EncounterCommentsSection: View {
                     .padding(.leading, 8)
             }
         }
+        .keyboardAvoiding(active: isInputFocused, padding: 20)
     }
 
     private func avatarColor(for key: String) -> Color {

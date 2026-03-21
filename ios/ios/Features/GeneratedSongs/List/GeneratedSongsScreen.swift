@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct GeneratedSongsView: View {
+    @Binding var isDetailPresented: Bool
     @StateObject private var viewModel = GeneratedSongsViewModel()
     @StateObject private var localStudioStore = LocalCompositionStudioStore.shared
     @EnvironmentObject private var bleCoordinator: BLEAppCoordinator
@@ -11,6 +12,10 @@ struct GeneratedSongsView: View {
     @State private var pendingSongAfterCelebration: GeneratedSong?
     @State private var scrollTargetID: String?
     @Namespace private var songNamespace
+
+    init(isDetailPresented: Binding<Bool> = .constant(false)) {
+        self._isDetailPresented = isDetailPresented
+    }
 
     private let wheelItemHeight: CGFloat = 280
     private let wheelItemSpacing: CGFloat = 10
@@ -71,6 +76,9 @@ struct GeneratedSongsView: View {
         .navigationDestination(item: $selectedSong) { song in
             GeneratedSongDetailView(song: song)
         }
+        .onChange(of: selectedSong) { _, newValue in
+            isDetailPresented = newValue != nil
+        }
     }
 
     private func presentCelebrationIfNeeded() async {
@@ -94,23 +102,11 @@ struct GeneratedSongsView: View {
 
     private var content: some View {
         GeometryReader { geometry in
-            ZStack {
-                // Layer 1: Background & Stats
-                ZStack {
-                    DotGridBackground()
-                        .opacity(0.15)
-                    
-                    VStack(alignment: .leading, spacing: 0) {
-                        HStack(alignment: .top, spacing: 16) {
-                            GeneratedSongsStatsHeader(count: allSongs.count)
-                            Spacer()
-                            createSongLink
-                        }
-                            .padding(.top, geometry.safeAreaInsets.top + 20)
-                        Spacer()
-                    }
-                }
-                .opacity(selectedSong == nil ? 1 : 0)
+            ZStack(alignment: .top) {
+                // Layer 1: Background
+                DotGridBackground()
+                    .opacity(0.15)
+                    .ignoresSafeArea()
 
                 // Layer 2: Wheel List
                 VStack(spacing: 0) {
@@ -164,6 +160,16 @@ struct GeneratedSongsView: View {
                     }
                 }
                 .padding(.top, geometry.safeAreaInsets.top + 8)
+
+                // Layer 3: Interactive Header Overlay
+                HStack(alignment: .center) {
+                    GeneratedSongsStatsHeader(count: allSongs.count)
+                    Spacer()
+                    createSongLink
+                }
+                .padding(.horizontal, 32)
+                .padding(.top, geometry.safeAreaInsets.top + 20)
+                .opacity(selectedSong == nil ? 1 : 0)
             }
         }
     }
@@ -298,16 +304,20 @@ struct GeneratedSongsView: View {
         NavigationLink {
             SongCreationStudioView()
         } label: {
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 Image(systemName: "waveform.badge.plus")
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.system(size: 9, weight: .bold))
                 Text("作曲する")
-                    .font(PrototypeTheme.Typography.font(size: 13, weight: .black))
+                    .font(PrototypeTheme.Typography.font(size: 10, weight: .black, role: .data))
+                    .kerning(1.2)
             }
-            .foregroundStyle(Color.white)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(Capsule().fill(Color.indigo))
+            .foregroundStyle(PrototypeTheme.textSecondary.opacity(0.8))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                Capsule()
+                    .fill(PrototypeTheme.surface.opacity(0.2))
+            )
         }
         .buttonStyle(EncounterScaleButtonStyle())
     }
@@ -334,8 +344,6 @@ private struct GeneratedSongsStatsHeader: View {
             .opacity(isAnimating ? 1.0 : 0)
             .offset(x: isAnimating ? 0 : -10)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 32)
         .onAppear {
             withAnimation(.spring(response: 0.9, dampingFraction: 0.8)) {
                 isAnimating = true

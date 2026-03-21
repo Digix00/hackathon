@@ -11,6 +11,10 @@ struct HomeInsightsPage: View {
         ArtistInsight.build(from: state.recentEncounters)
     }
 
+    private var peopleInsights: [PersonInsight] {
+        PersonInsight.build(from: state.recentEncounters)
+    }
+
     private var topTrack: TrackInsight? {
         trackInsights.first
     }
@@ -41,6 +45,10 @@ struct HomeInsightsPage: View {
                     heroInsightSection(trackInsight: topTrack)
                 }
 
+                if !peopleInsights.isEmpty {
+                    connectedPeopleSection
+                }
+
                 if !artistInsights.isEmpty {
                     connectedArtistsSection
                 }
@@ -62,6 +70,55 @@ struct HomeInsightsPage: View {
         }
     }
 
+    private var connectedPeopleSection: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            sectionEyebrow("MOST CONNECTED PEOPLE")
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 32) {
+                    ForEach(peopleInsights.prefix(5)) { insight in
+                        VStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(insight.representativeColor.opacity(0.15))
+                                    .frame(width: 90, height: 90)
+
+                                AsyncImage(url: URL(string: insight.avatarURL ?? "")) { image in
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                } placeholder: {
+                                    Image(systemName: "person.fill")
+                                        .font(.system(size: 32))
+                                        .foregroundStyle(insight.representativeColor.opacity(0.5))
+                                }
+                                .frame(width: 80, height: 80)
+                                .clipShape(Circle())
+                                .shadow(color: insight.representativeColor.opacity(0.15), radius: 15, x: 0, y: 8)
+                            }
+
+                            VStack(spacing: 6) {
+                                Text(insight.name)
+                                    .font(.system(size: 14, weight: .black))
+                                    .foregroundStyle(PrototypeTheme.textPrimary)
+                                    .lineLimit(1)
+
+                                Text("\(insight.encounterCount) CONNECTS")
+                                    .prototypeFont(size: 9, weight: .black, role: .data)
+                                    .foregroundStyle(PrototypeTheme.textSecondary)
+                                    .kerning(1.2)
+                            }
+                        }
+                        .frame(width: 100)
+                    }
+                }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 10)
+            }
+            .padding(.horizontal, -4)
+        }
+    }
+
     private var connectedArtistsSection: some View {
         VStack(alignment: .leading, spacing: 24) {
             sectionEyebrow("MOST CONNECTED ARTISTS")
@@ -79,7 +136,7 @@ struct HomeInsightsPage: View {
                                     color: insight.representativeColor,
                                     symbol: "person.fill",
                                     size: 80,
-                                    artwork: nil
+                                    artwork: insight.representativeArtwork
                                 )
                                 .clipShape(Circle())
                                 .shadow(color: insight.representativeColor.opacity(0.15), radius: 15, x: 0, y: 8)
@@ -491,23 +548,51 @@ private enum TimeBucket: String, CaseIterable {
     }
 }
 
-private struct ArtistInsight: Identifiable {
+private struct PersonInsight: Identifiable {
     let name: String
+    let avatarURL: String?
     let encounterCount: Int
     let representativeColor: Color
     let uniqueTracks: Int
 
     var id: String { name }
 
+    static func build(from encounters: [Encounter]) -> [PersonInsight] {
+        let grouped = Dictionary(grouping: encounters, by: { $0.userName })
+
+        return grouped.map { name, personEncounters in
+            let trackIds = Set(personEncounters.map { $0.track.id })
+            return PersonInsight(
+                name: name,
+                avatarURL: personEncounters.first?.userAvatarURL,
+                encounterCount: personEncounters.count,
+                representativeColor: personEncounters.first?.track.color ?? PrototypeTheme.accent,
+                uniqueTracks: trackIds.count
+            )
+        }
+        .sorted { $0.encounterCount > $1.encounterCount }
+    }
+}
+
+private struct ArtistInsight: Identifiable {
+    let name: String
+    let encounterCount: Int
+    let representativeColor: Color
+    let representativeArtwork: String?
+    let uniqueTracks: Int
+
+    var id: String { name }
+
     static func build(from encounters: [Encounter]) -> [ArtistInsight] {
         let grouped = Dictionary(grouping: encounters, by: { $0.track.artist })
-        
+
         return grouped.map { name, artistEncounters in
             let trackIds = Set(artistEncounters.map { $0.track.id })
             return ArtistInsight(
                 name: name,
                 encounterCount: artistEncounters.count,
                 representativeColor: artistEncounters.first?.track.color ?? PrototypeTheme.accent,
+                representativeArtwork: artistEncounters.first?.track.artwork,
                 uniqueTracks: trackIds.count
             )
         }
