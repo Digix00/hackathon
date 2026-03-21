@@ -51,8 +51,11 @@ func (u *songUsecase) ListMySongs(ctx context.Context, authUID string, cursor st
 		}
 		dtos = append(dtos, usecasedto.UserSongDTO{
 			ID:               s.Song.ID,
+			ChainID:          s.Song.ChainID,
 			Title:            s.Song.Title,
 			AudioURL:         s.Song.AudioURL,
+			DurationSec:      s.Song.DurationSec,
+			Mood:             s.Song.Mood,
 			ParticipantCount: s.ParticipantCount,
 			MyLyric:          s.MyLyric,
 			GeneratedAt:      generatedAt,
