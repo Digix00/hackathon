@@ -3,14 +3,16 @@ import Foundation
 struct Encounter: Identifiable, Hashable {
     let id: String
     let userName: String
+    let userAvatarURL: String?
     let track: Track
     let relativeTime: String
     let lyric: String
     let occurredAt: Date?
 
-    init(id: String? = nil, userName: String, track: Track, relativeTime: String, lyric: String, occurredAt: Date? = nil) {
+    init(id: String? = nil, userName: String, userAvatarURL: String? = nil, track: Track, relativeTime: String, lyric: String, occurredAt: Date? = nil) {
         self.id = id ?? "\(userName)-\(track.id)-\(relativeTime)-\(lyric)"
         self.userName = userName
+        self.userAvatarURL = userAvatarURL
         self.track = track
         self.relativeTime = relativeTime
         self.lyric = lyric

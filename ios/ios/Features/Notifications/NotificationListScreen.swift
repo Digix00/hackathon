@@ -315,7 +315,6 @@ private struct NotificationRow: View {
             .background(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .fill(PrototypeTheme.surface.opacity(notification.isRead ? 0.4 : 0.8))
-                    .background(Blur(style: .systemThinMaterialLight).opacity(0.1))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)

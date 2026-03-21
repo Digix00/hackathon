@@ -80,9 +80,17 @@ actor BLEBackendClient {
         )
         let result = try await send(path: "encounters", method: "POST", body: body)
 
-        guard result.response.statusCode == 200 || result.response.statusCode == 201 else {
+        // 200/201: Created successfully
+        // 409: Already exists (treat as success to avoid retries)
+        guard result.response.statusCode == 200 || result.response.statusCode == 201 || result.response.statusCode == 409 else {
             throw BackendError.unexpectedStatus(result.response.statusCode)
         }
+
+        #if DEBUG
+        if result.response.statusCode == 409 {
+            print("[BLEBackendClient] encounter already exists (409), treating as success")
+        }
+        #endif
     }
 
     func fetchUser(forBLEToken token: String) async throws -> BLEPublicUser {

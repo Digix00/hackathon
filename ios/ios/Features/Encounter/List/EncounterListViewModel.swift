@@ -73,9 +73,14 @@ final class EncounterListViewModel: ObservableObject {
 
 private extension EncounterListViewModel {
     static func mapListItem(_ item: BackendEncounterListItem) -> Encounter {
-        Encounter(
+        #if DEBUG
+        print("[EncounterListViewModel] mapListItem: user=\(item.user.displayName), avatarURL=\(item.user.avatarURL ?? "nil"), tracks.count=\(item.tracks.count)")
+        #endif
+
+        return Encounter(
             id: item.id,
             userName: item.user.displayName,
+            userAvatarURL: item.user.avatarURL,
             track: mapTrack(item.tracks.first, fallbackKey: item.id),
             relativeTime: relativeTime(from: item.occurredAt),
             lyric: "",
@@ -87,6 +92,7 @@ private extension EncounterListViewModel {
         Encounter(
             id: detail.id,
             userName: detail.user.displayName,
+            userAvatarURL: detail.user.avatarURL,
             track: mapTrack(detail.tracks.first, fallbackKey: detail.id),
             relativeTime: relativeTime(from: detail.occurredAt),
             lyric: "",
@@ -110,11 +116,15 @@ private extension EncounterListViewModel {
             )
         }
 
+        #if DEBUG
+        print("[EncounterListViewModel] mapTrack: title=\(track.title), artworkURL=\(track.artworkURL ?? "nil")")
+        #endif
+
         return Track(
             title: track.title,
             artist: track.artistName,
             color: paletteColor(for: track.id),
-            artwork: nil
+            artwork: track.artworkURL
         )
     }
 

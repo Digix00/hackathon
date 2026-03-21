@@ -13,6 +13,8 @@ struct SongCreationStudioView: View {
     @State private var templateLyric = ""
     @State private var activeRoute: Route?
     @State private var pendingRoute: Route?
+    @FocusState private var isDraftLyricFocused: Bool
+    @FocusState private var isTemplateLyricFocused: Bool
 
     private let availableMoods = ["dreamy", "upbeat", "melancholic", "bright", "nostalgic"]
 
@@ -108,6 +110,7 @@ struct SongCreationStudioView: View {
                         .foregroundStyle(PrototypeTheme.textSecondary)
 
                     TextEditor(text: $draftLyric)
+                        .focused($isDraftLyricFocused)
                         .frame(minHeight: 120)
                         .padding(12)
                         .background(PrototypeTheme.surfaceMuted)
@@ -123,9 +126,11 @@ struct SongCreationStudioView: View {
                     let chainID = studioStore.createProject(title: draftTitle, mood: selectedMood, openingLyric: draftLyric)
                     draftTitle = ""
                     draftLyric = ""
+                    isDraftLyricFocused = false
                     activeRoute = Route(id: chainID)
                 }
             }
+            .keyboardAvoiding(active: isDraftLyricFocused, padding: 20)
         }
     }
 
@@ -240,6 +245,7 @@ struct SongCreationStudioView: View {
                     .foregroundStyle(PrototypeTheme.textSecondary)
 
                 TextEditor(text: $templateLyric)
+                    .focused($isTemplateLyricFocused)
                     .frame(minHeight: 140)
                     .padding(12)
                     .background(PrototypeTheme.surfaceMuted)
@@ -257,9 +263,11 @@ struct SongCreationStudioView: View {
                     pendingRoute = Route(id: chainID)
                     selectedTemplate = nil
                     templateLyric = ""
+                    isTemplateLyricFocused = false
                 }
             }
             .padding(24)
+            .keyboardAvoiding(active: isTemplateLyricFocused, padding: 20)
             .navigationTitle("作詞する")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
