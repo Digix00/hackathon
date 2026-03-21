@@ -13,16 +13,22 @@ import AnyCodable
 public struct HackathonInternalHandlerSchemaResponseUserSong: Codable, JSONEncodable, Hashable {
 
     public var audioUrl: String?
+    public var chainId: String?
+    public var durationSec: Int?
     public var generatedAt: String?
     public var id: String?
+    public var mood: String?
     public var myLyric: String?
     public var participantCount: Int?
     public var title: String?
 
-    public init(audioUrl: String? = nil, generatedAt: String? = nil, id: String? = nil, myLyric: String? = nil, participantCount: Int? = nil, title: String? = nil) {
+    public init(audioUrl: String? = nil, chainId: String? = nil, durationSec: Int? = nil, generatedAt: String? = nil, id: String? = nil, mood: String? = nil, myLyric: String? = nil, participantCount: Int? = nil, title: String? = nil) {
         self.audioUrl = audioUrl
+        self.chainId = chainId
+        self.durationSec = durationSec
         self.generatedAt = generatedAt
         self.id = id
+        self.mood = mood
         self.myLyric = myLyric
         self.participantCount = participantCount
         self.title = title
@@ -30,8 +36,11 @@ public struct HackathonInternalHandlerSchemaResponseUserSong: Codable, JSONEncod
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
         case audioUrl = "audio_url"
+        case chainId = "chain_id"
+        case durationSec = "duration_sec"
         case generatedAt = "generated_at"
         case id
+        case mood
         case myLyric = "my_lyric"
         case participantCount = "participant_count"
         case title
@@ -42,8 +51,11 @@ public struct HackathonInternalHandlerSchemaResponseUserSong: Codable, JSONEncod
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(audioUrl, forKey: .audioUrl)
+        try container.encodeIfPresent(chainId, forKey: .chainId)
+        try container.encodeIfPresent(durationSec, forKey: .durationSec)
         try container.encodeIfPresent(generatedAt, forKey: .generatedAt)
         try container.encodeIfPresent(id, forKey: .id)
+        try container.encodeIfPresent(mood, forKey: .mood)
         try container.encodeIfPresent(myLyric, forKey: .myLyric)
         try container.encodeIfPresent(participantCount, forKey: .participantCount)
         try container.encodeIfPresent(title, forKey: .title)
