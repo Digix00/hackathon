@@ -44,6 +44,7 @@ struct MainPrototypeView: View {
     @State private var selectedSurface: Surface = .track
     @State private var selectedLibraryTab: LibraryTab = .insights
     @State private var isEncounterDetailPresented = false
+    @State private var isSongDetailPresented = false
     @StateObject private var profilePageSwipeController = LibraryPageSwipeController()
     @StateObject private var sharedTrackLoader = SharedTrackLoader()
     @GestureState private var verticalDragOffset: CGFloat = 0
@@ -148,7 +149,7 @@ struct MainPrototypeView: View {
             .tag(LibraryTab.history)
 
             navigationContainer {
-                GeneratedSongsView()
+                GeneratedSongsView(isDetailPresented: $isSongDetailPresented)
             }
             .tag(LibraryTab.songs)
 
@@ -181,7 +182,16 @@ struct MainPrototypeView: View {
     }
 
     private var shouldShowLibraryFooter: Bool {
-        selectedSurface == .library && !(selectedLibraryTab == .history && isEncounterDetailPresented)
+        guard selectedSurface == .library else { return false }
+        
+        switch selectedLibraryTab {
+        case .history:
+            return !isEncounterDetailPresented
+        case .songs:
+            return !isSongDetailPresented
+        default:
+            return true
+        }
     }
 
     private func libraryBottomInset(bottomSafeArea: CGFloat) -> CGFloat {
