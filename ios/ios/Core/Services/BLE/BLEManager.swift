@@ -75,10 +75,15 @@ final class BLEManager: NSObject, ObservableObject {
 
     func startAdvertising(token: String) {
         let normalizedToken = token.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !normalizedToken.isEmpty else { return }
+        log("startAdvertising called with token: \(token) -> normalized: \(normalizedToken)")
+        guard !normalizedToken.isEmpty else {
+            log("Token is empty, ignoring")
+            return
+        }
 
         shouldAdvertise = true
         advertisedToken = normalizedToken
+        log("Set advertisedToken to: \(normalizedToken)")
         applyAdvertisingState()
     }
 
@@ -167,11 +172,14 @@ final class BLEManager: NSObject, ObservableObject {
     }
 
     private func applyAdvertisingState() {
+        log("applyAdvertisingState called: shouldAdvertise=\(shouldAdvertise), peripheralState=\(peripheralManager.state.rawValue), advertisedToken=\(advertisedToken ?? "nil")")
+
         guard
             shouldAdvertise,
             peripheralManager.state == .poweredOn,
             let token = advertisedToken
         else {
+            log("Advertising conditions not met, stopping")
             stopAdvertisingRuntime()
             return
         }
