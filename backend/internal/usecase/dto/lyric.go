@@ -62,8 +62,11 @@ type ChainDetailResult struct {
 
 type UserSongDTO struct {
 	ID               string
+	ChainID          string
 	Title            *string
 	AudioURL         *string
+	DurationSec      *int
+	Mood             *string
 	ParticipantCount int
 	MyLyric          string
 	GeneratedAt      *string
